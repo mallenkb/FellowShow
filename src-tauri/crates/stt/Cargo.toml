@@ -1,5 +1,5 @@
 [package]
-name = "rhema-stt"
+name = "fellowshow-stt"
 version = "0.1.0"
 edition = "2021"
 
@@ -13,14 +13,14 @@ log.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true }
 tokio-tungstenite = { version = "0.26", features = ["native-tls"] }
-reqwest = { version = "0.12", features = ["json", "stream"], optional = true }
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"], optional = true }
 url = "2"
 futures-util = "0.3"
 crossbeam-channel = "0.5"
 async-trait = "0.1"
 
 # Whisper local STT (optional)
-rhema-audio = { path = "../audio", optional = true }
+fellowshow-audio = { path = "../audio", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 whisper-rs = { version = "0.16", features = ["metal"], optional = true }
@@ -31,4 +31,4 @@ whisper-rs = { version = "0.16", optional = true }
 [features]
 default = ["rest-fallback"]
 rest-fallback = ["reqwest"]
-whisper = ["dep:whisper-rs", "rhema-audio"]
+whisper = ["dep:whisper-rs", "fellowshow-audio"]

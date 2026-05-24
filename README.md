@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="public/rhema.svg" alt="Rhema logo" width="160" height="160" />
+  <img src="public/fellowshow.svg" alt="FellowShow logo" width="160" height="160" />
 </p>
 
-<h1 align="center">Rhema</h1>
+<h1 align="center">FellowShow</h1>
 
 <p align="center">Real-time AI-powered Bible verse detection for live sermons and broadcasts. A Tauri v2 desktop app with a React frontend and Rust backend.</p>
 
-Rhema listens to a live sermon audio feed, transcribes speech in real time, detects Bible verse references (both explicit citations and quoted passages), and renders them as broadcast-ready overlays via NDI for live production.
+FellowShow listens to a live sermon audio feed, transcribes speech in real time, detects Bible verse references (both explicit citations and quoted passages), and renders them as broadcast-ready overlays via NDI for live production.
 
 ## Features
 
@@ -51,13 +51,13 @@ Rhema listens to a live sermon audio feed, transcribes speech in real time, dete
 
 | Crate | Purpose |
 |---|---|
-| `rhema-audio` | Audio device enumeration, capture, VAD (cpal) |
-| `rhema-stt` | Deepgram STT streaming + REST fallback |
-| `rhema-bible` | SQLite Bible DB, FTS5 search, cross-references |
-| `rhema-detection` | Verse detection pipeline: direct, semantic, quotation, ensemble merger, sentence buffer, sermon context, reading mode |
-| `rhema-broadcast` | NDI video frame output via FFI |
-| `rhema-api` | Tauri command API layer |
-| `rhema-notes` | (placeholder) |
+| `fellowshow-audio` | Audio device enumeration, capture, VAD (cpal) |
+| `fellowshow-stt` | Deepgram STT streaming + REST fallback |
+| `fellowshow-bible` | SQLite Bible DB, FTS5 search, cross-references |
+| `fellowshow-detection` | Verse detection pipeline: direct, semantic, quotation, ensemble merger, sentence buffer, sermon context, reading mode |
+| `fellowshow-broadcast` | NDI video frame output via FFI |
+| `fellowshow-api` | Tauri command API layer |
+| `fellowshow-notes` | (placeholder) |
 
 ## Prerequisites
 
@@ -108,7 +108,7 @@ Windows needs an extra build-tools bootstrap before the shared setup pipeline �
 
 ```bash
 git clone <repo-url>
-cd rhema
+cd fellowshow
 bun install
 ```
 
@@ -127,7 +127,7 @@ This runs 7 phases in sequence, skipping any that are already complete:
 1. Python environment setup (`.venv` + all pip dependencies)
 2. Download open-source Bible data (KJV, Spanish, French, Portuguese + cross-references)
 3. Download copyrighted translations from BibleGateway (NIV, ESV, NASB, NKJV, NLT, AMP)
-4. Build SQLite Bible database (`data/rhema.db` with FTS5 + cross-references)
+4. Build SQLite Bible database (`data/fellowshow.db` with FTS5 + cross-references)
 5. Download & export ONNX model (Qwen3-Embedding-0.6B) + INT8 quantization
 6. Export KJV verses to JSON for embedding
 7. Precompute verse embeddings (auto-selects GPU if available, falls back to ONNX CPU)
@@ -136,7 +136,7 @@ This runs 7 phases in sequence, skipping any that are already complete:
 
 #### Speech-to-Text Options
 
-Rhema supports two speech-to-text engines:
+FellowShow supports two speech-to-text engines:
 
 **Option 1: Whisper (Local, Free)**
 No setup required! Whisper runs locally on your machine with no API costs or internet dependency.
@@ -188,7 +188,7 @@ bun run tauri build
 ## Project Structure
 
 ```
-rhema/
+fellowshow/
 ├── src/                          # React frontend
 │   ├── components/
 │   │   ├── broadcast/            # Theme designer, NDI settings
@@ -254,7 +254,7 @@ rhema/
 
 ## Security
 
-Rhema enforces a restrictive Content Security Policy on the Tauri webview to prevent script injection and unauthorized data exfiltration. The policy is defined in `src-tauri/tauri.conf.json`; see **[SECURITY.md](.github/SECURITY.md)** for the directive-by-directive rationale, threat model, and vulnerability reporting process.
+FellowShow enforces a restrictive Content Security Policy on the Tauri webview to prevent script injection and unauthorized data exfiltration. The policy is defined in `src-tauri/tauri.conf.json`; see **[SECURITY.md](.github/SECURITY.md)** for the directive-by-directive rationale, threat model, and vulnerability reporting process.
 
 ## Environment Variables
 

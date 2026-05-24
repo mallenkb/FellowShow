@@ -89,39 +89,39 @@ pub fn coerce_string(arg: &OscType) -> Result<String, CommandError> {
 
 /// Parse an OSC address + arguments into a `RemoteCommand`.
 ///
-/// Handles all 8 Rhema OSC addresses:
-/// - `/rhema/next`, `/rhema/prev`, `/rhema/show`, `/rhema/hide` (no arguments)
-/// - `/rhema/theme` (string argument)
-/// - `/rhema/opacity`, `/rhema/confidence` (float argument, normalized to [0.0, 1.0])
-/// - `/rhema/on_air` (bool argument)
+/// Handles all 8 FellowShow OSC addresses:
+/// - `/fellowshow/next`, `/fellowshow/prev`, `/fellowshow/show`, `/fellowshow/hide` (no arguments)
+/// - `/fellowshow/theme` (string argument)
+/// - `/fellowshow/opacity`, `/fellowshow/confidence` (float argument, normalized to [0.0, 1.0])
+/// - `/fellowshow/on_air` (bool argument)
 pub fn parse_osc(address: &str, args: &[OscType]) -> Result<RemoteCommand, CommandError> {
     match address {
-        "/rhema/next" => Ok(RemoteCommand::Next),
-        "/rhema/prev" => Ok(RemoteCommand::Prev),
-        "/rhema/show" => Ok(RemoteCommand::Show),
-        "/rhema/hide" => Ok(RemoteCommand::Hide),
-        "/rhema/theme" => {
+        "/fellowshow/next" => Ok(RemoteCommand::Next),
+        "/fellowshow/prev" => Ok(RemoteCommand::Prev),
+        "/fellowshow/show" => Ok(RemoteCommand::Show),
+        "/fellowshow/hide" => Ok(RemoteCommand::Hide),
+        "/fellowshow/theme" => {
             let arg = args.first().ok_or_else(|| CommandError::MissingArgument {
                 address: address.into(),
             })?;
             let name = coerce_string(arg)?;
             Ok(RemoteCommand::Theme(name))
         }
-        "/rhema/opacity" => {
+        "/fellowshow/opacity" => {
             let arg = args.first().ok_or_else(|| CommandError::MissingArgument {
                 address: address.into(),
             })?;
             let val = coerce_f32_normalized(arg)?;
             Ok(RemoteCommand::Opacity(val))
         }
-        "/rhema/confidence" => {
+        "/fellowshow/confidence" => {
             let arg = args.first().ok_or_else(|| CommandError::MissingArgument {
                 address: address.into(),
             })?;
             let val = coerce_f32_normalized(arg)?;
             Ok(RemoteCommand::Confidence(val))
         }
-        "/rhema/on_air" => {
+        "/fellowshow/on_air" => {
             let arg = args.first().ok_or_else(|| CommandError::MissingArgument {
                 address: address.into(),
             })?;
@@ -262,28 +262,28 @@ mod tests {
 
     #[test]
     fn parse_osc_next() {
-        assert_eq!(parse_osc("/rhema/next", &[]).unwrap(), RemoteCommand::Next);
+        assert_eq!(parse_osc("/fellowshow/next", &[]).unwrap(), RemoteCommand::Next);
     }
 
     #[test]
     fn parse_osc_prev() {
-        assert_eq!(parse_osc("/rhema/prev", &[]).unwrap(), RemoteCommand::Prev);
+        assert_eq!(parse_osc("/fellowshow/prev", &[]).unwrap(), RemoteCommand::Prev);
     }
 
     #[test]
     fn parse_osc_show() {
-        assert_eq!(parse_osc("/rhema/show", &[]).unwrap(), RemoteCommand::Show);
+        assert_eq!(parse_osc("/fellowshow/show", &[]).unwrap(), RemoteCommand::Show);
     }
 
     #[test]
     fn parse_osc_hide() {
-        assert_eq!(parse_osc("/rhema/hide", &[]).unwrap(), RemoteCommand::Hide);
+        assert_eq!(parse_osc("/fellowshow/hide", &[]).unwrap(), RemoteCommand::Hide);
     }
 
     #[test]
     fn parse_osc_theme() {
         assert_eq!(
-            parse_osc("/rhema/theme", &[OscType::String("Minimal".into())]).unwrap(),
+            parse_osc("/fellowshow/theme", &[OscType::String("Minimal".into())]).unwrap(),
             RemoteCommand::Theme("Minimal".into())
         );
     }
@@ -291,35 +291,35 @@ mod tests {
     #[test]
     fn parse_osc_opacity() {
         assert_eq!(
-            parse_osc("/rhema/opacity", &[OscType::Float(0.5)]).unwrap(),
+            parse_osc("/fellowshow/opacity", &[OscType::Float(0.5)]).unwrap(),
             RemoteCommand::Opacity(0.5)
         );
     }
 
     #[test]
     fn parse_osc_confidence_from_int_percent() {
-        let result = parse_osc("/rhema/confidence", &[OscType::Int(80)]).unwrap();
+        let result = parse_osc("/fellowshow/confidence", &[OscType::Int(80)]).unwrap();
         assert_eq!(result, RemoteCommand::Confidence(0.8));
     }
 
     #[test]
     fn parse_osc_on_air_from_int() {
         assert_eq!(
-            parse_osc("/rhema/on_air", &[OscType::Int(1)]).unwrap(),
+            parse_osc("/fellowshow/on_air", &[OscType::Int(1)]).unwrap(),
             RemoteCommand::OnAir(true)
         );
     }
 
     #[test]
     fn parse_osc_unknown_address_errors() {
-        let result = parse_osc("/rhema/unknown", &[]);
+        let result = parse_osc("/fellowshow/unknown", &[]);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Unknown OSC address"));
     }
 
     #[test]
     fn parse_osc_opacity_missing_arg_errors() {
-        let result = parse_osc("/rhema/opacity", &[]);
+        let result = parse_osc("/fellowshow/opacity", &[]);
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
@@ -329,7 +329,7 @@ mod tests {
 
     #[test]
     fn parse_osc_theme_missing_arg_errors() {
-        let result = parse_osc("/rhema/theme", &[]);
+        let result = parse_osc("/fellowshow/theme", &[]);
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
@@ -339,13 +339,13 @@ mod tests {
 
     #[test]
     fn parse_osc_on_air_missing_arg_errors() {
-        let result = parse_osc("/rhema/on_air", &[]);
+        let result = parse_osc("/fellowshow/on_air", &[]);
         assert!(result.is_err());
     }
 
     #[test]
     fn parse_osc_confidence_missing_arg_errors() {
-        let result = parse_osc("/rhema/confidence", &[]);
+        let result = parse_osc("/fellowshow/confidence", &[]);
         assert!(result.is_err());
     }
 
@@ -355,11 +355,11 @@ mod tests {
     fn parse_osc_on_air_from_float() {
         // TouchOSC sends Float for toggles
         assert_eq!(
-            parse_osc("/rhema/on_air", &[OscType::Float(1.0)]).unwrap(),
+            parse_osc("/fellowshow/on_air", &[OscType::Float(1.0)]).unwrap(),
             RemoteCommand::OnAir(true)
         );
         assert_eq!(
-            parse_osc("/rhema/on_air", &[OscType::Float(0.0)]).unwrap(),
+            parse_osc("/fellowshow/on_air", &[OscType::Float(0.0)]).unwrap(),
             RemoteCommand::OnAir(false)
         );
     }
@@ -368,7 +368,7 @@ mod tests {
     fn parse_osc_opacity_from_int_percent() {
         // Companion sends Int 0-100
         assert_eq!(
-            parse_osc("/rhema/opacity", &[OscType::Int(50)]).unwrap(),
+            parse_osc("/fellowshow/opacity", &[OscType::Int(50)]).unwrap(),
             RemoteCommand::Opacity(0.5)
         );
     }
@@ -377,7 +377,7 @@ mod tests {
     fn parse_osc_on_air_from_string() {
         // Some controllers send String "true"/"false"
         assert_eq!(
-            parse_osc("/rhema/on_air", &[OscType::String("on".into())]).unwrap(),
+            parse_osc("/fellowshow/on_air", &[OscType::String("on".into())]).unwrap(),
             RemoteCommand::OnAir(true)
         );
     }

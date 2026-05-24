@@ -32,3 +32,11 @@ export interface CrossReference {
   to_ref: string
   votes: number
 }
+
+export interface Hymn {
+  id: number
+  slug: string
+  title: string
+  lyrics: string
+  source_url: string
+}

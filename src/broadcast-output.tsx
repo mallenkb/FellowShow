@@ -3,7 +3,12 @@ import { useRef, useEffect, useCallback } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
-import type { BroadcastTheme, VerseRenderData } from "@/types/broadcast"
+import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
+import type {
+  BroadcastTheme,
+  PresenterTimerRenderData,
+  VerseRenderData,
+} from "@/types/broadcast"
 import type { NdiConfigEventPayload, NdiFrameRequest } from "@/types"
 
 /** Convert Uint8Array/Uint8ClampedArray to base64 using Function.apply (avoids spread stack overflow) */
@@ -27,6 +32,7 @@ const OUTPUT_ID = new URLSearchParams(window.location.search).get("output") ?? "
 interface BroadcastPayload {
   theme: BroadcastTheme
   verse: VerseRenderData | null
+  timer?: PresenterTimerRenderData | null
 }
 
 function BroadcastCanvas() {
@@ -60,21 +66,22 @@ function BroadcastCanvas() {
 
     const data = latestData.current
     if (!data) {
-      // Black screen when no data
-      ctx.fillStyle = "#000"
+      // Presentation default background when no verse data is available
+      ctx.fillStyle = getBuiltinPresentationBackground()
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       return
     }
 
-    const { theme, verse } = data
+    const { theme, verse, timer } = data
     canvas.width = theme.resolution.width
     canvas.height = theme.resolution.height
     const result = renderVerse(ctx, theme, verse, {
       scale: 1,
       imageCache: imageCacheRef.current,
+      timer,
     })
     if (!result) {
-      ctx.fillStyle = "#000"
+      ctx.fillStyle = getBuiltinPresentationBackground()
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       logDebug("renderVerse returned null; drew fallback frame")
     }
@@ -165,7 +172,7 @@ function BroadcastCanvas() {
       canvas.height = 1080
       const ctx = canvas.getContext("2d")
       if (ctx) {
-        ctx.fillStyle = "#000"
+        ctx.fillStyle = getBuiltinPresentationBackground()
         ctx.fillRect(0, 0, 1920, 1080)
       }
     }

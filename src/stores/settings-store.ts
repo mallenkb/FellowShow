@@ -1,11 +1,12 @@
 import { create } from "zustand"
 import { load, type Store } from "@tauri-apps/plugin-store"
 
-type SttProvider = "deepgram" | "whisper"
+type SttProvider = "deepgram" | "openai" | "groq" | "whisper"
 
 interface SettingsState {
   deepgramApiKey: string | null
   openaiApiKey: string | null
+  groqApiKey: string | null
   claudeApiKey: string | null
   audioDeviceId: string | null
   gain: number
@@ -14,9 +15,12 @@ interface SettingsState {
   cooldownMs: number
   onboardingComplete: boolean
   sttProvider: SttProvider
+  hiddenTranslationIds: number[]
+  pinnedTranslationIds: number[]
 
   setDeepgramApiKey: (key: string | null) => void
   setOpenaiApiKey: (key: string | null) => void
+  setGroqApiKey: (key: string | null) => void
   setClaudeApiKey: (key: string | null) => void
   setAudioDeviceId: (id: string | null) => void
   setGain: (gain: number) => void
@@ -25,11 +29,16 @@ interface SettingsState {
   setCooldownMs: (ms: number) => void
   setOnboardingComplete: (complete: boolean) => void
   setSttProvider: (provider: SttProvider) => void
+  setHiddenTranslationIds: (ids: number[]) => void
+  toggleHiddenTranslation: (id: number) => void
+  setPinnedTranslationIds: (ids: number[]) => void
+  togglePinnedTranslation: (id: number) => void
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   deepgramApiKey: null,
   openaiApiKey: null,
+  groqApiKey: null,
   claudeApiKey: null,
   audioDeviceId: null,
   gain: 1.0,
@@ -38,9 +47,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   cooldownMs: 2500,
   onboardingComplete: false,
   sttProvider: "deepgram",
+  hiddenTranslationIds: [],
+  pinnedTranslationIds: [],
 
   setDeepgramApiKey: (deepgramApiKey) => set({ deepgramApiKey }),
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
+  setGroqApiKey: (groqApiKey) => set({ groqApiKey }),
   setClaudeApiKey: (claudeApiKey) => set({ claudeApiKey }),
   setAudioDeviceId: (audioDeviceId) => set({ audioDeviceId }),
   setGain: (gain) => set({ gain }),
@@ -49,13 +61,30 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setCooldownMs: (cooldownMs) => set({ cooldownMs }),
   setOnboardingComplete: (onboardingComplete) => set({ onboardingComplete }),
   setSttProvider: (sttProvider) => set({ sttProvider }),
+  setHiddenTranslationIds: (hiddenTranslationIds) => set({ hiddenTranslationIds }),
+  toggleHiddenTranslation: (id) =>
+    set((state) => ({
+      hiddenTranslationIds: state.hiddenTranslationIds.includes(id)
+        ? state.hiddenTranslationIds.filter((hiddenId) => hiddenId !== id)
+        : [...state.hiddenTranslationIds, id],
+      pinnedTranslationIds: state.hiddenTranslationIds.includes(id)
+        ? state.pinnedTranslationIds
+        : state.pinnedTranslationIds.filter((pinnedId) => pinnedId !== id),
+    })),
+  setPinnedTranslationIds: (pinnedTranslationIds) => set({ pinnedTranslationIds }),
+  togglePinnedTranslation: (id) =>
+    set((state) => ({
+      pinnedTranslationIds: state.pinnedTranslationIds.includes(id)
+        ? state.pinnedTranslationIds.filter((pinnedId) => pinnedId !== id)
+        : [...state.pinnedTranslationIds, id],
+    })),
 }))
 
 const PERSISTED_KEYS = [
   "deepgramApiKey",
   "openaiApiKey",
+  "groqApiKey",
   "claudeApiKey",
-  "activeTranslationId",
   "audioDeviceId",
   "gain",
   "autoMode",
@@ -63,9 +92,9 @@ const PERSISTED_KEYS = [
   "cooldownMs",
   "onboardingComplete",
   "sttProvider",
+  "hiddenTranslationIds",
+  "pinnedTranslationIds",
 ] as const satisfies readonly (keyof SettingsState)[]
-
-type PersistedKey = (typeof PERSISTED_KEYS)[number]
 
 let tauriStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
@@ -114,6 +143,16 @@ export function hydrateSettings(): Promise<void> {
     }
   })()
   return hydrationPromise
+}
+
+export async function saveSettingsNow(): Promise<void> {
+  if (saveTimer) {
+    clearTimeout(saveTimer)
+    saveTimer = null
+  }
+  await hydrateSettings()
+  pendingSave = pendingSave.then(() => persistAll(useSettingsStore.getState()))
+  await pendingSave
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null

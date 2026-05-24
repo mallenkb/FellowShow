@@ -1,4 +1,4 @@
-//! Bible database access for the Rhema application.
+//! Bible database access for the FellowShow application.
 //!
 //! Provides SQLite-backed storage and retrieval for Bible translations,
 //! books, verses, and cross-references. Supports full-text search via
@@ -16,6 +16,7 @@ pub mod db;
 pub mod lookup;
 pub mod search;
 pub mod crossref;
+pub mod hymns;
 
 pub use models::*;
 pub use error::*;

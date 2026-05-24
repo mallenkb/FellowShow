@@ -45,4 +45,20 @@ describe("broadcast store sync", () => {
       }),
     )
   })
+
+  it("renaming a built-in theme creates an editable custom copy", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    const builtin = useBroadcastStore.getState().themes[0]
+
+    useBroadcastStore.getState().renameTheme(builtin.id, "Sunday Service")
+
+    const state = useBroadcastStore.getState()
+    const renamed = state.themes.find((theme) => theme.name === "Sunday Service")
+
+    expect(renamed).toBeTruthy()
+    expect(renamed?.builtin).toBe(false)
+    expect(renamed?.id).not.toBe(builtin.id)
+    expect(state.activeThemeId).toBe(renamed?.id)
+    expect(state.editingThemeId).toBe(renamed?.id)
+  })
 })

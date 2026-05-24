@@ -6,7 +6,7 @@
  * Usage:
  * 1. Run: bun run data/download-model.ts  (download the ONNX model first)
  * 2. Run: bun run data/compute-embeddings.ts  (export verses to JSON)
- * 3. Run: cargo run -p rhema-detection --features onnx,vector-search --bin precompute -- \
+ * 3. Run: cargo run -p fellowshow-detection --features onnx,vector-search --bin precompute -- \
  *         --model models/qwen3-embedding-0.6b/model.onnx \
  *         --tokenizer models/qwen3-embedding-0.6b/tokenizer.json \
  *         --verses data/verses-for-embedding.json \
@@ -22,7 +22,7 @@ import { join } from "node:path"
 import { mkdir } from "node:fs/promises"
 
 const DATA_DIR = import.meta.dir
-const DB_PATH = join(DATA_DIR, "rhema.db")
+const DB_PATH = join(DATA_DIR, "fellowshow.db")
 const OUTPUT_PATH = join(DATA_DIR, "verses-for-embedding.json")
 
 async function main() {

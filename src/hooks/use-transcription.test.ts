@@ -81,6 +81,50 @@ describe("use-transcription", () => {
       )
     })
 
+    it("forwards the OpenAI key when provider is openai", async () => {
+      mockInvoke.mockResolvedValue(undefined)
+      const { useSettingsStore, transcriptionActions } = await loadModules()
+
+      useSettingsStore.setState({
+        sttProvider: "openai",
+        openaiApiKey: "sk-openai",
+        audioDeviceId: null,
+        gain: 1.0,
+      })
+
+      await transcriptionActions.start()
+
+      expect(mockInvoke).toHaveBeenCalledWith(
+        "start_transcription",
+        expect.objectContaining({
+          apiKey: "sk-openai",
+          provider: "openai",
+        })
+      )
+    })
+
+    it("forwards the Groq key when provider is groq", async () => {
+      mockInvoke.mockResolvedValue(undefined)
+      const { useSettingsStore, transcriptionActions } = await loadModules()
+
+      useSettingsStore.setState({
+        sttProvider: "groq",
+        groqApiKey: "gsk-groq",
+        audioDeviceId: null,
+        gain: 1.0,
+      })
+
+      await transcriptionActions.start()
+
+      expect(mockInvoke).toHaveBeenCalledWith(
+        "start_transcription",
+        expect.objectContaining({
+          apiKey: "gsk-groq",
+          provider: "groq",
+        })
+      )
+    })
+
     it("sets connectionStatus to 'connecting' before invoke resolves and 'isTranscribing' after", async () => {
       let resolveInvoke: () => void = () => {}
       mockInvoke.mockReturnValue(

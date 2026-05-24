@@ -1,5 +1,5 @@
 /**
- * Builds rhema.db from Bible JSON sources + cross-references.
+ * Builds fellowshow.db from Bible JSON sources + cross-references.
  * Run: bun run data/build-bible-db.ts
  * Prereq: bun run data/download-sources.ts
  */
@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
 const DATA_DIR = import.meta.dir
-const DB_PATH = join(DATA_DIR, "rhema.db")
+const DB_PATH = join(DATA_DIR, "fellowshow.db")
 const SCHEMA_PATH = join(DATA_DIR, "schema.sql")
 const SOURCES_DIR = join(DATA_DIR, "sources")
 const CROSS_REFS_PATH = join(DATA_DIR, "cross-refs", "cross_references.txt")
@@ -72,9 +72,11 @@ const TRANSLATIONS_META: Array<{
   { file: "KJV.json", abbreviation: "KJV", title: "King James Version", language: "en", license: "Public Domain" },
   { file: "NIV.json", abbreviation: "NIV", title: "New International Version", language: "en", license: "Biblica" },
   { file: "ESV.json", abbreviation: "ESV", title: "English Standard Version", language: "en", license: "Crossway" },
+  { file: "NRSV.json", abbreviation: "NRSV", title: "New Revised Standard Version", language: "en", license: "NCC" },
   { file: "NASB.json", abbreviation: "NASB", title: "New American Standard Bible", language: "en", license: "Lockman Foundation" },
   { file: "NKJV.json", abbreviation: "NKJV", title: "New King James Version", language: "en", license: "Thomas Nelson" },
   { file: "NLT.json", abbreviation: "NLT", title: "New Living Translation", language: "en", license: "Tyndale House" },
+  { file: "CSB.json", abbreviation: "CSB", title: "Christian Standard Bible", language: "en", license: "Holman Bible Publishers" },
   { file: "AMP.json", abbreviation: "AMP", title: "Amplified Bible", language: "en", license: "Lockman Foundation" },
   // Non-English
   { file: "SpaRV.json", abbreviation: "SpaRV", title: "Reina-Valera 1909", language: "es", license: "Public Domain" },
@@ -83,7 +85,7 @@ const TRANSLATIONS_META: Array<{
 ]
 
 function main() {
-  console.log("\n🔨 Building rhema.db...\n")
+  console.log("\n🔨 Building fellowshow.db...\n")
 
   // Remove existing DB
   try { require("node:fs").unlinkSync(DB_PATH) } catch {}
@@ -227,7 +229,7 @@ function main() {
   const transTotal = db.query("SELECT COUNT(*) as c FROM translations").get() as { c: number }
   const crossTotal = db.query("SELECT COUNT(*) as c FROM cross_references").get() as { c: number }
 
-  console.log(`\n✅ rhema.db built successfully!`)
+  console.log(`\n✅ fellowshow.db built successfully!`)
   console.log(`   ${transTotal.c} translations`)
   console.log(`   ${verseTotal.c.toLocaleString()} verses`)
   console.log(`   ${crossTotal.c.toLocaleString()} cross-references`)

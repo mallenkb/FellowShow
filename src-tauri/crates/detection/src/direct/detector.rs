@@ -391,9 +391,9 @@ fn clean_transcript(text: &str) -> String {
     collapsed.trim().to_string()
 }
 
-/// How long to wait for an incomplete reference to be completed (15 seconds).
+/// How long to wait for an incomplete reference to be completed (45 seconds).
 /// Preachers often pause between book name and chapter/verse.
-const INCOMPLETE_REF_TIMEOUT_MS: u128 = 15_000;
+const INCOMPLETE_REF_TIMEOUT_MS: u128 = 45_000;
 
 /// An incomplete reference waiting for verse completion.
 #[derive(Debug, Clone)]
@@ -912,10 +912,10 @@ mod tests {
         assert!(results.is_empty()); // chapter-only, not emitted
         assert!(detector.incomplete.is_some());
 
-        // Simulate timeout by replacing with an expired timestamp (exceeds 15s)
+        // Simulate timeout by replacing with an expired timestamp (exceeds 45s)
         detector.incomplete = Some(IncompleteRef {
             verse_ref: detector.incomplete.as_ref().unwrap().verse_ref.clone(),
-            timestamp: Instant::now() - std::time::Duration::from_secs(20),
+            timestamp: Instant::now() - std::time::Duration::from_secs(50),
             chapter_is_default: detector.incomplete.as_ref().unwrap().chapter_is_default,
         });
 
@@ -1304,5 +1304,41 @@ mod tests {
         assert!(!results.is_empty());
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 15);
+    }
+
+    #[test]
+    fn test_paused_psalm_chapter_completed_by_later_verse() {
+        let mut detector = DirectDetector::new();
+
+        let results = detector.detect("I'm thinking of Psalm 56");
+        assert!(results.is_empty());
+        assert!(detector.incomplete.is_some());
+        let inc = detector.incomplete.as_ref().unwrap();
+        assert_eq!(inc.verse_ref.book_name, "Psalms");
+        assert_eq!(inc.verse_ref.chapter, 56);
+        assert!(!inc.chapter_is_default);
+
+        let results = detector.detect("hmm let me think, verse 5");
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].verse_ref.book_name, "Psalms");
+        assert_eq!(results[0].verse_ref.chapter, 56);
+        assert_eq!(results[0].verse_ref.verse_start, 5);
+        assert!(detector.incomplete.is_none());
+    }
+
+    #[test]
+    fn test_paused_psalm_chapter_with_dangling_verse_keyword() {
+        let mut detector = DirectDetector::new();
+
+        let results = detector.detect("Psalm 56 verse");
+        assert!(results.is_empty());
+        assert!(detector.incomplete.is_some());
+        assert_eq!(detector.incomplete.as_ref().unwrap().verse_ref.chapter, 56);
+
+        let results = detector.detect("verse 1");
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].verse_ref.book_name, "Psalms");
+        assert_eq!(results[0].verse_ref.chapter, 56);
+        assert_eq!(results[0].verse_ref.verse_start, 1);
     }
 }

@@ -3,6 +3,7 @@
 use std::sync::atomic::Ordering;
 use std::sync::Mutex;
 
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::events::{
@@ -22,8 +23,121 @@ fn truncate_safe(s: &str, max_bytes: usize) -> &str {
     }
     &s[..end]
 }
-use rhema_audio::{AudioConfig, AudioFrame};
-use rhema_stt::{DeepgramClient, SttConfig, SttProvider, TranscriptEvent};
+use fellowshow_audio::{AudioConfig, AudioFrame};
+use fellowshow_stt::{
+    DeepgramClient, OpenAiCompatibleConfig, OpenAiCompatibleSttProvider, SttConfig, SttProvider,
+    TranscriptEvent,
+};
+
+#[derive(Serialize)]
+pub struct DeepgramConnectionTest {
+    pub ok: bool,
+    pub message: String,
+}
+
+#[tauri::command]
+pub async fn test_deepgram_connection(api_key: String) -> Result<DeepgramConnectionTest, String> {
+    let resolved_api_key = if api_key.trim().is_empty() {
+        std::env::var("DEEPGRAM_API_KEY").unwrap_or_default()
+    } else {
+        api_key.trim().to_string()
+    };
+
+    if resolved_api_key.is_empty() {
+        return Ok(DeepgramConnectionTest {
+            ok: false,
+            message: "No Deepgram API key provided.".to_string(),
+        });
+    }
+
+    let response = reqwest::Client::new()
+        .get("https://api.deepgram.com/v1/projects")
+        .header("Authorization", format!("Token {resolved_api_key}"))
+        .send()
+        .await
+        .map_err(|e| format!("Could not reach Deepgram: {e}"))?;
+
+    if response.status().is_success() {
+        return Ok(DeepgramConnectionTest {
+            ok: true,
+            message: "Deepgram connection verified.".to_string(),
+        });
+    }
+
+    let status = response.status();
+    let message = match status.as_u16() {
+        401 | 403 => "Deepgram rejected this API key.".to_string(),
+        429 => "Deepgram rate limited the connection test. Try again shortly.".to_string(),
+        _ => format!("Deepgram returned HTTP {status}."),
+    };
+
+    Ok(DeepgramConnectionTest { ok: false, message })
+}
+
+#[tauri::command]
+pub async fn test_openai_connection(api_key: String) -> Result<DeepgramConnectionTest, String> {
+    test_bearer_connection(
+        "https://api.openai.com/v1/models",
+        api_key,
+        "OPENAI_API_KEY",
+        "OpenAI",
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn test_groq_connection(api_key: String) -> Result<DeepgramConnectionTest, String> {
+    test_bearer_connection(
+        "https://api.groq.com/openai/v1/models",
+        api_key,
+        "GROQ_API_KEY",
+        "Groq",
+    )
+    .await
+}
+
+async fn test_bearer_connection(
+    url: &str,
+    api_key: String,
+    env_var: &str,
+    provider_name: &str,
+) -> Result<DeepgramConnectionTest, String> {
+    let resolved_api_key = if api_key.trim().is_empty() {
+        std::env::var(env_var).unwrap_or_default()
+    } else {
+        api_key.trim().to_string()
+    };
+
+    if resolved_api_key.is_empty() {
+        return Ok(DeepgramConnectionTest {
+            ok: false,
+            message: format!("No {provider_name} API key provided."),
+        });
+    }
+
+    let response = reqwest::Client::new()
+        .get(url)
+        .bearer_auth(resolved_api_key)
+        .send()
+        .await
+        .map_err(|e| format!("Could not reach {provider_name}: {e}"))?;
+
+    if response.status().is_success() {
+        return Ok(DeepgramConnectionTest {
+            ok: true,
+            message: format!("{provider_name} connection verified."),
+        });
+    }
+
+    let status = response.status();
+    let message = match status.as_u16() {
+        401 | 403 => format!("{provider_name} rejected this API key."),
+        429 => format!("{provider_name} rate limited the connection test. Try again shortly."),
+        _ => format!("{provider_name} returned HTTP {status}."),
+    };
+
+    Ok(DeepgramConnectionTest { ok: false, message })
+}
 
 /// Start the full audio-capture-to-transcription pipeline.
 ///
@@ -97,7 +211,7 @@ pub async fn start_transcription(
                 model_path.display()
             );
 
-            Box::new(rhema_stt::WhisperProvider::new(
+            Box::new(fellowshow_stt::WhisperProvider::new(
                 model_path,
                 None,
                 n_threads,
@@ -108,6 +222,50 @@ pub async fn start_transcription(
             return Err(
                 "Whisper support not compiled. Rebuild with --features whisper".into(),
             );
+        }
+        "openai" | "groq" => {
+            let env_var = if provider_name == "openai" {
+                "OPENAI_API_KEY"
+            } else {
+                "GROQ_API_KEY"
+            };
+            let resolved_api_key = if api_key.is_empty() {
+                std::env::var(env_var).unwrap_or_default()
+            } else {
+                api_key
+            };
+
+            if resolved_api_key.is_empty() {
+                let label = if provider_name == "openai" { "OpenAI" } else { "Groq" };
+                return Err(format!("No {label} API key provided. Set it in Settings or via {env_var} env var."));
+            }
+
+            let (endpoint, model, provider_label) = if provider_name == "openai" {
+                (
+                    "https://api.openai.com/v1/audio/transcriptions",
+                    "gpt-4o-mini-transcribe",
+                    "OpenAI",
+                )
+            } else {
+                (
+                    "https://api.groq.com/openai/v1/audio/transcriptions",
+                    "whisper-large-v3-turbo",
+                    "Groq",
+                )
+            };
+
+            log::info!(
+                "Starting {provider_label} transcription: model={model}, api_key={}..., device_id={device_id:?}, gain={gain:?}",
+                truncate_safe(&resolved_api_key, 8)
+            );
+
+            Box::new(OpenAiCompatibleSttProvider::new(OpenAiCompatibleConfig {
+                api_key: resolved_api_key,
+                endpoint: endpoint.to_string(),
+                model: model.to_string(),
+                provider_name: provider_label,
+                sample_rate: 16_000,
+            }))
         }
         _ => {
             // Deepgram (default)
@@ -170,7 +328,7 @@ pub async fn start_transcription(
             let (audio_tx, audio_rx) = crossbeam_channel::bounded::<AudioFrame>(64);
 
             // Start capture on THIS thread — AudioCapture stays here.
-            let capture = match rhema_audio::capture::start(config, audio_tx) {
+            let capture = match fellowshow_audio::capture::start(config, audio_tx) {
                 Ok(c) => c,
                 Err(e) => {
                     log::error!("Failed to start audio capture: {e}");
@@ -195,7 +353,7 @@ pub async fn start_transcription(
                         // (a) Compute audio levels at ~15 Hz
                         //     At 16 kHz with ~1024-sample frames, every 4th frame is ~15 Hz.
                         if frame_count % 4 == 0 {
-                            let level = rhema_audio::meter::compute_level(&frame.samples);
+                            let level = fellowshow_audio::meter::compute_level(&frame.samples);
                             let _ = fan_app.emit(
                                 EVENT_AUDIO_LEVEL,
                                 AudioLevelPayload {
@@ -368,7 +526,7 @@ pub async fn start_transcription(
 /// Returns true if high-confidence results were found (>= 0.90).
 #[expect(clippy::similar_names, reason = "merger and merged are naturally named")]
 fn run_direct_detection(app: &AppHandle, transcript: &str) -> bool {
-    use rhema_detection::{DirectDetector, DetectionMerger};
+    use fellowshow_detection::{DirectDetector, DetectionMerger};
 
     let t0 = std::time::Instant::now();
     let detector_state: State<'_, Mutex<DirectDetector>> = app.state();
@@ -547,7 +705,7 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
 /// Returns `true` when reading mode handled the transcript (suppresses semantic).
 #[expect(clippy::too_many_lines, reason = "sequential state-machine logic is clearer in one flow")]
 fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> bool {
-    use rhema_detection::ReadingMode;
+    use fellowshow_detection::ReadingMode;
 
     // If direct detection found a verse, consider starting/restarting reading mode.
     // BUT: if reading mode is already active on a book/chapter, do NOT restart
@@ -555,7 +713,7 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
     // getting matched as "Job 3:5") would hijack the reading session.
     if direct_found {
         let verse_info = {
-            let detector_state: State<'_, Mutex<rhema_detection::DirectDetector>> = app.state();
+            let detector_state: State<'_, Mutex<fellowshow_detection::DirectDetector>> = app.state();
             let Ok(detector) = detector_state.lock() else { return false };
             detector.recent_detections().front().cloned()
         };
@@ -563,7 +721,7 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
         if let Some(recent) = verse_info {
             // Get the confidence of the detection to distinguish explicit refs from false positives
             let detection_confidence = {
-                let detector_state: State<'_, Mutex<rhema_detection::DirectDetector>> = app.state();
+                let detector_state: State<'_, Mutex<fellowshow_detection::DirectDetector>> = app.state();
                 detector_state.lock().ok()
                     .and_then(|d| d.recent_detections().front().map(|_| 0.95)) // Direct detections are always high confidence
                     .unwrap_or(0.0)
@@ -706,7 +864,7 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
 
                     // Emit the starting verse of the new chapter
                     let reference = format!("{} {}:{}", change.book_name, change.new_chapter, start_verse);
-                    let advance = rhema_detection::ReadingAdvance {
+                    let advance = fellowshow_detection::ReadingAdvance {
                         book_number: change.book_number,
                         book_name: change.book_name.clone(),
                         chapter: change.new_chapter,
@@ -750,7 +908,7 @@ fn check_translation_command(app: &AppHandle, transcript: &str) {
         translation_id: i64,
     }
 
-    let detector_state: State<'_, Mutex<rhema_detection::DirectDetector>> = app.state();
+    let detector_state: State<'_, Mutex<fellowshow_detection::DirectDetector>> = app.state();
     let Ok(detector) = detector_state.lock() else { return };
 
     if let Some(abbrev) = detector.detect_translation_command(transcript) {
@@ -795,4 +953,3 @@ pub fn stop_transcription(
     log::info!("Transcription stop requested");
     Ok(())
 }
-

@@ -21,11 +21,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .manage(Mutex::new(state::AppState::new()))
-        .manage(Mutex::new(rhema_detection::DetectionPipeline::new()))
-        .manage(Mutex::new(rhema_broadcast::ndi::NdiRuntime::default()))
-        .manage(Mutex::new(rhema_detection::DirectDetector::new()))
-        .manage(Mutex::new(rhema_detection::DetectionMerger::new()))
-        .manage(Mutex::new(rhema_detection::ReadingMode::new()))
+        .manage(Mutex::new(fellowshow_detection::DetectionPipeline::new()))
+        .manage(Mutex::new(fellowshow_broadcast::ndi::NdiRuntime::default()))
+        .manage(Mutex::new(fellowshow_detection::DirectDetector::new()))
+        .manage(Mutex::new(fellowshow_detection::DetectionMerger::new()))
+        .manage(Mutex::new(fellowshow_detection::ReadingMode::new()))
         .manage(Mutex::new(commands::remote::OscRuntime::new()))
         .manage(Mutex::new(commands::remote::HttpRuntime::new()))
         .invoke_handler(tauri::generate_handler![
@@ -34,6 +34,7 @@ pub fn run() {
             commands::bible::get_chapter,
             commands::bible::get_verse,
             commands::bible::search_verses,
+            commands::bible::search_hymns,
             commands::bible::get_translation_verses_for_search,
             commands::bible::get_cross_references,
             commands::bible::get_active_translation,
@@ -45,6 +46,9 @@ pub fn run() {
             commands::detection::reading_mode_status,
             commands::detection::stop_reading_mode,
             commands::audio::get_audio_devices,
+            commands::stt::test_deepgram_connection,
+            commands::stt::test_openai_connection,
+            commands::stt::test_groq_connection,
             commands::stt::start_transcription,
             commands::stt::stop_transcription,
             commands::broadcast::list_monitors,
@@ -70,16 +74,16 @@ pub fn run() {
             let db_path = app
                 .path()
                 .resource_dir()
-                .map(|p| p.join("rhema.db"))
+                .map(|p| p.join("fellowshow.db"))
                 .ok()
                 .filter(|p| p.exists())
                 .unwrap_or_else(|| {
                     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                        .join("../data/rhema.db")
+                        .join("../data/fellowshow.db")
                 });
 
             if db_path.exists() {
-                let bible_db = rhema_bible::BibleDb::open(&db_path)
+                let bible_db = fellowshow_bible::BibleDb::open(&db_path)
                     .expect("Failed to open Bible database");
 
                 let managed_state = app.state::<Mutex<state::AppState>>();
@@ -112,22 +116,22 @@ pub fn run() {
             let ids_path = base_dir.join("embeddings/kjv-qwen3-0.6b-ids.bin");
 
             if model_path.exists() && tokenizer_path.exists() {
-                use rhema_detection::semantic::embedder::TextEmbedder;
-                use rhema_detection::semantic::index::VectorIndex;
-                match rhema_detection::OnnxEmbedder::load(&model_path, &tokenizer_path) {
+                use fellowshow_detection::semantic::embedder::TextEmbedder;
+                use fellowshow_detection::semantic::index::VectorIndex;
+                match fellowshow_detection::OnnxEmbedder::load(&model_path, &tokenizer_path) {
                     Ok(embedder) => {
                         log::info!("ONNX embedding model loaded");
-                        let managed_pipeline = app.state::<Mutex<rhema_detection::DetectionPipeline>>();
+                        let managed_pipeline = app.state::<Mutex<fellowshow_detection::DetectionPipeline>>();
                         let mut pipeline = managed_pipeline.lock().unwrap();
 
                         // If pre-computed embeddings exist, load the vector index
                         if embeddings_path.exists() && ids_path.exists() {
                             let dim = embedder.dimension();
-                            match rhema_detection::HnswVectorIndex::load(&embeddings_path, &ids_path, dim) {
+                            match fellowshow_detection::HnswVectorIndex::load(&embeddings_path, &ids_path, dim) {
                                 Ok(index) => {
                                     log::info!("Verse embeddings loaded ({} vectors)", index.len());
                                     pipeline.set_semantic(
-                                        rhema_detection::SemanticDetector::new(
+                                        fellowshow_detection::SemanticDetector::new(
                                             Box::new(embedder),
                                             Box::new(index),
                                         ),

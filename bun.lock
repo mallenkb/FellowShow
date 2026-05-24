@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "rhema",
+      "name": "fellowshow",
       "dependencies": {
         "@dnd-kit/react": "^0.3.2",
         "@fontsource-variable/geist": "^5.2.8",

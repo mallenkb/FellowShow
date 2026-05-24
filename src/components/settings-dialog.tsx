@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -41,8 +42,12 @@ import {
   HelpCircleIcon,
   GraduationCapIcon,
   BrainCircuitIcon,
+  PinIcon,
+  CloudIcon,
+  MonitorIcon,
 } from "lucide-react"
 import { useSettingsStore } from "@/stores"
+import { saveSettingsNow } from "@/stores/settings-store"
 import { useTutorialStore } from "@/stores/tutorial-store"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import type { DeviceInfo } from "@/types/audio"
@@ -195,15 +200,63 @@ function SpeechSection() {
     setSttProvider,
     deepgramApiKey,
     setDeepgramApiKey,
+    openaiApiKey,
+    setOpenaiApiKey,
+    groqApiKey,
+    setGroqApiKey,
   } = useSettingsStore()
 
-  const [keyValue, setKeyValue] = useState(deepgramApiKey ?? "")
+  const activeApiKey =
+    sttProvider === "deepgram"
+      ? deepgramApiKey
+      : sttProvider === "openai"
+        ? openaiApiKey
+        : sttProvider === "groq"
+          ? groqApiKey
+          : null
+  const [keyValue, setKeyValue] = useState(activeApiKey ?? "")
   const [saved, setSaved] = useState(false)
+  const [testingConnection, setTestingConnection] = useState(false)
+  const [connectionResult, setConnectionResult] = useState<{
+    ok: boolean
+    message: string
+  } | null>(null)
 
-  const handleSaveKey = () => {
-    setDeepgramApiKey(keyValue || null)
+  useEffect(() => {
+    setKeyValue(activeApiKey ?? "")
+    setConnectionResult(null)
+    setSaved(false)
+  }, [activeApiKey, sttProvider])
+
+  const handleSaveKey = async () => {
+    if (sttProvider === "deepgram") setDeepgramApiKey(keyValue || null)
+    if (sttProvider === "openai") setOpenaiApiKey(keyValue || null)
+    if (sttProvider === "groq") setGroqApiKey(keyValue || null)
+    await saveSettingsNow()
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const handleTestConnection = async () => {
+    setTestingConnection(true)
+    setConnectionResult(null)
+    try {
+      const command =
+        sttProvider === "deepgram"
+          ? "test_deepgram_connection"
+          : sttProvider === "openai"
+            ? "test_openai_connection"
+            : "test_groq_connection"
+      const result = await invoke<{ ok: boolean; message: string }>(
+        command,
+        { apiKey: keyValue }
+      )
+      setConnectionResult(result)
+    } catch (e) {
+      setConnectionResult({ ok: false, message: String(e) })
+    } finally {
+      setTestingConnection(false)
+    }
   }
 
   return (
@@ -216,7 +269,7 @@ function SpeechSection() {
 
         <RadioGroup
           value={sttProvider}
-          onValueChange={(v) => setSttProvider(v as "deepgram" | "whisper")}
+          onValueChange={(v) => setSttProvider(v as "deepgram" | "openai" | "groq" | "whisper")}
           className="gap-3"
         >
           {/* Deepgram (cloud) */}
@@ -226,7 +279,7 @@ function SpeechSection() {
             }`}
           >
             <RadioGroupItem value="deepgram" className="mt-0.5" />
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="text-xs font-medium text-foreground">
                 Cloud (Deepgram)
               </span>
@@ -236,6 +289,43 @@ function SpeechSection() {
                 keyword boosting for Bible terms.
               </p>
             </div>
+            <CloudIcon className="ml-auto mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          </label>
+
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+              sttProvider !== "openai" ? "hover:border-muted-foreground/25" : ""
+            }`}
+          >
+            <RadioGroupItem value="openai" className="mt-0.5" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">
+                Cloud (OpenAI)
+              </span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                Uses OpenAI gpt-4o-mini-transcribe on short audio chunks.
+                Good for accurate cloud transcription when low-latency partials are not required.
+              </p>
+            </div>
+            <CloudIcon className="ml-auto mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          </label>
+
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+              sttProvider !== "groq" ? "hover:border-muted-foreground/25" : ""
+            }`}
+          >
+            <RadioGroupItem value="groq" className="mt-0.5" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="text-xs font-medium text-foreground">
+                Cloud (Groq)
+              </span>
+              <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
+                Uses Groq whisper-large-v3-turbo on short audio chunks.
+                Fast cloud transcription through Groq's OpenAI-compatible API.
+              </p>
+            </div>
+            <CloudIcon className="ml-auto mt-0.5 size-4 shrink-0 text-muted-foreground" />
           </label>
 
           {/* Whisper (local) */}
@@ -245,7 +335,7 @@ function SpeechSection() {
             }`}
           >
             <RadioGroupItem value="whisper" className="mt-0.5" />
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="text-xs font-medium text-foreground">
                 Local (Whisper)
               </span>
@@ -254,18 +344,18 @@ function SpeechSection() {
                 offline, no API key needed. Audio never leaves your machine.
               </p>
             </div>
+            <MonitorIcon className="ml-auto mt-0.5 size-4 shrink-0 text-muted-foreground" />
           </label>
         </RadioGroup>
       </div>
 
-      {/* Deepgram settings — show when deepgram is selected */}
-      {sttProvider === "deepgram" && (
+      {sttProvider !== "whisper" && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Deepgram API Key
+              {sttProvider === "deepgram" ? "Deepgram" : sttProvider === "openai" ? "OpenAI" : "Groq"} API Key
             </label>
-            {deepgramApiKey && (
+            {activeApiKey && (
               <Badge variant="outline" className="text-[0.5rem]">
                 Key configured
               </Badge>
@@ -274,11 +364,19 @@ function SpeechSection() {
           <div className="flex gap-2">
             <Input
               type="password"
-              placeholder="Enter your Deepgram API key..."
+              placeholder={`Enter your ${sttProvider === "deepgram" ? "Deepgram" : sttProvider === "openai" ? "OpenAI" : "Groq"} API key...`}
               value={keyValue}
               onChange={(e) => setKeyValue(e.target.value)}
               className="flex-1 text-xs"
             />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleTestConnection}
+              disabled={testingConnection || keyValue.trim().length === 0}
+            >
+              {testingConnection ? "Testing..." : "Test"}
+            </Button>
             <Button size="sm" onClick={handleSaveKey}>
               {saved ? (
                 <>
@@ -291,11 +389,20 @@ function SpeechSection() {
             </Button>
           </div>
           <p className="text-[0.625rem] text-muted-foreground">
-            Required for live transcription. Get a key at{" "}
-            <span className="text-primary">deepgram.com</span>
+            Required for this cloud transcription provider.
           </p>
+          {connectionResult && (
+            <p
+              className={`text-[0.625rem] ${
+                connectionResult.ok ? "text-emerald-600" : "text-red-500"
+              }`}
+            >
+              {connectionResult.message}
+            </p>
+          )}
         </div>
       )}
+
     </div>
   )
 }
@@ -452,10 +559,102 @@ interface TranslationInfo {
   language: string
 }
 
+function TranslationGroup({
+  title,
+  translations,
+  activeId,
+  hiddenTranslationIds,
+  pinnedTranslationIds,
+  onToggleHidden,
+  onTogglePinned,
+  onSelectTranslation,
+}: {
+  title: string
+  translations: TranslationInfo[]
+  activeId: number
+  hiddenTranslationIds: number[]
+  pinnedTranslationIds: number[]
+  onToggleHidden: (id: number) => void
+  onTogglePinned: (id: number) => void
+  onSelectTranslation: (id: number) => void
+}) {
+  if (translations.length === 0) return null
+
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center gap-3">
+        <h3 className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground">
+          {title}
+        </h3>
+      </div>
+      <div className="rounded-md border border-border">
+        {translations.map((t) => {
+          const isPinned = pinnedTranslationIds.includes(t.id)
+          const isHidden = hiddenTranslationIds.includes(t.id)
+
+          return (
+            <div
+              key={t.id}
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.setData("application/x-cop-translation-id", String(t.id))
+                event.dataTransfer.effectAllowed = "copy"
+              }}
+              onClick={() => onSelectTranslation(t.id)}
+              className="flex min-h-10 cursor-pointer items-center gap-3 px-3 py-2 transition hover:bg-muted/35"
+            >
+              <RadioGroupItem value={String(t.id)} id={`translation-${t.id}`} />
+              <span className="w-14 shrink-0 text-xs font-medium text-foreground">
+                {t.abbreviation}
+              </span>
+              <span className="min-w-0 text-xs text-muted-foreground">
+                {t.title}
+              </span>
+              <span
+                className="ml-auto flex shrink-0 items-center gap-2 text-[0.625rem] text-muted-foreground"
+                onClick={(event) => event.stopPropagation()}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className={isPinned ? "text-primary" : "text-muted-foreground"}
+                  onClick={() => onTogglePinned(t.id)}
+                  aria-label={`${isPinned ? "Unpin" : "Pin"} ${t.abbreviation}`}
+                >
+                  <PinIcon className={isPinned ? "size-3.5 fill-current" : "size-3.5"} />
+                </Button>
+                {t.id === activeId && (
+                  <Badge variant="secondary" className="shrink-0 text-[0.625rem]">
+                    Default
+                  </Badge>
+                )}
+                <span>{isHidden ? "Hidden" : "Shown"}</span>
+                <Switch
+                  checked={!isHidden}
+                  onCheckedChange={() => onToggleHidden(t.id)}
+                  disabled={t.id === activeId}
+                  aria-label={`${isHidden ? "Show" : "Hide"} ${t.abbreviation}`}
+                />
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 function BibleSection() {
   const [translations, setTranslations] = useState<TranslationInfo[]>([])
   const [activeId, setActiveId] = useState<number>(1)
   const [loading, setLoading] = useState(true)
+  const [isDragOverPinned, setIsDragOverPinned] = useState(false)
+  const hiddenTranslationIds = useSettingsStore((s) => s.hiddenTranslationIds)
+  const pinnedTranslationIds = useSettingsStore((s) => s.pinnedTranslationIds)
+  const toggleHiddenTranslation = useSettingsStore((s) => s.toggleHiddenTranslation)
+  const togglePinnedTranslation = useSettingsStore((s) => s.togglePinnedTranslation)
 
   useEffect(() => {
     async function load() {
@@ -483,58 +682,135 @@ function BibleSection() {
       // Update frontend stores so all panels use the new translation
       const { useBibleStore } = await import("@/stores")
       useBibleStore.getState().setActiveTranslation(id)
+      if (hiddenTranslationIds.includes(id)) {
+        useSettingsStore.getState().toggleHiddenTranslation(id)
+      }
     } catch (e) {
       console.error("Failed to set translation:", e)
     }
   }
 
-  const englishTranslations = translations.filter((t) => t.language === "en")
+  const preferredEnglishOrder = ["NIV", "NKJV", "KJV", "AMP", "NLT"]
+  const englishTranslations = translations
+    .filter((t) => t.language === "en")
+    .sort((a, b) => {
+      const aIndex = preferredEnglishOrder.indexOf(a.abbreviation)
+      const bIndex = preferredEnglishOrder.indexOf(b.abbreviation)
+      if (aIndex !== -1 || bIndex !== -1) {
+        return (aIndex === -1 ? preferredEnglishOrder.length : aIndex)
+          - (bIndex === -1 ? preferredEnglishOrder.length : bIndex)
+      }
+      return a.abbreviation.localeCompare(b.abbreviation)
+    })
   const otherTranslations = translations.filter((t) => t.language !== "en")
+  const activeTranslation = translations.find((t) => t.id === activeId)
+  const pinnedTranslations = pinnedTranslationIds
+    .map((id) => translations.find((translation) => translation.id === id))
+    .filter((translation): translation is TranslationInfo => Boolean(translation))
+
+  const pinTranslation = (id: number) => {
+    if (hiddenTranslationIds.includes(id)) {
+      toggleHiddenTranslation(id)
+    }
+    if (!pinnedTranslationIds.includes(id)) {
+      togglePinnedTranslation(id)
+    }
+  }
+
+  const handleTogglePinned = (id: number) => {
+    if (pinnedTranslationIds.includes(id)) {
+      togglePinnedTranslation(id)
+      return
+    }
+
+    pinTranslation(id)
+  }
+
+  const handlePinnedDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOverPinned(false)
+
+    const translationId = event.dataTransfer.getData("application/x-cop-translation-id")
+    if (!translationId) return
+
+    pinTranslation(Number(translationId))
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Primary Translation
-        </label>
-        <Select
-          value={String(activeId)}
-          onValueChange={handleChange}
-          disabled={loading}
-        >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder={loading ? "Loading..." : "Select translation"} />
-          </SelectTrigger>
-          <SelectContent>
-            {englishTranslations.length > 0 && (
-              <>
-                <div className="px-2 py-1 text-[0.5625rem] font-medium uppercase tracking-wider text-muted-foreground">
-                  English
+        {loading ? (
+          <p className="text-xs text-muted-foreground">Loading translations...</p>
+        ) : (
+          <RadioGroup value={String(activeId)} onValueChange={handleChange} className="space-y-5">
+            <div
+              onDragOver={(event) => {
+                event.preventDefault()
+                event.dataTransfer.dropEffect = "copy"
+                setIsDragOverPinned(true)
+              }}
+              onDragLeave={() => setIsDragOverPinned(false)}
+              onDrop={handlePinnedDrop}
+              className={`flex min-h-16 items-center justify-between rounded-lg border p-3 transition-colors ${
+                isDragOverPinned
+                  ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                  : "border-dashed border-border bg-muted/20"
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Pinned Translations
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {pinnedTranslations.length > 0 ? (
+                    pinnedTranslations.map((translation) => (
+                      <button
+                        key={translation.id}
+                        type="button"
+                        onClick={() => togglePinnedTranslation(translation.id)}
+                        className="rounded-md border border-primary/35 bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition hover:bg-primary/15"
+                      >
+                        {translation.abbreviation}
+                      </button>
+                    ))
+                  ) : activeTranslation ? (
+                    <Badge variant="secondary" className="text-[0.625rem]">
+                      Default: {activeTranslation.abbreviation}
+                    </Badge>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No pins yet</span>
+                  )}
                 </div>
-                {englishTranslations.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>
-                    {t.abbreviation} — {t.title}
-                  </SelectItem>
-                ))}
-              </>
-            )}
-            {otherTranslations.length > 0 && (
-              <>
-                <div className="mt-1 px-2 py-1 text-[0.5625rem] font-medium uppercase tracking-wider text-muted-foreground">
-                  Other Languages
-                </div>
-                {otherTranslations.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>
-                    {t.abbreviation} — {t.title}
-                  </SelectItem>
-                ))}
-              </>
-            )}
-          </SelectContent>
-        </Select>
+              </div>
+              <Badge variant="outline" className="shrink-0 text-[0.625rem]">
+                Drop to pin
+              </Badge>
+            </div>
+            <TranslationGroup
+              title="English Translations"
+              translations={englishTranslations}
+              activeId={activeId}
+              hiddenTranslationIds={hiddenTranslationIds}
+              pinnedTranslationIds={pinnedTranslationIds}
+              onToggleHidden={toggleHiddenTranslation}
+              onTogglePinned={handleTogglePinned}
+              onSelectTranslation={(id) => handleChange(String(id))}
+            />
+            <TranslationGroup
+              title="Other Languages"
+              translations={otherTranslations}
+              activeId={activeId}
+              hiddenTranslationIds={hiddenTranslationIds}
+              pinnedTranslationIds={pinnedTranslationIds}
+              onToggleHidden={toggleHiddenTranslation}
+              onTogglePinned={handleTogglePinned}
+              onSelectTranslation={(id) => handleChange(String(id))}
+            />
+          </RadioGroup>
+        )}
         <p className="text-[0.625rem] text-muted-foreground">
           Detected verses will display in this translation.
-          {translations.length > 0 && ` ${translations.length} translations available.`}
+          {translations.length > 0 && ` ${translations.length - hiddenTranslationIds.length} shown, ${hiddenTranslationIds.length} hidden.`}
         </p>
       </div>
     </div>
@@ -558,8 +834,6 @@ interface CommandLogEntry {
 }
 
 function RemoteControlSection() {
-  const [oscEnabled, setOscEnabled] = useState(false)
-  const [httpEnabled, setHttpEnabled] = useState(false)
   const [oscPort, setOscPort] = useState("8000")
   const [httpPort, setHttpPort] = useState("8080")
   const [oscStatus, setOscStatus] = useState<RemoteStatus>({ running: false, port: null })
@@ -625,12 +899,10 @@ function RemoteControlSection() {
     try {
       if (oscStatus.running) {
         await invoke("stop_osc")
-        setOscEnabled(false)
         setOscError(null)
       } else {
         const port = parseInt(oscPort) || 8000
         const boundPort = await invoke<number>("start_osc", { port })
-        setOscEnabled(true)
         setOscPort(String(boundPort))
         setOscError(null)
       }
@@ -643,12 +915,10 @@ function RemoteControlSection() {
     try {
       if (httpStatus.running) {
         await invoke("stop_http")
-        setHttpEnabled(false)
         setHttpError(null)
       } else {
         const port = parseInt(httpPort) || 8080
         const boundPort = await invoke<number>("start_http", { port })
-        setHttpEnabled(true)
         setHttpPort(String(boundPort))
         setHttpError(null)
       }
@@ -743,7 +1013,7 @@ function RemoteControlSection() {
       <div className="rounded-lg border border-border bg-muted/30 p-3">
         <p className="text-[0.625rem] font-medium text-muted-foreground mb-1">Firewall Note</p>
         <p className="text-[0.625rem] text-muted-foreground leading-relaxed">
-          Your OS may block incoming connections. On macOS, allow Rhema through
+          Your OS may block incoming connections. On macOS, allow FellowShow through
           System Settings → Network → Firewall. On Windows, allow through
           Windows Security → Firewall → Allow an app.
         </p>
@@ -803,7 +1073,7 @@ function HelpSection() {
     <div className="space-y-6">
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">
-          Resources to help you get the most out of Rhema.
+          Resources to help you get the most out of FellowShow.
         </p>
       </div>
 

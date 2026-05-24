@@ -6,6 +6,14 @@ export interface VerseSegment {
 export interface VerseRenderData {
   reference: string
   segments: VerseSegment[]
+  referenceMode?: "default" | "lyric-footer"
+}
+
+export interface PresenterTimerRenderData {
+  remainingSeconds: number
+  totalSeconds: number
+  isRunning: boolean
+  isFinished: boolean
 }
 
 export interface RenderOptions {
@@ -14,6 +22,7 @@ export interface RenderOptions {
   offsetY?: number
   scale?: number               // Scale factor for rendering at display size (e.g., 0.42 for 400px panel)
   imageCache?: Map<string, HTMLImageElement>
+  timer?: PresenterTimerRenderData | null
 }
 
 export type TextHorizontalAlign = "left" | "center" | "right" | "justify"

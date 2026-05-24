@@ -62,8 +62,11 @@ function SelectContent({
   children,
   position = "item-aligned",
   align = "center",
+  viewportClassName,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & {
+  viewportClassName?: string
+}) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -76,10 +79,12 @@ function SelectContent({
       >
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
+          data-slot="select-viewport"
           data-position={position}
           className={cn(
-            "data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)",
-            position === "popper" && ""
+            "max-h-[inherit] overflow-y-auto data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)",
+            position === "popper" && "",
+            viewportClassName
           )}
         >
           {children}

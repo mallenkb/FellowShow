@@ -1,8 +1,8 @@
 import { create } from "zustand"
 import { emitTo } from "@tauri-apps/api/event"
 import { load, type Store } from "@tauri-apps/plugin-store"
-import type { BroadcastTheme, VerseRenderData } from "@/types"
-import { BUILTIN_THEMES } from "@/lib/builtin-themes"
+import type { BroadcastTheme, PresenterTimerRenderData, VerseRenderData } from "@/types"
+import { BUILTIN_THEMES, getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 
 type SelectedElement = "verse" | "reference" | null
 
@@ -12,6 +12,7 @@ interface BroadcastState {
   altActiveThemeId: string
   isLive: boolean
   liveVerse: VerseRenderData | null
+  presenterTimer: PresenterTimerRenderData | null
 
   // Designer state
   isDesignerOpen: boolean
@@ -31,6 +32,7 @@ interface BroadcastState {
   setAltActiveTheme: (id: string) => void
   setLive: (live: boolean) => void
   setLiveVerse: (verse: VerseRenderData | null) => void
+  setPresenterTimer: (timer: PresenterTimerRenderData | null) => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
 
@@ -81,12 +83,14 @@ function emitDraftToBroadcast(state: BroadcastState): void {
     void emitTo("broadcast", "broadcast:verse-update", {
       theme: state.draftTheme,
       verse: state.liveVerse,
+      timer: state.presenterTimer,
     }).catch(() => {})
   }
   if (id === state.altActiveThemeId) {
     void emitTo("broadcast-alt", "broadcast:verse-update", {
       theme: state.draftTheme,
       verse: state.liveVerse,
+      timer: state.presenterTimer,
     }).catch(() => {})
   }
 }
@@ -97,6 +101,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   altActiveThemeId: BUILTIN_THEMES[0].id,
   isLive: false,
   liveVerse: null,
+  presenterTimer: null,
   isDesignerOpen: false,
   editingThemeId: null,
   draftTheme: null,
@@ -140,7 +145,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       updatedAt: Date.now(),
       background: {
         type: "solid",
-        color: "#000000",
+        color: getBuiltinPresentationBackground(),
         gradient: null,
         image: null,
       },
@@ -148,14 +153,37 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     set((s) => ({ themes: [...s.themes, newTheme] }))
     get().startEditing(newTheme.id)
   },
-  renameTheme: (id, name) =>
+  renameTheme: (id, name) => {
+    const source = get().themes.find((theme) => theme.id === id)
+    if (!source) return
+
+    if (source.builtin) {
+      const renamedTheme: BroadcastTheme = {
+        ...source,
+        id: crypto.randomUUID(),
+        name,
+        builtin: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }
+      set((s) => ({
+        themes: [...s.themes, renamedTheme],
+        activeThemeId: s.activeThemeId === id ? renamedTheme.id : s.activeThemeId,
+        altActiveThemeId: s.altActiveThemeId === id ? renamedTheme.id : s.altActiveThemeId,
+        editingThemeId: renamedTheme.id,
+        draftTheme: renamedTheme,
+      }))
+      return
+    }
+
     set((s) => ({
       themes: s.themes.map((t) =>
-        t.id === id && !t.builtin ? { ...t, name, updatedAt: Date.now() } : t
+        t.id === id ? { ...t, name, updatedAt: Date.now() } : t
       ),
       draftTheme:
         s.draftTheme?.id === id ? { ...s.draftTheme, name, updatedAt: Date.now() } : s.draftTheme,
-    })),
+    }))
+  },
   togglePinTheme: (id) =>
     set((s) => ({
       themes: s.themes.map((t) =>
@@ -172,6 +200,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     void emitTo(label, "broadcast:verse-update", {
       theme,
       verse: s.liveVerse,
+      timer: s.presenterTimer,
     }).catch(() => {})
   },
   syncBroadcastOutput: () => {
@@ -189,6 +218,10 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   setLive: (isLive) => set({ isLive }),
   setLiveVerse: (liveVerse) => {
     set({ liveVerse })
+    get().syncBroadcastOutput()
+  },
+  setPresenterTimer: (presenterTimer) => {
+    set({ presenterTimer })
     get().syncBroadcastOutput()
   },
 

@@ -1,5 +1,33 @@
 import type { BroadcastTheme } from "@/types/broadcast"
 
+const BUILTIN_PRESENTATION_BACKGROUND_LIGHT = "#101084"
+const BUILTIN_PRESENTATION_BACKGROUND_DARK = "#323294"
+export const BROADCAST_OVERLAY_PREVIEW_IMAGE = "/broadcast-previews/preacher-stage-unsplash-phil-hearing.jpg"
+const THEME_STORAGE_KEY = "theme"
+const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
+
+export function getBuiltinPresentationBackground(): string {
+  if (typeof window === "undefined") {
+    return BUILTIN_PRESENTATION_BACKGROUND_LIGHT
+  }
+
+  let preferredTheme: string | null = null
+  try {
+    preferredTheme = window.localStorage?.getItem(THEME_STORAGE_KEY) ?? null
+  } catch {
+    preferredTheme = null
+  }
+
+  if (preferredTheme === "dark") return BUILTIN_PRESENTATION_BACKGROUND_DARK
+  if (preferredTheme === "light") return BUILTIN_PRESENTATION_BACKGROUND_LIGHT
+
+  if (typeof window.matchMedia === "function" && window.matchMedia(COLOR_SCHEME_QUERY).matches) {
+    return BUILTIN_PRESENTATION_BACKGROUND_DARK
+  }
+
+  return BUILTIN_PRESENTATION_BACKGROUND_LIGHT
+}
+
 const baseTheme: Omit<BroadcastTheme, "id" | "name" | "background" | "verseText" | "reference" | "layout" | "transition" | "textBox"> = {
   builtin: true,
   pinned: false,
@@ -16,19 +44,13 @@ const baseTheme: Omit<BroadcastTheme, "id" | "name" | "background" | "verseText"
 
 const CLASSIC_DARK: BroadcastTheme = {
   ...baseTheme,
+  pinned: true,
   id: "builtin-classic-dark",
   name: "Classic Dark",
   background: {
-    type: "gradient",
-    color: "#1a1a3e",
-    gradient: {
-      type: "radial",
-      angle: 0,
-      stops: [
-        { color: "#1a1a3e", position: 0 },
-        { color: "#0a0a1a", position: 100 },
-      ],
-    },
+    type: "solid",
+    color: getBuiltinPresentationBackground(),
+    gradient: null,
     image: null,
   },
   textBox: {
@@ -55,14 +77,14 @@ const CLASSIC_DARK: BroadcastTheme = {
   verseNumbers: {
     visible: true,
     fontSize: 20,
-    color: "#d4a574",
+    color: "#F1E600",
     superscript: true,
   },
   reference: {
     fontFamily: "Geist Variable",
     fontSize: 48,
     fontWeight: 500,
-    color: "#d4a574",
+    color: "#F1E600",
     horizontalAlign: "center",
     verticalAlign: "top",
     textTransform: "none",
@@ -93,6 +115,7 @@ const CLASSIC_DARK: BroadcastTheme = {
 
 const MODERN_LIGHT: BroadcastTheme = {
   ...baseTheme,
+  pinned: true,
   id: "builtin-modern-light",
   name: "Modern Light",
   background: {
@@ -163,13 +186,20 @@ const MODERN_LIGHT: BroadcastTheme = {
 
 const BROADCAST_OVERLAY: BroadcastTheme = {
   ...baseTheme,
+  pinned: true,
   id: "builtin-broadcast-overlay",
   name: "Broadcast Overlay",
   background: {
-    type: "transparent",
-    color: "transparent",
+    type: "image",
+    color: "#000000",
     gradient: null,
-    image: null,
+    image: {
+      url: BROADCAST_OVERLAY_PREVIEW_IMAGE,
+      fit: "cover",
+      blur: 0,
+      brightness: 72,
+      tint: "rgba(0,0,0,0.18)",
+    },
   },
   textBox: {
     enabled: true,
@@ -219,7 +249,7 @@ const BROADCAST_OVERLAY: BroadcastTheme = {
     textAlign: "center",
     backgroundWidth: 100,
     backgroundHeight: 100,
-    textAreaWidth: 90,
+    textAreaWidth: 100,
     textAreaHeight: 40,
     referenceGap: 24,
   },

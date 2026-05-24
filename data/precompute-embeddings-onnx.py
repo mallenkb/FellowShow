@@ -38,7 +38,7 @@ BATCH_SIZE = 32
 
 
 def main():
-    print(f"\n=== Rhema Verse Embedding Pre-computation (ONNX) ===")
+    print(f"\n=== FellowShow Verse Embedding Pre-computation (ONNX) ===")
 
     # Select model
     if MODEL_INT8.exists():

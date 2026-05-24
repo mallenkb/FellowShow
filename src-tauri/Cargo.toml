@@ -28,21 +28,21 @@ missing_errors_doc = "allow"
 missing_panics_doc = "allow"
 
 [package]
-name = "rhema"
+name = "fellowshow"
 version = "0.1.0"
-description = "Rhema - Real-Time AI Bible Verse Detection"
+description = "FellowShow - Real-Time AI Bible Verse Detection"
 authors = ["Faithful"]
 license = "MIT"
-repository = "https://github.com/openbezal/rhema"
+repository = "https://github.com/openbezal/fellowshow"
 edition = "2021"
 rust-version = "1.77.2"
 
 [lib]
-name = "rhema_lib"
+name = "fellowshow_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
-name = "Rhema"
+name = "fellowshow"
 path = "src/main.rs"
 
 [build-dependencies]
@@ -56,21 +56,22 @@ tokio.workspace = true
 tauri = { version = "2.10.3", features = [] }
 tauri-plugin-log = "2"
 tauri-plugin-store = "2"
-rhema-audio = { path = "crates/audio" }
-rhema-bible = { path = "crates/bible" }
-rhema-stt = { path = "crates/stt" }
-rhema-broadcast = { path = "crates/broadcast" }
-rhema-detection = { path = "crates/detection", features = ["onnx", "vector-search"] }
-rhema-api = { path = "crates/api" }
+fellowshow-audio = { path = "crates/audio" }
+fellowshow-bible = { path = "crates/bible" }
+fellowshow-stt = { path = "crates/stt" }
+fellowshow-broadcast = { path = "crates/broadcast" }
+fellowshow-detection = { path = "crates/detection", features = ["onnx", "vector-search"] }
+fellowshow-api = { path = "crates/api" }
 crossbeam-channel = "0.5"
 dotenvy = "0.15"
 base64 = "0.22"
+reqwest = { version = "0.12", features = ["json"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 
 [features]
 default = ["whisper"]
-whisper = ["rhema-stt/whisper"]
+whisper = ["fellowshow-stt/whisper"]
 
 [lints]
 workspace = true

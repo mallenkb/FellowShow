@@ -16,7 +16,7 @@ function PanelHeader({
     <div
       data-slot="panel-header"
       className={cn(
-        "flex min-h-11 items-center justify-between border-b border-border bg-card px-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]",
+        "flex min-h-11 items-center justify-between bg-card px-3",
         className
       )}
       {...props}

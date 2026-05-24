@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pre-compute verse embeddings for Rhema.
+Pre-compute verse embeddings for FellowShow.
 
 Automatically picks the fastest available backend:
   1. sentence-transformers + GPU (MPS/CUDA) — fastest
@@ -172,7 +172,7 @@ def encode_with_onnx(texts):
 
 
 def main():
-    print(f"\n=== Rhema Verse Embedding Pre-computation ===")
+    print(f"\n=== FellowShow Verse Embedding Pre-computation ===")
 
     # Load verses
     print(f"\nLoading verses from {VERSES_PATH}...")

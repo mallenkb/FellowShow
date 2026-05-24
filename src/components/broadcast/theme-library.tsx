@@ -131,21 +131,21 @@ function ThemeCard({
                 <><PinIcon className="mr-2 size-3.5" />Pin</>
               )}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                const newName = window.prompt("Rename theme:", theme.name)
+                if (newName?.trim()) {
+                  useBroadcastStore.getState().renameTheme(theme.id, newName.trim())
+                }
+              }}
+            >
+              <EditIcon className="mr-2 size-3.5" />
+              Rename
+            </DropdownMenuItem>
             {!theme.builtin && (
               <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    const newName = window.prompt("Rename theme:", theme.name)
-                    if (newName?.trim()) {
-                      useBroadcastStore.getState().renameTheme(theme.id, newName.trim())
-                    }
-                  }}
-                >
-                  <EditIcon className="mr-2 size-3.5" />
-                  Rename
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive"
                   onClick={(e) => {

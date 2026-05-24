@@ -1,5 +1,6 @@
 import type {
   BroadcastTheme,
+  PresenterTimerRenderData,
   VerseRenderData,
   RenderOptions,
 } from "@/types/broadcast"
@@ -368,12 +369,60 @@ function drawReference(
   const canvasAlign = refAlign === "justify" ? "left" : refAlign
   ctx.textAlign = canvasAlign
   const x = alignX(canvasAlign, textRectX, textRectWidth)
-  ctx.fillText(transformed, x, y)
+  ctx.fillText(transformed, x, y, textRectWidth)
   const drawnWidth = Math.min(textRectWidth, Math.max(1, ctx.measureText(transformed).width))
   drawTextDecorationLine(ctx, refDecoration, ref.color, refAlign, x, y, drawnWidth, ref.fontSize, textRectX)
   ctx.restore()
 
   return ref.fontSize * 1.5
+}
+
+function lyricFooterTheme(theme: BroadcastTheme): BroadcastTheme {
+  const fontSize = Math.max(10, Math.min(22, theme.reference.fontSize * 0.36))
+  return {
+    ...theme,
+    reference: {
+      ...theme.reference,
+      fontSize,
+      fontWeight: 500,
+      horizontalAlign: "center",
+      verticalAlign: "bottom",
+      textTransform: "none",
+      textDecoration: "none",
+      uppercase: false,
+      letterSpacing: 0,
+      position: "below",
+    },
+  }
+}
+
+function formatTimer(totalSeconds: number): string {
+  const safeSeconds = Math.max(0, totalSeconds)
+  const minutes = Math.floor(safeSeconds / 60)
+  const seconds = safeSeconds % 60
+  return `${minutes}:${String(seconds).padStart(2, "0")}`
+}
+
+function drawPresenterTimer(
+  ctx: CanvasRenderingContext2D,
+  theme: BroadcastTheme,
+  timer: PresenterTimerRenderData,
+): void {
+  const { width, height } = theme.resolution
+  const text = formatTimer(timer.remainingSeconds)
+  const fontSize = Math.max(56, Math.min(width, height) * 0.16)
+
+  ctx.save()
+  ctx.font = `700 ${fontSize}px "Geist Variable", sans-serif`
+  ctx.fillStyle = timer.isFinished
+    ? "#dc2626"
+    : timer.remainingSeconds <= 30
+      ? "#F1E600"
+      : theme.verseText.color
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  ctx.fillText(text, width / 2, height / 2)
+  ctx.restore()
 }
 
 function drawVerseText(
@@ -572,6 +621,41 @@ function measureVerseHeight(
   }
 }
 
+function lyricPresentationTheme(
+  ctx: CanvasRenderingContext2D,
+  theme: BroadcastTheme,
+  verse: VerseRenderData,
+  textRectWidth: number,
+  textRectHeight: number,
+): BroadcastTheme {
+  let fittedTheme: BroadcastTheme = {
+    ...theme,
+    verseText: {
+      ...theme.verseText,
+      horizontalAlign: "center",
+      verticalAlign: "middle",
+    },
+  }
+
+  const baseFontSize = fittedTheme.verseText.fontSize
+  const minFontSize = Math.max(18, baseFontSize * 0.68)
+
+  while (
+    fittedTheme.verseText.fontSize > minFontSize &&
+    measureVerseHeight(ctx, fittedTheme, verse, textRectWidth).height > textRectHeight
+  ) {
+    fittedTheme = {
+      ...fittedTheme,
+      verseText: {
+        ...fittedTheme.verseText,
+        fontSize: Math.max(minFontSize, fittedTheme.verseText.fontSize - 2),
+      },
+    }
+  }
+
+  return fittedTheme
+}
+
 function rectForAlignedText(
   align: BroadcastTheme["layout"]["textAlign"],
   drawX: number,
@@ -600,7 +684,7 @@ export function computeVerseLayoutMetrics(
   options?: RenderOptions,
 ): VerseLayoutMetrics {
   const scale = options?.scale ?? 1
-  const scaledTheme = buildScaledTheme(theme, scale)
+  let scaledTheme = buildScaledTheme(theme, scale)
   const canvasW = scaledTheme.resolution.width
   const canvasH = scaledTheme.resolution.height
   const layout = scaledTheme.layout
@@ -634,24 +718,35 @@ export function computeVerseLayoutMetrics(
   }
 
   const referenceHeight = scaledTheme.reference.fontSize * 1.5
+  const isLyricFooter = verse.referenceMode === "lyric-footer"
+  const hasReference = verse.reference.trim().length > 0
+
+  if (isLyricFooter) {
+    scaledTheme = lyricPresentationTheme(ctx, scaledTheme, verse, textRectW, textRectH)
+  }
+
+  const footerTheme = isLyricFooter ? lyricFooterTheme(scaledTheme) : scaledTheme
+  const footerReferenceHeight = footerTheme.reference.fontSize * 1.5
   const verseAlign = resolveHorizontalAlign(
     scaledTheme.verseText.horizontalAlign,
     scaledTheme.layout.textAlign,
     true,
   )
   const referenceAlign = resolveHorizontalAlign(
-    scaledTheme.reference.horizontalAlign,
+    footerTheme.reference.horizontalAlign,
     scaledTheme.layout.textAlign,
     false,
   )
   const blockVerticalAlign = resolveVerticalAlign(
-    scaledTheme.reference.position === "above"
+    isLyricFooter
+      ? scaledTheme.verseText.verticalAlign
+      : scaledTheme.reference.position === "above"
       ? (scaledTheme.reference.verticalAlign ?? scaledTheme.verseText.verticalAlign)
       : (scaledTheme.verseText.verticalAlign ?? scaledTheme.reference.verticalAlign),
   )
   const referenceGap = Math.max(
     0,
-    scaledTheme.layout.referenceGap ?? scaledTheme.reference.fontSize * 0.5,
+    scaledTheme.layout.referenceGap ?? footerTheme.reference.fontSize * 0.5,
   )
   const verseMetrics = measureVerseHeight(ctx, scaledTheme, verse, textRectW)
   const verseHeight = verseMetrics.height
@@ -659,24 +754,59 @@ export function computeVerseLayoutMetrics(
   const referenceDrawX = alignX(referenceAlign === "justify" ? "left" : referenceAlign, textRectX, textRectW)
 
   const refText = applyTextTransform(
-    scaledTheme.reference.uppercase ? verse.reference.toUpperCase() : verse.reference,
-    resolveTextTransform(scaledTheme.reference.textTransform),
+    footerTheme.reference.uppercase ? verse.reference.toUpperCase() : verse.reference,
+    resolveTextTransform(footerTheme.reference.textTransform),
   )
   ctx.save()
-  ctx.font = `${scaledTheme.reference.fontWeight} ${scaledTheme.reference.fontSize}px "${scaledTheme.reference.fontFamily}", sans-serif`
+  ctx.font = `${footerTheme.reference.fontWeight} ${footerTheme.reference.fontSize}px "${footerTheme.reference.fontFamily}", sans-serif`
   const referenceWidth = Math.max(1, Math.min(textRectW, ctx.measureText(refText).width))
   ctx.restore()
 
-  const blockHeight = scaledTheme.reference.position === "above"
+  const blockHeight = isLyricFooter
+    ? verseHeight
+    : !hasReference
+    ? verseHeight
+    : scaledTheme.reference.position === "above"
     ? referenceHeight + verseHeight
     : scaledTheme.reference.position === "below"
       ? verseHeight + referenceGap + referenceHeight
       : verseHeight + referenceHeight
   const blockStartY = alignY(blockVerticalAlign, textRectY, textRectH, blockHeight)
 
-  let referenceRect: VerseLayoutRect
+  let referenceRect: VerseLayoutRect | null = null
   let verseRect: VerseLayoutRect
-  if (scaledTheme.reference.position === "above") {
+  if (isLyricFooter) {
+    const verseY = blockStartY
+    verseRect = rectForAlignedText(
+      verseAlign === "justify" ? "left" : verseAlign,
+      verseDrawX,
+      verseY,
+      verseMetrics.maxLineWidth,
+      verseHeight,
+      textRect,
+    )
+    if (hasReference) {
+      const refY = textRectY + textRectH - footerReferenceHeight
+      referenceRect = rectForAlignedText(
+        referenceAlign === "justify" ? "left" : referenceAlign,
+        referenceDrawX,
+        refY,
+        referenceWidth,
+        footerReferenceHeight,
+        textRect,
+      )
+    }
+  } else if (!hasReference) {
+    const verseY = blockStartY
+    verseRect = rectForAlignedText(
+      verseAlign === "justify" ? "left" : verseAlign,
+      verseDrawX,
+      verseY,
+      verseMetrics.maxLineWidth,
+      verseHeight,
+      textRect,
+    )
+  } else if (scaledTheme.reference.position === "above") {
     const refY = blockStartY
     const verseY = blockStartY + referenceHeight
     referenceRect = rectForAlignedText(
@@ -788,8 +918,11 @@ function renderVerseImpl(
     ctx.restore()
   }
 
-  // If no verse data, just draw the background and text box
+  // If no verse data, just draw the background, text box, and timer
   if (!verse) {
+    if (options?.timer) {
+      drawPresenterTimer(ctx, scaledTheme, options.timer)
+    }
     ctx.restore()
     return metrics
   }
@@ -809,12 +942,16 @@ function renderVerseImpl(
   if (referenceRect) {
     drawReference(
       ctx,
-      scaledTheme,
+      verse.referenceMode === "lyric-footer" ? lyricFooterTheme(scaledTheme) : scaledTheme,
       verse.reference,
       metrics.textRect.x,
       metrics.textRect.width,
       referenceRect.y,
     )
+  }
+
+  if (options?.timer) {
+    drawPresenterTimer(ctx, scaledTheme, options.timer)
   }
 
   ctx.restore()

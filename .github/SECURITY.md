@@ -1,10 +1,10 @@
 # Security Policy
 
-This document describes Rhema's Content Security Policy and how to report vulnerabilities.
+This document describes FellowShow's Content Security Policy and how to report vulnerabilities.
 
 ## Content Security Policy
 
-Rhema sets the webview CSP via `src-tauri/tauri.conf.json`. CSP applies only to the webview (JavaScript, HTML, and CSS loaded inside the Tauri window); it does **not** gate network calls made by the Rust process.
+FellowShow sets the webview CSP via `src-tauri/tauri.conf.json`. CSP applies only to the webview (JavaScript, HTML, and CSS loaded inside the Tauri window); it does **not** gate network calls made by the Rust process.
 
 ```text
 default-src 'self';

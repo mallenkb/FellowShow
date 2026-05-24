@@ -26,6 +26,8 @@ dist-ssr
 # Build artifacts
 build
 data/rhema.db
+data/*.db-shm
+data/*.db-wal
 data/sources/*.json
 data/cross-refs/cross_references.txt
 data/cross-refs/cross-references.zip

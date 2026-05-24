@@ -100,6 +100,20 @@ describe("settings store", () => {
     expect(mockSet).toHaveBeenCalledWith("gain", 1.3)
   })
 
+  it("saveSettingsNow flushes pending settings immediately", async () => {
+    mockGet.mockResolvedValue(null)
+
+    const { hydrateSettings, saveSettingsNow, useSettingsStore } = await import("./settings-store")
+    await hydrateSettings()
+
+    useSettingsStore.getState().setDeepgramApiKey("dg-key")
+    await saveSettingsNow()
+
+    expect(mockSet).toHaveBeenCalledWith("deepgramApiKey", "dg-key")
+    expect(mockSave).toHaveBeenCalledTimes(1)
+  })
+
+
   it("concurrent hydrate calls attach only one subscription", async () => {
     mockGet.mockResolvedValue(null)
 

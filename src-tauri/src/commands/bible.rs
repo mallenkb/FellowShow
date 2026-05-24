@@ -5,7 +5,7 @@ use serde::Serialize;
 use tauri::State;
 
 use crate::state::AppState;
-use rhema_bible::{Book, CrossReference, Translation, Verse};
+use fellowshow_bible::{Book, CrossReference, Hymn, Translation, Verse};
 
 #[tauri::command]
 pub fn list_translations(
@@ -79,6 +79,20 @@ pub fn search_verses(
         .ok_or_else(|| "Bible database not loaded".to_string())?;
     db.search_verses(&query, translation_id, limit)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn search_hymns(
+    state: State<'_, Mutex<AppState>>,
+    query: String,
+    limit: usize,
+) -> Result<Vec<Hymn>, String> {
+    let app_state = state.lock().map_err(|e| e.to_string())?;
+    let db = app_state
+        .bible_db
+        .as_ref()
+        .ok_or_else(|| "Bible database not loaded".to_string())?;
+    db.search_hymns(&query, limit).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

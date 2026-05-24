@@ -16,6 +16,12 @@ export function TutorialOverlay() {
   const isRunning = useTutorialStore((s) => s.isRunning)
   const onboardingComplete = useSettingsStore((s) => s.onboardingComplete)
   const { theme } = useTheme()
+  const skipTutorial = useMemo(() => {
+    if (import.meta.env.DEV) return true
+    if (typeof window === "undefined") return false
+    const params = new URLSearchParams(window.location.search)
+    return params.get("skipOnboarding") === "1" || params.get("skipOnboarding") === "true"
+  }, [])
 
   const [arrowColor, setArrowColor] = useState<string | undefined>()
 
@@ -38,19 +44,27 @@ export function TutorialOverlay() {
   )
 
   useEffect(() => {
+    if (skipTutorial) {
+      useSettingsStore.getState().setOnboardingComplete(true)
+      setIsHydrated(true)
+      return
+    }
+
     hydrateOnboardingState().then(() => {
       setIsHydrated(true)
     })
-  }, [])
+  }, [skipTutorial])
 
   useEffect(() => {
+    if (skipTutorial) return
+
     if (isHydrated && !onboardingComplete) {
       const timer = setTimeout(() => {
         useTutorialStore.getState().startTutorial()
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [isHydrated, onboardingComplete])
+  }, [isHydrated, onboardingComplete, skipTutorial])
 
   const handleEvent = useCallback((data: EventData) => {
     if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
@@ -65,19 +79,21 @@ export function TutorialOverlay() {
     }
   }, [])
 
-  if (!isHydrated) return null
+  if (!isHydrated || skipTutorial) return null
 
   return (
     <Joyride
       steps={steps}
       run={isRunning}
       continuous
-      buttons={["back", "primary", "skip"]}
-      skipScroll
+      options={{
+        buttons: ["back", "primary", "skip"],
+        skipScroll: true,
+        overlayColor: "rgba(0, 0, 0, 0.5)",
+        zIndex: 60,
+      }}
       tooltipComponent={TutorialTooltip}
       onEvent={handleEvent}
-      zIndex={60}
-      overlayColor="rgba(0, 0, 0, 0.5)"
     />
   )
 }

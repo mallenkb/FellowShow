@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  One-shot Windows build prerequisites installer for Rhema.
+  One-shot Windows build prerequisites installer for FellowShow.
 
 .DESCRIPTION
   Installs LLVM (provides libclang.dll required by bindgen when building

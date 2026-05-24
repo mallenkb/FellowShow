@@ -80,7 +80,7 @@ export function BroadcastSettings({
   const [monitors, setMonitors] = useState<Monitor[]>([])
   const [selectedMonitor, setSelectedMonitor] = useState("0")
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
-  const [ndiSourceName, setNdiSourceName] = useState("Rhema Output")
+  const [ndiSourceName, setNdiSourceName] = useState("FellowShow Output")
   const [ndiResolution, setNdiResolution] = useState<NdiResolution>("r1080p")
   const [ndiFrameRate, setNdiFrameRate] = useState<NdiFrameRate>("fps24")
   const [ndiAlphaMode, setNdiAlphaMode] = useState<NdiAlphaMode>("straightAlpha")
@@ -94,7 +94,7 @@ export function BroadcastSettings({
   const [altOutputType, setAltOutputType] = useState<OutputType>("ndi")
   const [altSelectedMonitor, setAltSelectedMonitor] = useState("0")
   const [altIsPreviewOpen, setAltIsPreviewOpen] = useState(false)
-  const [altNdiSourceName, setAltNdiSourceName] = useState("Rhema Alt")
+  const [altNdiSourceName, setAltNdiSourceName] = useState("FellowShow Alt")
   const [altNdiResolution, setAltNdiResolution] = useState<NdiResolution>("r1080p")
   const [altNdiFrameRate, setAltNdiFrameRate] = useState<NdiFrameRate>("fps24")
   const [altNdiAlphaMode, setAltNdiAlphaMode] = useState<NdiAlphaMode>("straightAlpha")
@@ -440,7 +440,7 @@ export function BroadcastSettings({
                   className={cn(
                     "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
                     outputType === "display"
-                      ? "border-lime-500/50 bg-lime-500/15 text-lime-400"
+                      ? "border-primary/50 bg-primary/15 text-primary"
                       : "border-border bg-background text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -452,7 +452,7 @@ export function BroadcastSettings({
                   className={cn(
                     "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
                     outputType === "ndi"
-                      ? "border-lime-500/50 bg-lime-500/15 text-lime-400"
+                      ? "border-primary/50 bg-primary/15 text-primary"
                       : "border-border bg-background text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -599,7 +599,7 @@ export function BroadcastSettings({
                   <Input
                     value={ndiSourceName}
                     onChange={(e) => setNdiSourceName(e.target.value)}
-                    placeholder="Rhema Output"
+                    placeholder="FellowShow Output"
                   />
                 </div>
                 <Button
@@ -663,7 +663,7 @@ export function BroadcastSettings({
                   className={cn(
                     "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
                     altOutputType === "display"
-                      ? "border-lime-500/50 bg-lime-500/15 text-lime-400"
+                      ? "border-primary/50 bg-primary/15 text-primary"
                       : "border-border bg-background text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -675,7 +675,7 @@ export function BroadcastSettings({
                   className={cn(
                     "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
                     altOutputType === "ndi"
-                      ? "border-lime-500/50 bg-lime-500/15 text-lime-400"
+                      ? "border-primary/50 bg-primary/15 text-primary"
                       : "border-border bg-background text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -745,7 +745,7 @@ export function BroadcastSettings({
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs text-muted-foreground">Source Name</label>
-                  <Input value={altNdiSourceName} onChange={(e) => setAltNdiSourceName(e.target.value)} placeholder="Rhema Alt" />
+                  <Input value={altNdiSourceName} onChange={(e) => setAltNdiSourceName(e.target.value)} placeholder="FellowShow Alt" />
                 </div>
                 <Button
                   variant="outline"

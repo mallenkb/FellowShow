@@ -7,8 +7,8 @@ use crate::error::CommandError;
 /// `emit_event` which maps to Tauri event emission. Backend-bound commands
 /// (show/hide broadcast windows, confidence threshold) go through `invoke_backend`.
 ///
-/// This trait keeps the `rhema-api` crate free of any `tauri` dependency,
-/// following the pattern established by `rhema-stt` and `rhema-detection`.
+/// This trait keeps the `fellowshow-api` crate free of any `tauri` dependency,
+/// following the pattern established by `fellowshow-stt` and `fellowshow-detection`.
 pub trait CommandSink: Send + Sync {
     fn emit_event(&self, event: &str, payload: &str) -> Result<(), CommandError>;
     fn invoke_backend(&self, action: &str, args: &str) -> Result<(), CommandError>;

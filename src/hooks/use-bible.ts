@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core"
 import { useBibleStore } from "@/stores"
+import { useSettingsStore } from "@/stores/settings-store"
 import type { Translation, Book, Verse, CrossReference } from "@/types"
 import type { SemanticSearchResult } from "@/types/detection"
 
@@ -108,6 +109,7 @@ export const bibleActions = {
 export function useBible() {
   const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
+  const hiddenTranslationIds = useSettingsStore((s) => s.hiddenTranslationIds)
   const books = useBibleStore((s) => s.books)
   const currentChapter = useBibleStore((s) => s.currentChapter)
   const searchResults = useBibleStore((s) => s.searchResults)
@@ -116,7 +118,11 @@ export function useBible() {
   const crossReferences = useBibleStore((s) => s.crossReferences)
 
   return {
-    translations,
+    translations: translations.filter(
+      (translation) =>
+        translation.id === activeTranslationId ||
+        !hiddenTranslationIds.includes(translation.id),
+    ),
     activeTranslationId,
     books,
     currentChapter,

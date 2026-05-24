@@ -225,6 +225,45 @@ describe("getAutocompleteSuggestion", () => {
     expect(result.chapter).toBe(23)
     expect(result.stage).toBe("chapter")
   })
+
+  it("handles a space instead of a colon in a full reference", () => {
+    const result = getAutocompleteSuggestion("John 3 16", mockBooks)
+    expect(result.matchedBook?.name).toBe("John")
+    expect(result.chapter).toBe(3)
+    expect(result.verse).toBe(16)
+    expect(result.stage).toBe("complete")
+  })
+
+  it("handles compact references without spaces", () => {
+    const result = getAutocompleteSuggestion("john316", mockBooks)
+    expect(result.matchedBook?.name).toBe("John")
+    expect(result.chapter).toBe(3)
+    expect(result.verse).toBe(16)
+    expect(result.stage).toBe("complete")
+  })
+
+  it("handles spoken reference words", () => {
+    const result = getAutocompleteSuggestion("John chapter 3 verse 16", mockBooks)
+    expect(result.matchedBook?.name).toBe("John")
+    expect(result.chapter).toBe(3)
+    expect(result.verse).toBe(16)
+    expect(result.stage).toBe("complete")
+  })
+
+  it("handles small book-name typos", () => {
+    const result = getAutocompleteSuggestion("Jhon 3 16", mockBooks)
+    expect(result.matchedBook?.name).toBe("John")
+    expect(result.chapter).toBe(3)
+    expect(result.verse).toBe(16)
+    expect(result.stage).toBe("complete")
+  })
+
+  it("handles noisy speech-style Psalm searches", () => {
+    const result = getAutocompleteSuggestion("sounds drivers 5", mockBooks)
+    expect(result.matchedBook?.name).toBe("Psalms")
+    expect(result.chapter).toBe(5)
+    expect(result.stage).toBe("chapter")
+  })
 })
 
 describe("getTabNavigationResult", () => {

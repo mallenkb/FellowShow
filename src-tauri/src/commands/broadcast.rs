@@ -6,7 +6,7 @@ use base64::Engine;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
-use rhema_broadcast::ndi::{NdiRuntime, NdiSessionInfo, NdiStartRequest};
+use fellowshow_broadcast::ndi::{NdiRuntime, NdiSessionInfo, NdiStartRequest};
 
 /// Map `output_id` ("main" | "alt") to Tauri window label.
 fn window_label(output_id: &str) -> &'static str {
@@ -65,7 +65,7 @@ pub fn ensure_broadcast_window(app: tauri::AppHandle, output_id: String) -> Resu
         label,
         WebviewUrl::App(window_url(&output_id).into()),
     )
-    .title(if output_id == "alt" { "Rhema NDI Alt" } else { "Rhema NDI" })
+    .title(if output_id == "alt" { "FellowShow NDI Alt" } else { "FellowShow NDI" })
     .inner_size(1920.0, 1080.0)
     .visible(false)
     .skip_taskbar(true)

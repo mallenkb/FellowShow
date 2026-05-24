@@ -1,6 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rhema_bible::Bm25Result;
+use fellowshow_bible::Bm25Result;
 
 use crate::direct::detector::DirectDetector;
 use crate::merger::{DetectionMerger, MergedDetection};

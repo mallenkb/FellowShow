@@ -1,4 +1,4 @@
-//! External API integrations for the Rhema application.
+//! External API integrations for the FellowShow application.
 //!
 //! Implements: OSC server, HTTP API (Axum).
 //! Planned: `OpenAI` embeddings client.

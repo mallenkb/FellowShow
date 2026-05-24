@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { TextProperties } from "@/components/broadcast/text-properties"
 import { BackgroundProperties } from "@/components/broadcast/background-properties"
 import { LayoutProperties } from "@/components/broadcast/layout-properties"
+import { ColorProperties } from "@/components/broadcast/color-properties"
 
 export function PropertiesPanel() {
   const draftTheme = useBroadcastStore((s) => s.draftTheme)
@@ -37,6 +38,7 @@ export function PropertiesPanel() {
         <div className="shrink-0 px-4 pt-3">
           <TabsList variant="default" className="w-full">
             <TabsTrigger value="text">Text</TabsTrigger>
+            <TabsTrigger value="colors">Colors</TabsTrigger>
             <TabsTrigger value="background">Background</TabsTrigger>
             <TabsTrigger value="layout">Layout</TabsTrigger>
           </TabsList>
@@ -45,6 +47,9 @@ export function PropertiesPanel() {
         <ScrollArea className="min-h-0 flex-1">
           <TabsContent value="text" className="mt-0 p-4">
             <TextProperties />
+          </TabsContent>
+          <TabsContent value="colors" className="mt-0 p-4">
+            <ColorProperties />
           </TabsContent>
           <TabsContent value="background" className="mt-0 p-4">
             <BackgroundProperties />

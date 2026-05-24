@@ -1,4 +1,4 @@
-//! Real-time Bible verse detection for the Rhema application.
+//! Real-time Bible verse detection for the FellowShow application.
 //!
 //! Combines direct pattern matching and semantic vector search into a
 //! unified pipeline that identifies Bible references in sermon transcripts.

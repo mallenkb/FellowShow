@@ -138,7 +138,7 @@ impl SttProvider for WhisperProvider {
         let vad_cancelled = cancelled.clone();
         let vad_event_tx = event_tx.clone();
         let vad_handle = tokio::task::spawn_blocking(move || {
-            use rhema_audio::{AudioFrame, Vad, VadConfig, VadTransition};
+            use fellowshow_audio::{AudioFrame, Vad, VadConfig, VadTransition};
 
             // Higher thresholds than default to avoid sending near-silence
             // to Whisper (which causes hallucinations).

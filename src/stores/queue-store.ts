@@ -18,6 +18,8 @@ interface QueueState {
   findDuplicate: (bookNumber: number, chapter: number, verse: number) => number
   /** Update a chapter-only queue item in place when the verse is refined. */
   updateEarlyRef: (bookNumber: number, chapter: number, verse: number, reference: string, verseText: string) => boolean
+  replaceLyricItem: (item: QueueItem, kind: "song" | "hymn") => void
+  setLyricBlock: (id: string, blockIndex: number) => void
 }
 
 let flashTimer: ReturnType<typeof setTimeout> | null = null
@@ -93,4 +95,25 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     })
     return found
   },
+  replaceLyricItem: (item, kind) =>
+    set((state) => {
+      const items = [item, ...state.items.filter((candidate) => candidate.lyricKind !== kind)]
+      return { items, activeIndex: 0 }
+    }),
+  setLyricBlock: (id, blockIndex) =>
+    set((state) => ({
+      items: state.items.map((item) => {
+        if (item.id !== id || !item.lyricBlocks?.length) return item
+        const safeIndex = Math.max(0, Math.min(blockIndex, item.lyricBlocks.length - 1))
+        const block = item.lyricBlocks[safeIndex]
+        return {
+          ...item,
+          activeBlockIndex: safeIndex,
+          verse: {
+            ...item.verse,
+            text: block?.text ?? item.verse.text,
+          },
+        }
+      }),
+    })),
 }))

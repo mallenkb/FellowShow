@@ -3,6 +3,7 @@ import * as fabric from "fabric"
 import { useBroadcastStore } from "@/stores"
 import { renderVerse } from "@/lib/verse-renderer"
 import { Button } from "@/components/ui/button"
+import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import {
   SearchIcon,
   PlusIcon,
@@ -88,7 +89,7 @@ export function DesignCanvas() {
     if (!canvasElRef.current || !containerRef.current || !editingThemeId) return
 
     const canvas = new fabric.Canvas(canvasElRef.current, {
-      backgroundColor: "#18181b",
+      backgroundColor: getBuiltinPresentationBackground(),
       controlsAboveOverlay: true,
     })
 

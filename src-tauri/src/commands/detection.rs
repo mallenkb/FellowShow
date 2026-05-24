@@ -1,4 +1,7 @@
-#![expect(clippy::needless_pass_by_value, reason = "Tauri command extractors require pass-by-value")]
+#![expect(
+    clippy::needless_pass_by_value,
+    reason = "Tauri command extractors require pass-by-value"
+)]
 
 use std::collections::HashSet;
 use std::sync::Mutex;
@@ -6,7 +9,7 @@ use std::sync::Mutex;
 use serde::Serialize;
 use tauri::State;
 
-use rhema_detection::{DetectionPipeline, MergedDetection, ReadingMode};
+use fellowshow_detection::{DetectionPipeline, MergedDetection, ReadingMode};
 
 use crate::state::AppState;
 
@@ -36,10 +39,10 @@ pub struct DetectionResult {
     pub is_chapter_only: bool,
 }
 
-fn source_to_string(source: &rhema_detection::DetectionSource) -> String {
+fn source_to_string(source: &fellowshow_detection::DetectionSource) -> String {
     match source {
-        rhema_detection::DetectionSource::DirectReference => "direct".to_string(),
-        rhema_detection::DetectionSource::Semantic { .. } => "semantic".to_string(),
+        fellowshow_detection::DetectionSource::DirectReference => "direct".to_string(),
+        fellowshow_detection::DetectionSource::Semantic { .. } => "semantic".to_string(),
     }
 }
 
@@ -62,7 +65,12 @@ pub fn to_result(state: &AppState, merged: &MergedDetection) -> DetectionResult 
         }
         // Fall back to book/chapter/verse lookup (direct + FTS5 detections)
         if vr.book_number > 0 && vr.chapter > 0 && vr.verse_start > 0 {
-            if let Ok(Some(v)) = db.get_verse(state.active_translation_id, vr.book_number, vr.chapter, vr.verse_start) {
+            if let Ok(Some(v)) = db.get_verse(
+                state.active_translation_id,
+                vr.book_number,
+                vr.chapter,
+                vr.verse_start,
+            ) {
                 return Some(v);
             }
         }
@@ -76,7 +84,14 @@ pub fn to_result(state: &AppState, merged: &MergedDetection) -> DetectionResult 
         }
         None => {
             let r = format!("{} {}:{}", vr.book_name, vr.chapter, vr.verse_start);
-            (r, String::new(), vr.book_name.clone(), vr.book_number, vr.chapter, vr.verse_start)
+            (
+                r,
+                String::new(),
+                vr.book_name.clone(),
+                vr.book_number,
+                vr.chapter,
+                vr.verse_start,
+            )
         }
     };
 
@@ -232,7 +247,11 @@ pub fn semantic_search(
     }
 
     // Ensure highest similarity is always first
-    results.sort_by(|a, b| b.similarity.partial_cmp(&a.similarity).unwrap_or(std::cmp::Ordering::Equal));
+    results.sort_by(|a, b| {
+        b.similarity
+            .partial_cmp(&a.similarity)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     Ok(results)
 }
@@ -257,9 +276,7 @@ pub struct ReadingModeStatus {
 
 /// Stop reading mode
 #[tauri::command]
-pub fn stop_reading_mode(
-    state: State<'_, Mutex<ReadingMode>>,
-) -> Result<(), String> {
+pub fn stop_reading_mode(state: State<'_, Mutex<ReadingMode>>) -> Result<(), String> {
     let mut rm = state.lock().map_err(|e| e.to_string())?;
     rm.deactivate();
     Ok(())

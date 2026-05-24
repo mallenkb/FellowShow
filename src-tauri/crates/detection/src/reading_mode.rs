@@ -740,6 +740,21 @@ mod tests {
     }
 
     #[test]
+    fn test_next_commands_advance_one_verse() {
+        let mut rm = ReadingMode::new();
+
+        rm.start(44, "Acts", 15, 28, sample_verses());
+
+        let r = rm.check_transcript("next");
+        assert!(r.is_some());
+        assert_eq!(r.unwrap().verse, 29);
+
+        let r = rm.check_transcript("next verse");
+        assert!(r.is_some());
+        assert_eq!(r.unwrap().verse, 30);
+    }
+
+    #[test]
     fn test_deactivate() {
         let mut rm = ReadingMode::new();
 

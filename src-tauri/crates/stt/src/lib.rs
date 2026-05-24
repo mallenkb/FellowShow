@@ -1,4 +1,4 @@
-//! Speech-to-text integration for the Rhema application.
+//! Speech-to-text integration for the FellowShow application.
 //!
 //! Provides real-time transcription via multiple providers:
 //! - **Deepgram** (cloud) — WebSocket streaming with keyword boosting
@@ -20,6 +20,7 @@
 pub mod deepgram;
 pub mod error;
 pub mod keyterms;
+pub mod openai_compatible;
 pub mod provider;
 pub mod rest;
 pub mod types;
@@ -30,6 +31,7 @@ pub mod whisper;
 pub use deepgram::DeepgramClient;
 pub use error::SttError;
 pub use keyterms::bible_keyterms;
+pub use openai_compatible::{OpenAiCompatibleConfig, OpenAiCompatibleSttProvider};
 pub use provider::SttProvider;
 pub use types::{SttConfig, TranscriptEvent, Word};
 

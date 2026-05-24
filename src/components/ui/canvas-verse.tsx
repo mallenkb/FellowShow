@@ -1,22 +1,26 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { renderVerse } from "@/lib/verse-renderer"
-import type { BroadcastTheme, VerseRenderData } from "@/types"
+import type { BroadcastTheme, PresenterTimerRenderData, VerseRenderData } from "@/types"
 import { cn } from "@/lib/utils"
 
 interface CanvasVerseProps {
   theme: BroadcastTheme
   verse: VerseRenderData | null
+  timer?: PresenterTimerRenderData | null
   className?: string
 }
 
 export const CanvasVerse = memo(function CanvasVerse({
   theme,
   verse,
+  timer,
   className,
 }: CanvasVerseProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const [containerWidth, setContainerWidth] = useState(0)
+  const [, setImageVersion] = useState(0)
 
   // Measure container width with ResizeObserver
   useEffect(() => {
@@ -30,6 +34,28 @@ export const CanvasVerse = memo(function CanvasVerse({
     observer.observe(container)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (theme.background.type !== "image" || !theme.background.image?.url) return
+    const url = theme.background.image.url
+    if (imageCacheRef.current.has(url)) return
+
+    let cancelled = false
+    const img = new Image()
+    img.onload = () => {
+      if (cancelled) return
+      imageCacheRef.current.set(url, img)
+      setImageVersion((version) => version + 1)
+    }
+    img.onerror = () => {
+      console.warn("[canvas-verse] failed to load background image", url)
+    }
+    img.src = url
+
+    return () => {
+      cancelled = true
+    }
+  }, [theme.background])
 
   // Render to canvas at display size
   useEffect(() => {
@@ -50,8 +76,8 @@ export const CanvasVerse = memo(function CanvasVerse({
 
     ctx.scale(dpr, dpr)
     const scale = displayW / theme.resolution.width
-    renderVerse(ctx, theme, verse, { scale })
-  }, [theme, verse, containerWidth])
+    renderVerse(ctx, theme, verse, { scale, timer, imageCache: imageCacheRef.current })
+  }, [theme, verse, timer, containerWidth])
 
   return (
     <div ref={containerRef} className={cn("w-full", className)}>

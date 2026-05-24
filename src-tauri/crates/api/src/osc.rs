@@ -226,7 +226,7 @@ mod tests {
         // Send an OSC message to the listener
         let send_socket = UdpSocket::bind("127.0.0.1:0").unwrap();
         let msg = rosc::OscMessage {
-            addr: "/rhema/next".into(),
+            addr: "/fellowshow/next".into(),
             args: vec![],
         };
         let packet = rosc::OscPacket::Message(msg);
@@ -265,7 +265,7 @@ mod tests {
     fn handle_message_dispatches_next() {
         let sink = MockSink::new();
         let msg = OscMessage {
-            addr: "/rhema/next".into(),
+            addr: "/fellowshow/next".into(),
             args: vec![],
         };
         handle_message(&msg, &sink);
@@ -290,11 +290,11 @@ mod tests {
             timetag: rosc::OscTime { seconds: 0, fractional: 0 },
             content: vec![
                 OscPacket::Message(OscMessage {
-                    addr: "/rhema/next".into(),
+                    addr: "/fellowshow/next".into(),
                     args: vec![],
                 }),
                 OscPacket::Message(OscMessage {
-                    addr: "/rhema/prev".into(),
+                    addr: "/fellowshow/prev".into(),
                     args: vec![],
                 }),
             ],

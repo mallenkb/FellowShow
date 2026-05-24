@@ -32,6 +32,10 @@ function isTheme(value: string | null): value is Theme {
 }
 
 function getSystemTheme(): ResolvedTheme {
+  if (typeof window.matchMedia !== "function") {
+    return "light"
+  }
+
   if (window.matchMedia(COLOR_SCHEME_QUERY).matches) {
     return "dark"
   }
@@ -58,6 +62,23 @@ function disableTransitionsTemporarily() {
   }
 }
 
+function getStoredTheme(storageKey: string): Theme | null {
+  try {
+    const storedTheme = window.localStorage?.getItem(storageKey) ?? null
+    return isTheme(storedTheme) ? storedTheme : null
+  } catch {
+    return null
+  }
+}
+
+function setStoredTheme(storageKey: string, theme: Theme) {
+  try {
+    window.localStorage?.setItem(storageKey, theme)
+  } catch {
+    // Storage can be unavailable in some embedded browser contexts.
+  }
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "system",
@@ -66,8 +87,8 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
-    const storedTheme = localStorage.getItem(storageKey)
-    if (isTheme(storedTheme)) {
+    const storedTheme = getStoredTheme(storageKey)
+    if (storedTheme) {
       return storedTheme
     }
 
@@ -76,7 +97,7 @@ export function ThemeProvider({
 
   const setTheme = React.useCallback(
     (nextTheme: Theme) => {
-      localStorage.setItem(storageKey, nextTheme)
+      setStoredTheme(storageKey, nextTheme)
       setThemeState(nextTheme)
     },
     [storageKey]
@@ -108,6 +129,10 @@ export function ThemeProvider({
       return undefined
     }
 
+    if (typeof window.matchMedia !== "function") {
+      return undefined
+    }
+
     const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY)
     const handleChange = () => {
       applyTheme("system")
@@ -122,7 +147,14 @@ export function ThemeProvider({
 
   React.useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.storageArea !== localStorage) {
+      let storage: Storage | undefined
+      try {
+        storage = window.localStorage
+      } catch {
+        storage = undefined
+      }
+
+      if (storage && event.storageArea !== storage) {
         return
       }
 

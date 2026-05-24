@@ -21,6 +21,7 @@ interface UseTranscriptionOptions {
 }
 
 const MISSING_DEEPGRAM_KEY_MARKER = "No Deepgram API key"
+const MISSING_API_KEY_MARKER = "No "
 const NOT_RUNNING_ERROR = "Transcription is not running"
 
 export const transcriptionActions = {
@@ -29,12 +30,18 @@ export const transcriptionActions = {
     transcript.setConnectionStatus("connecting")
 
     const settings = useSettingsStore.getState()
+    const apiKey =
+      settings.sttProvider === "deepgram"
+        ? (settings.deepgramApiKey ?? "")
+        : settings.sttProvider === "openai"
+          ? (settings.openaiApiKey ?? "")
+          : settings.sttProvider === "groq"
+            ? (settings.groqApiKey ?? "")
+            : ""
+
     try {
       await invoke("start_transcription", {
-        apiKey:
-          settings.sttProvider === "deepgram"
-            ? (settings.deepgramApiKey ?? "")
-            : "",
+        apiKey,
         deviceId: settings.audioDeviceId,
         gain: settings.gain,
         provider: settings.sttProvider,
@@ -43,7 +50,7 @@ export const transcriptionActions = {
     } catch (e) {
       const msg = String(e)
       transcript.setConnectionStatus("error")
-      if (msg.includes(MISSING_DEEPGRAM_KEY_MARKER) && onMissingApiKey) {
+      if ((msg.includes(MISSING_DEEPGRAM_KEY_MARKER) || msg.includes(MISSING_API_KEY_MARKER)) && onMissingApiKey) {
         onMissingApiKey()
       } else {
         toast.error("Could not start transcription", { description: msg })

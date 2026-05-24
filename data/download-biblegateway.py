@@ -38,10 +38,10 @@ def _get_page_with_timeout(url, retry_count=3, retry_delay=2):
 common.get_page = _get_page_with_timeout
 
 # Delay between book downloads to avoid BibleGateway rate-limiting
-BOOK_DELAY = 2  # seconds
+BOOK_DELAY = float(os.environ.get("BIBLEGATEWAY_BOOK_DELAY", "2"))  # seconds
 MAX_RETRIES = 3  # retries per book
 
-TRANSLATIONS = ["NIV", "ESV", "NASB", "NKJV", "NLT", "AMP"]
+TRANSLATIONS = ["NIV", "ESV", "NASB", "NKJV", "NLT", "AMP", "NRSV", "CSB"]
 
 BOOKS = [
     "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",

@@ -1,10 +1,10 @@
 /**
- * Unified pipeline: sets up everything needed for Rhema from scratch.
+ * Unified pipeline: sets up everything needed for FellowShow from scratch.
  *
  *   Phase 1 – Python environment (.venv + all pip deps)
  *   Phase 2 – Download open-source Bible data (scrollmapper + cross-refs)
  *   Phase 3 – Download copyrighted translations from BibleGateway
- *   Phase 4 – Build rhema.db (SQLite + FTS5)
+ *   Phase 4 – Build fellowshow.db (SQLite + FTS5)
  *   Phase 5 – Download & export ONNX model + INT8 quantization
  *   Phase 6 – Export KJV verses to JSON
  *   Phase 7 – Pre-compute verse embeddings
@@ -36,7 +36,7 @@ const MODELS_DIR_INT8 = join(
 
 const KJV_SOURCE = join(DATA_DIR, "sources", "KJV.json")
 const NIV_SOURCE = join(DATA_DIR, "sources", "NIV.json")
-const DB_PATH = join(DATA_DIR, "rhema.db")
+const DB_PATH = join(DATA_DIR, "fellowshow.db")
 const VERSES_JSON = join(DATA_DIR, "verses-for-embedding.json")
 const EMB_BIN = join(PROJECT_ROOT, "embeddings", "kjv-qwen3-0.6b.bin")
 const IDS_BIN = join(PROJECT_ROOT, "embeddings", "kjv-qwen3-0.6b-ids.bin")
@@ -76,7 +76,7 @@ async function run(
 // ── Main ─────────────────────────────────────────────────────────────
 async function main() {
   console.log("\n╔══════════════════════════════════════════════╗")
-  console.log("║   Rhema – Full Setup Pipeline                ║")
+  console.log("║   FellowShow – Full Setup Pipeline                ║")
   console.log("╚══════════════════════════════════════════════╝")
   if (force) console.log("  (--force: re-running all phases)\n")
 
@@ -169,7 +169,7 @@ async function main() {
   if (!shouldSkip("verses JSON", VERSES_JSON)) {
     if (!existsSync(DB_PATH)) {
       console.error(
-        "  ❌ rhema.db not found. Run phases 2-4 first (or remove --force skip)."
+        "  ❌ fellowshow.db not found. Run phases 2-4 first (or remove --force skip)."
       )
       process.exit(1)
     }

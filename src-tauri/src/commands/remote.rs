@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use tauri::{AppHandle, Emitter, State};
 
-use rhema_api::{
+use fellowshow_api::{
     CommandError, CommandSink, HttpConfig, HttpHandle, OscConfig, OscHandle, SharedStatus,
     new_shared_status, start_http_server, start_osc_listener,
 };
@@ -124,7 +124,7 @@ pub async fn get_osc_status(
     let runtime = state.lock().map_err(|e| e.to_string())?;
 
     Ok(OscStatus {
-        running: runtime.handle.as_ref().is_some_and(rhema_api::OscHandle::is_active),
+        running: runtime.handle.as_ref().is_some_and(fellowshow_api::OscHandle::is_active),
         port: runtime.bound_port,
     })
 }
@@ -226,7 +226,7 @@ pub async fn get_http_status(
     let runtime = state.lock().map_err(|e| e.to_string())?;
 
     Ok(HttpStatus {
-        running: runtime.handle.as_ref().is_some_and(rhema_api::HttpHandle::is_active),
+        running: runtime.handle.as_ref().is_some_and(fellowshow_api::HttpHandle::is_active),
         port: runtime.bound_port,
     })
 }

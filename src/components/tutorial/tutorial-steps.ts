@@ -1,7 +1,6 @@
 import type { Step } from "react-joyride"
 
 const STEP_DEFAULTS = {
-  disableBeacon: true,
   skipBeacon: true,
 } as const satisfies Partial<Step>
 
@@ -13,14 +12,6 @@ export const TUTORIAL_STEPS: Step[] = [
     content:
       "Start transcribing to convert speech to text in real time. Detected Bible verses are highlighted automatically.",
     placement: "right",
-  },
-  {
-    ...STEP_DEFAULTS,
-    target: '[data-slot="detections-panel"]',
-    title: "AI Detections",
-    content:
-      "Detected verses appear here. Press Present to display a verse on screen, or Queue to save it for later.",
-    placement: "left",
   },
   {
     ...STEP_DEFAULTS,
@@ -36,7 +27,7 @@ export const TUTORIAL_STEPS: Step[] = [
     target: '[data-tour="context-search"]',
     title: "Context Search",
     content:
-      "Search by phrase or topic. Rhema uses AI to find matching verses.",
+      "Search by phrase or topic. FellowShow uses AI to find matching verses.",
     placement: "bottom",
     spotlightPadding: 2,
   },

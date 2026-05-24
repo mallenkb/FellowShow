@@ -1,6 +1,6 @@
 # Remote Control
 
-Rhema provides two remote control protocols for external integration: **OSC** (Open Sound Control) and **HTTP API**. These allow you to control broadcasts, navigate verses, switch themes, and adjust settings from hardware controllers, automation scripts, or custom dashboards.
+FellowShow provides two remote control protocols for external integration: **OSC** (Open Sound Control) and **HTTP API**. These allow you to control broadcasts, navigate verses, switch themes, and adjust settings from hardware controllers, automation scripts, or custom dashboards.
 
 ## Overview
 
@@ -42,7 +42,7 @@ Both protocols support the same command set and can run simultaneously.
 
 ### Firewall & Network
 
-If accessing Rhema from another device on your network:
+If accessing FellowShow from another device on your network:
 - Allow incoming connections on your chosen ports (default 8000/8080)
 - Use your computer's local IP address (e.g., `192.168.1.100`)
 - For local-only access, change host to `127.0.0.1` in settings
@@ -57,7 +57,7 @@ Moves forward in the verse queue and presents the next verse.
 
 **OSC:**
 ```
-/rhema/next
+/fellowshow/next
 ```
 
 **HTTP:**
@@ -73,7 +73,7 @@ Moves backward in the verse queue and presents the previous verse.
 
 **OSC:**
 ```
-/rhema/prev
+/fellowshow/prev
 ```
 
 **HTTP:**
@@ -89,7 +89,7 @@ Makes the broadcast output visible (sets live state to true).
 
 **OSC:**
 ```
-/rhema/show
+/fellowshow/show
 ```
 
 **HTTP:**
@@ -105,7 +105,7 @@ Hides the broadcast output (sets live state to false).
 
 **OSC:**
 ```
-/rhema/hide
+/fellowshow/hide
 ```
 
 **HTTP:**
@@ -124,8 +124,8 @@ Sets the broadcast live state to a specific value.
 
 **OSC:**
 ```
-/rhema/on_air true
-/rhema/on_air false
+/fellowshow/on_air true
+/fellowshow/on_air false
 ```
 
 **HTTP:**
@@ -144,8 +144,8 @@ Changes the active broadcast theme by name (case-insensitive).
 
 **OSC:**
 ```
-/rhema/theme "Classic Dark"
-/rhema/theme "Minimal"
+/fellowshow/theme "Classic Dark"
+/fellowshow/theme "Minimal"
 ```
 
 **HTTP:**
@@ -164,8 +164,8 @@ Adjusts the opacity of the broadcast output.
 
 **OSC:**
 ```
-/rhema/opacity 0.75
-/rhema/opacity 1.0
+/fellowshow/opacity 0.75
+/fellowshow/opacity 1.0
 ```
 
 **HTTP:**
@@ -186,7 +186,7 @@ Adjusts the minimum confidence threshold for verse detection.
 
 **OSC:**
 ```
-/rhema/confidence 0.8
+/fellowshow/confidence 0.8
 ```
 
 **HTTP:**
@@ -246,14 +246,14 @@ curl -X POST http://localhost:8080/api/v1/command \
 
 1. **Install Companion** and configure your Stream Deck
 2. **Add Generic OSC module**:
-   - Host: `127.0.0.1` (or your Rhema computer's IP)
+   - Host: `127.0.0.1` (or your FellowShow computer's IP)
    - Port: `8000`
 3. **Create buttons** for each command:
-   - **Next Verse**: OSC path `/rhema/next`
-   - **Prev Verse**: OSC path `/rhema/prev`
-   - **Show Output**: OSC path `/rhema/show`
-   - **Hide Output**: OSC path `/rhema/hide`
-   - **Go Live**: OSC path `/rhema/on_air` with argument `true`
+   - **Next Verse**: OSC path `/fellowshow/next`
+   - **Prev Verse**: OSC path `/fellowshow/prev`
+   - **Show Output**: OSC path `/fellowshow/show`
+   - **Hide Output**: OSC path `/fellowshow/hide`
+   - **Go Live**: OSC path `/fellowshow/on_air` with argument `true`
 
 ### TouchOSC / Lemur
 
@@ -261,12 +261,12 @@ Mobile control surfaces can send OSC commands directly.
 
 **TouchOSC Example:**
 1. Create buttons with OSC message type
-2. Set destination to Rhema computer IP:8000
+2. Set destination to FellowShow computer IP:8000
 3. Configure OSC addresses:
-   - `/rhema/next`
-   - `/rhema/prev`
-   - `/rhema/show`
-   - `/rhema/hide`
+   - `/fellowshow/next`
+   - `/fellowshow/prev`
+   - `/fellowshow/show`
+   - `/fellowshow/hide`
 
 ### Node.js / JavaScript Automation
 
@@ -311,11 +311,11 @@ import { Client } from 'osc';
 const osc = new Client('localhost', 8000);
 
 // Send commands
-osc.send('/rhema/next');
-osc.send('/rhema/prev');
-osc.send('/rhema/theme', 'Classic Dark');
-osc.send('/rhema/opacity', 0.8);
-osc.send('/rhema/on_air', true);
+osc.send('/fellowshow/next');
+osc.send('/fellowshow/prev');
+osc.send('/fellowshow/theme', 'Classic Dark');
+osc.send('/fellowshow/opacity', 0.8);
+osc.send('/fellowshow/on_air', true);
 ```
 
 ### Python Automation
@@ -354,16 +354,16 @@ from pythonosc import udp_client
 osc = udp_client.SimpleUDPClient('localhost', 8000)
 
 # Send commands
-osc.send_message('/rhema/next', [])
-osc.send_message('/rhema/prev', [])
-osc.send_message('/rhema/theme', 'Classic Dark')
-osc.send_message('/rhema/opacity', 0.8)
-osc.send_message('/rhema/on_air', True)
+osc.send_message('/fellowshow/next', [])
+osc.send_message('/fellowshow/prev', [])
+osc.send_message('/fellowshow/theme', 'Classic Dark')
+osc.send_message('/fellowshow/opacity', 0.8)
+osc.send_message('/fellowshow/on_air', True)
 ```
 
 ### OBS Studio Integration
 
-While Rhema uses NDI for video output, you can use remote control for automation:
+While FellowShow uses NDI for video output, you can use remote control for automation:
 
 **OBS Advanced Scene Switcher + Shell Command:**
 
@@ -410,7 +410,7 @@ Use this to verify your integration is working correctly.
 
 4. **Network Issues**
    - Verify computer IP address: `ifconfig` (macOS/Linux) or `ipconfig` (Windows)
-   - Test connectivity: `ping <rhema-computer-ip>`
+   - Test connectivity: `ping <fellowshow-computer-ip>`
    - Ensure both devices on same network (if remote)
 
 #### Port Already in Use
@@ -464,7 +464,7 @@ All commands are validated before execution:
 - **Transport**: UDP
 - **Library**: Custom parser built on `tokio` async runtime
 - **Message Format**: Standard OSC bundle/message format
-- **Address Pattern**: `/rhema/<command>`
+- **Address Pattern**: `/fellowshow/<command>`
 - **Arguments**: Matched positionally to command parameters
 
 ### HTTP Implementation
@@ -502,7 +502,7 @@ Planned additions to remote control:
 - **MIDI support** for hardware controllers with MIDI over USB
 - **Authentication** for HTTP API (API keys or OAuth)
 - **Custom command macros** (trigger multiple commands at once)
-- **Verse navigation by reference** (e.g., `/rhema/goto John 3:16`)
+- **Verse navigation by reference** (e.g., `/fellowshow/goto John 3:16`)
 - **Queue management** (add/remove/reorder verses remotely)
 
 ## Support

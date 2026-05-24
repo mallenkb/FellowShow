@@ -259,21 +259,20 @@ export function TranscriptPanel() {
         </div>
       </div>
 
-      {/* Bottom control */}
-      <div className="flex gap-2 border-t border-border px-3 py-2">
+      <div className="flex gap-2 px-3 py-2">
         {isTranscribing ? (
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
-            className="text-destructive hover:text-destructive"
+            className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
             onClick={stopTranscription}
           >
-            <MicOffIcon className="size-3" />
+            <MicIcon className="size-3" />
             Stop transcribing
           </Button>
         ) : (
-          <Button variant="ghost" size="sm" onClick={startTranscription}>
-              <MicIcon className="size-3" />
+          <Button variant="secondary" size="sm" onClick={startTranscription}>
+            <MicOffIcon className="size-3" />
             Start transcribing
           </Button>
         )}
