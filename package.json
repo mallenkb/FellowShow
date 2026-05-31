@@ -1,7 +1,25 @@
 {
   "name": "fellowshow",
-  "private": true,
-  "version": "0.1.3",
+  "version": "0.1.4",
+  "description": "Real-time AI-powered Bible verse detection for live sermons and broadcasts.",
+  "license": "MIT",
+  "homepage": "https://github.com/mallenkb/FellowShow#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mallenkb/FellowShow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mallenkb/FellowShow/issues"
+  },
+  "keywords": [
+    "bible",
+    "broadcast",
+    "tauri",
+    "react",
+    "rust",
+    "ndi",
+    "speech-to-text"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -10,7 +10,8 @@ permissions:
   contents: write
 
 env:
-  MACOSX_DEPLOYMENT_TARGET: "10.15"
+  MACOSX_DEPLOYMENT_TARGET: "11.0"
+  CMAKE_OSX_DEPLOYMENT_TARGET: "11.0"
 
 jobs:
   build:
