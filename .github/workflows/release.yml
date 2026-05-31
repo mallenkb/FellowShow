@@ -79,7 +79,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build bundles
-        run: bun run tauri build -- ${{ matrix.bundle_args }}
+        run: bunx tauri build ${{ matrix.bundle_args }}
 
       - name: Verify installer silently installs
         if: runner.os == 'Windows'
