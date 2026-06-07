@@ -14,9 +14,57 @@ env:
   CMAKE_OSX_DEPLOYMENT_TARGET: "11.0"
 
 jobs:
+  prepare-bible-db:
+    name: Prepare Bible database
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install BibleGateway downloader dependency
+        run: python -m pip install meaningless
+
+      - name: Download Bible source data
+        env:
+          BIBLEGATEWAY_BOOK_DELAY: "1"
+          PYTHONUTF8: "1"
+        run: |
+          bun run download:bible-data
+          python data/download-biblegateway.py
+
+      - name: Build Bible database
+        run: bun run build:bible
+
+      - name: Verify Bible database
+        run: |
+          test -s data/fellowshow.db
+          bun -e "const { Database } = require('bun:sqlite'); const db = new Database('data/fellowshow.db'); console.log(db.query('select count(*) as count from translations').get().count + ' translations'); console.log(db.query('select count(*) as count from verses').get().count + ' verses');"
+
+      - name: Upload Bible database
+        uses: actions/upload-artifact@v4
+        with:
+          name: fellowshow-bible-db
+          path: data/fellowshow.db
+          if-no-files-found: error
+
   build:
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    needs: prepare-bible-db
     strategy:
       fail-fast: false
       matrix:
@@ -82,6 +130,15 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Download Bible database
+        uses: actions/download-artifact@v4
+        with:
+          name: fellowshow-bible-db
+          path: data
+
+      - name: Verify bundled Bible database exists
+        run: bun -e "if (!require('node:fs').statSync('data/fellowshow.db').size) process.exit(1)"
 
       - name: Build bundles
         run: bunx tauri build ${{ matrix.bundle_args }}
