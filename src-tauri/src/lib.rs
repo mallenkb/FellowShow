@@ -4,6 +4,57 @@ mod state;
 
 use std::sync::Mutex;
 
+/// Resolves a writable path to the working Bible database.
+///
+/// In release builds the bundled DB ships in a read-only resource directory, but
+/// installing a downloaded translation writes to the DB. So we seed a writable
+/// copy in the app data directory on first run and use that thereafter (which
+/// also preserves any translations the user has already downloaded).
+fn resolve_working_db_path<R: tauri::Runtime>(
+    app: &tauri::App<R>,
+    dev_data_dir: &std::path::Path,
+) -> Option<std::path::PathBuf> {
+    use tauri::Manager;
+
+    // Development: use the repo DB directly so rebuilds are picked up and writes persist.
+    if cfg!(debug_assertions) {
+        let dev_db = dev_data_dir.join("fellowshow.db");
+        if dev_db.exists() {
+            return Some(dev_db);
+        }
+    }
+
+    if let Ok(app_data_dir) = app.path().app_data_dir() {
+        let working = app_data_dir.join("fellowshow.db");
+        if working.exists() {
+            return Some(working);
+        }
+
+        if let Ok(resource_dir) = app.path().resource_dir() {
+            let seed = resource_dir.join("fellowshow.db");
+            if seed.exists() {
+                match std::fs::create_dir_all(&app_data_dir)
+                    .and_then(|()| std::fs::copy(&seed, &working))
+                {
+                    Ok(_) => {
+                        log::info!("Seeded writable Bible database at {}", working.display());
+                        return Some(working);
+                    }
+                    Err(e) => {
+                        log::warn!(
+                            "Failed to seed writable Bible database ({e}); using read-only bundle"
+                        );
+                        return Some(seed);
+                    }
+                }
+            }
+        }
+    }
+
+    let dev_db = dev_data_dir.join("fellowshow.db");
+    dev_db.exists().then_some(dev_db)
+}
+
 #[expect(clippy::too_many_lines, reason = "app setup is inherently complex")]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,6 +71,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Mutex::new(state::AppState::new()))
         .manage(Mutex::new(fellowshow_detection::DetectionPipeline::new()))
         .manage(Mutex::new(fellowshow_broadcast::ndi::NdiRuntime::default()))
@@ -30,11 +82,11 @@ pub fn run() {
         .manage(Mutex::new(commands::remote::HttpRuntime::new()))
         .invoke_handler(tauri::generate_handler![
             commands::bible::list_translations,
+            commands::bible::download_translation,
             commands::bible::list_books,
             commands::bible::get_chapter,
             commands::bible::get_verse,
             commands::bible::search_verses,
-            commands::bible::search_hymns,
             commands::bible::get_translation_verses_for_search,
             commands::bible::get_cross_references,
             commands::bible::get_active_translation,
@@ -70,29 +122,26 @@ pub fn run() {
         .setup(|app| {
             use tauri::Manager;
 
-            // Try resource dir first (production), then dev fallback
-            let db_path = app
-                .path()
-                .resource_dir()
-                .map(|p| p.join("fellowshow.db"))
-                .ok()
-                .filter(|p| p.exists())
-                .unwrap_or_else(|| {
-                    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                        .join("../data/fellowshow.db")
-                });
+            let dev_data_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
+            let db_path = resolve_working_db_path(app, &dev_data_dir);
 
-            if db_path.exists() {
+            if let Some(db_path) = db_path {
                 let bible_db = fellowshow_bible::BibleDb::open(&db_path)
                     .expect("Failed to open Bible database");
 
                 let managed_state = app.state::<Mutex<state::AppState>>();
                 let mut state = managed_state.lock().unwrap();
+                if let Ok(Some(nkjv_id)) = bible_db.get_translation_id_by_abbreviation("NKJV") {
+                    state.active_translation_id = nkjv_id;
+                }
                 state.bible_db = Some(bible_db);
                 drop(state);
                 log::info!("Bible database loaded from {}", db_path.display());
             } else {
-                log::warn!("Bible database not found at {}", db_path.display());
+                log::warn!(
+                    "Bible database not found (looked in app data dir, bundled resources, and {}).",
+                    dev_data_dir.display()
+                );
             }
 
             // Try to load ONNX embedding model and pre-computed verse index

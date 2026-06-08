@@ -5,6 +5,7 @@ import {
   RotateCcwIcon,
   TimerIcon,
 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -13,8 +14,16 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { BROADCAST_FONT_FAMILIES } from "@/lib/font-options"
 import { cn } from "@/lib/utils"
-import { usePresenterTimerStore } from "@/stores"
+import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
 
 function formatTimer(totalSeconds: number) {
   const safeSeconds = Math.max(0, totalSeconds)
@@ -27,11 +36,15 @@ export function PresenterTimer() {
   const totalSeconds = usePresenterTimerStore((s) => s.totalSeconds)
   const remainingSeconds = usePresenterTimerStore((s) => s.remainingSeconds)
   const isRunning = usePresenterTimerStore((s) => s.isRunning)
+  const fontFamily = usePresenterTimerStore((s) => s.fontFamily)
   const setDuration = usePresenterTimerStore((s) => s.setDuration)
+  const setFontFamily = usePresenterTimerStore((s) => s.setFontFamily)
   const start = usePresenterTimerStore((s) => s.start)
   const pause = usePresenterTimerStore((s) => s.pause)
   const reset = usePresenterTimerStore((s) => s.reset)
   const tick = usePresenterTimerStore((s) => s.tick)
+  const themes = useBroadcastStore((s) => s.themes)
+  const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const [minutes, setMinutes] = useState(Math.floor(totalSeconds / 60))
   const [seconds, setSeconds] = useState(totalSeconds % 60)
 
@@ -50,6 +63,18 @@ export function PresenterTimer() {
   }, [isRunning, tick])
 
   const startTimer = () => {
+    const activeTheme =
+      themes.find((theme) => theme.id === sectionThemeIds.bible) ?? themes[0]
+    const hasBackground =
+      activeTheme?.background.type === "image" &&
+      Boolean(activeTheme.background.image?.url)
+    if (!hasBackground) {
+      toast.warning("Choose a background before starting the timer", {
+        description:
+          "Presenter timers need a theme with an image or video background.",
+      })
+      return
+    }
     setDuration(configuredSeconds)
     start()
   }
@@ -131,6 +156,24 @@ export function PresenterTimer() {
             />
           </label>
         </div>
+
+        <label className="space-y-1">
+          <span className="text-[0.625rem] font-medium uppercase tracking-wider text-muted-foreground">
+            Timer font
+          </span>
+          <Select value={fontFamily} onValueChange={setFontFamily}>
+            <SelectTrigger className="h-10 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {BROADCAST_FONT_FAMILIES.map((font) => (
+                <SelectItem key={font.value} value={font.value}>
+                  {font.label} · {font.category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
 
         <div className="grid grid-cols-2 gap-2">
           {isRunning ? (

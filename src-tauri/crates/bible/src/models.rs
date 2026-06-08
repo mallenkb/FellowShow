@@ -48,12 +48,3 @@ pub struct SearchVerse {
     pub verse: i32,
     pub text: String,
 }
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Hymn {
-    pub id: i64,
-    pub slug: String,
-    pub title: String,
-    pub lyrics: String,
-    pub source_url: String,
-}

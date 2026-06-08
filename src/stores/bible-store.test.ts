@@ -31,19 +31,24 @@ describe("bible store persistence", () => {
   })
 
   describe("hydrateBibleStore", () => {
-    it("loads from bible.json and sets stored translation in Zustand", async () => {
+    it("loads from bible.json and sets accepted stored translation in Zustand", async () => {
       mockGet.mockResolvedValue(5)
+      mockInvoke.mockResolvedValue(5)
       const { hydrateBibleStore, useBibleStore } = await import("./bible-store")
 
       await hydrateBibleStore()
 
-      expect(mockLoad).toHaveBeenCalledWith("bible.json", { autoSave: false })
+      expect(mockLoad).toHaveBeenCalledWith("bible.json", {
+        autoSave: false,
+        defaults: {},
+      })
       expect(mockGet).toHaveBeenCalledWith("activeTranslationId")
       expect(useBibleStore.getState().activeTranslationId).toBe(5)
     })
 
     it("invokes set_active_translation with the hydrated value", async () => {
       mockGet.mockResolvedValue(5)
+      mockInvoke.mockResolvedValue(5)
       const { hydrateBibleStore } = await import("./bible-store")
 
       await hydrateBibleStore()
@@ -53,28 +58,44 @@ describe("bible store persistence", () => {
       })
     })
 
-    it("leaves default (1) when stored value is null and still pushes to Rust", async () => {
-      mockGet.mockResolvedValue(null)
+    it("falls back to backend default when stored translation is rejected", async () => {
+      mockGet.mockResolvedValue(5)
+      mockInvoke
+        .mockRejectedValueOnce(new Error("KJV is not downloaded"))
+        .mockResolvedValueOnce(1)
       const { hydrateBibleStore, useBibleStore } = await import("./bible-store")
 
       await hydrateBibleStore()
 
-      expect(useBibleStore.getState().activeTranslationId).toBe(1)
       expect(mockInvoke).toHaveBeenCalledWith("set_active_translation", {
-        translationId: 1,
+        translationId: 5,
       })
+      expect(mockInvoke).toHaveBeenCalledWith("get_active_translation")
+      expect(useBibleStore.getState().activeTranslationId).toBe(1)
+      expect(mockSet).toHaveBeenCalledWith("activeTranslationId", 1)
+      expect(mockSave).toHaveBeenCalled()
     })
 
-    it("leaves default (1) when stored value is undefined and still pushes to Rust", async () => {
-      mockGet.mockResolvedValue(undefined)
+    it("uses backend default when stored value is null", async () => {
+      mockGet.mockResolvedValue(null)
+      mockInvoke.mockResolvedValue(6)
       const { hydrateBibleStore, useBibleStore } = await import("./bible-store")
 
       await hydrateBibleStore()
 
-      expect(useBibleStore.getState().activeTranslationId).toBe(1)
-      expect(mockInvoke).toHaveBeenCalledWith("set_active_translation", {
-        translationId: 1,
-      })
+      expect(useBibleStore.getState().activeTranslationId).toBe(6)
+      expect(mockInvoke).toHaveBeenCalledWith("get_active_translation")
+    })
+
+    it("uses backend default when stored value is undefined", async () => {
+      mockGet.mockResolvedValue(undefined)
+      mockInvoke.mockResolvedValue(6)
+      const { hydrateBibleStore, useBibleStore } = await import("./bible-store")
+
+      await hydrateBibleStore()
+
+      expect(useBibleStore.getState().activeTranslationId).toBe(6)
+      expect(mockInvoke).toHaveBeenCalledWith("get_active_translation")
     })
 
     it("handles load rejection gracefully without throwing", async () => {

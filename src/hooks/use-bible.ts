@@ -120,8 +120,10 @@ export function useBible() {
   return {
     translations: translations.filter(
       (translation) =>
-        translation.id === activeTranslationId ||
-        !hiddenTranslationIds.includes(translation.id),
+        translation.is_downloaded &&
+        (translation.abbreviation === "NKJV" ||
+          translation.id === activeTranslationId ||
+          !hiddenTranslationIds.includes(translation.id)),
     ),
     activeTranslationId,
     books,

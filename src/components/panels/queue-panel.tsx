@@ -9,7 +9,6 @@ import {
   GripVerticalIcon,
   BookOpenIcon,
   MusicIcon,
-  ScrollTextIcon,
 } from "lucide-react"
 import { useQueueStore, useBroadcastStore, useBibleStore } from "@/stores"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
@@ -88,20 +87,22 @@ function QueueItemRow({
   )
 }
 
-type QueuePanelMode = "book" | "context" | "songs" | "hymns"
+type QueuePanelMode = "book" | "context" | "songs" | "presentation"
 
 export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
   const panelRef = useRef<HTMLDivElement>(null)
+  const lyricBlockRefs = useRef(new Map<number, HTMLElement>())
   const items = useQueueStore((s) => s.items)
   const activeIndex = useQueueStore((s) => s.activeIndex)
   const highlightedId = useQueueStore((s) => s.highlightedId)
   const visibleQueueItems = items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => {
-      if (mode === "songs" || mode === "hymns") return false
+      if (mode === "presentation") return false
+      if (mode === "songs") return false
       return item.verse.book_number > 0
     })
-  const lyricKind = mode === "songs" ? "song" : mode === "hymns" ? "hymn" : null
+  const lyricKind = mode === "songs" ? "song" : null
   const lyricItem = lyricKind
     ? items.find((item) => item.lyricKind === lyricKind) ?? null
     : null
@@ -110,12 +111,19 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
     0,
     Math.min(lyricItem?.activeBlockIndex ?? 0, Math.max(lyricBlocks.length - 1, 0)),
   )
-  const panelTitle = mode === "songs" ? "Song" : mode === "hymns" ? "Hymn" : "Queue"
+  const panelTitle = mode === "songs" ? "Song" : "Queue"
 
   useEffect(() => {
     if (!lyricItem) return
     panelRef.current?.focus({ preventScroll: true })
-  }, [lyricItem?.id])
+  }, [lyricItem])
+
+  useEffect(() => {
+    if (!lyricItem || lyricBlocks.length === 0) return
+    lyricBlockRefs.current
+      .get(activeBlockIndex)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }, [activeBlockIndex, lyricBlocks.length, lyricItem])
 
   const selectLyricBlock = (blockIndex: number) => {
     if (!lyricItem || lyricBlocks.length === 0) return
@@ -152,11 +160,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
           {!lyricItem && (
             <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
               <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
-                {lyricKind === "song" ? (
-                  <MusicIcon className="size-4" />
-                ) : (
-                  <ScrollTextIcon className="size-4" />
-                )}
+                <MusicIcon className="size-4" />
               </div>
               <p className="text-xs text-muted-foreground">
                 Select a {lyricKind} to prepare it here
@@ -181,6 +185,13 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
 
                 return (
                   <article
+                    ref={(node) => {
+                      if (node) {
+                        lyricBlockRefs.current.set(index, node)
+                      } else {
+                        lyricBlockRefs.current.delete(index)
+                      }
+                    }}
                     key={`${lyricItem.id}-${index}`}
                     aria-current={isActive ? "true" : undefined}
                     onClick={() => selectLyricBlock(index)}

@@ -273,10 +273,10 @@ Mobile control surfaces can send OSC commands directly.
 **Using HTTP API:**
 
 ```javascript
-const RHEMA_URL = 'http://localhost:8080/api/v1';
+const FELLOWSHOW_URL = 'http://localhost:8080/api/v1';
 
 async function nextVerse() {
-  await fetch(`${RHEMA_URL}/command`, {
+  await fetch(`${FELLOWSHOW_URL}/command`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ command: 'next' })
@@ -284,7 +284,7 @@ async function nextVerse() {
 }
 
 async function setTheme(themeName) {
-  await fetch(`${RHEMA_URL}/command`, {
+  await fetch(`${FELLOWSHOW_URL}/command`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ command: 'theme', value: themeName })
@@ -292,7 +292,7 @@ async function setTheme(themeName) {
 }
 
 async function getStatus() {
-  const res = await fetch(`${RHEMA_URL}/status`);
+  const res = await fetch(`${FELLOWSHOW_URL}/status`);
   return res.json();
 }
 
@@ -325,18 +325,18 @@ osc.send('/fellowshow/on_air', true);
 ```python
 import requests
 
-RHEMA_URL = 'http://localhost:8080/api/v1'
+FELLOWSHOW_URL = 'http://localhost:8080/api/v1'
 
 def next_verse():
-    requests.post(f'{RHEMA_URL}/command',
+    requests.post(f'{FELLOWSHOW_URL}/command',
                   json={'command': 'next'})
 
 def set_theme(theme_name):
-    requests.post(f'{RHEMA_URL}/command',
+    requests.post(f'{FELLOWSHOW_URL}/command',
                   json={'command': 'theme', 'value': theme_name})
 
 def get_status():
-    response = requests.get(f'{RHEMA_URL}/status')
+    response = requests.get(f'{FELLOWSHOW_URL}/status')
     return response.json()
 
 # Usage

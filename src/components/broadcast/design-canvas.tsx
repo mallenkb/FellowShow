@@ -3,22 +3,84 @@ import * as fabric from "fabric"
 import { useBroadcastStore } from "@/stores"
 import { renderVerse } from "@/lib/verse-renderer"
 import { Button } from "@/components/ui/button"
-import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import {
-  SearchIcon,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
+import { cn } from "@/lib/utils"
+import {
   PlusIcon,
   MinusIcon,
-  MousePointer2Icon,
   Grid3X3Icon,
   MaximizeIcon,
 } from "lucide-react"
-import type { BroadcastTheme, VerseRenderData } from "@/types"
+import type { BroadcastTheme, BroadcastThemeSection, VerseRenderData } from "@/types"
 
 const WS_WIDTH = 1920
 const WS_HEIGHT = 1080
-const DESIGNER_SAMPLE_VERSE: VerseRenderData = {
-  reference: "Genesis 1:1 (KJV)",
-  segments: [{ verseNumber: 1, text: "In the beginning God created the heaven and the earth." }],
+const GRID_STEP = 120
+
+// Preview content presets so a theme can be checked against the kind of text it
+// will actually display (short verse, long wrapping verse, lyric, slide).
+const SAMPLE_PRESETS: { id: string; label: string; verse: VerseRenderData }[] = [
+  {
+    id: "verse-short",
+    label: "Verse · short",
+    verse: {
+      reference: "Genesis 1:1 (KJV)",
+      segments: [{ verseNumber: 1, text: "In the beginning God created the heaven and the earth." }],
+    },
+  },
+  {
+    id: "verse-long",
+    label: "Verse · long",
+    verse: {
+      reference: "John 3:16 (KJV)",
+      segments: [
+        {
+          verseNumber: 16,
+          text: "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+        },
+      ],
+    },
+  },
+  {
+    id: "lyric",
+    label: "Song lyric",
+    verse: {
+      reference: "",
+      themeSection: "songs",
+      referenceMode: "lyric-footer",
+      segments: [{ text: "Amazing grace, how sweet the sound, that saved a wretch like me" }],
+    },
+  },
+  {
+    id: "presentation",
+    label: "Presentation",
+    verse: {
+      reference: "Presentation Slide",
+      themeSection: "presentation",
+      segments: [],
+      presentationImage: {
+        url: "/broadcast-previews/full-background.jpg",
+        name: "Sample presentation",
+        fit: "cover",
+      },
+    },
+  },
+]
+
+const SAMPLE_BY_ID = new Map(SAMPLE_PRESETS.map((preset) => [preset.id, preset.verse]))
+
+function defaultSampleForSection(section: BroadcastThemeSection): string {
+  if (section === "presentation") return "presentation"
+  if (section === "songs") return "lyric"
+  return "verse-short"
 }
 
 export function DesignCanvas() {
@@ -29,6 +91,8 @@ export function DesignCanvas() {
   const rafIdRef = useRef<number | null>(null)
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const imageRequestsRef = useRef<Map<string, Promise<HTMLImageElement>>>(new Map())
+  const videoCacheRef = useRef<Map<string, HTMLVideoElement>>(new Map())
+  const gridLinesRef = useRef<fabric.Line[]>([])
   const objectsRef = useRef<{
     workspace: fabric.Rect | null
     referenceRegion: fabric.Rect | null
@@ -38,7 +102,13 @@ export function DesignCanvas() {
   const draftTheme = useBroadcastStore((s) => s.draftTheme)
   const editingThemeId = useBroadcastStore((s) => s.editingThemeId)
   const selectedElement = useBroadcastStore((s) => s.selectedElement)
+  const selectedThemeSection = useBroadcastStore((s) => s.selectedThemeSection)
   const [zoomLevel, setZoomLevel] = useState(0)
+  const [showGrid, setShowGrid] = useState(false)
+  const [sampleId, setSampleId] = useState(() => defaultSampleForSection(selectedThemeSection))
+  const sampleVerseRef = useRef<VerseRenderData>(
+    SAMPLE_BY_ID.get(sampleId) ?? SAMPLE_PRESETS[0].verse
+  )
 
   const resyncLatestTheme = useCallback(() => {
     const latestTheme = latestThemeRef.current
@@ -49,8 +119,16 @@ export function DesignCanvas() {
       objectsRef,
       canvas,
       imageCacheRef.current,
-      imageRequestsRef.current
+      imageRequestsRef.current,
+      videoCacheRef.current,
+      sampleVerseRef.current
     )
+  }, [])
+
+  // Keep grid lines ~1px regardless of zoom (they live in canvas space).
+  const applyGridStroke = useCallback((zoom: number) => {
+    const width = zoom > 0 ? 1 / zoom : 1
+    gridLinesRef.current.forEach((line) => line.set({ strokeWidth: width }))
   }, [])
 
   // Auto-zoom: fit workspace into container
@@ -78,11 +156,12 @@ export function DesignCanvas() {
     vpTransform[4] = cw / 2 - wsCenter.x * vpTransform[0]
     vpTransform[5] = ch / 2 - wsCenter.y * vpTransform[3]
     canvas.setViewportTransform(vpTransform)
+    applyGridStroke(scale)
     canvas.requestRenderAll()
     resyncLatestTheme()
 
     setZoomLevel(Math.round(scale * 100))
-  }, [resyncLatestTheme])
+  }, [resyncLatestTheme, applyGridStroke])
 
   // Initialize Fabric canvas + workspace
   useEffect(() => {
@@ -113,6 +192,30 @@ export function DesignCanvas() {
     workspace.setCoords()
     canvas.clipPath = workspace
     objectsRef.current.workspace = workspace
+
+    // Build a static alignment grid clipped to the workspace (hidden until toggled).
+    const wsLeft = workspace.left ?? 0
+    const wsTop = workspace.top ?? 0
+    const gridLines: fabric.Line[] = []
+    const makeGridLine = (points: [number, number, number, number]) =>
+      new fabric.Line(points, {
+        stroke: "rgba(125,165,255,0.35)",
+        strokeWidth: 1,
+        selectable: false,
+        evented: false,
+        hoverCursor: "default",
+        excludeFromExport: true,
+        objectCaching: false,
+        visible: false,
+      })
+    for (let x = GRID_STEP; x < WS_WIDTH; x += GRID_STEP) {
+      gridLines.push(makeGridLine([wsLeft + x, wsTop, wsLeft + x, wsTop + WS_HEIGHT]))
+    }
+    for (let y = GRID_STEP; y < WS_HEIGHT; y += GRID_STEP) {
+      gridLines.push(makeGridLine([wsLeft, wsTop + y, wsLeft + WS_WIDTH, wsTop + y]))
+    }
+    gridLines.forEach((line) => canvas.add(line))
+    gridLinesRef.current = gridLines
 
     const refRegion = new fabric.Rect({
       left: 0,
@@ -194,6 +297,7 @@ export function DesignCanvas() {
       rafIdRef.current = null
       void canvas.dispose()
       fabricRef.current = null
+      gridLinesRef.current = []
       objectsRef.current = { workspace: null, referenceRegion: null, verseRegion: null }
     }
   }, [editingThemeId, autoZoom])
@@ -216,6 +320,8 @@ export function DesignCanvas() {
         latestCanvas,
         imageCacheRef.current,
         imageRequestsRef.current,
+        videoCacheRef.current,
+        sampleVerseRef.current,
         () => {
           const current = latestThemeRef.current
           const currentCanvas = fabricRef.current
@@ -225,7 +331,9 @@ export function DesignCanvas() {
             objectsRef,
             currentCanvas,
             imageCacheRef.current,
-            imageRequestsRef.current
+            imageRequestsRef.current,
+            videoCacheRef.current,
+            sampleVerseRef.current
           )
         }
       )
@@ -241,25 +349,46 @@ export function DesignCanvas() {
     fabricRef.current?.requestRenderAll()
   }, [selectedElement])
 
+  // Toggle grid visibility. Keyed to editingThemeId so it re-applies after the
+  // canvas (and its grid lines) is rebuilt when switching themes.
+  useEffect(() => {
+    const canvas = fabricRef.current
+    gridLinesRef.current.forEach((line) => line.set({ visible: showGrid }))
+    canvas?.requestRenderAll()
+  }, [showGrid, editingThemeId])
+
+  // Default the preview content to match the section being designed.
+  useEffect(() => {
+    setSampleId(defaultSampleForSection(selectedThemeSection))
+  }, [selectedThemeSection])
+
+  // Apply the selected sample content to the live preview.
+  useEffect(() => {
+    sampleVerseRef.current = SAMPLE_BY_ID.get(sampleId) ?? SAMPLE_PRESETS[0].verse
+    resyncLatestTheme()
+  }, [sampleId, resyncLatestTheme])
+
   const zoomIn = useCallback(() => {
     const canvas = fabricRef.current
     if (!canvas) return
     const newZoom = Math.min(canvas.getZoom() * 1.1, 3)
     canvas.setZoom(newZoom)
+    applyGridStroke(newZoom)
     canvas.requestRenderAll()
     resyncLatestTheme()
     setZoomLevel(Math.round(newZoom * 100))
-  }, [resyncLatestTheme])
+  }, [resyncLatestTheme, applyGridStroke])
 
   const zoomOut = useCallback(() => {
     const canvas = fabricRef.current
     if (!canvas) return
     const newZoom = Math.max(canvas.getZoom() * 0.9, 0.1)
     canvas.setZoom(newZoom)
+    applyGridStroke(newZoom)
     canvas.requestRenderAll()
     resyncLatestTheme()
     setZoomLevel(Math.round(newZoom * 100))
-  }, [resyncLatestTheme])
+  }, [resyncLatestTheme, applyGridStroke])
 
   const elementLabel =
     selectedElement === "verse" ? "verse"
@@ -269,44 +398,85 @@ export function DesignCanvas() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Toolbar */}
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border/40 px-3" style={{ background: "#18181b" }}>
-        <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
-          <MousePointer2Icon className="size-3.5" />
-        </Button>
-        <div className="flex items-center gap-1.5 text-[0.625rem] text-muted-foreground">
-          <Grid3X3Icon className="size-3" />
-          <span>Grid</span>
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card px-3">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => setShowGrid((value) => !value)}
+              aria-pressed={showGrid}
+              className={cn(
+                "gap-1.5 text-muted-foreground",
+                showGrid && "bg-primary/15 text-primary"
+              )}
+            >
+              <Grid3X3Icon className="size-3" />
+              Grid
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Toggle alignment grid</TooltipContent>
+        </Tooltip>
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-[0.625rem] text-muted-foreground">Preview</span>
+          <Select value={sampleId} onValueChange={setSampleId}>
+            <SelectTrigger size="sm" className="h-7 w-[150px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SAMPLE_PRESETS.map((preset) => (
+                <SelectItem key={preset.id} value={preset.id} className="text-xs">
+                  {preset.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
         <div className="flex-1" />
-        <Button variant="ghost" size="icon-xs" className="text-muted-foreground">
-          <SearchIcon className="size-3.5" />
-        </Button>
+
         <span className="min-w-12 text-center text-[0.625rem] font-medium tabular-nums text-muted-foreground">
           {zoomLevel}%
         </span>
-        <Button variant="ghost" size="icon-xs" onClick={zoomOut} className="text-muted-foreground">
-          <MinusIcon className="size-3" />
-        </Button>
-        <Button variant="ghost" size="icon-xs" onClick={zoomIn} className="text-muted-foreground">
-          <PlusIcon className="size-3" />
-        </Button>
-        <Button variant="ghost" size="icon-xs" onClick={autoZoom} className="text-muted-foreground">
-          <MaximizeIcon className="size-3.5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-xs" onClick={zoomOut} className="text-muted-foreground" aria-label="Zoom out">
+              <MinusIcon className="size-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom out</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-xs" onClick={zoomIn} className="text-muted-foreground" aria-label="Zoom in">
+              <PlusIcon className="size-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom in</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-xs" onClick={autoZoom} className="text-muted-foreground" aria-label="Fit to screen">
+              <MaximizeIcon className="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Fit to screen</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Canvas container */}
       <div ref={containerRef} className="relative min-h-0 flex-1">
         <canvas ref={canvasElRef} />
         {!draftTheme && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ background: "#18181b" }}>
+          <div className="absolute inset-0 flex items-center justify-center bg-background">
             <p className="text-xs text-muted-foreground">Select a theme to begin editing</p>
           </div>
         )}
       </div>
 
       {/* Status bar */}
-      <div className="flex h-8 shrink-0 items-center border-t border-border/40 px-3 text-[0.5625rem] text-muted-foreground/70" style={{ background: "#18181b" }}>
+      <div className="flex h-8 shrink-0 items-center border-t border-border bg-card px-3 text-[0.5625rem] text-muted-foreground">
         <span>Output: {WS_WIDTH} × {WS_HEIGHT}px</span>
         <span className="mx-2">·</span>
         <span>Zoom: {zoomLevel}%</span>
@@ -336,6 +506,8 @@ async function syncThemeToCanvas(
   canvas: fabric.Canvas,
   imageCache: Map<string, HTMLImageElement>,
   imageRequests: Map<string, Promise<HTMLImageElement>>,
+  videoCache: Map<string, HTMLVideoElement>,
+  sampleVerse: VerseRenderData,
   onImageReady?: () => void
 ) {
   const ws = objectsRef.current.workspace
@@ -343,7 +515,15 @@ async function syncThemeToCanvas(
   const verseRegion = objectsRef.current.verseRegion
   if (!ws || !refRegion || !verseRegion) return
 
+  // Preload a presentation sample image so the preview isn't blank.
+  if (sampleVerse.presentationImage?.url && !imageCache.has(sampleVerse.presentationImage.url)) {
+    ensureImage(sampleVerse.presentationImage.url, imageCache, imageRequests, onImageReady)
+  }
+
   if (theme.background.type === "image" && theme.background.image?.url) {
+    if (theme.background.image.mediaType === "video") {
+      ensureVideo(theme.background.image.url, videoCache, onImageReady)
+    } else {
     const img = imageCache.get(theme.background.image.url)
     if (!img) {
       ensureImage(
@@ -353,9 +533,10 @@ async function syncThemeToCanvas(
         onImageReady
       )
     }
+    }
   }
 
-  const { bitmap, metrics } = renderThemeBitmap(theme, imageCache)
+  const { bitmap, metrics } = renderThemeBitmap(theme, imageCache, videoCache, sampleVerse)
   ws.set({
     fill: new fabric.Pattern({
       source: bitmap,
@@ -502,9 +683,33 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   })
 }
 
+function ensureVideo(
+  url: string,
+  cache: Map<string, HTMLVideoElement>,
+  onReady?: () => void
+) {
+  if (cache.has(url)) return
+  const video = document.createElement("video")
+  video.muted = true
+  video.loop = true
+  video.playsInline = true
+  video.preload = "auto"
+  video.onloadeddata = () => {
+    cache.set(url, video)
+    void video.play().catch(() => {})
+    onReady?.()
+  }
+  video.onerror = () => {
+    console.warn("[theme-designer] failed to load background video", { url: url.slice(0, 100) })
+  }
+  video.src = url
+}
+
 function renderThemeBitmap(
   theme: BroadcastTheme,
-  imageCache: Map<string, HTMLImageElement>
+  imageCache: Map<string, HTMLImageElement>,
+  videoCache: Map<string, HTMLVideoElement>,
+  sampleVerse: VerseRenderData
 ): { bitmap: HTMLCanvasElement; metrics: ReturnType<typeof renderVerse> } {
   const offscreen = document.createElement("canvas")
   offscreen.width = WS_WIDTH
@@ -512,6 +717,6 @@ function renderThemeBitmap(
   const ctx = offscreen.getContext("2d")
   if (!ctx) return { bitmap: offscreen, metrics: null }
 
-  const metrics = renderVerse(ctx, theme, DESIGNER_SAMPLE_VERSE, { imageCache })
+  const metrics = renderVerse(ctx, theme, sampleVerse, { imageCache, videoCache })
   return { bitmap: offscreen, metrics }
 }

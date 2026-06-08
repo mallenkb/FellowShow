@@ -28,10 +28,10 @@ impl Default for VadConfig {
             silence_threshold: 0.005,
             frame_threshold: 0.0025,
             overall_threshold: 0.05,
-            silence_frame_count: 12,       // ~750ms of silence to end
-            min_voice_frames: 4,           // ~250ms of voice to start
-            max_utterance_frames: 240,     // ~15s max utterance
-            pre_buffer_frames: 4,          // ~250ms pre-buffer
+            silence_frame_count: 12,   // ~750ms of silence to end
+            min_voice_frames: 4,       // ~250ms of voice to start
+            max_utterance_frames: 240, // ~15s max utterance
+            pre_buffer_frames: 4,      // ~250ms pre-buffer
         }
     }
 }
@@ -91,8 +91,8 @@ impl Vad {
     /// Also returns a state transition event if the state changed.
     pub fn process(&mut self, frame: &AudioFrame) -> VadResult {
         let level = meter::compute_level(&frame.samples);
-        let is_voiced = level.rms >= self.config.silence_threshold
-            && level.rms >= self.config.frame_threshold;
+        let is_voiced =
+            level.rms >= self.config.silence_threshold && level.rms >= self.config.frame_threshold;
 
         match self.state {
             VadState::Silence => {

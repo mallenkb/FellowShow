@@ -1,12 +1,15 @@
 import { create } from "zustand"
+import { DEFAULT_TIMER_FONT_FAMILY } from "@/lib/font-options"
 import type { PresenterTimerRenderData } from "@/types"
 
 interface PresenterTimerState {
   totalSeconds: number
   remainingSeconds: number
   isRunning: boolean
+  fontFamily: string
 
   setDuration: (seconds: number) => void
+  setFontFamily: (fontFamily: string) => void
   start: () => void
   pause: () => void
   reset: () => void
@@ -18,6 +21,7 @@ export const usePresenterTimerStore = create<PresenterTimerState>((set, get) => 
   totalSeconds: 30,
   remainingSeconds: 30,
   isRunning: false,
+  fontFamily: DEFAULT_TIMER_FONT_FAMILY,
 
   setDuration: (seconds) => {
     const totalSeconds = Math.max(1, Math.floor(seconds))
@@ -26,6 +30,7 @@ export const usePresenterTimerStore = create<PresenterTimerState>((set, get) => 
       remainingSeconds: state.isRunning ? state.remainingSeconds : totalSeconds,
     }))
   },
+  setFontFamily: (fontFamily) => set({ fontFamily }),
   start: () =>
     set((state) => ({
       isRunning: true,
@@ -54,6 +59,7 @@ export const usePresenterTimerStore = create<PresenterTimerState>((set, get) => 
       totalSeconds: state.totalSeconds,
       isRunning: state.isRunning,
       isFinished: state.remainingSeconds === 0,
+      fontFamily: state.fontFamily,
     }
   },
 }))

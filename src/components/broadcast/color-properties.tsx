@@ -1,6 +1,6 @@
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { Input } from "@/components/ui/input"
-import { Slider } from "@/components/ui/slider"
+import { SliderField } from "@/components/ui/slider-field"
 
 function parseColorOpacity(color: string): { hex: string; opacity: number } {
   if (color.length === 9 && color.startsWith("#")) {
@@ -61,21 +61,15 @@ function ColorControl({
         />
       </div>
       {opacity && (
-        <div className="flex flex-col gap-1.5 pt-1">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Opacity</span>
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {parsed.opacity}%
-            </span>
-          </div>
-          <Slider
+        <div className="pt-1">
+          <SliderField
+            label="Opacity"
+            value={parsed.opacity}
             min={0}
             max={100}
-            step={1}
-            value={[parsed.opacity]}
-            onValueChange={([nextOpacity]) => {
-              update(path, buildColorWithOpacity(parsed.hex, nextOpacity))
-            }}
+            unit="%"
+            defaultValue={100}
+            onChange={(next) => update(path, buildColorWithOpacity(parsed.hex, next))}
           />
         </div>
       )}

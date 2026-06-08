@@ -65,7 +65,12 @@ impl OpenAiCompatibleSttProvider {
             .multipart(form)
             .send()
             .await
-            .map_err(|e| SttError::ConnectionFailed(format!("{} request failed: {e}", self.config.provider_name)))?;
+            .map_err(|e| {
+                SttError::ConnectionFailed(format!(
+                    "{} request failed: {e}",
+                    self.config.provider_name
+                ))
+            })?;
 
         if !response.status().is_success() {
             let status = response.status();
@@ -79,7 +84,12 @@ impl OpenAiCompatibleSttProvider {
         let parsed = response
             .json::<TranscriptionResponse>()
             .await
-            .map_err(|e| SttError::ParseError(format!("Failed to parse {} response: {e}", self.config.provider_name)))?;
+            .map_err(|e| {
+                SttError::ParseError(format!(
+                    "Failed to parse {} response: {e}",
+                    self.config.provider_name
+                ))
+            })?;
 
         let text = parsed.text.trim().to_string();
         Ok((!text.is_empty()).then_some(text))
@@ -102,7 +112,7 @@ impl SttProvider for OpenAiCompatibleSttProvider {
         while !self.stop.load(Ordering::SeqCst) {
             match audio_rx.recv_timeout(Duration::from_millis(100)) {
                 Ok(samples) => buffer.extend(samples),
-                Err(crossbeam_channel::RecvTimeoutError::Timeout) => {},
+                Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
                 Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
             }
 
@@ -119,7 +129,7 @@ impl SttProvider for OpenAiCompatibleSttProvider {
                             })
                             .await;
                     }
-                    Ok(None) => {},
+                    Ok(None) => {}
                     Err(e) => {
                         let _ = event_tx.send(TranscriptEvent::Error(e.to_string())).await;
                     }

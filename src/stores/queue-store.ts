@@ -18,7 +18,7 @@ interface QueueState {
   findDuplicate: (bookNumber: number, chapter: number, verse: number) => number
   /** Update a chapter-only queue item in place when the verse is refined. */
   updateEarlyRef: (bookNumber: number, chapter: number, verse: number, reference: string, verseText: string) => boolean
-  replaceLyricItem: (item: QueueItem, kind: "song" | "hymn") => void
+  replaceLyricItem: (item: QueueItem, kind: "song") => void
   setLyricBlock: (id: string, blockIndex: number) => void
 }
 

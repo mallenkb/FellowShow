@@ -3,6 +3,8 @@ import { load, type Store } from "@tauri-apps/plugin-store"
 
 type SttProvider = "deepgram" | "openai" | "groq" | "whisper"
 
+export const DEFAULT_PINNED_TRANSLATION_IDS = [6, 2]
+
 interface SettingsState {
   deepgramApiKey: string | null
   openaiApiKey: string | null
@@ -17,6 +19,7 @@ interface SettingsState {
   sttProvider: SttProvider
   hiddenTranslationIds: number[]
   pinnedTranslationIds: number[]
+  defaultPinnedTranslationsApplied: boolean
 
   setDeepgramApiKey: (key: string | null) => void
   setOpenaiApiKey: (key: string | null) => void
@@ -48,7 +51,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   onboardingComplete: false,
   sttProvider: "deepgram",
   hiddenTranslationIds: [],
-  pinnedTranslationIds: [],
+  pinnedTranslationIds: DEFAULT_PINNED_TRANSLATION_IDS,
+  defaultPinnedTranslationsApplied: false,
 
   setDeepgramApiKey: (deepgramApiKey) => set({ deepgramApiKey }),
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
@@ -61,7 +65,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setCooldownMs: (cooldownMs) => set({ cooldownMs }),
   setOnboardingComplete: (onboardingComplete) => set({ onboardingComplete }),
   setSttProvider: (sttProvider) => set({ sttProvider }),
-  setHiddenTranslationIds: (hiddenTranslationIds) => set({ hiddenTranslationIds }),
+  setHiddenTranslationIds: (hiddenTranslationIds) =>
+    set({ hiddenTranslationIds }),
   toggleHiddenTranslation: (id) =>
     set((state) => ({
       hiddenTranslationIds: state.hiddenTranslationIds.includes(id)
@@ -71,7 +76,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         ? state.pinnedTranslationIds
         : state.pinnedTranslationIds.filter((pinnedId) => pinnedId !== id),
     })),
-  setPinnedTranslationIds: (pinnedTranslationIds) => set({ pinnedTranslationIds }),
+  setPinnedTranslationIds: (pinnedTranslationIds) =>
+    set({ pinnedTranslationIds }),
   togglePinnedTranslation: (id) =>
     set((state) => ({
       pinnedTranslationIds: state.pinnedTranslationIds.includes(id)
@@ -94,6 +100,7 @@ const PERSISTED_KEYS = [
   "sttProvider",
   "hiddenTranslationIds",
   "pinnedTranslationIds",
+  "defaultPinnedTranslationsApplied",
 ] as const satisfies readonly (keyof SettingsState)[]
 
 let tauriStore: Store | null = null
@@ -119,6 +126,20 @@ export function hydrateSettings(): Promise<void> {
         const value = await store.get(key)
         if (value !== undefined && value !== null) {
           ;(patch as Record<string, unknown>)[key] = value
+        }
+      }
+      if (!patch.defaultPinnedTranslationsApplied) {
+        patch.pinnedTranslationIds = DEFAULT_PINNED_TRANSLATION_IDS
+        patch.defaultPinnedTranslationsApplied = true
+        try {
+          await store.set(
+            "pinnedTranslationIds",
+            DEFAULT_PINNED_TRANSLATION_IDS
+          )
+          await store.set("defaultPinnedTranslationsApplied", true)
+          await store.save()
+        } catch {
+          console.warn("[settings] Failed to persist settings")
         }
       }
       if (Object.keys(patch).length > 0) {

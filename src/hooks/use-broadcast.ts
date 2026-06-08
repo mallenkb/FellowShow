@@ -6,6 +6,7 @@ export function toVerseRenderData(verse: Verse, translation: string): VerseRende
   if (verse.book_number < 0) {
     return {
       reference: "",
+      themeSection: "songs",
       referenceMode: "lyric-footer",
       segments: [{ text: verse.text }],
     }
@@ -13,6 +14,7 @@ export function toVerseRenderData(verse: Verse, translation: string): VerseRende
 
   return {
     reference: `${verse.book_name} ${verse.chapter}:${verse.verse} (${translation})`,
+    themeSection: "bible",
     segments: [{ verseNumber: verse.verse, text: verse.text }],
   }
 }
@@ -37,6 +39,7 @@ export const broadcastActions = {
     useBroadcastStore.getState().setLive(live),
   getActiveTheme: () => {
     const s = useBroadcastStore.getState()
-    return s.themes.find((t) => t.id === s.activeThemeId) ?? s.themes[0]
+    const themeId = s.sectionThemeIds[s.selectedThemeSection] ?? s.activeThemeId
+    return s.themes.find((t) => t.id === themeId) ?? s.themes[0]
   },
 }

@@ -125,7 +125,10 @@ impl DetectionPipeline {
         // Add FTS5 results as detections with populated VerseRef (no verse_id).
         // The merger will dedup if both vector and FTS5 find the same verse.
         // to_result() resolves VerseRef via the active translation's db.get_verse().
-        #[expect(clippy::cast_possible_truncation, reason = "timestamp millis won't exceed u64")]
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "timestamp millis won't exceed u64"
+        )]
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
@@ -139,7 +142,9 @@ impl DetectionPipeline {
             }
             log::debug!(
                 "[HYBRID] FTS5 hit: {} {}:{} rank={} conf={:.0}%",
-                fts.book_name, fts.chapter, fts.verse,
+                fts.book_name,
+                fts.chapter,
+                fts.verse,
                 rank,
                 confidence * 100.0
             );
@@ -153,7 +158,9 @@ impl DetectionPipeline {
                 },
                 verse_id: None,
                 confidence,
-                source: DetectionSource::Semantic { similarity: confidence },
+                source: DetectionSource::Semantic {
+                    similarity: confidence,
+                },
                 transcript_snippet: snippet.clone(),
                 detected_at: now,
                 is_chapter_only: false,
@@ -167,7 +174,6 @@ impl DetectionPipeline {
     pub fn semantic_search(&mut self, query: &str, k: usize) -> Vec<(i64, f64)> {
         self.semantic.search_query(query, k)
     }
-
 }
 
 impl Default for DetectionPipeline {

@@ -40,7 +40,8 @@ describe("settings store", () => {
       return null
     })
 
-    const { hydrateSettings, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
     await hydrateSettings()
 
     const state = useSettingsStore.getState()
@@ -55,7 +56,8 @@ describe("settings store", () => {
   it("hydrate with no persisted values falls back to defaults", async () => {
     mockGet.mockResolvedValue(null)
 
-    const { hydrateSettings, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
     const before = useSettingsStore.getState()
     await hydrateSettings()
     const after = useSettingsStore.getState()
@@ -63,13 +65,33 @@ describe("settings store", () => {
     expect(after.gain).toBe(before.gain)
     expect(after.sttProvider).toBe(before.sttProvider)
     expect(after.autoMode).toBe(before.autoMode)
+    expect(after.pinnedTranslationIds).toEqual([6, 2])
+    expect(after.defaultPinnedTranslationsApplied).toBe(true)
+    expect(mockSet).toHaveBeenCalledWith("pinnedTranslationIds", [6, 2])
+    expect(mockSet).toHaveBeenCalledWith(
+      "defaultPinnedTranslationsApplied",
+      true
+    )
+  })
+
+  it("uses NKJV and NIV as default pinned translations", async () => {
+    const { DEFAULT_PINNED_TRANSLATION_IDS, useSettingsStore } =
+      await import("./settings-store")
+
+    expect(DEFAULT_PINNED_TRANSLATION_IDS).toEqual([6, 2])
+    expect(useSettingsStore.getState().pinnedTranslationIds).toEqual(
+      DEFAULT_PINNED_TRANSLATION_IDS
+    )
   })
 
   it("a setter call after hydration writes the full snapshot to disk", async () => {
     mockGet.mockResolvedValue(null)
 
-    const { hydrateSettings, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
     await hydrateSettings()
+    mockSet.mockClear()
+    mockSave.mockClear()
 
     useSettingsStore.getState().setGain(1.75)
 
@@ -86,8 +108,10 @@ describe("settings store", () => {
   it("rapid setter calls coalesce into a single save", async () => {
     mockGet.mockResolvedValue(null)
 
-    const { hydrateSettings, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
     await hydrateSettings()
+    mockSave.mockClear()
 
     const { setGain } = useSettingsStore.getState()
     setGain(1.1)
@@ -103,8 +127,11 @@ describe("settings store", () => {
   it("saveSettingsNow flushes pending settings immediately", async () => {
     mockGet.mockResolvedValue(null)
 
-    const { hydrateSettings, saveSettingsNow, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, saveSettingsNow, useSettingsStore } =
+      await import("./settings-store")
     await hydrateSettings()
+    mockSet.mockClear()
+    mockSave.mockClear()
 
     useSettingsStore.getState().setDeepgramApiKey("dg-key")
     await saveSettingsNow()
@@ -113,14 +140,15 @@ describe("settings store", () => {
     expect(mockSave).toHaveBeenCalledTimes(1)
   })
 
-
   it("concurrent hydrate calls attach only one subscription", async () => {
     mockGet.mockResolvedValue(null)
 
-    const { hydrateSettings, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
     // Kick off two concurrent hydrations — a second caller must not
     // attach a duplicate subscription that would double every write.
     await Promise.all([hydrateSettings(), hydrateSettings()])
+    mockSave.mockClear()
 
     useSettingsStore.getState().setGain(1.5)
     await flushSave()
@@ -132,7 +160,8 @@ describe("settings store", () => {
     mockLoad.mockRejectedValue(new Error("store not available"))
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
-    const { hydrateSettings, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
     await expect(hydrateSettings()).resolves.toBeUndefined()
 
     // Defaults preserved
@@ -148,13 +177,16 @@ describe("settings store", () => {
     mockSave.mockRejectedValue(new Error("disk error"))
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
-    const { hydrateSettings, useSettingsStore } = await import("./settings-store")
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
     await hydrateSettings()
 
     useSettingsStore.getState().setAutoMode(true)
     await flushSave()
 
-    expect(warnSpy).toHaveBeenCalledWith("[settings] Failed to persist settings")
+    expect(warnSpy).toHaveBeenCalledWith(
+      "[settings] Failed to persist settings"
+    )
     warnSpy.mockRestore()
   })
 })

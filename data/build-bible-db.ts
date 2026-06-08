@@ -61,27 +61,37 @@ interface ScrollmapperJSON {
   }>
 }
 
+const requestedTranslations = new Set(
+  (process.env.FELLOWSHOW_BIBLE_TRANSLATIONS ?? "")
+    .split(",")
+    .map((translation) => translation.trim().toUpperCase())
+    .filter(Boolean),
+)
+const includeUndownloadedTranslations =
+  process.env.FELLOWSHOW_INCLUDE_UNDOWNLOADED_TRANSLATIONS === "1"
+
 const TRANSLATIONS_META: Array<{
   file: string
   abbreviation: string
   title: string
   language: string
   license: string
+  isCopyrighted: boolean
 }> = [
   // English
-  { file: "KJV.json", abbreviation: "KJV", title: "King James Version", language: "en", license: "Public Domain" },
-  { file: "NIV.json", abbreviation: "NIV", title: "New International Version", language: "en", license: "Biblica" },
-  { file: "ESV.json", abbreviation: "ESV", title: "English Standard Version", language: "en", license: "Crossway" },
-  { file: "NRSV.json", abbreviation: "NRSV", title: "New Revised Standard Version", language: "en", license: "NCC" },
-  { file: "NASB.json", abbreviation: "NASB", title: "New American Standard Bible", language: "en", license: "Lockman Foundation" },
-  { file: "NKJV.json", abbreviation: "NKJV", title: "New King James Version", language: "en", license: "Thomas Nelson" },
-  { file: "NLT.json", abbreviation: "NLT", title: "New Living Translation", language: "en", license: "Tyndale House" },
-  { file: "CSB.json", abbreviation: "CSB", title: "Christian Standard Bible", language: "en", license: "Holman Bible Publishers" },
-  { file: "AMP.json", abbreviation: "AMP", title: "Amplified Bible", language: "en", license: "Lockman Foundation" },
+  { file: "KJV.json", abbreviation: "KJV", title: "King James Version", language: "en", license: "Public Domain", isCopyrighted: false },
+  { file: "NIV.json", abbreviation: "NIV", title: "New International Version", language: "en", license: "Biblica", isCopyrighted: true },
+  { file: "ESV.json", abbreviation: "ESV", title: "English Standard Version", language: "en", license: "Crossway", isCopyrighted: true },
+  { file: "NRSV.json", abbreviation: "NRSV", title: "New Revised Standard Version", language: "en", license: "NCC", isCopyrighted: true },
+  { file: "NASB.json", abbreviation: "NASB", title: "New American Standard Bible", language: "en", license: "Lockman Foundation", isCopyrighted: true },
+  { file: "NKJV.json", abbreviation: "NKJV", title: "New King James Version", language: "en", license: "Thomas Nelson", isCopyrighted: true },
+  { file: "NLT.json", abbreviation: "NLT", title: "New Living Translation", language: "en", license: "Tyndale House", isCopyrighted: true },
+  { file: "CSB.json", abbreviation: "CSB", title: "Christian Standard Bible", language: "en", license: "Holman Bible Publishers", isCopyrighted: true },
+  { file: "AMP.json", abbreviation: "AMP", title: "Amplified Bible", language: "en", license: "Lockman Foundation", isCopyrighted: true },
   // Non-English
-  { file: "SpaRV.json", abbreviation: "SpaRV", title: "Reina-Valera 1909", language: "es", license: "Public Domain" },
-  { file: "FreJND.json", abbreviation: "FreJND", title: "J.N. Darby French 1885", language: "fr", license: "Public Domain" },
-  { file: "PorBLivre.json", abbreviation: "PorBLivre", title: "Biblia Livre", language: "pt", license: "Public Domain" },
+  { file: "SpaRV.json", abbreviation: "SpaRV", title: "Reina-Valera 1909", language: "es", license: "Public Domain", isCopyrighted: false },
+  { file: "FreJND.json", abbreviation: "FreJND", title: "J.N. Darby French 1885", language: "fr", license: "Public Domain", isCopyrighted: false },
+  { file: "PorBLivre.json", abbreviation: "PorBLivre", title: "Biblia Livre", language: "pt", license: "Public Domain", isCopyrighted: false },
 ]
 
 function main() {
@@ -106,7 +116,7 @@ function main() {
 
   // Prepare insert statements
   const insertTranslation = db.prepare(
-    "INSERT INTO translations (abbreviation, title, language, license) VALUES (?, ?, ?, ?)"
+    "INSERT INTO translations (abbreviation, title, language, license, is_copyrighted, is_downloaded) VALUES (?, ?, ?, ?, ?, ?)"
   )
   const insertBook = db.prepare(
     "INSERT INTO books (translation_id, book_number, name, abbreviation, testament) VALUES (?, ?, ?, ?, ?)"
@@ -116,15 +126,48 @@ function main() {
   )
 
   // Process each translation
-  for (const meta of TRANSLATIONS_META) {
+  const requestedTranslationOrder = [...requestedTranslations]
+  const translationsToBuild = requestedTranslations.size > 0
+    ? [
+        ...requestedTranslationOrder
+          .map((abbreviation) => TRANSLATIONS_META.find((meta) => meta.abbreviation === abbreviation))
+          .filter((meta): meta is (typeof TRANSLATIONS_META)[number] => Boolean(meta)),
+        ...(includeUndownloadedTranslations
+          ? TRANSLATIONS_META.filter((meta) => !requestedTranslations.has(meta.abbreviation))
+          : []),
+      ]
+    : TRANSLATIONS_META
+
+  if (requestedTranslations.size > 0) {
+    const knownTranslations = new Set(TRANSLATIONS_META.map((meta) => meta.abbreviation))
+    const unknownTranslations = [...requestedTranslations].filter((translation) => !knownTranslations.has(translation))
+    if (unknownTranslations.length > 0) {
+      throw new Error(`Unknown translation(s): ${unknownTranslations.join(", ")}`)
+    }
+    console.log(`  Building selected translations: ${[...requestedTranslations].join(", ")}`)
+  }
+
+  for (const meta of translationsToBuild) {
     const filePath = join(SOURCES_DIR, meta.file)
+    const shouldImportVerses = requestedTranslations.size === 0 || requestedTranslations.has(meta.abbreviation)
     console.log(`  📖 Processing ${meta.abbreviation}...`)
 
     let raw: string
     try {
       raw = readFileSync(filePath, "utf-8")
     } catch {
+      if (!shouldImportVerses && includeUndownloadedTranslations) {
+        insertTranslation.run(meta.abbreviation, meta.title, meta.language, meta.license, meta.isCopyrighted ? 1 : 0, 0)
+        console.log(`  ✓ ${meta.abbreviation}: metadata only`)
+        continue
+      }
       console.log(`  ⏭ ${meta.file} not found, skipping`)
+      continue
+    }
+
+    if (!shouldImportVerses) {
+      insertTranslation.run(meta.abbreviation, meta.title, meta.language, meta.license, meta.isCopyrighted ? 1 : 0, 0)
+      console.log(`  ✓ ${meta.abbreviation}: metadata only`)
       continue
     }
 
@@ -133,7 +176,7 @@ function main() {
     db.exec("BEGIN TRANSACTION")
 
     // Insert translation
-    insertTranslation.run(meta.abbreviation, meta.title, meta.language, meta.license)
+    insertTranslation.run(meta.abbreviation, meta.title, meta.language, meta.license, meta.isCopyrighted ? 1 : 0, 1)
     const translationId = db.query("SELECT last_insert_rowid() as id").get() as { id: number }
     const tId = translationId.id
 

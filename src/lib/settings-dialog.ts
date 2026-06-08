@@ -6,7 +6,7 @@ type SettingsSection =
   | "bible"
   | "display"
   | "remote"
-  | "api-keys"
+  | "updates"
   | "help"
 
 interface SettingsDialogState {

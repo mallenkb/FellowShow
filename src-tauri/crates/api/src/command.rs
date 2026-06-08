@@ -67,25 +67,37 @@ mod tests {
     #[test]
     fn serialize_theme() {
         let json = serde_json::to_value(&RemoteCommand::Theme("Dark".into())).unwrap();
-        assert_eq!(json, serde_json::json!({"command": "theme", "value": "Dark"}));
+        assert_eq!(
+            json,
+            serde_json::json!({"command": "theme", "value": "Dark"})
+        );
     }
 
     #[test]
     fn serialize_opacity() {
         let json = serde_json::to_value(&RemoteCommand::Opacity(0.75)).unwrap();
-        assert_eq!(json, serde_json::json!({"command": "opacity", "value": 0.75}));
+        assert_eq!(
+            json,
+            serde_json::json!({"command": "opacity", "value": 0.75})
+        );
     }
 
     #[test]
     fn serialize_confidence() {
         let json = serde_json::to_value(&RemoteCommand::Confidence(0.75)).unwrap();
-        assert_eq!(json, serde_json::json!({"command": "confidence", "value": 0.75}));
+        assert_eq!(
+            json,
+            serde_json::json!({"command": "confidence", "value": 0.75})
+        );
     }
 
     #[test]
     fn serialize_on_air() {
         let json = serde_json::to_value(&RemoteCommand::OnAir(true)).unwrap();
-        assert_eq!(json, serde_json::json!({"command": "on_air", "value": true}));
+        assert_eq!(
+            json,
+            serde_json::json!({"command": "on_air", "value": true})
+        );
     }
 
     // --- Serde deserialization tests ---
@@ -146,10 +158,7 @@ mod tests {
 
     #[test]
     fn display_theme() {
-        assert_eq!(
-            RemoteCommand::Theme("X".into()).to_string(),
-            "theme(X)"
-        );
+        assert_eq!(RemoteCommand::Theme("X".into()).to_string(), "theme(X)");
     }
 
     #[test]

@@ -62,13 +62,7 @@ impl EnsembleSearcher {
         let mut combined: HashMap<i64, EnsembleResult> = HashMap::new();
 
         // Strategy 1: Original (direct embedding)
-        let original_results = self.run_strategy(
-            text,
-            embedder,
-            index,
-            k,
-            "original",
-        )?;
+        let original_results = self.run_strategy(text, embedder, index, k, "original")?;
         for (verse_id, similarity) in &original_results {
             if *similarity >= ORIGINAL_CUTOFF {
                 let entry = combined.entry(*verse_id).or_insert_with(|| EnsembleResult {
@@ -87,13 +81,7 @@ impl EnsembleSearcher {
         let variants = self.synonym_expander.expand(text);
         // Skip the first variant (it's the original text, already searched)
         for variant in variants.iter().skip(1).take(2) {
-            let synonym_results = self.run_strategy(
-                variant,
-                embedder,
-                index,
-                k,
-                "synonym",
-            )?;
+            let synonym_results = self.run_strategy(variant, embedder, index, k, "synonym")?;
             for (verse_id, similarity) in &synonym_results {
                 if *similarity >= SYNONYM_CUTOFF {
                     let entry = combined.entry(*verse_id).or_insert_with(|| EnsembleResult {
@@ -116,13 +104,8 @@ impl EnsembleSearcher {
         let concepts = extract_concepts(text);
         if !concepts.is_empty() {
             let concept_query = concepts.join(" ");
-            let concept_results = self.run_strategy(
-                &concept_query,
-                embedder,
-                index,
-                k,
-                "concept",
-            )?;
+            let concept_results =
+                self.run_strategy(&concept_query, embedder, index, k, "concept")?;
             for (verse_id, similarity) in &concept_results {
                 if *similarity >= CONCEPT_CUTOFF {
                     let entry = combined.entry(*verse_id).or_insert_with(|| EnsembleResult {
@@ -195,14 +178,53 @@ impl Default for EnsembleSearcher {
 fn extract_concepts(text: &str) -> Vec<String> {
     // Biblical concept keywords — if any appear in the text, include them
     const CONCEPT_WORDS: &[&str] = &[
-        "love", "faith", "grace", "mercy", "sin", "salvation", "forgiveness",
-        "righteousness", "holy", "spirit", "prayer", "worship", "heaven",
-        "eternal", "life", "death", "resurrection", "cross", "blood",
-        "covenant", "promise", "blessing", "curse", "judgment", "kingdom",
-        "peace", "joy", "hope", "truth", "wisdom", "light", "darkness",
-        "shepherd", "lamb", "sacrifice", "temple", "circumcision",
-        "baptism", "communion", "apostle", "prophet", "priest",
-        "repentance", "obedience", "commandment", "law", "gospel",
+        "love",
+        "faith",
+        "grace",
+        "mercy",
+        "sin",
+        "salvation",
+        "forgiveness",
+        "righteousness",
+        "holy",
+        "spirit",
+        "prayer",
+        "worship",
+        "heaven",
+        "eternal",
+        "life",
+        "death",
+        "resurrection",
+        "cross",
+        "blood",
+        "covenant",
+        "promise",
+        "blessing",
+        "curse",
+        "judgment",
+        "kingdom",
+        "peace",
+        "joy",
+        "hope",
+        "truth",
+        "wisdom",
+        "light",
+        "darkness",
+        "shepherd",
+        "lamb",
+        "sacrifice",
+        "temple",
+        "circumcision",
+        "baptism",
+        "communion",
+        "apostle",
+        "prophet",
+        "priest",
+        "repentance",
+        "obedience",
+        "commandment",
+        "law",
+        "gospel",
     ];
 
     let lower = text.to_lowercase();
@@ -210,7 +232,10 @@ fn extract_concepts(text: &str) -> Vec<String> {
 
     let mut concepts: Vec<String> = Vec::new();
     for &concept in CONCEPT_WORDS {
-        if words.iter().any(|w| w.trim_matches(|c: char| !c.is_alphabetic()) == concept) {
+        if words
+            .iter()
+            .any(|w| w.trim_matches(|c: char| !c.is_alphabetic()) == concept)
+        {
             concepts.push(concept.to_string());
         }
     }

@@ -1,27 +1,88 @@
 import { useEffect, useMemo, useState } from "react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
-import { useBibleStore, useBroadcastStore, usePresenterTimerStore } from "@/stores"
+import { PresentationEmptyState } from "@/components/ui/presentation-empty-state"
+import {
+  useBibleStore,
+  useBroadcastStore,
+  usePresenterTimerStore,
+  usePresentationStore,
+} from "@/stores"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import type { VerseRenderData } from "@/types"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon } from "lucide-react"
+import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
+import { sortThemesForSection } from "@/lib/theme-order"
+import { SliderField } from "@/components/ui/slider-field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const THEME_THUMBNAIL_VERSE: VerseRenderData = {
   reference: "John 3:16",
+  themeSection: "bible",
   segments: [{ text: "Sample Verse" }],
 }
 
-export function PreviewPanel() {
+type ThemeAwareMode = "book" | "context" | "songs" | "presentation"
+
+const THEME_SECTION_LABELS: Record<BroadcastThemeSection, string> = {
+  bible: "Scriptures",
+  songs: "Songs",
+  presentation: "Presentation",
+}
+
+function sectionFromMode(mode: ThemeAwareMode): BroadcastThemeSection {
+  if (mode === "presentation") return "presentation"
+  if (mode === "songs") return "songs"
+  return "bible"
+}
+
+const THEME_THUMBNAIL_BY_SECTION: Record<
+  BroadcastThemeSection,
+  VerseRenderData
+> = {
+  bible: THEME_THUMBNAIL_VERSE,
+  songs: {
+    reference: "",
+    themeSection: "songs",
+    referenceMode: "lyric-footer",
+    segments: [{ text: "Sample song lyric" }],
+  },
+  presentation: {
+    reference: "Presentation Slide",
+    themeSection: "presentation",
+    segments: [],
+    presentationImage: {
+      url: "/broadcast-previews/full-background.jpg",
+      name: "Sample presentation",
+      fit: "cover",
+    },
+  },
+}
+
+export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const selectedVerse = useBibleStore((s) => s.selectedVerse)
   const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
+  const slides = usePresentationStore((s) => s.slides)
+  const selectedSlideId = usePresentationStore((s) => s.selectedSlideId)
 
   // When translation changes, re-fetch the selected verse in the new translation
   useEffect(() => {
     const verse = useBibleStore.getState().selectedVerse
-    if (verse && verse.book_number > 0 && verse.chapter > 0 && verse.verse > 0) {
+    if (
+      verse &&
+      verse.book_number > 0 &&
+      verse.chapter > 0 &&
+      verse.verse > 0
+    ) {
       bibleActions
         .fetchVerse(verse.book_number, verse.chapter, verse.verse)
         .then((v) => {
@@ -31,15 +92,41 @@ export function PreviewPanel() {
     }
   }, [activeTranslationId])
   const themes = useBroadcastStore((s) => s.themes)
-  const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
+  const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
   const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
+  const timerFontFamily = usePresenterTimerStore((s) => s.fontFamily)
 
-  const activeTheme = themes.find((t) => t.id === activeThemeId) ?? themes[0]
-  const translation = translations.find((t) => t.id === activeTranslationId)?.abbreviation ?? "KJV"
+  const themeSection = sectionFromMode(mode)
+  const selectedSlide =
+    slides.find((slide) => slide.id === selectedSlideId) ?? null
+  const isEmptyPresentation = mode === "presentation" && !selectedSlide
+  const activeTheme = selectedSlide
+    ? themes[0]
+    : (themes.find((t) => t.id === sectionThemeIds[themeSection]) ?? themes[0])
+  const translation =
+    translations.find((t) => t.id === activeTranslationId)?.abbreviation ??
+    "KJV"
 
-  const verseData = selectedVerse ? toVerseRenderData(selectedVerse, translation) : null
+  const verseData: VerseRenderData | null = selectedSlide
+    ? {
+        reference: selectedSlide.name,
+        themeSection: "presentation",
+        segments: [],
+        presentationImage: {
+          url: selectedSlide.url,
+          name: selectedSlide.name,
+          mediaType: selectedSlide.mediaType,
+          fit: selectedSlide.fit,
+          scale: selectedSlide.scale,
+          offsetX: selectedSlide.offsetX,
+          offsetY: selectedSlide.offsetY,
+        },
+      }
+    : selectedVerse
+      ? toVerseRenderData(selectedVerse, translation)
+      : null
   const timer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null
     return {
@@ -47,8 +134,9 @@ export function PreviewPanel() {
       totalSeconds: timerTotal,
       isRunning: timerIsRunning,
       isFinished: timerRemaining === 0,
+      fontFamily: timerFontFamily,
     }
-  }, [timerIsRunning, timerRemaining, timerTotal])
+  }, [timerFontFamily, timerIsRunning, timerRemaining, timerTotal])
 
   return (
     <div
@@ -57,17 +145,31 @@ export function PreviewPanel() {
     >
       <PanelHeader title="Program preview" />
       <div className="flex min-h-0 items-center justify-center p-3">
-        <CanvasVerse theme={activeTheme} verse={verseData} timer={timer} />
+        {isEmptyPresentation ? (
+          <PresentationEmptyState />
+        ) : (
+          <CanvasVerse theme={activeTheme} verse={verseData} timer={timer} />
+        )}
       </div>
     </div>
   )
 }
 
-export function ThemesPanel() {
-  const [isOpen, setIsOpen] = useState(true)
+export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
+  const [isOpen, setIsOpen] = useState(false)
   const themes = useBroadcastStore((s) => s.themes)
-  const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
-  const pinnedThemes = themes.filter((t) => t.pinned)
+  const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
+
+  const selectedSection = sectionFromMode(mode)
+  const activeThemeId = sectionThemeIds[selectedSection]
+  const visibleThemes = sortThemesForSection(
+    themes,
+    selectedSection,
+    activeThemeId
+  )
+  const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
+
+  if (mode === "presentation") return null
 
   return (
     <div
@@ -80,38 +182,43 @@ export function ThemesPanel() {
         className="flex h-10 items-center justify-between px-3 text-left transition hover:bg-muted/35"
         aria-expanded={isOpen}
       >
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
           Themes
         </span>
         <ChevronDownIcon
           className={cn(
             "size-4 text-muted-foreground transition-transform",
-            !isOpen && "-rotate-90",
+            !isOpen && "-rotate-90"
           )}
         />
       </button>
       {isOpen && (
-        <div className="px-3 pb-4">
-          {pinnedThemes.length > 0 ? (
-            <div className="flex gap-3 overflow-x-auto px-1 pb-2 pt-1">
-              {pinnedThemes.map((theme) => {
+        <div className="px-3 pt-1 pb-4">
+          {visibleThemes.length > 0 ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
+              {visibleThemes.map((theme) => {
                 const isActive = theme.id === activeThemeId
                 return (
                   <button
                     key={theme.id}
                     type="button"
-                    onClick={() => useBroadcastStore.getState().setActiveTheme(theme.id)}
+                    onClick={() => {
+                      useBroadcastStore
+                        .getState()
+                        .setActiveTheme(theme.id, selectedSection)
+                    }}
                     className={cn(
-                      "group w-28 shrink-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
-                      isActive && "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70",
+                      "group min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
+                      isActive &&
+                        "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70"
                     )}
                     title={`Use ${theme.name}`}
                   >
                     <div className="aspect-video overflow-hidden rounded-sm">
-                      <CanvasVerse theme={theme} verse={THEME_THUMBNAIL_VERSE} />
+                      <CanvasVerse theme={theme} verse={thumbnailVerse} />
                     </div>
                     <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-                      <span className="min-w-0 flex-1 truncate text-xs font-medium leading-tight text-foreground">
+                      <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
                         {theme.name}
                       </span>
                       {isActive && (
@@ -124,8 +231,142 @@ export function ThemesPanel() {
             </div>
           ) : (
             <p className="py-3 text-center text-xs text-muted-foreground">
-              Pin themes from the theme designer to show them here.
+              No themes available for{" "}
+              {THEME_SECTION_LABELS[selectedSection].toLowerCase()}.
             </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function MotionPanel({ mode }: { mode: ThemeAwareMode }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const themes = useBroadcastStore((s) => s.themes)
+  const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
+
+  const selectedSection = sectionFromMode(mode)
+  const activeThemeId = sectionThemeIds[selectedSection]
+  const activeTheme = themes.find((theme) => theme.id === activeThemeId) ?? null
+
+  const updateActiveTransition = (
+    transitionUpdates: Partial<BroadcastTheme["transition"]>
+  ) => {
+    if (!activeTheme) return
+    const store = useBroadcastStore.getState()
+    const updatedTheme: BroadcastTheme = {
+      ...activeTheme,
+      id: activeTheme.builtin ? crypto.randomUUID() : activeTheme.id,
+      name: activeTheme.builtin
+        ? `${activeTheme.name} Custom`
+        : activeTheme.name,
+      builtin: false,
+      createdAt: activeTheme.createdAt,
+      updatedAt: activeTheme.updatedAt + 1,
+      transition: {
+        ...activeTheme.transition,
+        ...transitionUpdates,
+      },
+    }
+    store.saveTheme(updatedTheme)
+    if (updatedTheme.id !== activeTheme.id) {
+      store.setActiveTheme(updatedTheme.id, selectedSection)
+    } else {
+      store.syncBroadcastOutputFor("main")
+    }
+  }
+
+  if (mode === "presentation") return null
+
+  return (
+    <div
+      data-slot="motion-panel"
+      className="flex h-fit min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+    >
+      <button
+        type="button"
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex h-10 items-center justify-between px-3 text-left transition hover:bg-muted/35"
+        aria-expanded={isOpen}
+      >
+        <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+          Motion
+        </span>
+        <ChevronDownIcon
+          className={cn(
+            "size-4 text-muted-foreground transition-transform",
+            !isOpen && "-rotate-90"
+          )}
+        />
+      </button>
+      {isOpen && activeTheme && (
+        <div className="grid gap-3 px-4 pt-1 pb-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-muted-foreground">
+              Animation
+            </label>
+            <Select
+              value={activeTheme.transition.type}
+              onValueChange={(value) =>
+                updateActiveTransition({
+                  type: value as BroadcastTheme["transition"]["type"],
+                })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fade">Fade</SelectItem>
+                <SelectItem value="slide">Slide</SelectItem>
+                <SelectItem value="scale">Scale</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {activeTheme.transition.type !== "none" && (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">
+                  Easing
+                </label>
+                <Select
+                  value={activeTheme.transition.easing}
+                  onValueChange={(value) =>
+                    updateActiveTransition({
+                      easing: value as BroadcastTheme["transition"]["easing"],
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ease-in-out">Ease in/out</SelectItem>
+                    <SelectItem value="ease-in">Ease in</SelectItem>
+                    <SelectItem value="ease-out">Ease out</SelectItem>
+                    <SelectItem value="linear">Linear</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <SliderField
+                  label="Duration"
+                  value={activeTheme.transition.duration}
+                  min={100}
+                  max={2000}
+                  step={50}
+                  unit="ms"
+                  defaultValue={500}
+                  onChange={(value) =>
+                    updateActiveTransition({ duration: value })
+                  }
+                />
+              </div>
+            </>
           )}
         </div>
       )}

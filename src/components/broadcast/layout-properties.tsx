@@ -1,5 +1,5 @@
 import { useBroadcastStore } from "@/stores/broadcast-store"
-import { Slider } from "@/components/ui/slider"
+import { SliderField } from "@/components/ui/slider-field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -19,15 +19,13 @@ export function LayoutProperties() {
   const resolution = draftTheme.resolution
   const referenceGap = layout.referenceGap ?? Math.max(16, Math.round(draftTheme.reference.fontSize * 0.5))
 
-  const bgWidthPx = Math.round((layout.backgroundWidth / 100) * resolution.width)
-  const bgHeightPx = Math.round((layout.backgroundHeight / 100) * resolution.height)
-  const textWidthPx = Math.round((layout.textAreaWidth / 100) * resolution.width)
-  const textHeightPx = Math.round((layout.textAreaHeight / 100) * resolution.height)
-
   const verseNumbers = draftTheme.verseNumbers
   const superscriptSizePct = Math.round(
     (verseNumbers.fontSize / draftTheme.verseText.fontSize) * 100
   )
+
+  const pctWithPx = (value: number, total: number) =>
+    `${value}% (${Math.round((value / 100) * total)}px)`
 
   return (
     <div className="flex flex-col gap-3">
@@ -36,78 +34,44 @@ export function LayoutProperties() {
         <h4 className="text-xs font-semibold">Background Dimensions</h4>
       </div>
 
-      {/* Width */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Width</label>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {layout.backgroundWidth}% ({bgWidthPx}px)
-          </span>
-        </div>
-        <Slider
-          min={10}
-          max={100}
-          step={1}
-          value={[layout.backgroundWidth]}
-          onValueChange={([v]) => update("layout.backgroundWidth", v)}
-        />
-      </div>
-
-      {/* Height */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Height</label>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {layout.backgroundHeight}% ({bgHeightPx}px)
-          </span>
-        </div>
-        <Slider
-          min={10}
-          max={100}
-          step={1}
-          value={[layout.backgroundHeight]}
-          onValueChange={([v]) => update("layout.backgroundHeight", v)}
-        />
-      </div>
+      <SliderField
+        label="Width"
+        value={layout.backgroundWidth}
+        min={10}
+        max={100}
+        format={(v) => pctWithPx(v, resolution.width)}
+        onChange={(v) => update("layout.backgroundWidth", v)}
+      />
+      <SliderField
+        label="Height"
+        value={layout.backgroundHeight}
+        min={10}
+        max={100}
+        format={(v) => pctWithPx(v, resolution.height)}
+        onChange={(v) => update("layout.backgroundHeight", v)}
+      />
 
       {/* Text Area Dimensions */}
       <div className="flex flex-col gap-0.5 border-t pt-3 pb-1">
         <h4 className="text-xs font-semibold">Text Area Dimensions</h4>
       </div>
 
-      {/* Text Width */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Text Width</label>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {layout.textAreaWidth}% ({textWidthPx}px)
-          </span>
-        </div>
-        <Slider
-          min={10}
-          max={100}
-          step={1}
-          value={[layout.textAreaWidth]}
-          onValueChange={([v]) => update("layout.textAreaWidth", v)}
-        />
-      </div>
-
-      {/* Text Height */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Text Height</label>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {layout.textAreaHeight}% ({textHeightPx}px)
-          </span>
-        </div>
-        <Slider
-          min={10}
-          max={100}
-          step={1}
-          value={[layout.textAreaHeight]}
-          onValueChange={([v]) => update("layout.textAreaHeight", v)}
-        />
-      </div>
+      <SliderField
+        label="Text Width"
+        value={layout.textAreaWidth}
+        min={10}
+        max={100}
+        format={(v) => pctWithPx(v, resolution.width)}
+        onChange={(v) => update("layout.textAreaWidth", v)}
+      />
+      <SliderField
+        label="Text Height"
+        value={layout.textAreaHeight}
+        min={10}
+        max={100}
+        format={(v) => pctWithPx(v, resolution.height)}
+        onChange={(v) => update("layout.textAreaHeight", v)}
+      />
 
       {/* Padding */}
       <div className="flex flex-col gap-0.5 border-t pt-3 pb-1">
@@ -158,19 +122,14 @@ export function LayoutProperties() {
         <h4 className="text-xs font-semibold">Element Spacing</h4>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Verse / Reference</label>
-          <span className="text-xs tabular-nums text-muted-foreground">{referenceGap}px</span>
-        </div>
-        <Slider
-          min={0}
-          max={200}
-          step={1}
-          value={[referenceGap]}
-          onValueChange={([v]) => update("layout.referenceGap", v)}
-        />
-      </div>
+      <SliderField
+        label="Verse / Reference"
+        value={referenceGap}
+        min={0}
+        max={200}
+        unit="px"
+        onChange={(v) => update("layout.referenceGap", v)}
+      />
 
       {/* Display Options */}
       <div className="flex flex-col gap-0.5 border-t pt-3 pb-1">
@@ -208,22 +167,17 @@ export function LayoutProperties() {
 
       {/* Superscript Size */}
       {verseNumbers.superscript && (
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground">Superscript Size</label>
-            <span className="text-xs tabular-nums text-muted-foreground">{superscriptSizePct}%</span>
-          </div>
-          <Slider
-            min={20}
-            max={100}
-            step={1}
-            value={[superscriptSizePct]}
-            onValueChange={([v]) => {
-              const newFontSize = Math.round((v / 100) * draftTheme.verseText.fontSize)
-              update("verseNumbers.fontSize", newFontSize)
-            }}
-          />
-        </div>
+        <SliderField
+          label="Superscript Size"
+          value={superscriptSizePct}
+          min={20}
+          max={100}
+          unit="%"
+          onChange={(v) => {
+            const newFontSize = Math.round((v / 100) * draftTheme.verseText.fontSize)
+            update("verseNumbers.fontSize", newFontSize)
+          }}
+        />
       )}
     </div>
   )

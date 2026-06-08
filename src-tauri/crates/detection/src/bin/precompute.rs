@@ -20,8 +20,8 @@ fn main() {
         .unwrap_or_else(|| "models/qwen3-embedding-0.6b/model.onnx".to_string());
     let tokenizer_path = get_arg(&args, "--tokenizer")
         .unwrap_or_else(|| "models/qwen3-embedding-0.6b/tokenizer.json".to_string());
-    let verses_path = get_arg(&args, "--verses")
-        .unwrap_or_else(|| "data/verses-for-embedding.json".to_string());
+    let verses_path =
+        get_arg(&args, "--verses").unwrap_or_else(|| "data/verses-for-embedding.json".to_string());
     let output_embeddings = get_arg(&args, "--output-embeddings")
         .unwrap_or_else(|| "embeddings/kjv-qwen3-0.6b.bin".to_string());
     let output_ids = get_arg(&args, "--output-ids")

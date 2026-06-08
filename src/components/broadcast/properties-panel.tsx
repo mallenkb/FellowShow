@@ -1,6 +1,5 @@
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { TextProperties } from "@/components/broadcast/text-properties"
 import { BackgroundProperties } from "@/components/broadcast/background-properties"
 import { LayoutProperties } from "@/components/broadcast/layout-properties"
@@ -44,7 +43,7 @@ export function PropertiesPanel() {
           </TabsList>
         </div>
 
-        <ScrollArea className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
           <TabsContent value="text" className="mt-0 p-4">
             <TextProperties />
           </TabsContent>
@@ -57,7 +56,7 @@ export function PropertiesPanel() {
           <TabsContent value="layout" className="mt-0 p-4">
             <LayoutProperties />
           </TabsContent>
-        </ScrollArea>
+        </div>
       </Tabs>
     </div>
   )

@@ -47,19 +47,6 @@ CREATE TABLE IF NOT EXISTS cross_references (
 
 CREATE INDEX IF NOT EXISTS idx_crossref_from ON cross_references(from_book, from_chapter, from_verse);
 
-CREATE TABLE IF NOT EXISTS hymns (
-    id INTEGER PRIMARY KEY,
-    slug TEXT NOT NULL UNIQUE,
-    title TEXT NOT NULL,
-    lyrics TEXT NOT NULL,
-    lyrics_html TEXT NOT NULL,
-    source_url TEXT NOT NULL,
-    date TEXT,
-    modified TEXT
-);
-
-CREATE INDEX IF NOT EXISTS idx_hymns_title ON hymns(title);
-
 CREATE TABLE IF NOT EXISTS embedding_status (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     translation_id INTEGER NOT NULL REFERENCES translations(id),

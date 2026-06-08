@@ -3,7 +3,10 @@ use std::time::Instant;
 
 /// Tracks recent Bible reference context so partial references
 /// (e.g., "verse 17" without a book/chapter) can be resolved.
-#[expect(clippy::struct_field_names, reason = "last_ prefix conveys temporal context clearly")]
+#[expect(
+    clippy::struct_field_names,
+    reason = "last_ prefix conveys temporal context clearly"
+)]
 pub struct ReferenceContext {
     last_book: Option<i32>,
     last_book_name: Option<String>,

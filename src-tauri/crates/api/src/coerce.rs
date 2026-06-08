@@ -45,24 +45,25 @@ pub fn coerce_bool(arg: &OscType) -> Result<bool, CommandError> {
 pub fn coerce_f32_normalized(arg: &OscType) -> Result<f32, CommandError> {
     match arg {
         OscType::Float(f) => Ok(f.clamp(0.0, 1.0)),
-        #[expect(clippy::cast_possible_truncation, reason = "OSC double values are small control values that fit in f32")]
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "OSC double values are small control values that fit in f32"
+        )]
         OscType::Double(d) => Ok((*d as f32).clamp(0.0, 1.0)),
-        #[expect(clippy::cast_precision_loss, reason = "OSC int values are small control values that fit in f32")]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "OSC int values are small control values that fit in f32"
+        )]
         OscType::Int(i) => {
-            let val = if *i > 1 {
-                *i as f32 / 100.0
-            } else {
-                *i as f32
-            };
+            let val = if *i > 1 { *i as f32 / 100.0 } else { *i as f32 };
             Ok(val.clamp(0.0, 1.0))
         }
-        #[expect(clippy::cast_precision_loss, reason = "OSC long values are small control values that fit in f32")]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "OSC long values are small control values that fit in f32"
+        )]
         OscType::Long(l) => {
-            let val = if *l > 1 {
-                *l as f32 / 100.0
-            } else {
-                *l as f32
-            };
+            let val = if *l > 1 { *l as f32 / 100.0 } else { *l as f32 };
             Ok(val.clamp(0.0, 1.0))
         }
         other => Err(CommandError::TypeCoercion {
@@ -181,10 +182,7 @@ mod tests {
 
     #[test]
     fn coerce_bool_from_string_true() {
-        assert_eq!(
-            coerce_bool(&OscType::String("true".into())).unwrap(),
-            true
-        );
+        assert_eq!(coerce_bool(&OscType::String("true".into())).unwrap(), true);
     }
 
     #[test]
@@ -262,22 +260,34 @@ mod tests {
 
     #[test]
     fn parse_osc_next() {
-        assert_eq!(parse_osc("/fellowshow/next", &[]).unwrap(), RemoteCommand::Next);
+        assert_eq!(
+            parse_osc("/fellowshow/next", &[]).unwrap(),
+            RemoteCommand::Next
+        );
     }
 
     #[test]
     fn parse_osc_prev() {
-        assert_eq!(parse_osc("/fellowshow/prev", &[]).unwrap(), RemoteCommand::Prev);
+        assert_eq!(
+            parse_osc("/fellowshow/prev", &[]).unwrap(),
+            RemoteCommand::Prev
+        );
     }
 
     #[test]
     fn parse_osc_show() {
-        assert_eq!(parse_osc("/fellowshow/show", &[]).unwrap(), RemoteCommand::Show);
+        assert_eq!(
+            parse_osc("/fellowshow/show", &[]).unwrap(),
+            RemoteCommand::Show
+        );
     }
 
     #[test]
     fn parse_osc_hide() {
-        assert_eq!(parse_osc("/fellowshow/hide", &[]).unwrap(), RemoteCommand::Hide);
+        assert_eq!(
+            parse_osc("/fellowshow/hide", &[]).unwrap(),
+            RemoteCommand::Hide
+        );
     }
 
     #[test]
@@ -314,27 +324,24 @@ mod tests {
     fn parse_osc_unknown_address_errors() {
         let result = parse_osc("/fellowshow/unknown", &[]);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Unknown OSC address"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Unknown OSC address"));
     }
 
     #[test]
     fn parse_osc_opacity_missing_arg_errors() {
         let result = parse_osc("/fellowshow/opacity", &[]);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Missing argument"));
+        assert!(result.unwrap_err().to_string().contains("Missing argument"));
     }
 
     #[test]
     fn parse_osc_theme_missing_arg_errors() {
         let result = parse_osc("/fellowshow/theme", &[]);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Missing argument"));
+        assert!(result.unwrap_err().to_string().contains("Missing argument"));
     }
 
     #[test]

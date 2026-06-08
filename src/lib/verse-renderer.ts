@@ -4,6 +4,7 @@ import type {
   VerseRenderData,
   RenderOptions,
 } from "@/types/broadcast"
+import { DEFAULT_TIMER_FONT_FAMILY, getFontFallback } from "@/lib/font-options"
 
 export interface VerseLayoutRect {
   x: number
@@ -223,6 +224,7 @@ function drawBackground(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
   imageCache?: Map<string, HTMLImageElement>,
+  videoCache?: Map<string, HTMLVideoElement>,
 ): void {
   const { width, height } = theme.resolution
   const bg = theme.background
@@ -274,8 +276,9 @@ function drawBackground(
         ctx.fillRect(0, 0, width, height)
         break
       }
-      const img = imageCache?.get(bg.image.url)
-      if (!img) {
+      const isVideo = bg.image.mediaType === "video"
+      const media = isVideo ? videoCache?.get(bg.image.url) : imageCache?.get(bg.image.url)
+      if (!media) {
         // Use a deterministic fallback while image is still loading.
         ctx.fillStyle = bg.image.tint ?? "#000"
         ctx.fillRect(0, 0, width, height)
@@ -295,7 +298,13 @@ function drawBackground(
       let drawW = width
       let drawH = height
 
-      const imgRatio = img.naturalWidth / img.naturalHeight
+      const mediaWidth = isVideo
+        ? (media as HTMLVideoElement).videoWidth
+        : (media as HTMLImageElement).naturalWidth
+      const mediaHeight = isVideo
+        ? (media as HTMLVideoElement).videoHeight
+        : (media as HTMLImageElement).naturalHeight
+      const imgRatio = mediaWidth / mediaHeight
       const canvasRatio = width / height
 
       switch (bg.image.fit) {
@@ -325,7 +334,7 @@ function drawBackground(
           break
       }
 
-      ctx.drawImage(img, drawX, drawY, drawW, drawH)
+      ctx.drawImage(media, drawX, drawY, drawW, drawH)
       ctx.restore()
 
       if (bg.image.tint) {
@@ -339,6 +348,84 @@ function drawBackground(
       ctx.clearRect(0, 0, width, height)
       break
   }
+}
+
+function drawImageToRect(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement | HTMLVideoElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  fit: "cover" | "contain" | "stretch",
+  scale = 1,
+  offsetX = 0,
+  offsetY = 0,
+): void {
+  let drawX = x
+  let drawY = y
+  let drawW = width
+  let drawH = height
+
+  if (fit !== "stretch") {
+    const imgWidth = img instanceof HTMLVideoElement ? img.videoWidth : img.naturalWidth
+    const imgHeight = img instanceof HTMLVideoElement ? img.videoHeight : img.naturalHeight
+    const imgRatio = imgWidth / imgHeight
+    const rectRatio = width / height
+    const shouldFillWidth = fit === "contain" ? imgRatio > rectRatio : imgRatio <= rectRatio
+
+    if (shouldFillWidth) {
+      drawW = width
+      drawH = width / imgRatio
+      drawY = y + (height - drawH) / 2
+    } else {
+      drawH = height
+      drawW = height * imgRatio
+      drawX = x + (width - drawW) / 2
+    }
+  }
+
+  const scaledW = drawW * scale
+  const scaledH = drawH * scale
+  drawX = drawX + (drawW - scaledW) / 2 + offsetX * width
+  drawY = drawY + (drawH - scaledH) / 2 + offsetY * height
+  drawW = scaledW
+  drawH = scaledH
+
+  ctx.drawImage(img, drawX, drawY, drawW, drawH)
+}
+
+function drawPresentationImage(
+  ctx: CanvasRenderingContext2D,
+  theme: BroadcastTheme,
+  verse: VerseRenderData,
+  imageCache?: Map<string, HTMLImageElement>,
+  videoCache?: Map<string, HTMLVideoElement>,
+): boolean {
+  const image = verse.presentationImage
+  if (!image?.url) return false
+
+  const { width, height } = theme.resolution
+  ctx.fillStyle = "#000000"
+  ctx.fillRect(0, 0, width, height)
+
+  const isVideo = image.mediaType === "video"
+  const media = isVideo ? videoCache?.get(image.url) : imageCache?.get(image.url)
+  if (!media) return true
+
+  drawImageToRect(
+    ctx,
+    media,
+    0,
+    0,
+    width,
+    height,
+    image.fit ?? "contain",
+    image.scale ?? 1,
+    image.offsetX ?? 0,
+    image.offsetY ?? 0,
+  )
+  return true
 }
 
 function drawReference(
@@ -403,6 +490,131 @@ function formatTimer(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`
 }
 
+interface RgbColor {
+  r: number
+  g: number
+  b: number
+}
+
+const TIMER_MIN_CONTRAST = 4.5
+const TIMER_LIGHT = "#ffffff"
+const TIMER_DARK = "#111827"
+
+function parseHexColor(color: string): RgbColor | null {
+  const normalized = color.trim()
+  const hex = normalized.startsWith("#") ? normalized.slice(1) : normalized
+
+  if (/^[\da-f]{3}$/i.test(hex)) {
+    return {
+      r: Number.parseInt(hex[0] + hex[0], 16),
+      g: Number.parseInt(hex[1] + hex[1], 16),
+      b: Number.parseInt(hex[2] + hex[2], 16),
+    }
+  }
+
+  if (/^[\da-f]{6}$/i.test(hex)) {
+    return {
+      r: Number.parseInt(hex.slice(0, 2), 16),
+      g: Number.parseInt(hex.slice(2, 4), 16),
+      b: Number.parseInt(hex.slice(4, 6), 16),
+    }
+  }
+
+  return null
+}
+
+function relativeLuminance({ r, g, b }: RgbColor): number {
+  const channel = (value: number) => {
+    const srgb = value / 255
+    return srgb <= 0.03928 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
+  }
+
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+}
+
+function contrastRatio(a: RgbColor, b: RgbColor): number {
+  const lighter = Math.max(relativeLuminance(a), relativeLuminance(b))
+  const darker = Math.min(relativeLuminance(a), relativeLuminance(b))
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+function sampleCanvasColor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): RgbColor | null {
+  const sampleX = Math.max(0, Math.floor(x))
+  const sampleY = Math.max(0, Math.floor(y))
+  const sampleW = Math.max(1, Math.min(ctx.canvas.width - sampleX, Math.floor(width)))
+  const sampleH = Math.max(1, Math.min(ctx.canvas.height - sampleY, Math.floor(height)))
+
+  try {
+    const data = ctx.getImageData(sampleX, sampleY, sampleW, sampleH).data
+    let r = 0
+    let g = 0
+    let b = 0
+    let count = 0
+
+    for (let i = 0; i < data.length; i += 16) {
+      const alpha = data[i + 3] / 255
+      r += data[i] * alpha
+      g += data[i + 1] * alpha
+      b += data[i + 2] * alpha
+      count += alpha
+    }
+
+    if (count === 0) return null
+    return {
+      r: Math.round(r / count),
+      g: Math.round(g / count),
+      b: Math.round(b / count),
+    }
+  } catch {
+    return null
+  }
+}
+
+function resolveTimerColor(
+  ctx: CanvasRenderingContext2D,
+  theme: BroadcastTheme,
+  timer: PresenterTimerRenderData,
+  textWidth: number,
+  fontSize: number,
+): { fill: string; shadow: string } {
+  const { width, height } = theme.resolution
+  const background = sampleCanvasColor(
+    ctx,
+    width / 2 - textWidth / 2,
+    height / 2 - fontSize / 2,
+    textWidth,
+    fontSize,
+  ) ?? parseHexColor(theme.background.color) ?? { r: 0, g: 0, b: 0 }
+
+  const semanticCandidates = timer.isFinished
+    ? ["#fee2e2", "#fecaca", "#ef4444", "#b91c1c"]
+    : timer.remainingSeconds <= 30
+      ? ["#fef9c3", "#fde047", "#a16207"]
+      : [theme.verseText.color]
+  const candidates = [...semanticCandidates, TIMER_LIGHT, TIMER_DARK]
+    .map((fill) => ({ fill, rgb: parseHexColor(fill) }))
+    .filter((candidate): candidate is { fill: string; rgb: RgbColor } => Boolean(candidate.rgb))
+    .map((candidate) => ({
+      ...candidate,
+      contrast: contrastRatio(candidate.rgb, background),
+    }))
+    .sort((a, b) => b.contrast - a.contrast)
+
+  const selected = candidates.find((candidate) => candidate.contrast >= TIMER_MIN_CONTRAST) ?? candidates[0]
+  const selectedLuminance = selected ? relativeLuminance(selected.rgb) : 1
+
+  return {
+    fill: selected?.fill ?? TIMER_LIGHT,
+    shadow: selectedLuminance > 0.45 ? "rgba(0, 0, 0, 0.55)" : "rgba(255, 255, 255, 0.45)",
+  }
+}
+
 function drawPresenterTimer(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
@@ -413,12 +625,15 @@ function drawPresenterTimer(
   const fontSize = Math.max(56, Math.min(width, height) * 0.16)
 
   ctx.save()
-  ctx.font = `700 ${fontSize}px "Geist Variable", sans-serif`
-  ctx.fillStyle = timer.isFinished
-    ? "#dc2626"
-    : timer.remainingSeconds <= 30
-      ? "#F1E600"
-      : theme.verseText.color
+  const fontFamily = timer.fontFamily ?? DEFAULT_TIMER_FONT_FAMILY
+  ctx.font = `700 ${fontSize}px "${fontFamily}", ${getFontFallback(fontFamily)}`
+  const textMetrics = ctx.measureText(text)
+  const timerColor = resolveTimerColor(ctx, theme, timer, textMetrics.width, fontSize)
+  ctx.fillStyle = timerColor.fill
+  ctx.shadowColor = timerColor.shadow
+  ctx.shadowBlur = Math.max(8, fontSize * 0.08)
+  ctx.shadowOffsetX = 0
+  ctx.shadowOffsetY = Math.max(2, fontSize * 0.025)
   ctx.textAlign = "center"
   ctx.textBaseline = "middle"
   ctx.fillText(text, width / 2, height / 2)
@@ -438,70 +653,124 @@ function drawVerseText(
   const verseAlign = resolveHorizontalAlign(vt.horizontalAlign, theme.layout.textAlign, true)
   const verseDecoration = resolveTextDecoration(vt.textDecoration)
   const lineHeightPx = vt.fontSize * vt.lineHeight
+  const mainFont = `${vt.fontWeight} ${vt.fontSize}px "${vt.fontFamily}", serif`
+  const numberFont = `700 ${vn.fontSize}px "${theme.reference.fontFamily}", sans-serif`
+
+  type StyledToken = {
+    text: string
+    kind: "number" | "text"
+    width: number
+  }
+  type StyledLine = {
+    tokens: StyledToken[]
+    width: number
+  }
 
   ctx.save()
-  ctx.font = `${vt.fontWeight} ${vt.fontSize}px "${vt.fontFamily}", serif`
+  ctx.font = mainFont
   ctx.fillStyle = vt.color
   ctx.textBaseline = "top"
-  ctx.textAlign = verseAlign === "justify" ? "left" : verseAlign
+  ctx.textAlign = "left"
 
   if (vt.letterSpacing > 0) {
     try { ctx.letterSpacing = `${vt.letterSpacing}px` } catch { /* unsupported in some WebViews */ }
   }
 
-  // Build full text with verse numbers inline
-  let fullText = ""
+  const measureToken = (text: string, kind: StyledToken["kind"]): StyledToken => {
+    ctx.font = kind === "number" ? numberFont : mainFont
+    return { text, kind, width: ctx.measureText(text).width }
+  }
+
+  const spaceWidth = measureToken(" ", "text").width
+  const tokens: StyledToken[] = []
   for (const segment of verse.segments) {
     if (vn.visible && segment.verseNumber !== undefined) {
-      fullText += `${segment.verseNumber} `
+      tokens.push(measureToken(String(segment.verseNumber), "number"))
     }
-    fullText += segment.text + " "
+    const transformedText = applyTextTransform(
+      segment.text,
+      resolveTextTransform(vt.textTransform),
+    )
+    for (const word of transformedText.split(/\s+/).filter(Boolean)) {
+      tokens.push(measureToken(word, "text"))
+    }
   }
-  fullText = applyTextTransform(fullText.trim(), resolveTextTransform(vt.textTransform))
 
-  const wrappedLines = wrapText(ctx, fullText, textRectWidth)
+  const wrappedLines: StyledLine[] = []
+  let currentLine: StyledToken[] = []
+  let currentWidth = 0
+  for (const token of tokens) {
+    const nextWidth = currentLine.length === 0
+      ? token.width
+      : currentWidth + spaceWidth + token.width
+    if (nextWidth > textRectWidth && currentLine.length > 0) {
+      wrappedLines.push({ tokens: currentLine, width: currentWidth })
+      currentLine = [token]
+      currentWidth = token.width
+    } else {
+      currentLine.push(token)
+      currentWidth = nextWidth
+    }
+  }
+  if (currentLine.length > 0) {
+    wrappedLines.push({ tokens: currentLine, width: currentWidth })
+  }
 
   let currentY = startY
-  const x = alignX(verseAlign === "justify" ? "left" : verseAlign, textRectX, textRectWidth)
 
-  const drawStyledLine = (line: string, drawX: number, drawY: number) => {
+  const drawStyledText = (
+    text: string,
+    kind: StyledToken["kind"],
+    drawX: number,
+    drawY: number,
+  ) => {
+    const isNumber = kind === "number"
+    const fontSize = isNumber ? vn.fontSize : vt.fontSize
+    const y = isNumber && vn.superscript
+      ? drawY + Math.max(0, (vt.fontSize - vn.fontSize) * 0.1)
+      : drawY + Math.max(0, (vt.fontSize - fontSize) * 0.45)
+
+    ctx.font = isNumber ? numberFont : mainFont
+    ctx.fillStyle = isNumber ? vn.color : vt.color
+
     if (vt.shadow) {
       ctx.save()
       ctx.shadowColor = vt.shadow.color
       ctx.shadowBlur = vt.shadow.blur
       ctx.shadowOffsetX = vt.shadow.x
       ctx.shadowOffsetY = vt.shadow.y
-      ctx.fillText(line, drawX, drawY)
+      ctx.fillText(text, drawX, y)
       ctx.restore()
     }
 
-    if (vt.outline) {
+    if (!isNumber && vt.outline) {
       ctx.save()
       ctx.strokeStyle = vt.outline.color
       ctx.lineWidth = vt.outline.width
-      ctx.strokeText(line, drawX, drawY)
+      ctx.strokeText(text, drawX, y)
       ctx.restore()
     }
 
     if (!vt.shadow) {
-      ctx.fillText(line, drawX, drawY)
+      ctx.fillText(text, drawX, y)
     }
   }
 
   for (const [index, line] of wrappedLines.entries()) {
-    const isJustifiedLine = verseAlign === "justify" && index < wrappedLines.length - 1 && /\s+/.test(line)
+    const isJustifiedLine = verseAlign === "justify" && index < wrappedLines.length - 1 && line.tokens.length > 1
+    const lineX = verseAlign === "center"
+      ? textRectX + (textRectWidth - line.width) / 2
+      : verseAlign === "right"
+        ? textRectX + textRectWidth - line.width
+        : textRectX
+
     if (isJustifiedLine) {
-      const words = line.trim().split(/\s+/).filter(Boolean)
-      if (words.length > 1) {
-        const wordsWidth = words.reduce((sum, word) => sum + ctx.measureText(word).width, 0)
-        const gap = (textRectWidth - wordsWidth) / (words.length - 1)
-        let cursorX = textRectX
-        for (const word of words) {
-          drawStyledLine(word, cursorX, currentY)
-          cursorX += ctx.measureText(word).width + gap
-        }
-      } else {
-        drawStyledLine(line, textRectX, currentY)
+      const tokensWidth = line.tokens.reduce((sum, token) => sum + token.width, 0)
+      const gap = (textRectWidth - tokensWidth) / (line.tokens.length - 1)
+      let cursorX = textRectX
+      for (const token of line.tokens) {
+        drawStyledText(token.text, token.kind, cursorX, currentY)
+        cursorX += token.width + gap
       }
       drawTextDecorationLine(
         ctx,
@@ -515,14 +784,18 @@ function drawVerseText(
         textRectX,
       )
     } else {
-      drawStyledLine(line, x, currentY)
-      const lineWidth = Math.min(textRectWidth, Math.max(1, ctx.measureText(line).width))
+      let cursorX = lineX
+      for (const token of line.tokens) {
+        drawStyledText(token.text, token.kind, cursorX, currentY)
+        cursorX += token.width + spaceWidth
+      }
+      const lineWidth = Math.min(textRectWidth, Math.max(1, line.width))
       drawTextDecorationLine(
         ctx,
         verseDecoration,
         vt.color,
         verseAlign,
-        x,
+        alignX(verseAlign === "justify" ? "left" : verseAlign, textRectX, textRectWidth),
         currentY,
         lineWidth,
         vt.fontSize,
@@ -596,27 +869,52 @@ function measureVerseHeight(
   const vn = theme.verseNumbers
   const verseAlign = resolveHorizontalAlign(vt.horizontalAlign, theme.layout.textAlign, true)
   const lineHeightPx = vt.fontSize * vt.lineHeight
+  const mainFont = `${vt.fontWeight} ${vt.fontSize}px "${vt.fontFamily}", serif`
+  const numberFont = `700 ${vn.fontSize}px "${theme.reference.fontFamily}", sans-serif`
   ctx.save()
-  ctx.font = `${vt.fontWeight} ${vt.fontSize}px "${vt.fontFamily}", serif`
+  ctx.font = mainFont
   if (vt.letterSpacing > 0) {
     try { ctx.letterSpacing = `${vt.letterSpacing}px` } catch { /* unsupported in some WebViews */ }
   }
-  let fullText = ""
-  for (const segment of verse.segments) {
-    if (vn.visible && segment.verseNumber !== undefined) fullText += `${segment.verseNumber} `
-    fullText += `${segment.text} `
+  const measure = (text: string, isNumber = false) => {
+    ctx.font = isNumber ? numberFont : mainFont
+    return ctx.measureText(text).width
   }
-  const transformed = applyTextTransform(fullText.trim(), resolveTextTransform(vt.textTransform))
-  const lines = wrapText(ctx, transformed, textRectWidth)
+  const spaceWidth = measure(" ")
+  const lineWidths: number[] = []
+  let currentLineHasToken = false
+  let currentWidth = 0
+  for (const segment of verse.segments) {
+    const tokenWidths: number[] = []
+    if (vn.visible && segment.verseNumber !== undefined) {
+      tokenWidths.push(measure(String(segment.verseNumber), true))
+    }
+    const transformed = applyTextTransform(segment.text, resolveTextTransform(vt.textTransform))
+    tokenWidths.push(...transformed.split(/\s+/).filter(Boolean).map((word) => measure(word)))
+
+    for (const tokenWidth of tokenWidths) {
+      const nextWidth = currentLineHasToken ? currentWidth + spaceWidth + tokenWidth : tokenWidth
+      if (nextWidth > textRectWidth && currentLineHasToken) {
+        lineWidths.push(currentWidth)
+        currentWidth = tokenWidth
+        currentLineHasToken = true
+      } else {
+        currentWidth = nextWidth
+        currentLineHasToken = true
+      }
+    }
+  }
+  if (currentLineHasToken) lineWidths.push(currentWidth)
+  const lineCount = Math.max(1, lineWidths.length)
   let maxLineWidth = 0
-  for (const [index, line] of lines.entries()) {
-    const isJustifiedLine = verseAlign === "justify" && index < lines.length - 1 && /\s+/.test(line)
-    const width = isJustifiedLine ? textRectWidth : ctx.measureText(line).width
+  for (const [index, lineWidth] of lineWidths.entries()) {
+    const isJustifiedLine = verseAlign === "justify" && index < lineWidths.length - 1
+    const width = isJustifiedLine ? textRectWidth : lineWidth
     if (width > maxLineWidth) maxLineWidth = width
   }
   ctx.restore()
   return {
-    height: Math.max(lineHeightPx, lines.length * lineHeightPx),
+    height: Math.max(lineHeightPx, lineCount * lineHeightPx),
     maxLineWidth: Math.max(1, maxLineWidth),
   }
 }
@@ -899,7 +1197,16 @@ function renderVerseImpl(
   }
 
   // Draw background
-  drawBackground(ctx, scaledTheme, options?.imageCache)
+  drawBackground(ctx, scaledTheme, options?.imageCache, options?.videoCache)
+
+  if (verse?.presentationImage) {
+    drawPresentationImage(ctx, scaledTheme, verse, options?.imageCache, options?.videoCache)
+    if (options?.timer) {
+      drawPresenterTimer(ctx, scaledTheme, options.timer)
+    }
+    ctx.restore()
+    return metrics
+  }
 
   // Draw text box if enabled
   if (scaledTheme.textBox.enabled) {

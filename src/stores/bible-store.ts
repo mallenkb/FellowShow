@@ -34,7 +34,7 @@ interface BibleState {
 
 export const useBibleStore = create<BibleState>((set) => ({
   translations: [],
-  activeTranslationId: 1, // KJV default
+  activeTranslationId: 1,
   books: [],
   searchResults: [],
   semanticResults: [],
@@ -60,11 +60,22 @@ export async function hydrateBibleStore(): Promise<void> {
     const store = await load("bible.json", { autoSave: false, defaults: {} })
     const value = await store.get<number>("activeTranslationId")
     if (typeof value === "number") {
-      useBibleStore.getState().setActiveTranslation(value)
+      try {
+        const activeTranslationId = await invoke<number>("set_active_translation", {
+          translationId: value,
+        })
+        useBibleStore.getState().setActiveTranslation(activeTranslationId)
+        return
+      } catch {
+        const activeTranslationId = await invoke<number>("get_active_translation")
+        useBibleStore.getState().setActiveTranslation(activeTranslationId)
+        await store.set("activeTranslationId", activeTranslationId)
+        await store.save()
+        return
+      }
     }
-    await invoke("set_active_translation", {
-      translationId: useBibleStore.getState().activeTranslationId,
-    })
+    const activeTranslationId = await invoke<number>("get_active_translation")
+    useBibleStore.getState().setActiveTranslation(activeTranslationId)
   } catch {
     console.warn("[bible] Failed to hydrate bible store, using defaults")
   }

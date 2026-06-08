@@ -107,10 +107,7 @@ where
         .parse()
         .map_err(|e| CommandError::DispatchFailed(format!("Invalid bind address: {e}")))?;
 
-    let state = Arc::new(AppState {
-        sink,
-        status,
-    });
+    let state = Arc::new(AppState { sink, status });
 
     let app = Router::new()
         .route("/api/v1/health", get(health_handler))
@@ -119,11 +116,16 @@ where
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind(bind_addr).await.map_err(|e| {
-        CommandError::DispatchFailed(format!("Failed to bind HTTP on {bind_addr}: {e}"))
-    })?;
+    let listener = tokio::net::TcpListener::bind(bind_addr)
+        .await
+        .map_err(|e| {
+            CommandError::DispatchFailed(format!("Failed to bind HTTP on {bind_addr}: {e}"))
+        })?;
 
-    let bound_port = listener.local_addr().map(|a| a.port()).unwrap_or(config.port);
+    let bound_port = listener
+        .local_addr()
+        .map(|a| a.port())
+        .unwrap_or(config.port);
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
 
@@ -281,7 +283,9 @@ mod tests {
                 body_str.len()
             )
         } else {
-            format!("{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n")
+            format!(
+                "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n"
+            )
         };
 
         stream.write_all(request.as_bytes()).await.expect("write");
@@ -373,7 +377,10 @@ mod tests {
 
         // Give dispatch a moment
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-        assert!(sink.command_count() > 0, "Sink should have received command");
+        assert!(
+            sink.command_count() > 0,
+            "Sink should have received command"
+        );
 
         let mut handle = result.handle;
         handle.stop();
@@ -381,9 +388,7 @@ mod tests {
 
     #[tokio::test]
     async fn port_conflict_returns_error() {
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-            .await
-            .unwrap();
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let port = listener.local_addr().unwrap().port();
 
         let sink = Arc::new(MockSink::new());

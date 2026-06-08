@@ -23,20 +23,17 @@ pub struct Bm25Result {
 /// Common English stop words that match nearly every Bible verse.
 /// Filtering these keeps AND queries fast (~5-20ms instead of 200-1300ms).
 const STOP_WORDS: &[&str] = &[
-    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
-    "of", "with", "by", "from", "is", "it", "not", "be", "are", "was",
-    "were", "been", "has", "have", "had", "do", "does", "did", "will",
-    "would", "shall", "should", "may", "might", "can", "could", "that",
-    "this", "these", "those", "he", "she", "we", "they", "you", "i",
-    "me", "him", "her", "us", "them", "my", "his", "its", "our", "your",
-    "their", "so", "if", "as", "no", "up", "all", "am", "about", "into",
-    "when", "what", "which", "who", "whom", "how", "than", "then", "now",
-    "just", "also", "very", "like", "even", "out", "there", "here",
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by",
+    "from", "is", "it", "not", "be", "are", "was", "were", "been", "has", "have", "had", "do",
+    "does", "did", "will", "would", "shall", "should", "may", "might", "can", "could", "that",
+    "this", "these", "those", "he", "she", "we", "they", "you", "i", "me", "him", "her", "us",
+    "them", "my", "his", "its", "our", "your", "their", "so", "if", "as", "no", "up", "all", "am",
+    "about", "into", "when", "what", "which", "who", "whom", "how", "than", "then", "now", "just",
+    "also", "very", "like", "even", "out", "there", "here",
 ];
 
-static STOP_WORD_SET: LazyLock<HashSet<&str>> = LazyLock::new(|| {
-    STOP_WORDS.iter().copied().collect()
-});
+static STOP_WORD_SET: LazyLock<HashSet<&str>> =
+    LazyLock::new(|| STOP_WORDS.iter().copied().collect());
 
 fn is_stop_word(word: &str) -> bool {
     STOP_WORD_SET.contains(word.to_lowercase().as_str())
@@ -134,7 +131,8 @@ fn run_fts_query(
             })
         },
     )?;
-    rows.collect::<Result<Vec<_>, _>>().map_err(BibleError::from)
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(BibleError::from)
 }
 
 /// Deduplicate results by (`book_number`, chapter, verse), keeping first occurrence.
@@ -168,7 +166,10 @@ impl BibleDb {
         translation_id: i64,
         limit: usize,
     ) -> Result<Vec<Verse>, BibleError> {
-        let conn = self.conn.lock().map_err(|e| BibleError::Internal(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| BibleError::Internal(e.to_string()))?;
         let mut stmt = conn.prepare(
             "SELECT v.id, v.translation_id, v.book_number, v.book_name, v.book_abbreviation, v.chapter, v.verse, v.text \
              FROM verses_fts fts \
@@ -212,7 +213,10 @@ impl BibleDb {
         query: &str,
         limit: usize,
     ) -> Result<Vec<Bm25Result>, BibleError> {
-        let conn = self.conn.lock().map_err(|e| BibleError::Internal(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| BibleError::Internal(e.to_string()))?;
         let fetch_limit = limit * 4;
 
         // Tier 1: Exact phrase match
@@ -244,7 +248,10 @@ impl BibleDb {
     }
 
     pub fn search_books(&self, query: &str) -> Result<Vec<Book>, BibleError> {
-        let conn = self.conn.lock().map_err(|e| BibleError::Internal(e.to_string()))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|e| BibleError::Internal(e.to_string()))?;
         let pattern = format!("{query}%");
         let mut stmt = conn.prepare(
             "SELECT id, translation_id, book_number, name, abbreviation, testament \
@@ -293,10 +300,7 @@ mod tests {
 
     #[test]
     fn and_query_filters_stop_words() {
-        assert_eq!(
-            build_and_query("be doers of the word"),
-            "doers word"
-        );
+        assert_eq!(build_and_query("be doers of the word"), "doers word");
     }
 
     #[test]
@@ -330,7 +334,8 @@ mod tests {
 
     #[test]
     fn or_query_caps_at_10_terms() {
-        let long_input = "God love peace faith hope joy spirit truth grace mercy light salvation prayer";
+        let long_input =
+            "God love peace faith hope joy spirit truth grace mercy light salvation prayer";
         let result = build_or_query(long_input);
         let term_count = result.matches(" OR ").count() + 1;
         assert!(term_count <= 10);

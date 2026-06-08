@@ -3,6 +3,7 @@ import type { BroadcastTheme } from "@/types/broadcast"
 const BUILTIN_PRESENTATION_BACKGROUND_LIGHT = "#101084"
 const BUILTIN_PRESENTATION_BACKGROUND_DARK = "#323294"
 export const BROADCAST_OVERLAY_PREVIEW_IMAGE = "/broadcast-previews/preacher-stage-unsplash-phil-hearing.jpg"
+export const BIBLE_VERSE_PREVIEW_IMAGE = "/broadcast-previews/full-background.jpg"
 const THEME_STORAGE_KEY = "theme"
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
 
@@ -177,9 +178,9 @@ const MODERN_LIGHT: BroadcastTheme = {
     referenceGap: 30,
   },
   transition: {
-    type: "slide",
+    type: "fade",
     duration: 400,
-    easing: "ease-out",
+    easing: "ease-in-out",
     direction: "up",
   },
 }
@@ -261,8 +262,86 @@ const BROADCAST_OVERLAY: BroadcastTheme = {
   },
 }
 
+const BIBLE_VERSE_PREVIEW: BroadcastTheme = {
+  ...baseTheme,
+  pinned: true,
+  id: "builtin-bible-verse-preview",
+  name: "Bible Verse Preview",
+  background: {
+    type: "image",
+    color: "#091b3f",
+    gradient: null,
+    image: {
+      url: BIBLE_VERSE_PREVIEW_IMAGE,
+      fit: "cover",
+      blur: 0,
+      brightness: 82,
+      tint: "rgba(4,12,32,0.28)",
+    },
+  },
+  textBox: {
+    enabled: false,
+    color: "#000000",
+    opacity: 0,
+    borderRadius: 0,
+    padding: 0,
+  },
+  verseText: {
+    fontFamily: "Source Serif 4 Variable",
+    fontSize: 70,
+    fontWeight: 500,
+    color: "#ffffff",
+    horizontalAlign: "center",
+    verticalAlign: "top",
+    textTransform: "none",
+    textDecoration: "none",
+    lineHeight: 1.45,
+    letterSpacing: 0,
+    shadow: { color: "rgba(0,0,0,0.78)", blur: 10, x: 0, y: 3 },
+    outline: null,
+  },
+  verseNumbers: {
+    visible: true,
+    fontSize: 18,
+    color: "#f4c95d",
+    superscript: true,
+  },
+  reference: {
+    fontFamily: "Geist Variable",
+    fontSize: 42,
+    fontWeight: 600,
+    color: "#f4c95d",
+    horizontalAlign: "center",
+    verticalAlign: "top",
+    textTransform: "none",
+    textDecoration: "none",
+    uppercase: false,
+    letterSpacing: 1,
+    position: "below",
+  },
+  layout: {
+    anchor: "center",
+    offsetX: 0,
+    offsetY: 0,
+    padding: { top: 48, right: 72, bottom: 48, left: 72 },
+    textAlign: "center",
+    backgroundWidth: 100,
+    backgroundHeight: 100,
+    textAreaWidth: 78,
+    textAreaHeight: 44,
+    referenceGap: 22,
+  },
+  transition: {
+    type: "fade",
+    duration: 300,
+    easing: "ease-in-out",
+    direction: "up",
+  },
+}
+
 export const BUILTIN_THEMES: BroadcastTheme[] = [
   CLASSIC_DARK,
   MODERN_LIGHT,
   BROADCAST_OVERLAY,
+  BIBLE_VERSE_PREVIEW,
 ]

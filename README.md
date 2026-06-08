@@ -8,6 +8,12 @@
 
 FellowShow listens to a live sermon audio feed, transcribes speech in real time, detects Bible verse references (both explicit citations and quoted passages), and renders them as broadcast-ready overlays via NDI for live production.
 
+## Open Source
+
+FellowShow is open source under the [MIT License](LICENSE). Contributions are welcome through issues and pull requests; see [CONTRIBUTING.md](.github/CONTRIBUTING.md), [CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md), and [SECURITY.md](.github/SECURITY.md) before opening a change.
+
+Generated and third-party runtime assets are not part of the MIT-licensed source release. Bible databases, copyrighted translations, ML models, embeddings, and NDI SDK files are downloaded or built locally by the setup scripts and remain subject to their own upstream licenses and terms.
+
 ## Features
 
 - **Real-time speech-to-text** via local Whisper or cloud Deepgram (WebSocket streaming + REST fallback)
@@ -160,6 +166,8 @@ For broadcast output via NDI:
 bun run download:ndi-sdk
 ```
 
+The NDI SDK files are downloaded into `sdk/ndi/` and are intentionally ignored by Git. Review the NDI SDK and upstream source terms before redistributing binaries that include or depend on those files.
+
 ### Running individual setup steps
 
 Each phase can also be run independently:
@@ -183,6 +191,70 @@ bun run tauri dev
 
 ```bash
 bun run tauri build
+```
+
+Release installers bundle the single SQLite database listed in
+`src-tauri/tauri.conf.json` (`data/fellowshow.db`). To ship NIV and NKJV by
+default without songs or hymns, place licensed exports at `data/sources/NIV.json`
+and `data/sources/NKJV.json`, then run:
+
+```bash
+bun run release:bundled
+```
+
+That command verifies the licensed source files, builds `data/fellowshow.db`
+with only NIV and NKJV, and then runs the Tauri release build. It does not
+download or bundle song assets.
+
+### Publish bundled content to R2
+
+FellowShow can publish the same release database to Cloudflare R2 for future
+content update flows. The publisher prefers Wrangler with a Cloudflare API token
+and can also use R2's S3-compatible API through the AWS CLI.
+
+Create a local `.env` from `.env.example` or set these variables in CI:
+
+```bash
+CLOUDFLARE_API_TOKEN=...
+R2_BUCKET=fellow-show
+R2_PREFIX=content
+```
+
+Then run:
+
+```bash
+bun run release:r2
+```
+
+That command rebuilds `data/fellowshow.db` from every available translation
+source in `data/sources`, writes
+`data/dist/content-manifest.json`, and uploads:
+
+```text
+content/v<app-version>/fellowshow.db
+content/v<app-version>/content-manifest.json
+content/latest/content-manifest.json
+```
+
+To let the desktop app download published translation packs at runtime, expose
+the R2 objects through a public/custom domain and set one of:
+
+```bash
+FELLOWSHOW_CONTENT_MANIFEST_URL=https://<public-domain>/content/latest/content-manifest.json
+# or
+FELLOWSHOW_CONTENT_BASE_URL=https://<public-domain>
+```
+
+Do not commit real R2 credentials. If a token or S3 secret is pasted into an
+issue, PR, chat, or log, rotate it in Cloudflare before using it for production.
+
+If you need the S3-compatible path instead of Wrangler, set:
+
+```bash
+R2_UPLOAD_TOOL=aws
+R2_ENDPOINT_URL=https://<account-id>.r2.cloudflarestorage.com
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
 ```
 
 ## Project Structure

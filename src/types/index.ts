@@ -4,10 +4,10 @@ export type {
   TranscriptSegment,
   TranscriptEventPayload,
 } from "./transcript"
-export type { Translation, Book, Verse, CrossReference, Hymn } from "./bible"
+export type { Translation, Book, Verse, CrossReference } from "./bible"
 export type { QueueItem } from "./queue"
 export type { DetectionResult, DetectionStatus, ReadingAdvance, SemanticSearchResult } from "./detection"
-export type { BroadcastTheme, PresenterTimerRenderData, VerseRenderData, VerseSegment, RenderOptions } from "./broadcast"
+export type { BroadcastTheme, BroadcastThemeSection, PresenterTimerRenderData, VerseRenderData, VerseSegment, RenderOptions } from "./broadcast"
 export type {
   NdiAlphaMode,
   NdiConfigEventPayload,

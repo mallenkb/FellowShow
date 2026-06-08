@@ -3,16 +3,20 @@ import { readFile, writeTextFile } from "@tauri-apps/plugin-fs"
 import type { BroadcastTheme } from "@/types"
 
 /**
- * Opens a native file dialog to pick an image, reads it,
+ * Opens a native file dialog to pick a background image or video, reads it,
  * and returns a base64 data URL that persists across restarts.
  */
-export async function pickThemeBackgroundImage(): Promise<string | null> {
+export async function pickThemeBackgroundMedia(): Promise<{ url: string; mediaType: "image" | "video" } | null> {
   const selected = await open({
     multiple: false,
     filters: [
       {
-        name: "Images",
-        extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg"],
+        name: "Images and Videos",
+        extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "mp4", "webm", "mov", "m4v"],
+      },
+      {
+        name: "Videos",
+        extensions: ["mp4", "webm", "mov", "m4v"],
       },
     ],
   })
@@ -29,15 +33,20 @@ export async function pickThemeBackgroundImage(): Promise<string | null> {
     gif: "image/gif",
     bmp: "image/bmp",
     svg: "image/svg+xml",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mov: "video/quicktime",
+    m4v: "video/mp4",
   }
   const mime = mimeMap[extension] ?? "image/png"
+  const mediaType = mime.startsWith("video/") ? "video" : "image"
 
   let binary = ""
   for (const byte of bytes) {
     binary += String.fromCharCode(byte)
   }
   const base64 = btoa(binary)
-  return `data:${mime};base64,${base64}`
+  return { url: `data:${mime};base64,${base64}`, mediaType }
 }
 
 /**

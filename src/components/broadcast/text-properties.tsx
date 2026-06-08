@@ -1,6 +1,7 @@
 import { useBroadcastStore } from "@/stores/broadcast-store"
-import { Slider } from "@/components/ui/slider"
+import { SliderField } from "@/components/ui/slider-field"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import {
   Select,
   SelectContent,
@@ -8,16 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-const FONT_FAMILIES = [
-  "Geist Variable",
-  "Source Serif 4 Variable",
-  "Georgia",
-  "Arial",
-  "Helvetica",
-  "Times New Roman",
-  "Courier New",
-]
+import { BROADCAST_FONT_FAMILIES } from "@/lib/font-options"
 
 const FONT_WEIGHTS = [
   { value: "100", label: "100 - Thin" },
@@ -112,9 +104,9 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {FONT_FAMILIES.map((f) => (
-              <SelectItem key={f} value={f}>
-                {f}
+            {BROADCAST_FONT_FAMILIES.map((font) => (
+              <SelectItem key={font.value} value={font.value}>
+                {font.label} · {font.category}
               </SelectItem>
             ))}
           </SelectContent>
@@ -142,65 +134,40 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
       </div>
 
       {/* Font Size */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Font Size</label>
-          <span className="text-xs tabular-nums text-muted-foreground">{data.fontSize}px</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Slider
-            min={8}
-            max={200}
-            step={1}
-            value={[data.fontSize]}
-            onValueChange={([v]) => update(`${prefix}.fontSize`, v)}
-            className="flex-1"
-          />
-          <Input
-            type="number"
-            min={8}
-            max={200}
-            value={data.fontSize}
-            onChange={(e) => {
-              const v = Number(e.target.value)
-              if (v >= 8 && v <= 200) update(`${prefix}.fontSize`, v)
-            }}
-            className="w-16"
-          />
-        </div>
-      </div>
+      <SliderField
+        label="Font Size"
+        value={data.fontSize}
+        min={8}
+        max={200}
+        unit="px"
+        onChange={(v) => update(`${prefix}.fontSize`, v)}
+      />
 
       {/* Line Height — only for verse text, reference type doesn't have lineHeight */}
       {prefix === "verseText" && (
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground">Line Height</label>
-            <span className="text-xs tabular-nums text-muted-foreground">{(draftTheme.verseText.lineHeight).toFixed(2)}</span>
-          </div>
-          <Slider
-            min={0.5}
-            max={3.0}
-            step={0.05}
-            value={[draftTheme.verseText.lineHeight]}
-            onValueChange={([v]) => update("verseText.lineHeight", v)}
-          />
-        </div>
+        <SliderField
+          label="Line Height"
+          value={draftTheme.verseText.lineHeight}
+          min={0.5}
+          max={3}
+          step={0.05}
+          defaultValue={1.2}
+          format={(v) => v.toFixed(2)}
+          onChange={(v) => update("verseText.lineHeight", v)}
+        />
       )}
 
       {/* Letter Spacing */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Letter Spacing</label>
-          <span className="text-xs tabular-nums text-muted-foreground">{data.letterSpacing}px</span>
-        </div>
-        <Slider
-          min={-5}
-          max={50}
-          step={0.5}
-          value={[data.letterSpacing]}
-          onValueChange={([v]) => update(`${prefix}.letterSpacing`, v)}
-        />
-      </div>
+      <SliderField
+        label="Letter Spacing"
+        value={data.letterSpacing}
+        min={-5}
+        max={50}
+        step={0.5}
+        unit="px"
+        defaultValue={0}
+        onChange={(v) => update(`${prefix}.letterSpacing`, v)}
+      />
 
       {/* Horizontal Alignment */}
       <div className="flex flex-col gap-1.5">
@@ -307,18 +274,14 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
             className="w-20 font-mono"
           />
         </div>
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Opacity</label>
-          <span className="text-xs tabular-nums text-muted-foreground">{colorOpacity}%</span>
-        </div>
-        <Slider
+        <SliderField
+          label="Opacity"
+          value={colorOpacity}
           min={0}
           max={100}
-          step={1}
-          value={[colorOpacity]}
-          onValueChange={([v]) =>
-            update(`${prefix}.color`, buildColorWithOpacity(colorHex, v))
-          }
+          unit="%"
+          defaultValue={100}
+          onChange={(v) => update(`${prefix}.color`, buildColorWithOpacity(colorHex, v))}
         />
       </div>
     </div>
@@ -345,24 +308,6 @@ function ReferenceProperties() {
           onChange={(e) => update("reference.uppercase", e.target.checked)}
           className="h-4 w-4 rounded border-input accent-primary"
         />
-      </div>
-
-      {/* Reference Position */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Reference Position</label>
-        <Select
-          value={draftTheme.reference.position}
-          onValueChange={(v) => update("reference.position", v)}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="above">Above Verse</SelectItem>
-            <SelectItem value="below">Below Verse</SelectItem>
-            <SelectItem value="inline">Inline</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
     </div>
   )
@@ -405,50 +350,33 @@ function VerseProperties() {
 
         {shadow && (
           <div className="flex flex-col gap-3">
-            {/* Offset X */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Offset X</label>
-                <span className="text-xs tabular-nums text-muted-foreground">{shadow.x}px</span>
-              </div>
-              <Slider
-                min={-20}
-                max={50}
-                step={1}
-                value={[shadow.x]}
-                onValueChange={([v]) => update("verseText.shadow.x", v)}
-              />
-            </div>
-
-            {/* Offset Y */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Offset Y</label>
-                <span className="text-xs tabular-nums text-muted-foreground">{shadow.y}px</span>
-              </div>
-              <Slider
-                min={-20}
-                max={50}
-                step={1}
-                value={[shadow.y]}
-                onValueChange={([v]) => update("verseText.shadow.y", v)}
-              />
-            </div>
-
-            {/* Blur */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Blur</label>
-                <span className="text-xs tabular-nums text-muted-foreground">{shadow.blur}px</span>
-              </div>
-              <Slider
-                min={0}
-                max={50}
-                step={1}
-                value={[shadow.blur]}
-                onValueChange={([v]) => update("verseText.shadow.blur", v)}
-              />
-            </div>
+            <SliderField
+              label="Offset X"
+              value={shadow.x}
+              min={-20}
+              max={50}
+              unit="px"
+              defaultValue={2}
+              onChange={(v) => update("verseText.shadow.x", v)}
+            />
+            <SliderField
+              label="Offset Y"
+              value={shadow.y}
+              min={-20}
+              max={50}
+              unit="px"
+              defaultValue={2}
+              onChange={(v) => update("verseText.shadow.y", v)}
+            />
+            <SliderField
+              label="Blur"
+              value={shadow.blur}
+              min={0}
+              max={50}
+              unit="px"
+              defaultValue={4}
+              onChange={(v) => update("verseText.shadow.blur", v)}
+            />
 
             {/* Shadow Color */}
             <div className="flex flex-col gap-1.5">
@@ -479,20 +407,15 @@ function VerseProperties() {
                   className="w-20 font-mono"
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Opacity</label>
-                <span className="text-xs tabular-nums text-muted-foreground">{shadowColor.opacity}%</span>
-              </div>
-              <Slider
+              <SliderField
+                label="Opacity"
+                value={shadowColor.opacity}
                 min={0}
                 max={100}
-                step={1}
-                value={[shadowColor.opacity]}
-                onValueChange={([v]) =>
-                  update(
-                    "verseText.shadow.color",
-                    buildColorWithOpacity(shadowColor.hex, v)
-                  )
+                unit="%"
+                defaultValue={100}
+                onChange={(v) =>
+                  update("verseText.shadow.color", buildColorWithOpacity(shadowColor.hex, v))
                 }
               />
             </div>
@@ -520,20 +443,16 @@ function VerseProperties() {
 
         {outline && (
           <div className="flex flex-col gap-3">
-            {/* Width */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Width</label>
-                <span className="text-xs tabular-nums text-muted-foreground">{outline.width}px</span>
-              </div>
-              <Slider
-                min={0}
-                max={20}
-                step={0.5}
-                value={[outline.width]}
-                onValueChange={([v]) => update("verseText.outline.width", v)}
-              />
-            </div>
+            <SliderField
+              label="Width"
+              value={outline.width}
+              min={0}
+              max={20}
+              step={0.5}
+              unit="px"
+              defaultValue={1}
+              onChange={(v) => update("verseText.outline.width", v)}
+            />
 
             {/* Outline Color */}
             <div className="flex flex-col gap-1.5">
@@ -564,23 +483,54 @@ function VerseProperties() {
   )
 }
 
+const ELEMENT_OPTIONS = [
+  { value: "verse", label: "Verse" },
+  { value: "reference", label: "Reference" },
+] as const
+
+function ElementSwitcher() {
+  const selectedElement = useBroadcastStore((s) => s.selectedElement)
+  const setSelectedElement = useBroadcastStore((s) => s.setSelectedElement)
+
+  return (
+    <div className="mb-4 grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+      {ELEMENT_OPTIONS.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => setSelectedElement(option.value)}
+          className={cn(
+            "rounded px-2 py-1 text-xs font-medium transition-colors",
+            selectedElement === option.value
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function TextProperties() {
   const selectedElement = useBroadcastStore((s) => s.selectedElement)
 
-  if (selectedElement === "reference") {
-    return <ReferenceProperties />
-  }
-
-  if (selectedElement === "verse") {
-    return <VerseProperties />
-  }
-
   return (
-    <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-      <p className="text-sm font-medium text-muted-foreground">No element selected</p>
-      <p className="text-xs text-muted-foreground">
-        Click on verse, reference, or translation text in the canvas to edit its properties
-      </p>
+    <div className="flex flex-col">
+      <ElementSwitcher />
+      {selectedElement === "reference" ? (
+        <ReferenceProperties />
+      ) : selectedElement === "verse" ? (
+        <VerseProperties />
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+          <p className="text-sm font-medium text-muted-foreground">No element selected</p>
+          <p className="text-xs text-muted-foreground">
+            Pick Verse or Reference above, or click the text on the canvas, to edit its properties.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

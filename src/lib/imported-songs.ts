@@ -1,0 +1,5914 @@
+import type { CopSong } from "./cop-songs"
+
+export const importedSongs: CopSong[] = [
+  {
+    "id": "theme-2026-1",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 1,
+    "title": "By the power of the Spirit,",
+    "lyrics": "By the power of the Spirit,\nThe church is marching on\nThrough the power of the\ngospel Salvation comes to all\nSigns and wonders follow our\npreaching Healing the sick\nRaising the dead\nCasting out demons\nPulling down strongholds\nIn the name of Jesus Christ\nNational Music Committee",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-2",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 2,
+    "title": "The Holy Spirit, by the power of the Gospel",
+    "lyrics": "The Holy Spirit, by the power of the Gospel\nHas unleashed the church to transform the world\nHe transforms hearts and lives of the faithful\nTo preach Christ until He returns\nUnleashed!\nWe have met the\nMessiah We are\nwitnesses of His\nrighteous reign\nEmpowered!\nBy the Holy - Spirit\nThat convicts and cures the world of sin\nNational Music Committee",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-3",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 3,
+    "title": "We journey on",
+    "lyrics": "We journey on\nThe church remains unleashed\nTo reach out to all\nAnd save the world for Christ\nWe will not retreat\nBy the pow'r of the Spirit\nAnd the pow'r of the gospel\nShackles break\nThe bound is set free.\nO what great joy!\nNational Music\nCommittee",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-4",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 4,
+    "title": "Chantez au Seigneur Dieu",
+    "lyrics": "Chantez au Seigneur Dieu\nTous les saints de Dieu\nChantez des louanges au roi Jésus (2x)\nIl est roi sur toute la terre\nIl est roi sous la terre\nIl est roi dans-les-cieux\nVous, serviteurs\nChantez des louanges au roi Jésus\nDelmar Asorwoe",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-5",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 5,
+    "title": "I will let my light shine before all people",
+    "lyrics": "I will let my light shine before all people\nThat they may see my works and glorify God\nGood works of God's love\nHis wonderful love\nI will let my light shine throughout my world",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-6",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 6,
+    "title": "Psalms 126:1-6 NIV",
+    "lyrics": "Psalms 126:1-6 NIV\nWhen the Lord restored the fortunes of\nZion, we were like those who dreamed.\nOur mouths were filled with laughter, our\ntongues with songs of joy.\nThen it was said among the nations,\n“The Lord has done great things for\nthem. The Lord has done great things\nfor us, and we are filled with joy.\nRestore our fortunes, Lord, like streams in the Negev.\nThose who sow with tears will reap with songs of\njoy. Those who go out weeping, carrying seed to\nsow, will return with songs, With songs of joy,\ncarrying sheaves with them. Fred Amoakohene\nSarpong",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-7",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 7,
+    "title": "When the Saviour said goodbye",
+    "lyrics": "When the Saviour said goodbye\nHis disciples gathered close\nThe Holy Spirit came like fire\nHe poured Himself in each of them\n2. He vowed He'd never leave our side\nHis promise stands through every age\nThe living Word in every life\nProclaimed by every faithful voice\nJesus is here,\nJesus is there\nWhen we are one,\nHe's always near us\nWhen the Saviour said goodbye\nHe didn't really go away\n3. Not just a memory or name\nBut the Spirit's power in our beings\nIn every heart that calls His way\nHe is walking in our day\nSeth Asare Ofei Badu",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-8",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 8,
+    "title": "The journey may be long",
+    "lyrics": "The journey may be long\nBut I'm walking along\nThe road may be rough\nSurely, I will arrive\nThough trials be tough\nGod's presence is here\nHis promise is true\nHe will see me Through\nI'm counting on the Lord, the Almighty One\nI trust in the Lord, the Living One\nThe faithful One, He will never fail me\nHe has called me, He will do it\nThe faithful One, He will never fail me\nHe has called me, He will do it\nDaniel K. Dekpor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-9",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 9,
+    "title": "Let every nation praise the name of the Lord forever",
+    "lyrics": "Let every nation praise the name of the Lord forever\nLet every nation praise the name of the Lord forever\nHe has done great things\nHe deserves our praise\nLet every nation praise the name of the Lord forever\nLet every nation praise the name of the Lord forever\nDaniel K. Dekpor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-10",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 10,
+    "title": "It is true",
+    "lyrics": "It is true\nThe Lord, Jesus Christ\nHas risen from the dead\nIt is true\nThe Lord, Jesus Christ\nHas risen from the dead\nStop doubting\nAnd believe\nStop doubting\nAnd believe\nIt is true\nThe Lord, Jesus Christ\nHas risen from the dead\nP. B. Appiah-Adu",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-11",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 11,
+    "title": "Great is the mystery of godliness",
+    "lyrics": "Great is the mystery of godliness\nThat the Creator revealed as\ncreature To save the wretched soul\nof man T o redeem us back to God\nTo save the wretched soul of man\nTo redeem us back to God\nHe appeared in body\nVindicated by the Spirit\nWas seen by the angels\nPreached among the nations\nWas believed in the world\nAnd taken up in glory\nOh Jesus Christ,\nOur Lord and King\n2. Salvation belongs to our God who reigns above\nHe gave His Son to die for us\nOutcasts and vile sinners we were\nHe shed His blood for us\nOutcasts and vile sinners we were\nHe shed His blood for us\nBenjamin Elijah Baidoo",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-12",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 12,
+    "title": "Great and Mighty are you, Lord",
+    "lyrics": "Great and Mighty are you, Lord\nNone can compare unto You\nLord,\nyou reign in majesty and power\nGreat are you, Lord\nOther kingdoms pass away\nBut Your kingdom still remains\nYou are King over King over them all\nGenerations come and go\nYet, You reign forevermore\nYou are King over King over them all\nYou are King over King over the earth\nYou are King over King over the earth\nYou remain the same\nYou will never change\nVoice of Pentecost",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-13",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 13,
+    "title": "God is my Rock",
+    "lyrics": "God is my Rock\nIn Him I find protection\nGod is my Rock\nIn Him I find deliverance\nHe is my refuge\nMy Saviour\nHe is worthy of my\npraise Let's sing His\npraise Let's shout with\njoy\nLet's sing His praise\nLet's shout with joy\nHe is my refuge\nMy Saviour\nHe is worthy of my praise\nDaniel K Dekpor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-14",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 14,
+    "title": "We worship You",
+    "lyrics": "We worship You\nWe worship You\nWe worship You, Lord\nWe worship You\nThere is none like You\nNone can compare to You\nWe worship You, Lord\nWe worship You\nEmmanuel Oppong Donkor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-15",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 15,
+    "title": "We bow before Your throne",
+    "lyrics": "We bow before Your throne\nAnd give You praise\nWe bow before Your\nthrone And worship You\nYou are God\nYou are God\nYou are God\nWe give You praise\nYou are God\nYou are God\nYou are God\nWe worship You\nEmmanuel Oppong Donkor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-16",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 16,
+    "title": "Away, far away",
+    "lyrics": "Away, far away\nI was far away\nGod brought me close to Himself\nCleansed me by the blood of Christ\nAnd now I stand justified\nAll because of Christ.\nOpoku Onyinah",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-17",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 17,
+    "title": "When you thought it was faith,",
+    "lyrics": "When you thought it was faith,\nBut it turned out to be fake\nYou thought he was a saint,\nBut he led you into sin\nNow your soul feels the ache,\nFrom the choices that you make\nTruth is calling out your name,\nStill, there's time to change your fate Refrain\nIt's time for your conscience\nTo guide you to God's Light\nFor at the Great Judgement\nYou will need to answer right\n2. Do not abandon faith,\nYou'll believe some lie instead\nAnd don't go back to evil,\nJust to feed your pride or dread\nWhat you worship, you defend,\nEven when it leads to death\nBut the Word brings living breath—\nTurn around, find peace instead\n3. The Bible commands a clean heart,\nAnd a conscience clear and true\nNot just outward works or noise,\nBut a life aligned through you\nTruth and love must walk as one,\nFaith must bear its fruit\nWhat you sow is what you reap—\nSo plant what's good even in its\nroots\n4. We all start off as misled,\nSinners blinded by the lies\nBut you don't have to die lost,\nGrace is open wide\nDeceived but not forsaken,\nBroken yet still prized\nIf you turn while it is day—\nThere is mercy in His eyes\nOptional Chorus\nConscience all awake is the call before any call\nCaution the world, for it is dark\nLight has come, it's calling your heart\nTruth still speaks and grace still fights\nTurn, and you'll answer right\nSeth Asare Ofei Badu",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-18",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 18,
+    "title": "God is our refuge and strength",
+    "lyrics": "God is our refuge and strength\nAlways ready to help in times of need.\nSo we will not fear when the earth\nmay quake and the mountains\ncrumble into the sea.\nLet the oceans roar and the valleys foam\nAnd the mountains tremble as the waters\nsurge! Be still and know\nThat I am God\nAnd there's a river that makes glad the city of God\nBe still and know\nBe still and know\nThat God walks\nin the midst of all of those\nAnd He will fulfill\nHis promises today\nJehu Gyimah",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-19",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 19,
+    "title": "Oh God",
+    "lyrics": "Oh God\nYou are seated on your throne\nHighly lifted up\nAt your feet we bow\nSinging Holy, Holy, are you Lord\nWe cry Holy, Holy, are you Lord\nSinging Holy, Holy, are you Lord\nWe cry Holy, Holy\nGrace Kyei Boate",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-20",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 20,
+    "title": "Baba Oluwa my Savior eeyy",
+    "lyrics": "Baba Oluwa my Savior eeyy\nI've come to say thank you Baba\nFor all you've done for me\nYou picked me up from the miry clay\nAnd set my feet on the rock to stay you changed my story\nWhat was meant for my harm\nHas turned for my Good\nAnd now I can sing a new song\nEse oo Ese oo Ese oo Baba oo\nEse Ese oo\nSiyabonga\nThe one who changed my destiny\nThe one who brought me joy and peace;\nA wretched soul like me\nI'm here today just by your grace\nI give my heart and soul to You, my one and only\nEse oo Ese oo Ese oo Baba oo\nEse Baba oo\nSiyabonga\nLord Your blessing Dey follow follow me\nYour love eno Dey leave my life alone\nYour blessing Dey follow follow me\nI have seen it I have touched it\nI have lived it Oh God\nVoice of Pentecost\nGHANAIAN LANGUAGES\n1. Honhom Kronkron ahoɔden mu\n2. Asɔre no apue wɔ\n3. Yesu abehu me mmↄbↄ\n4. Nea Ɔde bɔne kyɛ n’\n5. Awurade ne me nkwa ahoɔden\n6. Awurade, hena na ɔtesɛ Wo\n7. Mɛsom Onyankopↄn yie\n8. Ɔreyɛ, Ɔreyɛ\n9. Adom no abu so ama me\n10. Twɛn, twɛn, na twɛn No\n11. Di hene wɔ m’akoma mu\n12. Aseda, aseda, aseda bebree\n13. Nyame wɔ ha, Ɔdom wɔ ha\n14. Sɔ me nsa na kyerɛ me kwan\n15. Ɛyɛ nokwasɛm sɛ\n16. Yesu baa wiase maa me\n17. Mewͻ nnwanten ͻha\n18. Ɛnnɛ twa mu a da bɛn\n19. Yehowa nko na yεnim no\n20. Nea Wafrɛ yɛn no yɛ Ɔnokwafo\n21. Bee mli ni wɔ hiɛnɔkamɔ fɛɛ eta\n22. Naawin titari onɛ maal siel woo\n23. Wɔnɔ, A ne wɔnɔ\n24. Winàam ye tumpusiya\n25. Mi dzi ha na Mawu\n26. Ame ka ƒe lɔlɔnu ’ya tae mele agbe ɖo?\n27. Miɖe gbeƒã nyanyui la na dukɔwo",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-21",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 21,
+    "title": "Honhom Kronkron ahoɔden mu",
+    "lyrics": "Honhom Kronkron ahoɔden mu\nNa Asɔre n' retu sa\nAsɛmpa n' ahoɔden mu\nNkwagye aba ama obiaa\nNsɛnkyerɛnne di yɛasɛnka akyi\nYɛresa nyarewa, awufo nyan\nYɛretu mmonsam, redwiriw adaban\nWɔ Yesu Kristo din m'\nNational Music Committee",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-22",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 22,
+    "title": "Asɔre no apue wɔ",
+    "lyrics": "Asɔre no apue wɔ\nHonhom Kronkron tumi mu\nReyɛ adwuma\nReka asɛmpa no\nAsɛmpa no reso aba\nAma wiase nyinaa ahu\nDe nsakrae kɛse reba\nAmanman nyinaa mu\nNational Music Committee",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-23",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 23,
+    "title": "Yesu abehu me mmↄbↄ",
+    "lyrics": "Yesu abehu me mmↄbↄ\nObusueni a ↄtesɛ me\nWa gye me afi mmusu nyinaa mu\nNa W'ayɛ me yie\nWa gye me afi mmusu nyinaa mu\nNa W'ayɛ me yie\nEunice Johnson",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-24",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 24,
+    "title": "Nea Ɔde bɔne kyɛ n'",
+    "lyrics": "Nea Ɔde bɔne kyɛ n'\nNe din ne Jesus\nNea ɔma nkwa no\nNe din ne Jesus\nSɛ wo ba ne nkyɛn a\nƆrento wo ntwene\nWiase Agyenkwa no\nƆno ne Jesus\nJones Ohene-Addo",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-25",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 25,
+    "title": "Awurade ne me nkwa ahoɔden",
+    "lyrics": "Awurade ne me nkwa ahoɔden\nƆberempɔn wɔ kronkronyɛ\nmu Abɔdeɛ nyinaara wɔ Wo,\nme Wura\nWo ho yɛ hu yie\nWoso! Woso! Woso O! Woso!\nAnyame nyinaa mu\nHwan na ɔte sɛ Wo\nWoso, Onyankopɔn, Woso\nDelmar Asorwoe",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-26",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 26,
+    "title": "Awurade, hena na ɔtesɛ Wo",
+    "lyrics": "Awurade, hena na ɔtesɛ Wo\nTete Nyame, hena na ɔtesɛ Wo\nAwurade, obiara ntesɛ Wo\nWanim ne Wakyi, obiara nni hↄ oo\nAwurade, hena na ɔtesɛ Wo,\nWanim ne Wakyi\nObiara nni hↄ oo\nPatrick Asante",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-27",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 27,
+    "title": "Mɛsom Onyankopↄn yie",
+    "lyrics": "Mɛsom Onyankopↄn yie\nWↄ me brɛ yi so\nMɛsom Onyankopↄn yie\nWↄ me brɛ yi so\nNa W'ama me amo o\nNa W'ama me amo\nSɛ akoa pa nokwarefo\nNa W'ama me amo o\nNa W'ama me amo\nSɛ akoa pa nokwarefo\nEbenezer Nartey",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-28",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 28,
+    "title": "Ɔreyɛ, Ɔreyɛ,",
+    "lyrics": "Ɔreyɛ, Ɔreyɛ,\nƆreyɛ N'adwuma\nOnyame Honhom reyɛ N'adwuma\nƆreyɛ, Ɔreyɛ,\nƆreyɛ N'adwuma\nOnyame Honhom reyɛ N'adwuma\nWɔ tumi ne ahoɔden mu, Ɔreyɛ N'anwonwadwuma\nWɔ tumi ne ahoɔden mu, Ɔreyɛ N'anwonwadwuma\nGrace Gapketor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-29",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 29,
+    "title": "Adom no abu so ama me",
+    "lyrics": "Adom no abu so ama me\nAbu so ama Wo nso\nAdom no abu so ama me\nAbu so ama Wo nso\nNantew Honhom no tumi mu\nNantew Honhom no tumi mu\nGrace Gapketor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-30",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 30,
+    "title": "Twɛn, twɛn, na twɛn No,",
+    "lyrics": "Twɛn, twɛn, na twɛn No,\nKyɛ wɔ mpaebɔ mu\nWɔn a wɔtwɛn Awurade no anim rengu ase da\nWɔn a wɔtwɛn Awurade no anim rengu ase da\nGrace Gapketor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-31",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 31,
+    "title": "Di hene wɔ m'akoma mu",
+    "lyrics": "Di hene wɔ m'akoma mu\nYɛ Wo tenabea wɔ me mu\nNyame Honhom, di me mu\nhene Kanyan Wo ho, wɔ me\nkra mu Grace Gapketor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-32",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 32,
+    "title": "Aseda, aseda, aseda bebree",
+    "lyrics": "Aseda, aseda, aseda bebree\nNa mede mema Wo, Onyame\nNea W'ayɛ dɔɔso, ɛboro adwen so\nMe Wura, Wo nnwuma so\nSɛ mehwɛ Wo dɔ, Wahummɔborɔ, banbɔ\nNe ɔgye a Wo gye me daa\nMefiri m'akoma mu nyinaa na\nmiyi W'ayɛ Wɔ nea Wo yɛ ma\nme daa nyinaa\nAwurade, W'ayamye, W'adɔeɛ dɔɔso\nAo me Wura, mensi dɛn nkamfo Wo?\nAnka memfata, Woama maba fie Me Wura, Wo nnwuma so\nGrace Gapketor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-33",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 33,
+    "title": "Nyame wɔ ha, Ɔdom wɔ ha",
+    "lyrics": "Nyame wɔ ha, Ɔdom wɔ ha\nN'adɔeɛ dɔɔso ma wɔn a wɔtwɛn no daa nyinaa\nƆsoro abue, nnepa nyinaa\nWɔ hɔ ma wɔn a wɔtwɛn no daa\nNyame wɔ ha, Ɔdom wɔ ha\nN'adɔeɛ dɔɔso ma wɔn a wɔtwɛn no daa nyinaa\nDaniel K. Dekpor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-34",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 34,
+    "title": "Sɔ me nsa na kyerɛ me kwan",
+    "lyrics": "Sɔ me nsa na kyerɛ me kwan\nFa m'anamɔn si bea ɛkorɔn\nHwie Wo mu nnepa nyinaa gu me mu\nHwie ma ɛnyɛ ma\nHwie ma ɛmmu so\nHwie Wo mu ngosra nyinaa gu me mu\nDaniel K. Dekpor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-35",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 35,
+    "title": "Ɛyɛ nokwasɛm sɛ",
+    "lyrics": "Ɛyɛ nokwasɛm sɛ\nYesu asɔre afi awufuo mu\nampa Wayi Ne ho adi akyerɛ\nyɛn sɛ\nWasɔre ampa\nƆde N'apirakuro mu\ntwa akyerɛ yɛn sɛ\nWasɔre ampa\nƆte Agya N' nifa\nredi ma y ɛn\nƆbɛsan aba bio\nabɛfa yɛn akɔ P .\nB. Appiah-Adu",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-36",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 36,
+    "title": "Yese baa wiase maa me",
+    "lyrics": "Yese baa wiase maa me\nYesu kɔɔ Dua no so maa me\nYesu kɔɔ soro maa me\nƆte Agya no nifa so redi ma me\nMe nti na Yesu wui\nMe nti na wosiee No\nMe nti na wonyan no fii awufo m'\nYesu nti manya nkwa\nJohn Odoi Korang",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-37",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 37,
+    "title": "Mewͻ nnwanten ͻha",
+    "lyrics": "Mewͻ nnwanten ͻha\nBaako deɛ wa fom kwan\nMerekͻ hwehwɛ n' na mede no aba fie\nƐbɛyɛ anigye wͻ soro ahenman mu,\nƆkra nkwagyeɛ ho hi-a Me Awurade\nMomma so,\nMomma nkwagye abɛn no so\nAkra pii rekͻ ͻsɛeɛ mu\nMontu anamͻn nkͻyi wͻn nyinaa mmrɛ Me\nƆsoro ahennie no abɛn\nT. K. Owusu Boreh",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-38",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 38,
+    "title": "Ɛnnɛ twa mu a da bɛn",
+    "lyrics": "Ɛnnɛ twa mu a da bɛn\nNa wo bɛsakyera W'adwene\nYesu Kristo atene Ne nsa\nRefrɛfrɛ nnebɔneyɛfo\nƆkyena mu asɛm deɛ obiara nnim\nDwane gye wo kra nkwa\nYesu Kristo atene Ne nsa\nRefrɛfrɛ nnebɔneyɛfo\nEmmanuel Ampomah",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-39",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 39,
+    "title": "Yehowa nko na yεnim no",
+    "lyrics": "Yehowa nko na yεnim no\nƆno na ɔyε kronkron\nAbɔde tumi renntumi\nNsakra ne Nyame su\nYehowa yε kronkron\nYiw, ɔno ne\nkronkron Ahotefo\nanidaso ɔno na ɔyε\nkronkron\n2. Wo ara wo nko ne\nYehowaW'akyi obi nni hɔ\nWowɔ hɔ nnεra,nnε ne daa\nW'anim,obi nni hɔ\nYehowa yε kronkron\nYiw, ɔno ne kronkron\nMogya adansefo gyefo\nɔno na ɔyε kronkron\n3. Nea ne nko yε 'po ne\nnsoromma Ɔno na ɔyε kronkron\nƆkasa ma mframa yε\nkomm Ɔno na ɔyε\nkronkron Yehowa yε\nkronkron Yiw, ɔno ne\nkronkron ɔsoro ne asase\nnyina ɔno na ɔyε kronkron\n4. Ɔsoro abɔfo mu\nmpoƆno na ɔyε krokron\nTεkrεma rentumi nkyerε\nYehowa kronkron yε no\nYehowa yε kronkron\nNe nko na ɔyε kronkron\nKerubim ne Serafim nyinaa\nBom ka sε ɔyε kronkron\n5. Ɔte n'ahengua kronkron\nno soYiw,Yehowa yε kronkron\nMomma Onyankopɔn din so\nNa ne nkutoo ne kronkron\nYehowa yε kronkron\nKoroansa no yε kronkron\nKristofo asafo nka nto nnwom\nSε Yehowa yε kronkron\nTAC Hymnal (Hymn 58)",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-40",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 40,
+    "title": "Nea Wafrɛ yɛn no yɛ Ɔnokwafo",
+    "lyrics": "Nea Wafrɛ yɛn no yɛ Ɔnokwafo\nƆrennya yɛn mu da\nNea Wafrɛ yɛn no yɛ Ɔnokwafo\nƆrennya yɛn mu da\nOdi yɛn anim,\nMununkum\ndum, na Ɔka\nyɛn ho sɛ\nogyafadum\nNea Wafrɛ yɛn no yɛ Ɔnokwafo\nƆrennya yɛn mu da\n2. Nea Wafrɛ yɛn no yɛ\nƆnokwafo,Ɔrennya yɛn mu da\nNea Wafrɛ yɛn no yɛ\nƆnokwafo, Ɔrennya yɛn mu\nda Nea W'aka no na Ɔbɛyɛ\nNe bɔhyɛ nsɛm no yɛ yiw ne\nAmen\nNea Wafrɛ yɛn no yɛ Ɔnokwafo\nƆrennya yɛn mu da\n3. Nea Wafrɛ yɛn no yɛ\nƆnokwafo,Ɔrennya yɛn mu da\nNea Wafrɛ yɛn no yɛ Ɔnokwafo,\nƆrennya yɛn mu da\nFa w' dadwene ne w' haw nyinaa to Ne so,\nNya gyidi twɛn No\nNa Ɔbɛyɛ ama wo\nNea Wafrɛ yɛn no yɛ Ɔnokwafo,\nƆrennya yɛn mu da\nEmmanuel Amankwah\nWofata ayeyi,\nAwurade Wofata ayeyi\nWosɛ ayeyi o,\nWofata aseda daa\nWofata ayeyi,\nAwurade Wofata ayeyi\nWosɛ ayeyi o, Wofata aseda daa\nWo nsa ano nnwuma nyinaa kamfo Wo\nAbɔde nyinaa hyira Wo din\nObiara nte sɛ Wo, tumi nyinaa wura\nWosɛ ayeyi oo, Wofata aseda daa\nYɛbɛbɔ Wo din, na yɛakamfo Wo\nYebeyi W'ayɛ, na yɛatrontrom Wo\nYɛbɛma Wo so, na yɛahyɛ W'anuonyam\nWosɛ ayeyi o, Wofata aseda daa\nEmmanuel Oppong Donkor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-41",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 41,
+    "title": "Bee mli ni wɔ hiɛnɔkamɔ fɛɛ eta",
+    "lyrics": "Bee mli ni wɔ hiɛnɔkamɔ fɛɛ eta\n(When we had lost all hope)\nNi wɔ wala mli he anmɛɛwɔ lɛ\n(And our lives had almost ended)\nAtsɔɔ wɔ Onine naa nitsumɔi lɛ, kɛ\n(We were taught Your handiworks, and)\nOnaakpɛɛ okadii lɛ hu\n(The signs of Your wonders)\nHewɔ lɛ Ataa wɔ Mli nkpa bo gbɛ ei (Therefore, Lord, we\nwait on You) Akɛ Obaatsu naakpɛɛ nitsumɔi\n(That You will do miracles)\nFeemɔ ekon\n(Do it again)\nFeemɔ ekon\n(Do it again)\nShikome ekon\n(One more time)\nChorus\nFéémɔ ékon nuntsɔ\n(Do it again, Lord)\nFéémɔ ékon Tsɛ Ataa\n(Do it again, Father)\nFéémɔ ékon nuntsɔ\n(Do it again, Lord)\nFéémɔ ékon Tsɛ Ataa\n(Do it again, Father)\nAkɛɛ wɔ\n(We have been told)\nWɔ kané\n(We have read)\nWɔ hinmɛi ena\n(Our eyes have seen)\nNɔni obaanyɛ ofé\n(What You can do)\nFeemɔ ekon\n(Do it again)\nFeemɔ ekon\n(Do it again)\nShikome ekon\n(One more time)\n2. Nshɔké baa kumɔ, ahum baa tswa\n(Waves will roll, storms will rage)\nShi wɔlɛ, wɔyi aana wala kɛ\n(But as for us, we will live)\nGbɛfaalɛ yɛ gbeyei shi Kristo yɛ mli\n(The journey is perilous, but Christ is in it)\nEkɛ wɔ baashɛshi hwehweehwe\n(He will cause us to arrive safely)\nHewɔlɛ, Ataa\n(Therefore, Father)\nWɔ mli nkpa bo gbɛ ei\n(We wait on You)\nAkɛ Obaatsu naakpɛɛ nitsumɔi\n(That You will do miracles)\nFeemɔ ekon\n(Do it again)\nFeemɔ ekon\n(Do it again)\nShikome ekon\n(One more time)\nEmmanuel Oppong Donkor",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-42",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 42,
+    "title": "Naawin titari onɛ maal siel woo",
+    "lyrics": "Naawin titari onɛ maal siel woo\n(Greater Lord, he created everything)\nNaawin titari onɛ maal sangbana\n(Greater Lord, he created the clouds)\nKamal dunia wa wusa\n(And he created the whole world)\nO yuri nar ne girima (His\nname deserves praise)",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-43",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 43,
+    "title": "Wɔnɔ, A ne wɔnɔ",
+    "lyrics": "Wɔnɔ, A ne wɔnɔ\nA ne wɔnɔ, Yezu wone\n(Yezu wone)\nWɔnɔ, A ne wɔnɔ\nA ne wɔnɔ, Yezu wone\nEmmanuel Bayiba",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-44",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 44,
+    "title": "Winàam ye tumpusiya",
+    "lyrics": "Winàam ye tumpusiya\n(Lord, we thank You)\nTum ba wináam ye tumpusiya\n(Our Lord, we thank You)\nTuma tuma\n(Well done, well done)",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-45",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 45,
+    "title": "Mi dzi ha na Mawu",
+    "lyrics": "Mi dzi ha na Mawu\n(Sing unto the Lord)\nMi amɛ kɔkɔɛ wo\n(All ye saints)\nMitso aseye na Fia Kristo (2x)\n(Shout aloud to King Jesus)\nƐdu fia lɛ anyigbadzi\n(He reigns on the Earth)\nƐdu fia lɛ anyigbatɛ\n(He reigns beneath the Earth)\nƐdu fia lɛ dzifo\nHe reigns in the Heavens)\nMi dɔlawo\n(His servants)\nMitso aseye na Fia Kristo\n(Shout aloud to King Jesus)\nDelma Asorwoe",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-46",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 46,
+    "title": "Ame ka ƒe lɔlɔnu 'ya tae mele agbe ɖo?",
+    "lyrics": "Ame ka ƒe lɔlɔnu 'ya tae mele agbe ɖo?\n(By whose will do we live?)\nMawugã ƒe lɔlɔnu 'ya tae mele agbe ɖo\n(By the will of the great God we live)\nMawu kae míada akpe na?\n(Which God shall we thank?)\nMawugã si le dziƒo\n(The great God in heaven)\nMíabɔbɔ ta ɖe egbɔ\n(We shall bow before Him)\nMíatsɔ míaƒewo dzi nε\n(We will give Him our hearts)\nMawugã ƒe lɔlɔnu 'ya tae míele agbe ɖo\n(By the will of the great God, we live)\nEwe Gospel (with\ntranslation)",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2026-47",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 47,
+    "title": "Miɖe gbeƒã nyanyui la na dukɔwo",
+    "lyrics": "Miɖe gbeƒã nyanyui la na dukɔwo\n(Announce the gospel to the nations)\nMina woadze Aƒetɔ Yesu yome\n(Let them follow the Lord Jesus)\nKple hadzidzi, kple ɣeɖuɖu\n(With singing, with dancing)\nKaka nya nyui la ɖe dukɔwo me\n(Spread the gospel to the nations)\nAgbenya ye, agbenya ye\nAgbenya ye Xɔla he vε\n(Word of life, word of life\nThe word of life the Lord has brought)\nEwe Gospel (with\ntranslation)",
+    "source": "theme-2026",
+    "sourceLabel": "2026 Theme Songs"
+  },
+  {
+    "id": "theme-2025-1",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 1,
+    "title": "I must live worthy of the call I’ve received",
+    "lyrics": "I must live worthy of the call I’ve received.\nI’m now a prisoner of Christ’s love and word.\nBound to be holy, faithful, and bold.\nUnleashed to bring light and life to the world.\nReflecting Christ wherever I am.\nI no more live for myself but for Christ\nAnd all will see that Christ lives in me\nTo the praise and glory of God\n2. Waiting and praying to God for His grace\nJoyful in fellowship of the saints\nGladly giving my all for His work\nStriving for rich eternal rewards\nTheme Songs Committee",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-2",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 2,
+    "title": "I’m more than a conqueror",
+    "lyrics": "a) I’m more than a conqueror\nThrough Jesus my Lord\nHe won the victory for me on the Cross\nHe disarmed all pow’rs and princi-palities\nAnd brought all dominion under His feet",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-3",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 3,
+    "title": "I’m Christ’s own beloved",
+    "lyrics": "b) I’m Christ’s own beloved\nHe purchased me\nWith His own precious blood and made me whole\nI’m no longer a slave\nto sin and death\nOh! What a wonderful Saviour\nJesus is to me\nc) I am free, Oh yes! I’m free!\nHis death ransomed me\nAnd gave me eternal life beyond this world\nOh what shepherd so loving\nIs Jesus to me\nMy Way, my Life, my Light\nHe guides me always\nGrace Gakpetor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-4",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 4,
+    "title": "You are the mighty God",
+    "lyrics": "You are the mighty God\nMiracle-working God\nShowing Your mighty power today\nYou are the living God\nGrace Gakpetor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-5",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 5,
+    "title": "Revive us again",
+    "lyrics": "Revive us again\nRevive us again\nAwaken us\nLord, quicken\nUnto greater works\nUnto mighty works",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-6",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 6,
+    "title": "Make us people of Your presence",
+    "lyrics": "Make us people of Your presence\nUnto greater works\nUnto mighty works\nMake us people of Your will\nWe shine\nWe reign in You\nSeated in heavenly places\nEsther Issaka",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-7",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 7,
+    "title": "There’s a wind blowing over the Nations:",
+    "lyrics": "There’s a wind blowing over the Nations:\nThe Spirit of the Lord\nMoving in Power\nTo revive the broken-hearted\nSet hearts on fire now\nThe Spirit of the Lord is at work\nI know Him, I know Him,\nThe Spirit of the Lord\nThe Spirit of the Lord\nI love Him, I need Him,\nThe Spirit of the Lord is at work\nMountains are brought low,\nWhen the Spirit moves\nDry bones live again\nWhen the Spirit moves\nThe weak are strengthened\nWhen the Spirit moves\nThe Spirit of the Lord is at work\nEmmanuel Kyei Boate",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-8",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 8,
+    "title": "I’m a prisoner of Christ",
+    "lyrics": "a) I’m a prisoner of Christ\nI live worthy\nOf the calling I’ve received from the Lord\nUnleashed into the world\nAs salt and light\nI am walking worthy of my Master’s call\nb) Being like my Saviour\nAnd following His steps\nPrepared and unleashed as His tool\nMany will give Him glory because of me\nI am walking worthy of my Master’s call\nTheme Songs Committee",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-9",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 9,
+    "title": "I am a servant of the Lord",
+    "lyrics": "I am a servant of the Lord\nWalking in a manner\nWorthy of the calling I’ve received\nWith all humility, gentleness and patience\nI bear with all the brethren in love\nEager to keep the unity of the Spirit\nAll will glorify God for my sake\nI am a servant of the Lord\nWalking in a manner\nWorthy of the calling I’ve received\nJohn Odoi Korang",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-10",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 10,
+    "title": "How awesome are Your ways",
+    "lyrics": "How awesome are Your ways\nSo great is Your power\nWe sing praise to You, Lord\nYou have done amazing things\nGrace Gakpetor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-11",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 11,
+    "title": "At the Cross of Calvary",
+    "lyrics": "At the Cross of Calvary\nWhere my Saviour paid it all\nTo set me free from sin\nAnd all shackles of the fall\nHe died to pave the way to reconcile man to God\nOn the Cross, my Saviour made me whole\nOn the Cross, on the Cross\nChrist brought His beauty into my life\nOn the Cross, on the Cross\nHe replaced my sins with holiness.\nHe died to redeem the world\nHe died to disarm the devil\nAnd reconcile us to God\nOn the Cross, on the Cross,\nI see the victory of my daily life\nDaniel K. Dekpor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-12",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 12,
+    "title": "Looking back at all the things You’ve done",
+    "lyrics": "Looking back at all the things You’ve done\nHow you rescued me brought me to Your light\nI do not deserve the love You’ve shown\nOoooooooooo\nIndescribable love\nLord, You’re good\nYou’re amazing\nYou’re amazing\nWhen I consider all You’ve done for me\nThe love You’ve shown me\nall my life\nYour faithfulness\nTender mercies\nEverlasting grace\nIs all I see\nOooooooooooo\nYou’re amazing\nYou’re amazing\nVoice of Pentecost",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-13",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 13,
+    "title": "Eternal, Living One",
+    "lyrics": "Eternal, Living One\nHoly one\nFaithful God\nThe I am that I am\nPour out Your grace\nPour it on us\nThe grace that makes men become anew",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-14",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 14,
+    "title": "Pour out Yourself into us, Lord",
+    "lyrics": "Pour out Yourself into us, Lord\nWe’ve opened up to You\nWe are ready (We thirst for You)\nWe are ready (we are waiting)\n2. The maker of the heavens\nAnd the earth\nKing of kings\nThe Lord of hosts\nMy God and my King\nAnd my king\nHow great You are\nHow great You are\nLord, You reign\nYou reign above all else\nLord, You rule\nYou rule\nOver all things\nSo I call You Yahweh (Alpha)\nMighty ruler\nLord of all\nYou are my anchor and my shield\nAnd my shield\nOlowogbogboro\nIbi You turn my life around\nVoice of Pentecost",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-15",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 15,
+    "title": "We have heard",
+    "lyrics": "We have heard\nYour wonders, O Lord\nWe have seen\nYour amazing works\nIt is time, it is time, it is time\nTo help us again\nIt is time, it is time, it is time\nTo help us again\nRemember Your mercy\nRemember Your love over us\nIt is time, it is time, it is time\nTo help us again\nIt is time, it is time, it is time\nTo help us now\nLike years gone by\nO Lord, O Lord\nIt is time, it is time, it is time\nTo help us again\nIt is time, it is time, it is time\nTo help us now\nDaniel K. Dekpor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-16",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 16,
+    "title": "In the name of Jesus,",
+    "lyrics": "In the name of Jesus,\nMountains move\nChains are broken.\nWe’re set free\nBy His pow’r,\nWe stand and prove\nOur authority and victory",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-17",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 17,
+    "title": "In His name,",
+    "lyrics": "In His name,\nWe conquer the enemy,\nWith His power,\nwe advance\nLights of the world,\nOur hearts are bold\nIn His name,\nWe take the world\nFred Amoakohene Sarpong",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-18",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 18,
+    "title": "The beauty of Your handiworks",
+    "lyrics": "The beauty of Your handiworks\nTestifies that You are God\nThe splendour of Your majesty\nDeclares to me how great You are\nYou are great\nYou are great\nYou are great\nYes, You are\nYou are great\nYou are great\nYou are great\nYes, You are",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-19",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 19,
+    "title": "Generations will come to know",
+    "lyrics": "Generations will come to know\nHow powerful and great You are\nNations will testify\nHow wonderful our God is\nMichael Agyemang Amoako",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-20",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 20,
+    "title": "Are you searching for genuine love",
+    "lyrics": "Are you searching for genuine love\nWithout lies and disappointment?\nNowhere else to look\nNowhere to go\nTrue love is found in Jesus Christ\nIn Him is love\nTrue love\nIn Him is love\nAmazing love\nTrue love is only found in Jesus Christ\nAre you searching for abundant life\nWithout judgment and destruction?\nNowhere else to look\nNowhere to go\nTrue life is found in Jesus Christ\nIn Him is life\nTrue life\nIn Him is life\nEternal life\nTrue life is only found in Jesus Christ\nDaniel Gyan Henanaopeh",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-21",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 21,
+    "title": "Let the world know that",
+    "lyrics": "Let the world know that\nYou are the only God\nWe bow before you;",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-22",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 22,
+    "title": "Cry Out:",
+    "lyrics": "Cry Out:\nFire from heaven,\nConsume our sacrifice\nSet before you as\nSweet Aroma\nTo You, our Father\nSupreme in Power\nWe pour our hearts in pray’r;\nShout that:\nHear us from your throne,\nSend forth your power,\nStrength for Life’s journey\nFor your glory\nOpoku Onyinah",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-23",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 23,
+    "title": "The Holy Spirit came down",
+    "lyrics": "The Holy Spirit came down\nWith God’s power on the day of Pentecost\nThe Holy Spirit came down\nWith anointing in the Upper Room of old\nWalk in the Spirit if you want to be strong\nHe came from heaven to strengthen the Church\nWalk in the Spirit if you want to serve Him\nHe came from heaven to anoint the church\nSamuel Sampson Sackey Hughes",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-24",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 24,
+    "title": "I am anointed with the power of the Holy Ghost",
+    "lyrics": "I am anointed with the power of the Holy Ghost\nI have the spirit of the Lord, our God\nI am anointed with the power of the Holy Ghost\nI have the spirit of the Lord, our God\nI have the spirit of the Lord, our God\nI have the spirit of the Lord, our God\nI am anointed with the power of the Holy Ghost\nI have the spirit of the Lord, our God\nSamuel Sampson Sackey Hughes",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-25",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 25,
+    "title": "Adonai, we worship You",
+    "lyrics": "Adonai, we worship You\nAdonai, we praise Your name\nAdonai, we bow before You\nAdonai, we bless Your name",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-26",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 26,
+    "title": "Praise our God, all peoples",
+    "lyrics": "Praise our God, all peoples\nLet the sound of praise be heard\nPraise Him, praise Him\nMay God be known on the Earth\nP. B. Appiah Adu",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-27",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 27,
+    "title": "You are the reason I sing",
+    "lyrics": "You are the reason I sing\nThe reason I praise\nYou are the reason for my worship\nO Lamb of God.\nIt’s Your blood that sets me free\nYour blood that cleanses me\nYour blood that makes me whole\nHallelujah!\nOh Oh Oh Oh Oh Oh Oh Oh\nYou are the light in the world\nOh Oh Oh Oh Oh Oh Oh Oh\nYou are the light in the world\nGina Asante",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-28",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 28,
+    "title": "TWI & OTHER GHANAIAN",
+    "lyrics": "TWI & OTHER GHANAIAN\nLANGUAGES\n1. M’abrabɔ bɛfata ɔfrɛ yi\n2. Honhom Kronkron, sian bra\n3. M’adom bɛdɔɔso ama wo\n4. Mahyehyɛ wo\n5. Sɛ ɔko no mu yɛ den a\n6. Kyerɛw M’asɛm w’akoma pon so\n7. Adwuma a M’afrɛ w’ mu yi\n8. Pira a wopiraa No wɔ Kalvari\n9. Bɔ mpae daa\n10. Yɛrekɔ yɛn anim\n11. Ɛsɛ sɛ yedi nkunim\n12. Nyankopɔn adi adanseɛ\n13. Onyame ka yɛn ho oo\n14. Ɛnyɛ ahoɔden so\n15. Awurade ee\n16. Mede akoma pa bɛyɛ Onyame N’adwuma no",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-29",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 29,
+    "title": "Yɛfri atifi, ne anafoɔ",
+    "lyrics": "17. Yɛfri atifi, ne anafoɔ\n18. Osii m’anan mu wui o\n19. Awurade sɛ ayeyi\n20. Yesu ne mogya no na\n21. Wo ne Nyame\n22. Meyε Kristo deduani\n23. Honhom Kronkron\n24. Ɔbɔadze, Agyenkwa, Ewuradze\n25. N kobԑrԑ Naaᵑmen nԑ\n26. Yeezu zii\n27. Dzukɔwo miva\n28. Wa bé wa se kpale ye\n29. J’irai avec mon Jésus en moi\n30. Agbe tsi tɔsisi la tó\n31. Dzidze nu la dze nyuieƒe nam",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-30",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 30,
+    "title": "M’abrabɔ bɛfata ɔfrɛ yi",
+    "lyrics": "M’abrabɔ bɛfata ɔfrɛ yi\nKristo dɔ ne Asɛmpa deduani\nKronkronyɛ, nokwaredi, nnamyɛ mu\nMe de Ne hann ne nkwa aberɛ wiase yi\nKristo ada adi baabiara a mewɔ\nKristo nti mentena ase mma me ho\n‘Ma Obia’a ahu sɛ Kristo te me mu\nNa wahyɛ Onyankopɔn anuonyam\n2. Minya adom wɔ ɔtwɛn ne mpaebɔ m’\nMani gye ahotewfo ayɔnkofa m’\nM’ahode nyinaa yɛ Nyame de daa\nNa akatua pa bi remmɔ me da\nTheme Songs Committee",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-31",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 31,
+    "title": "Honhom Kronkron, sian bra",
+    "lyrics": "Honhom Kronkron, sian bra\nFa nkenyan bra Wasɔre mu\nHonhom Kronkron, sian bra\nFa nkenyan bra Wasɔre mu\nSian bra, sian bra\nYɛretwɛn Wahoɔden\nHonhom Kronkron, sian bra\nFa nkenyan bra Wasɔre mu\nJ. O. Kesse",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-32",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 32,
+    "title": "M’adom bɛdɔɔso ama wo",
+    "lyrics": "M’adom bɛdɔɔso ama wo\nMe ngosra bɛ dɔɔso\nNea ɛyɛ wo sɛ wo ntumi nnyɛ\nM’adom bɛboa w’\nMa w’ayɛ\nCecilia Obeng Asare",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-33",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 33,
+    "title": "Mahyehyɛ wo",
+    "lyrics": "Mahyehyɛ wo\nMahyehyɛ wo\nMahyehyɛ wo\nMahyehyɛ wo\nMe de M’ahoɔden ama wo\nEnti fa kɔ kɔyɛ M’adwuma\nAkatua pa wɔhɔ ma wo\nCecilia Obeng Asare",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-34",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 34,
+    "title": "Sɛ ɔko no mu yɛ den a",
+    "lyrics": "Sɛ ɔko no mu yɛ den a\nMɛmma wakoma ntu\nEfisɛ dɔm so Safohene no aba\nSɛ Ɔbɛko ama yɛn\nEfisɛ dɔm so Safohene no aba\nSɛ Obedi nkunim ama yɛn\nEric Owusu Afriyie",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-35",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 35,
+    "title": "Kyerɛw M’asɛm w’akoma pon so",
+    "lyrics": "Kyerɛw M’asɛm w’akoma pon so\nFa M’asɛm no, nantew mu daa\nNa wo kwan so bɛyɛ wo dwoodwoo\nNa woadu w’akwantu awiei\n2. Kɔ w’anim mma nsan w’akyi da\nYesu ne wo nkwa ahoɔden nti\nSɛ ɔkwan no mu yɛ sum mpo a\nƆne wo hann, worenyera da\n3. Akwantu no yɛ anigye nsɛm\nEfisɛ Yesu, Ɔno ara\nƆne kwan, nokware ne nkwa\nObi nkwati no nkɔ Agya n’ nkyɛn\nF. C. Ampiah",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-36",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 36,
+    "title": "Adwuma a M’afrɛ w’ mu yi",
+    "lyrics": "Adwuma a M’afrɛ w’ mu yi\nMama wo tumi ne ahoɔden\nSɛ wo som honhom ne nokware mu a\nWo bɛyɛ nhyira\nEsther Mensah",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-37",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 37,
+    "title": "Pira a wopiraa No wɔ Kalvari",
+    "lyrics": "Pira a wopiraa No wɔ Kalvari\nƐno na ama manya nkwa\nAmane a Ohuu wɔ Kalvari\nƐno na ama manya nkwa",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-38",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 38,
+    "title": "W’atew me ho, W’agye me nkwa",
+    "lyrics": "W’atew me ho, W’agye me nkwa\nW’agye me afi bɔne su nyinaa mu\nPira a wo piraa No wɔ Kalvari\nƐno na ama manya nkwa\nEric Owusu Afriyie",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-39",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 39,
+    "title": "Bɔ mpae daa",
+    "lyrics": "Bɔ mpae daa\nTwɛn Awurade anim\nKyɛ wɔ mpaebɔ mu\nƆsoro bɛbue\nMmuaeɛ bɛba\nƆdom ne nnepa nyinaa bɛ bu so\nEmmanuel Oppong Donkor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-40",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 40,
+    "title": "Yɛrekɔ yɛn anim",
+    "lyrics": "Yɛrekɔ yɛn anim\nYɛbɛdi nkunim\nYɛre nsan yɛn akyi da\nYɛbɛdi nkunim\nƐmfa ho nea ɔtamfo no bɛyɛ\nƐmfa ho nea wiase yi bɛyɛ\nYesu din no nti\nYɛbɛdi nkunim\nEmmanuel Oppong Donkor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-41",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 41,
+    "title": "Ɛsɛ sɛ yedi nkunim",
+    "lyrics": "Ɛsɛ sɛ yedi nkunim\nƐsɛ sɛ yedi nkunim\nYɛnam Agya, Ɔba, Honhom Kronkron so\nYɛbɛdi nkunim\nDaniel K. Dekpor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-42",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 42,
+    "title": "Nyankopɔn adi adanseɛ",
+    "lyrics": "Nyankopɔn adi adanseɛ\nSɛ Ne ba Kristo ma daa nkwa\nNea ɔgye Ne ba no di n’\nƆno na ɔbenya daa nkwa\nGye No di, gye No di\nEfisɛ nea ɔwɔ ba No\nƆno na ɔwɔ daa nkwa\nYesu nko na Ɔma daa nkwa\nJ.B.K. Tawiah",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-43",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 43,
+    "title": "Onyame ka yɛn ho oo",
+    "lyrics": "Onyame ka yɛn ho oo\nƆhwɛ yɛn so daa\nNyame ka yɛn ho oo\nƆhwɛ yɛn so daa\n2. Yɛ’ akɔneaba nyinaa mu\nƆhwɛ yɛn so daa\n3. Anɔpa ne anwumerɛ\nƆhwɛ yɛn so daa",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-44",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 44,
+    "title": "Adekyee ne adesae",
+    "lyrics": "4. Adekyee ne adesae\nƆhwɛ yɛn so daa\n5. Awia bere ne anadwo\nƆhwɛ yɛn so daa\n6. Awɔbere ne ahuhuro m’\nƆhwɛ yɛn so daa\n7. Papa mu ne bɔne mu\nƆhwɛ yɛn so daa\n8. Anigye m’ ne awereho m’\nƆhwɛ yɛn so daa\n9. Yɛ’ akwantuo nyinaara mu\nƆhwɛ yɛn so daa\nOpoku Onyinah",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-45",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 45,
+    "title": "Ɛnyɛ ahoɔden so",
+    "lyrics": "Ɛnyɛ ahoɔden so\nƐnyɛ tumi so\nNyame Sunsum,\nNa ɛbɛyɛ\nanwonwadwuma\nJ. Odoi Korang",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-46",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 46,
+    "title": "Awurade ee,",
+    "lyrics": "Awurade ee,\nWo nnwunu ase na mɛtena daa\nAwurade ee,\nWo nnwunu ase na mɛtena daa\nSɛ ɔtamfo no hwehwɛ me a\nNe nsa rennka me\nWo nnwunu ase na mɛtena daa\nSɛ ɔtamfo no hwehwɛ me a\nNe nsa rennka me\nWo nnwunu ase na mɛtena daa\nJ.B.K. Tawiah",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-47",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 47,
+    "title": "Mede akoma pa bɛyɛ Onyame N’adwuma no",
+    "lyrics": "Mede akoma pa bɛyɛ Onyame N’adwuma no\nMede akoma pa bɛyɛ Onyame N’adwuma no\nAdwuma no m’ wɔ nhyira\nAdwuma no m’ wɔ akatua pa\nMede akoma pa bɛyɛ Onyame N’adwuma no\nEunice Johnson",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-48",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 48,
+    "title": "Yɛfri atifi, ne anafoɔ,",
+    "lyrics": "Yɛfri atifi, ne anafoɔ,\nApueiɛ ne atɔyɛ\nƆman koro mu mma\nGhana man koro no ara\nBra ma yɛ’ mpre nkɔsoɔ\nBra ma yɛ’ mpre mpuntuo\nWo yɛ me nua",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-49",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 49,
+    "title": "Wo yɛ me nua paa",
+    "lyrics": "Wo yɛ me nua paa\nEno nti\nYɛ’ nto asisie ntwene\nYɛ’ nto akohwie ntwene\nYɛ’ nto anibere ntwene\nAtrutrasɛm ne awudie nso\nYe’ mpɛ yiedie\nYɛ’ mpɛ asomdwoe\nBiakoyɛ ne onuadɔ\nWoyɛ me nua\nWoyɛ me nua paa\nWoyɛ me nua\nWoyɛ me nua paa\nWoyɛ me nua\nWoyɛ me nua paa\nLydia Otoo",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-50",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 50,
+    "title": "Osii m’anan mu wui o",
+    "lyrics": "Osii m’anan mu wui o\nM’agyenkwa sii m’anan mu\nHuu amane ne yaw\nOsii m’anan mu wui o\nOsii m’anan mu wui o\nOsii m’anan mu brɛe o\nWɔbroo no, guu N’anim\nAse na wodii Ne ho fɛw",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-51",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 51,
+    "title": "Osii m’anan mu brɛe o",
+    "lyrics": "Osii m’anan mu brɛe o\nOsii m’anan mu wui o\nSeth Asare Ofei Badu",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-52",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 52,
+    "title": "Awurade sɛ ayeyi",
+    "lyrics": "Awurade sɛ ayeyi\nAwurade sɛ ayeyi\nAwurade sɛ ayeyi\nNadɔeɛ aso yɛn so\nƆde N’ayamye atwitwa agye yɛn\nYɛnfa anigye ne osebɔ nyi N’ayɛ\nGrace Gakpetor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-53",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 53,
+    "title": "Yesu ne mogya no na",
+    "lyrics": "Yesu ne mogya no na\nama manya nkwa\nN’apirak’ru no mu na\nmanya m’ayaresa\nNe mogya no mu na\nwahoro me bɔne;\nYesu wu n’ na agye me nkwa\nEnti mema No ammo\nMmo, mmo, mmo;\nMmo, mmo, mmo;\nYesu Kristo mmo,\nMe de mema W’ Ammo\n2. Yesu, ne mogya no\napata ama me;\nNe wusɔr’ tum’ mu na",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-54",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 54,
+    "title": "manya bɔn’ fafiri",
+    "lyrics": "manya bɔn’ fafiri\nNkabom, asomdwee,\nbembu mu abagye,\nMenyɛ bɔn’ akoa bio,\nmeyɛ s’ro dehye\n3. Yesu ne mogya no\nabue soro pon;\nMogya no mu tum’ no\nayɛ me ‘dedifo\nManya ‘yɔnkofa ne\ntrabea wɔ soro.\nMe werɛ mfi N’adom\nmogya afɔrebɔ\nS. K. Ampiah\n2nd and 3rd verses by M. K.Yeboah\nPAN (T) 146",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-55",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 55,
+    "title": "Wo ne Nyame,",
+    "lyrics": "Wo ne Nyame,\nWoso na Wo krɔn\nAhen mu Hene, Wo din yɛ kɛse\nYɛtrontrom Wo, yedi Wodin ni\nWo ne Nyame, Woso na wo krɔn\nWo ne Nyame, Woso na wo krɔn\nWo ne Otumfoɔ Nwanwani Nyankopɔn\nWo ne Nyame, Woso na wo krɔn\nW’anim ne W’akyi tumi biara nni hɔ\nWo ne Nyame, Woso na wo krɔn\nDelmar Asorwoe",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-56",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 56,
+    "title": "Meyε Kristo deduani",
+    "lyrics": "Meyε Kristo deduani\nƐsε sε\nM’abrabɔ fata ɔfrε a Wɔafrε me y’\nWasoma me wiase sε nkyene ne hann\nMεnante daa sεnea me Wura no pε\nMεsε m’ Agyenkwa no,\nmedi N’akyi daa\nWasiesie me ama nnwuma pa\nMe nti wɔbεhyε N’animuonyam\nMεnante daa sεnea me Wura no pε\nTheme Songs Committee",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-57",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 57,
+    "title": "Honhom Kronkron",
+    "lyrics": "Honhom Kronkron\nMe kra dɔfo\nWo na mekra r’pre hwehwε Wo\nMa minhu Wo yiye\nNa masom Wo akosi awiei\n2. Honhom Kronkron,\nƆsoro bosu\nWo na mani agyina Wo\nBra bεdwodwo makoma\nMa me-kra ho nsane no\n3. Sɔ ɔbra akwantu\nno mu yε den a\nMinni ɔbo-afo biara\nHonhom Kronkron, boa me\nAma mantɔ bahaw\nEmmanuel Oppong Donkor",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-58",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 58,
+    "title": "Ɔbɔadze, Agyenkwa, Ewuradze",
+    "lyrics": "Ɔbɔadze, Agyenkwa, Ewuradze\nAkyingye pii wɔ asaase yi do\nNanso obiara gye biribi dzi\nEmi mapaw dɛ mebɛgye W’ edzi\nMerennantsew dɛ meretwɛɔn owu\nMenya biribi kakra a, meda Wo ase\nMebɛyɛ adwumadzen wɔ enyidado mu\nNa afa me do ama nkwa pii\nOsiandɛ me nye Wo nam ntsi\nMewɔ enyidado kɛse paa\nM’akwan nyina mu no\nMebɔ mbɔdzen dɛ mebɛsɔ W’enyi\n2. Ibi femfam ndua na abrabɔ bɔn\nMepɛ Wo, Tete Bo, na abrabɔ pa\nHɔn a wɔmmfa Wo kwan do mpo\nƆtɔ da a wɔbɔ Wo dzin papa\nNsɔhwɛ ba a, nsɔhwɛ bɔkɔ\nOnyin na yar to me mpo a\nMedze enyidado retwɛɔn daa nkwa\nMagye ndɛ nkwa yi a, mepɛ dza ewɔ biaa\nSeth Asare Ofei Badu",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-59",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 59,
+    "title": "N kobԑrԑ Naaᵑmen nԑ",
+    "lyrics": "N kobԑrԑ Naaᵑmen nԑ\nN ko zagre a Naaᵑmen bԑre\nMaa ko lԑbԑNaaᵑmen poɔ\nOlԑ N na puore kuralԑ\nFredrick Chaba",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-60",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 60,
+    "title": "Yeezu zii",
+    "lyrics": "Yeezu zii\nA eni zii sog\nA eni zii sog\nYeldԑo bԑ poɔ a poɔ\nYeezu zii\nA eni zii sog\nA eni zii sog\nKyԑ waari faafo\nYeezu zii\nA eni zii sog\nA eni zii sog\nKyԑ waari balsano\nFredrick Chaba",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-61",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 61,
+    "title": "Dzukɔwo miva",
+    "lyrics": "Dzukɔwo miva\nMiva kpɔ dzidula da\nAmexawo miƒoƒu\nMiva kpɔ Amesi dudzi\nYesu dudzi lo\nYesu nye dzidula lo\nDzukɔwo miva\nMiva kpɔ dzidula da\nDzukɔwo miva\nMiva kpɔ dzidula da\nAmexawo miƒoƒu\nMiva kpɔ nukunu da\nYesu nye nukunu lo",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-62",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 62,
+    "title": "Yesu wɔ nukunu lo",
+    "lyrics": "Yesu wɔ nukunu lo\nDzukɔwo mi va\nMiva kpɔ Nukunu da\nDzukɔwo miva\nMiva kpɔ dzidula da\nAmexawo miƒoƒu\nMiva kpɔ agbenala da\nYesu nye agbe mavɔ lo\nYesu nye agbenala lo\nDzukɔwo miva\nMiva kpɔ Agbenala da\nGeorge Osei Asiedu",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-63",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 63,
+    "title": "Wa bé wa se kpale ye",
+    "lyrics": "Wa bé wa se kpale ye\nLigbi ɔ ko\nHe nɛ Yesu Kpɔ wɔ kɛje\nHe nɛ Ekɛ wɔ ba su nɛ ɔ\nWa bé wa se Kpale ye ligbi ɔ ko.\nEunice Johnson",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-64",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 64,
+    "title": "J’irai avec mon Jésus en moi",
+    "lyrics": "J’irai avec mon Jésus en moi\nImposer le règne de Dieu\nQuelques soient les forces qui s’opposent\nJe transformerai mon monde",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-65",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 65,
+    "title": "Mon sel sera utile",
+    "lyrics": "Mon sel sera utile\nJe garderai ma lampe allumée\nJésus Christ sera proclamé\nLe seul Seigneur partout\nJeremiah Atakpa",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-66",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 66,
+    "title": "Agbe tsi tɔsisi la tó",
+    "lyrics": "Agbe tsi tɔsisi la tó\nAgbetsi tɔsisi la tó\nYayra kple dɔyɔyɔ gba go\nAgbetsi tɔsisi la tó\n2. Wo wu enu, Wo wu enu\nWo wu enu le atitsoga ŋu 2x Vevesesewo, Wo wu enu\nVlododowo, Wo wu enu Dɔlelewo, Wo wu enu\nWo wu enu le atitsoga ŋu",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "theme-2025-67",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 67,
+    "title": "Dzidze nu la dze nyuieƒe nam",
+    "lyrics": "Dzidze nu la dze nyuieƒe nam\nMekpɔ yayra go me 2x Dzɔgbbenyuie kple Amenuveve\nA’kplɔm do le agbe sia me tegbee\nEye manɔ Yehowa gbɔ\nYi dase mavɔ me\nDela Quampah",
+    "source": "theme-2025",
+    "sourceLabel": "2025 Theme Songs"
+  },
+  {
+    "id": "pentecostal-book-1",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 1,
+    "title": "A charge to keep I have,",
+    "lyrics": "1. A charge to keep I have,\nA God to glorify,\nA never-dying soul to save,\nAnd fit it for the sky\n2. To serve the present age,\nMy calling to fulfil:\nO may it all my powers engage\nTo do my Master’s will!\n3. Arm me with jealous care,\nAs in Thy sight to live;\nAnd O Thy servant, Lord,\nprepare\nA strict account to give!\n4. Help me to watch and pray,\nAnd on Thyself rely,\nAssured, if I my trust betray,\nI shall for ever die.\nCharles Wesley\nMHB 578",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-2",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 2,
+    "title": "A greater rain is coming",
+    "lyrics": "1. A greater rain is coming\nA greater rain is coming\nA greater rain is coming very\nsoon\nThe early and the latter rain\nshall fall together at the time\nA greater rain is coming very\nsoon\n2. I see the signs are all\naround\nMy ear has heard a certain\nsound\nA greater rain is coming very\nsoon\nFor Zion has travailed and\nshall bring forth\nThe sons of God with a word\nin their mouth\nA greater rain is coming very\nsoon\nPH. 35",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-3",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 3,
+    "title": "Abba Father, let me be",
+    "lyrics": "Abba Father, let me be\nYours, and yours alone,\nMay my will for ever be\nEvermore your own.\nNever let my heart grow cold,\nNever let me go,\nAbba Father, let me be\nYours and yours alone.\nDave Bilbrough",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-4",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 4,
+    "title": "Abide under his anointing,",
+    "lyrics": "Abide under his anointing,\nAbide under his control,\nAbide under his anointing,\nHis presence upon your soul;\nJust stay in the arms of Jesus\nAnd thou shall be fully\nwhole;\nAbide under his anointing,\nAbide under his control,\nPH 64",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-5",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 5,
+    "title": "Abide with me, fast falls",
+    "lyrics": "1. Abide with me, fast falls\nthe eventide;\nThe darkness deepens; Lord,\nwith me abide,\nWhen other helpers fail, and\ncomforts flee\nHelp of the helpless, O abide\nwith me.\n2. Swift to its close ebbs out\nlife's little day;\nEarth's joys grow dim, its\nglories pass away\nChange and decay in all\naround I see\nO thou who changest not,\nabide with me.\n3. I need thy presence every\npassing hour\nWhat but thy grace can foil\nthe tempter's power?\nWho like thyself my guide\nand stay can be?\nThrough cloud and sunshine,\nO abide with me.\n4. I fear no foe, with thee at\nhand to bless;\nIlls have no weight, and tears\nno bitterness.\nWhere is death's sting?\nWhere, grave, thy victory?\nI triumph still, if thou abide\nwith me.\n5. Keep thou thy cross before\nmy closing eyes;\nShine through the gloom, and\npoint me to the skies\nHeaven's morning breaks, and\nearth's vain shadows flee;\nIn life, in death, O Lord,\nabide with me\nRH 797, H.F. Lyte (1793-1847)",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-6",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 6,
+    "title": "Ah! Lord God, thou has made",
+    "lyrics": "Ah! Lord God, thou has made\nthe heavens and the earth by\nThy Great power\nAh! Lord God, thou hast\nmade the heavens and the\nearth by Thy outstretched\narms\nNothing is too difficult for\nthee!\nNothing is too difficult for\nthee!\nO Great and mighty God\nGreat in counsel and mighty\nin deed\nNothing, nothing, Absolutely\nnothing\nNothing is too difficult for\nthee.\nKey Chance\nSongs of Fellowship - Vol. 1 No 3.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-7",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 7,
+    "title": "All hail the power of Jesu's",
+    "lyrics": "1. All hail the power of Jesu's\nname!\nLet angels prostrate fall;\nBring forth the royal diadem\nAnd crown Him Lord of all.\n2. Crown Him, ye martyrs of\nour God,\nWho from His altar call;\nExtol the stem of Jesse's rod,\nAnd crown him Lord of all.\n3. Ye chosen seed of Israel's\nrace,\nAnd remnant weak and small,\nHail Him who saves you by\nHis grace\nAnd crown Him Lord of all.\n4. Ye Gentile sinners, ne'er\nforget\nThe wormwood and the gall;\nGo, spread your trophies at\nHis feet,\nAnd crown Him Lord of all.\n5. Let every kindred, every tribe\nOn this terrestrial ball,\nTo Him all majesty ascribe,\nAnd crown Him Lord of all\n6. O that with yonder sacred\nthrong\nWe at His feet may fall,\nJoin in the everlasting song,\nAnd crown Him Lord of all.\nEdward Perronel - RH 2",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-8",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 8,
+    "title": "All heaven declares",
+    "lyrics": "1. All heaven declares\nThe glory of the risen Lord;\nWho can compare\nWith the beauty of the Lord?\nFor ever he will be\nThe lamb upon the throne\nI gladly bow the knee,\nAnd worship him alone\n2. I will proclaim\nThe glory of the risen Lord,\nWho once was slain\nTo reconcile man to God\nFor ever you will be\nThe lamb upon the throne\nI gladly bow the knee\nAnd worship you alone.\nTracia Richards\nBBC 134",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-9",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 9,
+    "title": "All His ways are",
+    "lyrics": "All His ways are\npleasantness, pleasantness,\npleasantness.\nAll His ways are pleasantness\nAnd all His paths are peace.\nPeace, peace, peace,\nAll His paths are peace;\nAll His ways are\npleasantness,\nAnd all His paths are peace\nTranslation of “N’akwan nyinaa yε fε”\nPH 57",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-10",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 10,
+    "title": "All my springs are in Thee O",
+    "lyrics": "All my springs are in Thee O\nLord\nAll my springs are in Thee O\nLord\nNothing can satisfy my weary\nsoul\nAll my springs are in thee.\nPH 213",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-11",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 11,
+    "title": "All our weaknesses consume",
+    "lyrics": "All our weaknesses consume\nLet our shortcomings\ndisappear\nAnd let Christ shine greatly in\nus\nYou alone can do this\nFill us Holy Spirit\nFill us, O Power Divine\nFill us till we overflow\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-12",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 12,
+    "title": "All things praise Thee,",
+    "lyrics": "1. All things praise Thee,\nLord most high\nHeaven and earth and sea and\nsky,\nAll were for Thy glory made\nThat Thy greatness thus\ndisplayed\nShould all worship bring to\nThee;\nAll things praise thee: Lord may\nwe\n2. All things praise Thee:\nnight to night\nSings in silent hymns of light;\nAll things praise thee: day to\nday\nChants Thy power, in burning\nray;\nTime and space are\npraisingThee,\nAll things praise Thee Lord\nmay we.\n3. All things praise thee;\nround her zones\nEarth, with her ten thousand\ntones\nRolls a ceaseless choral\nstrain;\nRoaring wind and deep-\nvoiced main,\nRustling leaf and humming\nbee,\nAll things praise thee; Lord,\nmay we.\n4. All things praise Thee;\nhigh and low,\nRain and dew and seven-hued\nbow,\nCrimson sunset, fleecy cloud,\nRippling stream and tempest\nloud;\nSummer, winter, all to Thee\nGlory render, Lord, may we.\n5. All things praise Thee;\ngracious Lord,\nGreat Creator, powerful Word,\nOmnipresent Spirit, now\nAt Thy feet we humbly bow\nLift our hearts in praise to thee;\nAll things praise Thee; Lord\nmay we. Amen\nGeorge William Conder, MHB 29",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-13",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 13,
+    "title": "All to Jesus I surrender",
+    "lyrics": "1. All to Jesus I surrender\nAll to Him I freely give;\nI will ever love and trust Him,\nIn His presence daily live\nI surrender all...\nI surrender all...\nAll to Thee, my blessed\nSaviour\nI surrender all.\n2. All to Jesus I surrender\nHumbly at His feet I bow\nWorldly pleasures all forsaken,\nTake me Jesus, take me now.\n3. All to Jesus I surrender\nLord, I give myself to thee;\nFill me with Thy love and\npower\nLet Thy blessing fall on me\n4. All to Jesus I surrender\nNow I feel the sacred flame;\nO the joy of full salvation!\nGlory, glory to His Name!\nJ. Van de Venter, RH 600",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-14",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 14,
+    "title": "Alleluia, Alleluia",
+    "lyrics": "Alleluia, Alleluia\nFor the Lord God Almighty\nreigns\nAlleluia, Alleluia\nFor the Lord God Almighty\nreigns\nAlleluia, Holy\nHoly are You Lord God\nAlmighty\nWorthy is the Lamb\nWorthy is the Lamb\nYou are holy\nHoly are You Lord God\nAlmighty\nWorthy is the Lamb\nWorthy is the Lamb\nAmen\nAgnus Dei",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-15",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 15,
+    "title": "Amazing grace! how sweet",
+    "lyrics": "1. Amazing grace! how sweet\nthe sound\nThat saved a wretch like me!\nI once was lost, but now I’m\nfound\nWas blind but now I see\n2. ’Twas grace that taught my\nheart to fear,\nAnd grace my fears relieved;\nHow precious did that grace\nappear,\nThe hour I first believed!\n3. Thro’ many dangers, toils,\nand snares,\nI have already come;\nTis grace hath brought me\nsafe thus Far,\nAnd grace will lead me home.\n4. The Lord has promised\ngood to me\nHis word my hope secures.\nHe will my shield and portion\nbe\nAs long as life endures.\n5 And when this flesh and\nheart shall fail\nAnd mortal life shall cease\nI shall possess within the veil\nA life of joy and peace.\n6. When we’ve been there ten\nthousand years,\nBright shining as the sun,\nWe’ve no less days to sing\nGod’s grace,\nThan when we first began.\nJohn Newton,\nBBC Songs of praise, 282",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-16",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 16,
+    "title": "Amen, Amen, Blessings and",
+    "lyrics": "Amen, Amen, Blessings and\nGlory\nWisdom, thanksgiving and\nhonour\nPower and might be unto our\nGod\nFor ever and ever, Amen!\nAntwi Bekoe - PH 260",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-17",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 17,
+    "title": "Ancient fire at work in us",
+    "lyrics": "1. Ancient fire at work in us\nAncient fire will never die\nThe fire from above\nThe Pentecost fire\nThe fire set in me\nThe fire set in you\nThe Pentecost fire will ever\nburn\nThe fire set in me, I will fan it\nup\nThe fire set in you, you should\nfan it up\nThe fire will impact\ngenerations\nThe Pentecost fire will never\ndie\n2. Ancient fire at work in us\nAncient fire will never die\nThe burning bush fire\nThe light in the temple\nThat which burns in my soul\nThat which lights up my path\nThe Pentecost fire will set\nablaze\n3. Ancient fire at work in us\nAncient fire will never die\nFire from the Father\nThat which led Israel\nThe fire that leads me\nThe fire that leads you\nThe Pentecost fire will lead\nus on\n4. Ancient fire at work in us\nAncient fire will never die\nThe promise of Jesus\nThe Holy Ghost Fire\nThe fire that gives life\nIs what is set in us\nThe Pentecost fire will make\nus live\n5. Ancient fire at work in me\nAncient fire will never die\nThe storms may rage\nThe waves may flood\nThe fire set ahead\nThe fire set behind\nThe Pentecost fire will see me\nthrough\nTranslation of “Tete gya no r’y1\nadwuma” - Opoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-18",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 18,
+    "title": "Ancient of days",
+    "lyrics": "Ancient of days\nAs old as you are\nAs old as you are\nYou remain the same\nAncient of days\nAs old as you are\nAs old as you are\nYou remain the same",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-19",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 19,
+    "title": "Ancient of days",
+    "lyrics": "1. Ancient of days\nRock of Ages is He\nThe Son of God;\nThe Promised One,\nIs here with me\nJesus is with me\nJesus with me\n2. Eternal God\nEverlasting Father\nIs He, Jesus the Lord\nThe Coming One,\nIs now with me\nJesus is with me\nJesus with me\nOpoku Onyinah,",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-20",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 20,
+    "title": "And can it be, that I should",
+    "lyrics": "1. And can it be, that I should\ngain\nAn interest in the saviour's\nblood?\nDied he for me, who caused\nhis pain?\nFor me, who him to death\npursued?\nAmazing love! how can it be\nThat thou, my God should die\nfor me?\n2. 'Tis mystery all! The\nimmortal dies!\nWho can explore his strange\ndesign?\nIn vain the first born seraph tries\nTo sound the depth of love\ndivine\n'Tis' mercy all! let earth adore,\nLet angel-minds inquire no\nmore.\n3. He left His father's throne\nabove!\n(So free, so infinite His grace,)\nEmptied himself of all but\nlove,\nAnd bled for Adam's helpless\nrace;\n'Tis mercy all, immense and\nfree,\nFor, O my God , it found out\nme!\n4. Long my imprisoned spirit lay\nFast bound in sin and nature's\nnight;\nThine eye diffused a quickening\nray\nI woke, dungeon flamed with\nlight;\nMy chains fell off, my heart\nwas free,\nI rose, went forth and followed\nthee.\n5. No condemnation now I\ndread,\nJesus, and all in him, is mine!\nAlive in him, my living head,\nAnd clothed in righteousness\ndivine,\nBold I approach the eternal\nthrone,\nAnd claim the crown, through\nChrist my own\nCharles Wesley\nRH 324",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-21",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 21,
+    "title": "Ar-ise, shine, still move forward",
+    "lyrics": "Ar-ise, shine, still move forward\nIn vic-tory\nFor the Lord your God is with\nyou\nAnd you will never fail\nStill move forward\nTranslation of \"S4re Hyer1n\"\nEunice Johnson's",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-22",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 22,
+    "title": "As a father who so loved me,",
+    "lyrics": "As a father who so loved me,\nThat you gave Jesus for my life\nNow I bear fruit for your\nservice\nLet your beauty be seen in me\nI give you all my life\nI give you all my life\nYour grace is sufficient for me\nLet your beauty be seen in me.\nE.K. Asamoah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-23",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 23,
+    "title": "As I live; I will praise you;",
+    "lyrics": "1. As I live; I will praise you;\nAs I live; My heart will\nworship;\nFor you are God; For you are\nGod;\nHoly is the Lord our God; 3x\nFor you are God; For you are\nGod\n2. As I breathe I will praise you;\nAs I breathe; my heart will\nworship;\nFor you are God; For you are\nGod\nHoly is the Lord our God; (x3)\nFor you are God; For you are\nGod\nDaniel Akakpo",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-24",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 24,
+    "title": "As the deer panteth for the",
+    "lyrics": "1. As the deer panteth for the\nwaters\nSo my soul panteth after Thee\nYou alone are my heart’s desire\nAnd I long to worship you.\nYou alone are my strength and\nshield\nTo you alone may my spirit yield\nYou alone are my heart’s desire\nAnd I long to worship you.\n2. I want you more than gold\nor silver\nOnly you can satisfy\nYou alone are the real joy\ngiver\nAnd the apple of my eye.\n3. You are my friend and you\nare my brother\nEven though you are a King\nI love you more than any\nother\nSo much more than anything\nMartin Nystrom\nBBC Songs 212",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-25",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 25,
+    "title": "Away far over Jordan",
+    "lyrics": "Away far over Jordan\nWe'll meet in that land\nO won't it be grand!\nAway far over Jordan\nWe'll meet in that beautiful\nland\nSo grand!\nIf you get there before I do,\nPlease tell my friends that I'm\ncoming too,\nAway far over Jordan\nWe'll meet in that beautiful\nland\nSo grand!\nPH 236",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-26",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 26,
+    "title": "Be gone, unbelief,",
+    "lyrics": "1. Be gone, unbelief,\nMy saviour is near,\nAnd for my relief\nWill surely appear;\nBy prayer let me wrestle,\nAnd He will perform;\nWith Christ in the vessel,\nI smile at the storm.\n2. Though dark be my way,\nSince He is my Guide,\n‘Tis mine to obey,\n‘Tis His to provide;\nThough cisterns be broken,\nAnd creatures all fail,\nThe word He has spoken\nShall surely prevail\n3. His love in time past,\nForbids me to think\nHe’ll leave me at last\nIn trouble to sink:\nWhile each Ebenezer\nI have in review\nConfirms His good pleasure\nTo help me quite through\n4. Why should I complain\nOf want or distress,\nTemptation or pain?\nHe told me no less;\nThe heirs of salvation,\nI know from His Word,\nThrough much tribulation\nMust follow their Lord\n5. How bitter that cup\nNo heart can conceive,\nWhich He drank quite up,\nThat sinners might live!\nHis way was much rougher\nAnd darker than mine;\nDid Christ, my Lord, suffer,\nAnd shall I repine?\n6. Since all that I meet\nShall work for my good,\nThe bitter is sweet,\nThe medicine, food;\nThough painful at present,\n‘T will cease before long,\nAnd then, oh, how pleasant\nThe conqueror’s song!\nJohn Newton 1725-1807",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-27",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 27,
+    "title": "Be steadfast and Immovable",
+    "lyrics": "Be steadfast and Immovable\nAbounding in the work of the\nLord\nYour labour won’t be in vain\nAnd your reward will be great.\nTranslation of “Montintim,\nmma monhinhim da”\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-28",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 28,
+    "title": "Be still, my soul; the Lord",
+    "lyrics": "1. Be still, my soul; the Lord\nis on thy side\nBear patiently the cross of\ngrief or pain;\nLeave to thy God to order and\nprovide;\nIn every change he faithful\nwill remain;\nBe still, my soul: thy best, thy\nheavenly friend\nThrough thorny way leads to\na joyful end\n2. Be still, my soul, thy God\ndoth undertake\nTo guide the future as he has\nthe past\nThy hope, thy confidence let\nnothing shake\nAll now mysterious shall be\nbright at last\nBe still, my soul; the waves\nand winds still know\nHis voice who ruled them\nwhile he dwelt below\n3. Be still, my soul; when\ndearest friend depart\nAnd all is darkened in the\nvale of tears\nThen shalt thou better know\nhis love, his heart\nWho comes to soothe thy\nsorrow and thy fears\nBe still, my soul, thy Jesus\ncan repay\nFrom his own fullness, all he\ntakes away.\n4. Be still, my soul; the hour\nis hastening on\nWhen we shall be forever\nwith the Lord.\nWhen disappointment, grief\nand fear are gone\nSorrow forgot, love's purest\njoys restored\nBe still, my soul, when\nchange and tears are past\nAll safe and blessed we shall\nmeet at last\nKatharina Von Schlegel (1697)\nTr. Jane Laurie Borthwick\n(1813-97)",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-29",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 29,
+    "title": "Beautiful Nazarene",
+    "lyrics": "Beautiful Nazarene\nWonderful friend of mine\nOh let me gaze on thee\nThou Son of God divine",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-30",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 30,
+    "title": "Behold he comes, in power",
+    "lyrics": "Behold he comes, in power\nand glory\nHere comes, the Christ our\nking (x2)\nHas gloriously been crowned,\nin the heavenly realms\nHis angels worship him, and\nthe saints adore him\nBehold he comes, in power\nand glory\nHere comes, the Christ our\nking\nTranslation of $no na 4reba ‘i\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-31",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 31,
+    "title": "Behold He comes",
+    "lyrics": "Behold He comes\nJesus Christ the King\nAre you ready to welcome\nHim?\nDoes it mean anything to you?\nHe is coming to take the\nsaints to heaven\nAnd to reward everyone\naccording to his works\nBehold He comes, behold He\ncomes\nMeet the saviour in beauty\nand splendour\nBehold He comes, behold He\ncomes\nJesus Christ the coming king.\nElder Emmanuel Asante",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-32",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 32,
+    "title": "Bind us together, Lord",
+    "lyrics": "Bind us together, Lord\nBind us together, with cords\nThat cannot be broken,\nBind us together, Lord\nBind us together, Lord\nBind us together with love\n1. There is only one God\nThere is only one King\nThere is only one body\nThat is why we sing\n2. Made for the Glory of God\nPurchased by his precious\nSon\nBorn with the right to be clean\nFor Jesus the victory has won\n3. You are the family of God\nYou are the promise divine\nYou are God's chosen desire.\nYou are the glorious new wine\nBob Gillman\nBBC Songs 356",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-33",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 33,
+    "title": "Bless the Lord, O my soul",
+    "lyrics": "Bless the Lord, O my soul\nBless the Lord, O my soul\nAnd all that is within me\nbless His holy name\nBless the Lord, O my soul,\nBless the Lord, O my soul,\nAnd all that is within me\nbless His holy name.\nKing of kings forever and ever\nLord of lords forever and ever\nKing of kings forever and ever\nKing of kings and Lord of lords",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-34",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 34,
+    "title": "Bless the Lord, oh my soul (x2)",
+    "lyrics": "Bless the Lord, oh my soul (x2)\nAnd all that is within me\nBless His holy name\nHe has done great things (x3)\nBless His holy name",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-35",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 35,
+    "title": "Blessed assurance, Jesus is",
+    "lyrics": "1. Blessed assurance, Jesus is\nmine!\nOh, what a foretaste of glory\ndivine!\nHeir of salvation, purchase of\nGod,\nBorn of his spirit, washed in\nhis blood\nThis is my story, this is my\nsong\nPraising my saviour all the\nday long\n2. Perfect submission, perfect\ndelight,\nVisions of rapture now burst\non my sight,\nAngels descending, bring\nfrom above\nEchoes of mercy, whispers of\nlove\n3. Perfect submission, all is at\nrest\nI in my saviour am happy and\nblest\nWatching and waiting,\nlooking above\nFilled with his goodness, lost\nin his love\nFanny J. Crosby - RH 370",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-36",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 36,
+    "title": "Blessing and honour be unto",
+    "lyrics": "Blessing and honour be unto\nYou,\nOh Lord, our God\nBlessing and honour be unto\nyou\nOh Lord, our God\nYou are the Lord of lords\nThe Only God\nThe King of kings in the world\nWe’ll lift up your name\nWill praise your name\nDeclare your glorious works\nBlessing and honour be unto\nyou\nOh Lord our God\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-37",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 37,
+    "title": "Blow over me, the breath of",
+    "lyrics": "Blow over me, the breath of\nGod\nSweep over me, the Spirit of\nGod\nChange my whole being,\ntransform me\nCause me Lord to do your\nwhole will\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-38",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 38,
+    "title": "Break camp! Advance!",
+    "lyrics": "Break camp! Advance!\nArise and move on\nI am always with you\nBreak camp! Advance!\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-39",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 39,
+    "title": "Breathe on me, Breath of",
+    "lyrics": "1. Breathe on me, Breath of\nGod\nFill me with life anew\nThat I may love what Thou\ndost love\nAnd do what Thou wouldst\ndo//\n2. Breathe on me, Breath of\nGod\nUntil my heart is pure\nUntil with Thee I will one will,\nTo do and to endure//\n3. Breathe on me, Breath of God\nTill I am wholly Thine,\nTill all this earthly part of me\nGlows with Thy fire divine//\n4. Breathe on me, Breath of God\nso shall I never die\nBut live with Thee the perfect\nlife\nOf Thine eternity//\nEdwin Hatch, RH 536",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-40",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 40,
+    "title": "Brightest and best of the",
+    "lyrics": "1. Brightest and best of the\nsons of the morning\nDawn on our darkness, and lend\nus thine aid\nStar of the East, the horizon\nadorning,\nGuide where our infant\nRedeemer is laid\n2. Cold on His cradle the\ndew-drops are shining\nLow lies His head with the\nbeasts of the stall\nAngels adore Him in slumber\nreclining\nMaker, and Monarch, and\nSaviour of all.\n3. Say, shall we yield Him, in\ncostly devotion\nOdours of Edom, and\nofferings divine\nGems of the mountain and\npearls of the ocean\nMyrrh from the forest or gold\nfrom the mine\n4. Vainly we offer each\nample oblation\nVainly with gifts would His\nfavour secure\nRicher by far is the heart’s\nadoration\nDearer to God are the prayers\nof the poor\n5. Brightest and best of the\nsons of the morning\nDawn on our darkness, and\nlend us thine aid\nStar of the East, the horizon\nadorning\nGuide where our infant\nRedeemer is laid\nReginald Heber, 1783-1826 –\nMHB 122",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-41",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 41,
+    "title": "Captain of Israel’s host,",
+    "lyrics": "1. Captain of Israel’s host,\nand guide\nOf all who seek the land\nabove,\nBeneath Thy shadow we\nabide\nThe cloud of Thy protecting\nlove\nOur strength, thy grace\nOur rule, Thy word\nOur end, the glory of the Lord\n2. By thine unerring spirit led,\nWe shall not in the desert\nstray;\nWe shall not full direction need,\nNor miss our providential\nway\nAs far from danger, as from fear\nWhile love, Almighty love is\nnear.\n3. We’ve no abiding city here\nBut seek a city out of sight\nThither our steady course we\nsteer\nAspiring to the plains of light\nJerusalem the saints’ abode\nWhose founder is the Living\nGod\nCharles Wesley - MHB 608",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-42",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 42,
+    "title": "Christ is born for us today",
+    "lyrics": "Christ is born for us today\nRejoice, Rejoice\nChrist is born for us today\nRejoice, Rejoice.\nTranslation of Wawo Christ ama\nyεn nnε",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-43",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 43,
+    "title": "Christ is risen from the dead!",
+    "lyrics": "Christ is risen from the dead!\nHe’s risen, never to die.\nO, death, where is your sting?\nHe’s risen, Hallelujah!\nTranslation of Yesu Kristo, W’as4re!",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-44",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 44,
+    "title": "Christ is the answer to all our",
+    "lyrics": "Christ is the answer to all our\nproblems\nChrist is the answer to all our\nneeds;\nSaviour, Baptiser, the Great\nPhysician:\nO Halleluia! He’s all I need\n2. Christ is the answer to all\nour longings\nChrist is the answer to all our\nneeds;\nSaviour, Baptiser, the Great\nPhysician:\nO Halleluia! He’s all I need\n3. Christ is the answer to all\nour sufferings\nChrist is the answer to all our\nneeds;\nSaviour, Baptiser, the Great\nPhysician:\nO Halleluia! He’s all I need\nPH 316",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-45",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 45,
+    "title": "Christ Our Lord comes",
+    "lyrics": "1. Christ Our Lord comes\nonce again\nComes to judge the entire world\nSoon He comes, He won’t\ndelay\nWill appear in glory, po-wer\nand strength\nSoon He comes, He won’t delay\nAll believers will a-ppear\nbefore Him\nTo render account of our\nstewardship\nSoon He comes, He won’t delay\nIn all my ways I must be\nwatchful that I do not go astray\nChrist will tell me: “Well\ndone, good servant,” for my\nfaithful stewardship\nTribulations await all who did\nnot serve Christ the Son of\nGod\nA faithful servant I shall be\nIn all my life and forever\nserve Him\n2. Christ our Lord comes once\nagain\nComes to judge the entire world\nTell me what your stand will\nbe\nThe merciful judge will\ndeclare His right judgement\nTell me what your stand will\nbe\nThe whole world will a-ppear\nbefore Him\nTo render account for works\nthey have done\nTell me what your stand will\nbe\nYou must accept Christ as the\nSon of God, in order to be\nsaved\nChrist will give you eternal\nlife, if you truly believe in\nHim\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-46",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 46,
+    "title": "Come and dine, Come and",
+    "lyrics": "Come and dine, Come and\ndine\nYou may feast at Jesus’ table\nall the time,\nHe, who fed the multitude,\nturned the water into wine;\nTo the hungry He calleth now,\nCome and dine.\nC. B. Widmeyer\nP H195",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-47",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 47,
+    "title": "Come, let us all rejoice! (x2)",
+    "lyrics": "Come, let us all rejoice! (x2)\nAlthough I was so poor,\nBut now I have the love of\nGod,\nLove much precious than gold!\nTranslation of Ao, bra ma yεnni\ndεw",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-48",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 48,
+    "title": "Come, ye that love the Lord,",
+    "lyrics": "1. Come, ye that love the Lord,\nAnd let your joys be known\nJoin in a song with sweet\naccord, (x2)\nAnd thus surround the throne,\n(x2)\nWe’re marching to Zion\nBeautiful, beautiful Zion;\nWe’re marching upward to\nZion,\nThe beautiful city of God.\n2. Let those refuse to sing\nWho never knew our God;\nBut children of the heavenly\nKing (x2)\nMust speak their joys abroad\n(x2)\n3. The hill of Zion yields\nA thousand sacred sweets,\nBefore we reach the heavenly\nfields, (x2)\nOr walk the golden streets\n4. Then let our songs abound,\nAnd every tear be dry;\nWe’re marching through\nEmmanuel’s ground (x2)\nTo fairer worlds on high (x2)\nGolden Bells 31",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-49",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 49,
+    "title": "Courage, brother! do not",
+    "lyrics": "1. Courage, brother! do not\nstumble,\nThough thy path be dark as night;\nThere’s a star to guide the\nhumble;\n“Trust in God, and do the\nright”\n2. Let the road be rough and\ndreary,\nAnd its end far out of sight\nFoot it bravely! strong or\nweary,\n“Trust in God, and do the\nright”\n3. Perish policy and cunning\nPerish all that fears the light!\nWhether losing, whether\nwinning,\nTrust in God, and do the right”\n4. Simple rule, and safest\nguiding,\nInward peace, and inward\nlight\nStar up our path abiding -\n“Trust in God and do the right”\n5. Some will hate thee, some\nwill love thee,\nSome will flatter, some will\nslight;\nCease from man, and look\nabove thee;\n“Trust in God and do the right”\n6. Courage, brother! do not\nstumble,\nThough thy path be dark as\nnight;\nThere’s a star to guide the\nhumble;\n“Trust in God and do the right”\nGolden Bells 354",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-50",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 50,
+    "title": "Cover me with the Cloud",
+    "lyrics": "1. Cover me with the Cloud\nof glory;\nLight my path, O Pillar of\nFire;\nLead me through this crimson\nsea;\nSafely to yonder shore\n2. Spirit Divine, You're a Pill'r\nof Fire;\nLamp for my feet, Light for\nmy path;\nGuide me in this barren land;\nSafely home in Your hands\n3. You are my Lamp, Lord,\nthrough this journey;\nShine upon me on earth below;\nThrough death's darkness to\nlight\nIn palaces above\n4. Shine O shine Lord, shine\nupon me;\nLight of the Holy Spirit, shine;\nAll my days, Lord, shine for\nme;\nI pray, Lord, ever shine.\nTranslation of “Ma mununkum\nno nkata me so”\nEunice Johnson\nPAN (T) 1432",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-51",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 51,
+    "title": "Crown him with many",
+    "lyrics": "1. Crown him with many\ncrowns\nThe Lamb upon his throne\nHark! How the heavenly\nAnthem drowns\nAll music but its own\nAwake; my soul, and sing\nOf him who died for thee..\nAnd hail him as thy\nmatchless King\nThrough all eternity.\n2. Crown him the Son of God\nBefore the worlds began;\nAnd ye who tread where he\nhad trod,\nCrown him the son of Man\nWho every grief hath known\nThat wrings the human breast\nAnd takes and bears them for\nhis own,\nThat all in him may rest\n3. Crown him the Lord of\nlove\nBehold his hands and side'\nThose wounds yet visible\nabove\nIn beauty glorified\nNo angel in the sky\nCan fully bear that sight\nBut downward bends his\nburning eye\nAt mysteries so bright.\n4. Crown him the Lord of\npeace\nWhose power a sceptre sways\nFrom pole to pole, that war\nmay cease\nAnd all be prayer and praise\nHis reign shall know no end\nAnd round his pierced feet\nFair flowers of paradise\nextend\nTheir fragrance ever sweet.\n5. Crown him the Lord of\nyears\nThe Potentate of time,\nCreator of the rolling spheres,\nIneffably sublime;\nAll hail, Redeemer, hail!\nFor thou has died for me:\nThy praise shall never, never\nfail\nThroughout eternity.\nMatthew Bridges, (1800-94) - v. 1,3,5,\nGodfrey Thring (1823-1903) v2.\nBBC Songs 121",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-52",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 52,
+    "title": "Crucified with Christ,",
+    "lyrics": "Crucified with Christ,\nCrucified with him,\nNailed upon the tree,\nsanctified from sin;\nYet not I but Christ\nlive to glorify;\nBy the faith of His dear Son,\ncrucified with Him\nPH 61",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-53",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 53,
+    "title": "Day by day, dear Lord",
+    "lyrics": "Day by day, dear Lord\nFor these three things I pray\nTo see thee more clearly\nLove thee more dearly\nFollow thee more nearly\nDay by day.\nPH 323",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-54",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 54,
+    "title": "Declaring what I know",
+    "lyrics": "Declaring what I know\nand what I’ve heard to you\nJesus is life, He gives life\nIn Him is life always\nTranslation of “Ma menka\nnea mahu”\nP.B Appiah-Adu\nPANT (3) 1141",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-55",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 55,
+    "title": "Doing the work of the Lord,",
+    "lyrics": "Doing the work of the Lord,\nPublishing his mighty name;\nDoing the work of the Lord,\nTelling of his love to all,\nInto the world we go.\nSowing the precious seed\nSowing in the morning,\nsowing in the noon-tide\nSowing when the sun goes\ndown\nEunice Addision - PH. 262",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-56",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 56,
+    "title": "Don't give up yet,",
+    "lyrics": "1. Don't give up yet,\nI’m in control\nWatching over you to the end\nLife may be dark, I’ll be\nyour light\nIn your weakness, my grace\nprevails\nLook up to me, rely on me\nKeep trusting Me, in all you\ndo\nSurely My presence is with\nyou\nSurely victory will be your\nend.\n2. Life will be brigh-ter than\nnoon day\nDarkness will be-come like\nmorning\nIf you devote your heart to me\nIf you stretch your hand to\nhold mine\n3. Worry no more, I’m still\nyour God\nYour Redeemer, the Mighty\nOne\nGiver of life, Eternal God\nI will hold you through life’s\njourney\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-57",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 57,
+    "title": "Draw me to the Living stream",
+    "lyrics": "Draw me to the Living stream\nOh Lord\nDraw me to the living stream\nDraw me to the living stream\nOh Lord\nDraw me to the living stream\nThe living stream of God is\nflowing now\nFlowing through those who\nwait on Him\nDraw me to the living stream\nOh Lord\nDraw me to the living stream.\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-58",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 58,
+    "title": "Enough is Your grace to me,",
+    "lyrics": "Enough is Your grace to me,\nO Lord\nYour grace is sufficient for me\n(x2)\nYou keep me safe in darkest\nnight\nYou are with me in troubled\ntimes\nEnough is Your grace to me,\nO Lord\nYour grace is sufficient for me\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-59",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 59,
+    "title": "Everybody ought to love Him,",
+    "lyrics": "Everybody ought to love Him,\nEverybody, everywhere;\nEverybody ought to love Him,\nHe will banish every care;\nHe’s the author of salvation,\nCondemnation He did bear\nJesus died for every nation\nEverybody, everywhere.\nMitchell & L McPherson\nPH. 3",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-60",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 60,
+    "title": "Exalt the Lord, our God",
+    "lyrics": "Exalt the Lord, our God\nWorship at His footstool\nFor the Lord, our God is Holy\n(2x)\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-61",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 61,
+    "title": "Exalted one is He on the throne",
+    "lyrics": "Exalted one is He on the throne\nAround the throne are the\nheavenly hosts\nBow before Him, the Holy One\nThe Lord God Almighty is\nHe on the throne\nHe’s worthy of praise\nThe Lord God Almighty is\nHe on the throne\nHe’s worthy of praise\nHe is the King of kings\nHe is the Lord of lords\nJesus Christ is the King of kings\nJesus Christ is the Lord of\nlords\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-62",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 62,
+    "title": "Fairest of all the earth beside",
+    "lyrics": "Fairest of all the earth beside.\nChiefest of all unto thy bride,\nFullness divine in thee I see,\nWonderful man of Calvary\nThat man of Calvary\nHas won my heart from me,\nAnd died to set me free,\nBlest man of Calvary\n2. Granting the sinner life and\npeace\nGranting the captive sweet\nrelease\nShedding his blood to make\nus free\nMerciful man of Calvary!\n3. Giving the gifts obtained for\nmen\nPouring out love beyond our ken\nGiving us spotless purity,\nBountiful man of Calvary!\n4. Comfort of all my earthly\nway\nJesus I’ll meet thee some\nsweet day;\nCentre of glory thee I’ll see\nWonderful man of calvary\nM.P. Ferguson",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-63",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 63,
+    "title": "Faith, mighty faith,",
+    "lyrics": "Faith, mighty faith,\nthe promise sees\nAnd looks to God alone;\nLaughs at impossibilities,\nAnd cries “it shall be done”\nAnd cries\nIt shall, it shall be done\nAnd cries\n“It shall, it shall be done”\nLaughs at impossibilities\nAnd cries, “it shall be done”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-64",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 64,
+    "title": "Faithful One",
+    "lyrics": "Faithful One\nSo unchanging\nAgeless One\nYou’re my rock of peace\nLord of all, I depend on You\nI call out to you\nAgain and again\nI call out to you\nAgain and again\nYou are my rock\nIn times of trouble\nYou lift me up\nWhen I fall down\nAll through the storm\nYour love is the anchor\nMy hope is in you alone\nRobin Mark",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-65",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 65,
+    "title": "Father, we adore you,",
+    "lyrics": "1. Father, we adore you,\nLay our lives before you;\nHow we love you!\n2. Jesus, we adore you\nLay our lives before you;\nHow we love you\n3. Spirit, we adore you\nLay our lives before you;\nHow we love you!\nTerry Coelho",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-66",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 66,
+    "title": "Father, we love you,",
+    "lyrics": "1. Father, we love you,\nWe worship and adore you;\nGlorify your name in all the\nearth,\nGlorify your name! Glorify\nyour name!\nGlorify your name in all the\nearth,\n3. Jesus, we love you,\nWe worship and adore you;\n3. Spirit, we love you,\nWe worship and adore you.\nDonna Adkins (b. 1940)\nBBC Songs 219",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-67",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 67,
+    "title": "Fight the good fight with",
+    "lyrics": "1. Fight the good fight with\nall thy might\nChrist is thy strength, and\nChrist thy right\nLay hold on life and it shall be\nThy joy and crown eternally.\n2. Run the straight race through\nGod's good grace,\nLift thine eyes, and seek his\nface;\nLife with its way before thee lies,\nChrist is the path, and Christ\nthy prize\n3. Cast care aside, lean on thy\nGuide;\nHis boundless mercy will\nprovide;\nLean and the trusting soul\nshall prove,\nChrist is its life, and Christ its\nlove.\n4. Faint not, nor fear his arms\nare near,\nHe changeth not, and thou art\ndear\nOnly believe, and thou shalt\nsee\nThat Christ is all in all to thee.\nJ.S.B. Monsell, RH 432\nMelodies of Praises 128",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-68",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 68,
+    "title": "For God so loved the world,",
+    "lyrics": "For God so loved the world,\nThat He gave us His only\nSon.\nAnd whosoever believes on Him\nShall have everlasting life.\nThe Lord is good! The Lord\nis good!\nThe Lord God is good,\nHe’s good to me.\nTranslation of “Sεdeε\nOnyankopon d44 wiase ni”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-69",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 69,
+    "title": "For God so loved this sinful",
+    "lyrics": "1. For God so loved this sinful\nworld,\nHis Son He freely gave,\nThat whosoever would\nbelieve,\nEternal life should have.\n‘Tis true, oh, yes, ‘tis true\nGod’s wonderful promise is\ntrue,\nFor I’ve trusted, and tested\nand tried it,\nAnd I know God’s promise is\ntrue\n2. I was a way-ward,\nwand’ring child\nA slave to sin and fear,\nUntil this blessed promise fell\nLike music on my ear\n3. The “whosoever of the Lord,\nI trusted was for me;\nI took Him at His gracious\nWord,\nFrom sin He set me free\n4. Eternal life, begun below,\nNow fills my heart and soul;\nI’ll sing His praise\nforevermore,\nWho has redeemed my soul.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-70",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 70,
+    "title": "For I'm building, a people of",
+    "lyrics": "For I'm building, a people of\npower\nAnd I'm making a people of\npraise\nThat will move through this\nland by my Spirit\nAnd will glorify my precious\nname\nBuild your Church Lord,\nMake us strong, Lord,\nJoin our hearts, Lord, through\nyour Son.\nMake us one Lord, in your body\nIn the Kingdom of your Son\nDave Richards\nBBC Songs 221",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-71",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 71,
+    "title": "For your goodness, O, my",
+    "lyrics": "For your goodness, O, my\nSaviour\nI will love you more and\nmore\nLet the Holy Spirit teach me\nHow to love my Saviour\nmore and more\nMore and more\nMore and more\nHow to love my Saviour\nmore and more\nMore and more\nMore and more\nHow to love my Saviour\nmore and more",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-72",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 72,
+    "title": "From season to season",
+    "lyrics": "1. From season to season\nHe is God indeed;\nHe will come revealing\nHimself in His time;\nIn seasons of old; His own He\nredeemed;\nHe will come in season, God\nof Abraham\n2. From season to season He\nis God indeed;\nHe will come revealing\nHimself in His time;\nFrom Pharaoh the king, He\nset Israel free;\nHe will come in season, God\nof Abraham\n3. From season to season He\nis God indeed;\nHe will come revealing\nHimself in His time;\nIn dry desert lands His large\nband He fed;\nHe will come in season, God\nof Abraham\n4. From season to season He\nis God indeed;\nHe will come revealing\nHimself in His time;\nFrom hot oven flames His\nservants He saved;\nHe will come in season, God\nof Abraham\n5. From season to season He\nis God indeed;\nHe will come revealing\nHimself in His time;\nFor He is the God that we\nserve today;\nHe will come in season, God\nof Abraham\nTranslation of “Abere Biara,\nabere biara”\nEunice Johnson,\nPAN (T) 1276",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-73",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 73,
+    "title": "Gentle Jesus, meek and mild,",
+    "lyrics": "1. Gentle Jesus, meek and mild,\nLook upon a little child;\nPity my simplicity,\nSuffer me to come to Thee.\n2. Fain I would to Thee be brought,\nGracious Lord, forbid it not;\nIn the Kingdom of Thy grace\nGive a little child a place.\n3. Fain I would be as Thou\nart;\nGive me Thine obedient heart\nThou art pitiful and kind,\nLet me have Thy loving\nmind.\n4. Let me, above all, fulfil\nGod my heavenly Father’s\nwill;\nNever His good Spirit grieve;\nOnly to His glory live.\n5. Lamb of God, I look to\nThee;\nThou shalt my Example be;\nThou art gentle, meek, and mild;\nThou wast once a little child.\n6. Thou didst live to God\nalone;\nThou didst never seek Thine\nown;\nThou Thyself didst never\nplease;\nGod was all Thy happiness.\n7. Loving Jesus, gentle Lamb,\nIn Thy gracious hands I am;\nMake me, Saviour, what Thou\nart;\nLive Thyself within my heart.\n8. I shall then show forth Thy\npraise,\nServe Thee all my happy\ndays;\nThen the world shall always\nsee\nChrist, the holy Child , in me.\nCharles Wesley, 1707-83\nMHB 842",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-74",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 74,
+    "title": "Give me oil in my lamp,",
+    "lyrics": "1. Give me oil in my lamp,\nkeep me burning,\nGive me oil in my lamp, I\npray,\nGive me oil in my lamp, keep\nme burning\nKeep me burning till the\nbreak of day.\nSing Hossana! Sing Hossana!\nSing Hossana! To the King of\nKings!\nSing Hossana! Sing Hossana!\nSing Hossana! To the King\n2. Give me joy in my heart,\nKeep me praising\nGive my joy in my heart, I\npray;\nGive my joy in my heart\nkeep me praising\nKeep me praising till the\nbreak of day\n3. Give me peace in my heart,\nKeep me loving\nGive me peace in my Heart I\npray\nGive me peace in my heart,\nkeep me loving\nKeep me loving till the break\nof day.\n4. Give me love in my heart,\nkeep me serving\nGive me love in my heart, I\npray\nGive me love in my heart\nkeep me serving\nKeep me serving till the break\nof day\nBBC Songs 223",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-75",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 75,
+    "title": "Glorious Lord of lords (2x)",
+    "lyrics": "Glorious Lord of lords (2x)\nPraise be to you forevermore\nGlorious Lord of lords\nSeth Asare Ofei Badu\nPAN (T) 1267",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-76",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 76,
+    "title": "Glory! Glory! Glory!",
+    "lyrics": "Glory! Glory! Glory!\nBe unto the Lamb\nLift the name of Jesus,\nfor He’s victorious\nHail Him, Church of Jesus!\nLet’s sing praises to our King,\nGlory! Glory! Glory\nBe unto the Lamb!\nTranslation of “Anuonyam,\nanuonyam nka Oguamaa no”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-77",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 77,
+    "title": "Go, labour on, spend, and",
+    "lyrics": "1. Go, labour on, spend, and\nbe spent\nThy joy to do the Father’s will;\nIt is the way the Master went,\nShould not the servant tread it\nstill?\n2. Go, Labour on, ‘tis not for\nnought,\nThy earthly loss is heavenly\ngain\nMen heed thee, love thee,\npraise thee not\nThe Master praises, what are\nmen?\n3. Go labour on, while it is day;\nThe world’s dark night is\nhastening on\nSpeed, speed thy work cast\nsloth away;\nIt is not thus that souls are won.\n4. Men die in darkness at\nyour side\nWithout a hope to cheer the tomb;\nTake up the torch, and wave\nit wide,\nThe torch that lights time’s\nthickest gloom\n5. Toil on, faint not, keep\nwatch, and pray\nBe wise, the erring soul to win;\nGo forth into the world’s\nhighway,\nCompel the wanderer to come in\n6. Toil on, and in thy toil\nrejoice;\nFor toil comes rest, for exile home\nSoon shalt thou hear the\nBridegroom’s voice\nThe midnight peal: “Behold I\ncome!”\nHorartius Bonar",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-78",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 78,
+    "title": "Go, tell it on the mountain",
+    "lyrics": "Go, tell it on the mountain\nOver the hills and everywhere\nGo, tell it on the mountain\nThat Jesus is his name\n1. He possessed no riches\nNo home to lay his head;\nHe saw the needs of others\nAnd cared for them instead\n2. He reached out and\ntouched them\nThe blind, the deaf, the lame;\nHe spoke and listened gladly\nTo anyone who came\n3. Some turned away in anger,\nWith hatred in the eye;\nThey tried him and condemned\nhim\nThen led him out to die\n4. 'Father, now forgive them'\nUpon the cross he said;\nIn three more days he was alive\nAnd risen from the dead\n5. He still comes to people\nHis life moves through the\nlands;\nHe uses us for speaking\nHe touches with our hands\nGeoffrey Marshall Taylor\nBBC Songs 139",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-79",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 79,
+    "title": "God be with you till we",
+    "lyrics": "1. God be with you till we\nmeet again!\nBy His counsel guide, uphold you;\nWith His sheep securely fold you;\nGod be with you till we meet again!\nTill we meet ... Till we meet ...\nTill we meet at Jesus’ feet...\nTill we meet ... Till we meet ...\nGod be with you till we meet\nagain\n2. God be with you till we\nmeet again!\n‘Neath His wings securely\nhide you\nDaily manna still provide you;\nGod be with you till we meet\nagain!\n3. God be with you till we\nmeet again!\nWhen life’s perils thick\nconfound you.\nPut His love arms around\nyou;\nGod be with you till we meet\nagain!\n4. God be with you till we\nmeet again!\nKeep love’s banner floating\no’er you\nSmite death’s threatening\nwave before you\nGod be with you till we meet\nagain!\nGolden Bells 699",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-80",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 80,
+    "title": "God said to Abram, come",
+    "lyrics": "1. God said to Abram, come\nand follow me.\nI’ll lead you to a land,\nThat flows with milk and\nhoney\nAs far as you can see I’ll give\nit all to thee\nGod’s got an army, marching\nthrough the land\nDeliverance is their song,\nthere’s healing in their hand\nThere’s everlasting joy and\ngladness in their heart\nAnd in this army I’ve got a\npart\n2. God asked Ezekiel, can\nthese bones live again?\nEzekiel said, Lord you know\nif they can.\nThen preach to these bones,\nsay come together and stand\nIt’s time, we’re gonna march\nthrough this land.\n3. In the clouds of heaven\nKing Jesus shall decend\nAnd every knee shall bow,\nand every tongue confess\nHe’ll reign throughout this land\nin peace and righteousness\nAnd I’ll be there in the army\nof the blessed\nLeroy Baker",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-81",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 81,
+    "title": "God sent His Son, they",
+    "lyrics": "1. God sent His Son, they\ncalled him Jesus\nHe came to love, heal and\nforgive;\nHe lived and died to buy my\npardon\nAn empty grave is there to\nprove\nMy Saviour lives.\nBecause He lives, I can face\ntomorrow\nBecause He lives all fear is\ngone\nBecause I know He holds the\nfuture\nAnd life is worth the living\njust because He lives\n2. How sweet to hold a new\nborn baby\nAnd feel the pride and joy he\ngives\nBut greater still the calm\nassurance\nThis child can face uncertain\ndays because Christ lives\n3. And then one day I’ll cross\nthe river;\nI’ll fight life’s final war with\npain;\nAnd then as death gives way\nto vict’ry\nI’ll see the lights of glory and\nI’ll know He lives\nGloria Gaiter",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-82",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 82,
+    "title": "Gracious God you are",
+    "lyrics": "1. Gracious God you are\nWe bow to worship you\nGracious God you are\nWe shall ever praise you\nYour mercies shall never end\nYour dew of grace drips\ndown on us\nLike a well that springs up\nNever ever runs dry\n2. Liberal provider you are\nYou do provide for all\nLiberal provider you are\nDepend we on your providence\nYour affection is ever sure\nYour goodness covers all\nLike the spring and autumn\nrains\nNever fail in season.\n3. Almighty God you are\nYour name we ever bless\nAlmighty God you are\nYour greatness we exalt\nYour favour never ends\nYour kindness never ceases\nLike a spring that will\nNever ever run dry\nTranslation of ‘Domfo Nyame’by\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-83",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 83,
+    "title": "Great change, since I was",
+    "lyrics": "1. Great change, since I was\nborn,\nGreat change, since I was born,\nGreat change, since I was born,\nThere’s a great change since I\nwas born.\nThe things I used to do, I do\nthem no more. (x3)\nThere’s a great change since I\nwas born\n2. Great change, since I met\nGod\nGreat change, since I met God,\nGreat change, since I met God,\nThere’s a great change since I\nmet God\nThe things I used to do, I do\nthem no more. (3x)\nThere’s a great change since I\nmet God.\nPH 258",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-84",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 84,
+    "title": "Great is the Lord,",
+    "lyrics": "1. Great is the Lord,\nAnd he’s worthy to be praised\n(x2)\nGreat is the Lord\nGreat is the Lord\nGreat is the Lord, forever more\n2. Holy is the Lord,\nAnd he’s worthy to be praised\n(x2)\nHoly is the Lord\nHoly is the Lord\nHoly is the Lord, forever more\n3. Mighty is the Lord,\nAnd he’s worthy to be praised\n(x2)\nMighty is the Lord\nMighty is the Lord\nMighty is the Lord, forever\nmore.\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-85",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 85,
+    "title": "“Great is Thy faithfulness”",
+    "lyrics": "1. “Great is Thy faithfulness”\nO God my Father\nThere is no shadow of turning\nwith Thee\nThou changest not,\nThy compassions they fail not\nAs Thou hast been\nThou forever will be.\nGreat is Thy faithfulness!\nGreat is Thy faithfulness!\nMorning by morning new\nmercies I see\nAll I have needed Thy hand\nhath provided\nGreat is Thy faithfulness,\nLord unto me!\n2. Summer and winter and\nspring time and harvest\nSun, moon and stars in their\ncourses above\nJoin with all nature in\nmanifold witness\nTo Thy great faithfulness,\nmercy and love\n3. Pardon for sin and a peace\nthat endureth\nThy own dear presence to\ncheer and to guide\nStrength for today and bright\nhope for tomorrow\nBlessings all mine, with ten\nthousand beside.\nThomas O. Chisholm\nSongs of Fellowship",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-86",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 86,
+    "title": "Great Provider, He cares",
+    "lyrics": "1. Great Provider, He cares\nfor you;\nHe will provide all your needs;\nAccording to His glorious\nriches;\nHe cares, and will provide\n2. In times of need do not be\ntroubled;\nHe will provide all your needs;\nJust trust in Him, He will\nprovide;\nHe cares, and will provide\nFrancis Agyemang Badu\nPAN (T) 1320",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-87",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 87,
+    "title": "Greater one is our God;",
+    "lyrics": "Greater one is our God;\nNone like Him, He is within;\nAlmighty, Sovereign One,\nOur God is great, far above all;\nOur God is great,\nHe is great, greater than all;\nOur God is great,\nHe is great, far above all\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-88",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 88,
+    "title": "Guide me, O Thou Great",
+    "lyrics": "1. Guide me, O Thou Great\nJehovah!\nPilgrim through this barren\nland;\nI am weak, but thou art mighty,\nHold me with Thy powerful\nhand;\nBread of heaven!\nFeed me now and evermore.\n2. Open Thou the crystal\nfountain\nWhence the healing stream\ndoth flow;\nLet the fiery, cloudy pillar\nLead me all my journey\nthrough;\nStrong Deliverer!\nBe Thou still my strength and\nshield.\n3. If I tread the verge of Jordan,\nBid my anxious fears subside;\nBear me through the swelling\ntorrent\nLand me safe on Canaan’s\nside;\nSongs of praises\nI will ever give to Thee.\n4. Saviour, come! We long to\nsee Thee\nLong to dwell with thee above;\nAnd to know in full\ncommunion,\nAll the sweetness of Thy love,\nCome, Lord Jesus!\nTake Thy waiting people home\nW. Williams, RH 462",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-89",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 89,
+    "title": "Hallelu Ya! Hallelu Ya!",
+    "lyrics": "Hallelu Ya! Hallelu Ya!\nWe praise Thy name forever\nand ever more\nHallelu Ya!\nPH 21",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-90",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 90,
+    "title": "Happiness is to know the",
+    "lyrics": "1. Happiness is to know the\nSaviour\nLiving a life within His favour\nHaving a change in my\nbehavior\nHappiness is the Lord\n2. Happiness is a new creation\nJesus and me in close relation\nHaving a part in His salvation\nHappiness is the Lord\nReal Joy is mine\nNo matter if tear drops start\nI’ve found the secret\n‘Tis Jesus in my heart\n3. Happiness is to be forgiven\nLiving a life that’s worth the\nliving\nTaking a trip that leads to\nheaven\nHappiness is the Lord\nHappiness is the Lord\nHappiness is the Lord",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-91",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 91,
+    "title": "Hark! The herald-angels sing",
+    "lyrics": "1. Hark! The herald-angels sing\nGlory to the new-born King\nPeace on earth, and mercy\nmild.\nGod and sinners reconciled\nJoyful, all ye nations rise,.\nJoin the triumph of the skies;\nWith the angelic host proclaim\n‘Christ is born in Bethlehem’\nHark! The herald-angels sing\nGlory to the new-born King\n2. Christ, by highest heaven\nadored,\nChrist, the everlasting Lord\nLate in time behold him come\nOffspring of a virgin’s womb\nVeiled in flesh the Godhead see!\nHail, the incarnate deity!\nPleased as man with man to\ndwell,\nJesus, our Emmanuel.\n3. Hail, the heaven-born\nPrince of peace!\nHail, the sun of righteousness!\nLight and life to all he brings,\nRisen with healing in his wings,\nMild he lays his glory by\nBorn that man no more may die\nBorn to raise the sons of earth,\nBorn to give them second birth\nCharles Wesley (1707-88) altd.\nBBC songs 46",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-92",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 92,
+    "title": "Hark the voice of Jesus",
+    "lyrics": "1. Hark the voice of Jesus\ncrying\nWho will go and work today?\nFields are white and harvest\nwaiting\nWho will bear the sheaves\naway\nLoud and strong the Master\ncalleth\nRich reward He offers thee\nWho will answer gladly saying\nHere am I, send me! Send me!\n2. If you cannot speak like\nangels\nIf you cannot preach like Paul\nYou can tell the love of Jesus\nYou can say He died for all\nIf you cannot rouse the wicked\nWith the judgement dread\nalarms\nYou can lead the little children\nTo the Saviour’s waiting arms\n3. If among the older people\nYou may not be apt to teach\n“Feed my lambs” said Christ\nour Shepherd\nPlace the food within their\nreach\nAnd it may be that the children\nYou have led with trembling\narms\nWill be found among the jewels\nWhen you reach the better land\n4. Let none hear you idly saying\n“There is nothing I can do”\nWhile the souls of men are\ndying\nAnd the Master calls for you\nTake the task He gives you\ngladly\nLet His work your pleasure be\nAnswer quickly when he calleth\n“Here am I, send me! Send me!\nGolden Bells 617",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-93",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 93,
+    "title": "Hark, my soul, it is the Lord;",
+    "lyrics": "1. Hark, my soul, it is the Lord;\n'Tis thy saviour; hear his word;\nJesus speaks and speaks to\nthee;\n'Say, \"poor sinner, lov'st thou Me?\"\n2. I delivered thee when bound,\nAnd when bleeding, healed\nthy wound;\nSought thee wand'ring, set\nthee right,\nTurned thy darkness into light.\n3. “Can a woman's tender care\nCease towards the child she\nbare?\nYes, she may forgetful be,\nYet will I remember thee.\n4. “Mine is an unchanging\nlove,\nHigher than the heights above,\nDeeper than the depths beneath,\nFree and faithful strong as\ndeath.\n5. Thou shall see My glory soon,\nWhen the work of grace is done;\nPartner of my throne shalt be;\nSay, \"poor sinner, lov'st thou\nMe?\"\n6. Lord it is my chief complaint\nThat my love is weak and faint;\nYet I love thee, and adore;\nOh for grace to love thee more\nW. Cowper\nRH. 397",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-94",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 94,
+    "title": "Have Thine own way, Lord!",
+    "lyrics": "1. Have Thine own way, Lord!\nHave Thine own way!\nThou art the Potter;\nI am the clay.\nMould me and make me\nAfter Thy will,\nWhile I am waiting\nYielded and still.\n2. Have Thine own way, Lord!\nHave Thine own way!\nSearch me and try me\nMaster, today!\nWhiter than snow, Lord\nWash me just now\nAs in Thy presence\nHumbly I bow\n3. Have Thine own way, Lord!\nHave Thine own Way!\nWounded and weary\nHelp me, I pray!\nPower all power\nSurely is Thine!\nTouch me and heal me,\nSaviour Divine\n4. Have Thine own way, Lord!\nHave Thine own way!\nHold o’er my being\nAbsolute sway!\nFill with thy Spirit\nTill all shall see\nChrist only, always\nLiving in me!\nRH. 573",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-95",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 95,
+    "title": "He became sin, who knew",
+    "lyrics": "1. He became sin, who knew\nno sin\nThat we might become His\nrighteousness\nHe humbled himself and\ncarried the cross\nLove so amazing, love so\namazing\nJesus Messiah, name above all\nnames\nBlessed redeemer, Emmanuel\nThe rescue for sinners, the\nransom from Heaven\nJesus Messiah, Lord of all\nHis body the bread, his blood\nthe wine\nBroken and poured out all for\nlove\nThe whole earth trembled,\nand the veil was torn\nLove so amazing, love so\namazing, yeah\n2. Jesus Messiah, name above\nall names\nBlessed redeemer, Emmanuel\nThe rescue for sinners, the\nransom from Heaven\nJesus Messiah, Lord of all\nAll I hope is in You, all I hope\nis in You\nAll the glory to You, God, the\nlight of the world\nJesus Messiah, name above all\nnames\nBlessed redeemer, Emmanuel\nThe rescue for sinners, the\nransom from Heaven\nJesus Messiah, Lord of all\nChris Tomlin",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-96",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 96,
+    "title": "He carried my shame",
+    "lyrics": "1. He carried my shame\nwith Him to the cross,\nIn exchange for His glory for\nme;\nHe carried my wick-edness to\nthe cross,\nIn exchange for his virtue for me\nO, the peace that I now have,\nIs because of the cross of Cal-\nvary;\nO, the peace that I now have,\nIs because of the cross of Cal-\nvary\n2. He carried my guilt with\nHim to the cross,\nFor His justification for me;\nHe carried my bondage with\nHim to the cross,\nIn exchange for His freedom\nfor me\n3. O, this great salvation that\nwe sinners enjoy,\nIs because of the cross of\nCal-vary;\nO, the heavenly gate that is\nopened for us,\nIs because of the cross of Cal-\nvary\nEunice Johnson\nTranslation of 4faa ’animguase\nPAN (T) 679",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-97",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 97,
+    "title": "He died for me, He died for me",
+    "lyrics": "He died for me, He died for me\nMy Saviour Jesus died. (x2)\nO, He died for me; my\nSaviour Jesus died (x2)\nTranslation of Owui maa me,\nOwui maa me - PH 184",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-98",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 98,
+    "title": "He is my everything,",
+    "lyrics": "He is my everything,\nHe is my all\nHe is my everything,\nboth great and small\nHe gave His life for me\nMade everything new;\nHe is my everything\nAnd what about you?\nSome folks may ask me,\nSome folks may say,\nWho is this Jesus,\nYou talk about every day?\nHe is my Saviour,\nHe set me free\nNow listen while I tell you\nWhat He means to me.\nLiving Songs 73",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-99",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 99,
+    "title": "He is risen, He’s not here",
+    "lyrics": "He is risen, He’s not here\nHe is risen in victory\nHe’s exalted above all\nDeath could not hold Him in\nthe grave\nHe will surely come on a day\nunknown\nTo take all His saints to\nheaven\nAnd He will reign eternally\nOh! What joy awaits all saints\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-100",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 100,
+    "title": "He’s King of kings",
+    "lyrics": "1. He’s King of kings\nHe’s Lord of lords\nHe is Christ, the King of all\nAbove all things, beyond all\nthings\nWe shall praise Him for\nevermore\nWe shall ever hail Christ our\nLord, the King\nHe is the victorious One\nThere's none who can be\ncompared to Him\nWe shall praise Him for\nevermore\n2. Eternal God\nEverlasting Father\nAgeless One, Ancient of Days\nHe is I am, before Abraham\nwas\nWe shall praise Him for\nevermore\n3. King of Glory\nTriumphant Lord\nDavid’s Son, the Greatest of\nAll\nA light for the Gentiles,\nGlory to Israel\nWe shall praise Him for\nevermore\n4. Majestic One\nSovereign Lord\nThe Lion of Judah, David\ncalls Him Lord\nThe Son of God, the Son of\nMan\nWe shall praise Him for\nevermore\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-101",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 101,
+    "title": "He lives, he lives,",
+    "lyrics": "He lives, he lives,\nChrist Jesus lives today!\nHe walks with me\nAnd talks with me\nAlong life’s narrow way;\nHe lives, he lives\nSalvation to impart,\nYou ask me how I know he lives?\nHe lives within my heart.\nPH 158, A.H. Acklley",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-102",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 102,
+    "title": "He lives, He lives, He’s risen",
+    "lyrics": "He lives, He lives, He’s risen\nfrom the dead,\nHe’s risen as He said,\nThe glad tidings to spread.\nHe gives, He gives, eternal\nlife He gives;\nHallelujah! Jesus lives!\nTranslation of 4te ase,\nW’as4re afi awufu m’",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-103",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 103,
+    "title": "He paid a debt he did not",
+    "lyrics": "1. He paid a debt he did not\nowe\nI owed a debt I could not pay\nI needed someone to wash my\nsins away\nAnd now I sing a brand new\nsong\nAmazing grace\nChrist Jesus paid the debt\nThat I could never pay\n2. A debt he paid upon the cross\nHe cleansed my soul from all\nits flaws\nI thought that no one could all\nmy sins erase\nBut now I sing a brand new\nsong\nAmazing grace\nChrist Jesus paid the debt\nThat I could never pay\n3. He paid the debt at Calvary\nHe cleansed my soul and set\nme free\nI’m glad that Jesus did all my\nsins erase\nI now can sing a brand new\nsong\nAmazing grace\nChrist Jesus paid the debt\nThat I could never pay\n4. Oh such great pain\nMy Lord endured\nWhen he my sinful soul secure\nI sure had doubt though\nBut Jesus took my place\nSo now I sing a brand song\nAmazing grace\nChrist Jesus paid the debt\nThat I could never pay\n5. He didn’t give to me alone\nHe gave himself that he’s my\nLord\nHe’s gone to heaven\nTo make for me a place\nAnd now I sing a brand new\nsong\nAmazing grace\nChrist Jesus paid the debt\nThat I could never pay\n6. One day He’s coming back\nfor me\nTo live with him eternally\nWon’t it be glory to see him\non that day?\nI then will sing a brand new\nsong\nAmazing grace\nChrist Jesus paid the debt\nThat I could never pay",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-104",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 104,
+    "title": "He reigns, He reigns, He",
+    "lyrics": "He reigns, He reigns, He\nreigns\nMy Jesus ever reigns\nEvery knee shall bow\nEvery tongue’ll confess\nThat Jesus reigns for\nevermore\nEunice Johnson",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-105",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 105,
+    "title": "He set me free, Yes, He set me",
+    "lyrics": "He set me free, Yes, He set me\nfree\nHe broke the bonds of prison\nfor me\nI’m glory bound my Jesus to\nsee,\nO praise the Lord, He set me\nfree.\nPH 4",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-106",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 106,
+    "title": "He took my place and died for",
+    "lyrics": "He took my place and died for\nme\nHe took my place and died for\nme\nI was condemned to hell\nHell, hell, hell fire\nHe took my place and died for\nme\nHe took my place and died for\nme",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-107",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 107,
+    "title": "He Who has called you, the",
+    "lyrics": "1. He Who has called you, the\nFaithful One,\nHe goes before you, orders\nyour steps,\nHe will never leave his own\npeople, to suffer loss.\nHe will protect you, take care\nof you.\nHe who has called you is the\nStrong To-wer.\nDo not fear he who is in the\nworld.\nThe mountains shall be\nbrought low before you.\nThe crooked shall be made\nstraight before you\nAll shall see the glo-ry of the\nLord (x2)\n2. He who has loved you,\nUnfailing One\nHe goes ahead of you,\nprepares the way\nDefeat is not seen in his own\nif they look up to Him.\nHe will guide them and show\nthem the way.\nRock of Ages is He in whom\nyou hide.\nNothing can hurt you or\ndestroy you.\nAll strongholds shall be\npulled down before you.\nAll captives shall be set free\nbefore you.\nThe name of God shall be\nglorified. (x2)\n3. He who has sent you, the\nSon of God.\nAlways available, to show the\nway.\nVictory is assured for you in\nhis name, when you call him.\nHe will provide you with all\nyour needs.\nThe Spiritual Rock is that\nwhich follows you.\nYou shall lack nothing on\nyour journey.\nYou will drink from Him the\nliving water.\nYou will be fed by Him\nManna from a-bove .\nLord Jesus Christ shall be\nlifted up. (x2)\n4. He who is with you,\nUnchanging One.\nHe knows the future, past and\npresent.\nHe is never taken by\nsurprises, ready to help.\nHe assures you his ever\npresence\nHe who is with you is the\nAgeless One.\nDo not fear he who roars like\nlion\nBreaking chains and sha-\nckles that bind people.\nSetting at liberty those who\nare oppressed.\nThe Lord Jesus shall be\nglorified (x2)\n5. He who has promised, the\nMighty one.\nHe carries His people on\neagle’s wings.\nHe shows strength with His\narms to His own in generations.\nHe puts down the mighty\nfrom their thrones.\nHe who has promised is the\nMighty Rock.\nYou shall tread on serpents\nand scorpions.\nSatan falls down like\nlightning from heaven.\nDemons flee at the mention\nof His name.\nAll shall see the power of the\nLord. (x2)\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-108",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 108,
+    "title": "He’s been a friend to me",
+    "lyrics": "He’s been a friend to me\nmany a time\nHe’s been a friend to me\nmany a time\nMany a time;\nI laugh and I sing and I feel\nlike a king,\nFor he’s saved me from sin\nand from crime;\nHe’s been a friend to me,\nmany a time\nMany a time.\nPH 159",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-109",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 109,
+    "title": "He’s shown up Himself once",
+    "lyrics": "He’s shown up Himself once\nagain\nIn o-ur sacred camp\nAnd brought satisfaction to all\nJehovah, Captain of the host,\nWe bow to You,\nJehovah, Captain of the host\nWe praise Your name\nJehovah, Captain of the host\nWe praise Your name\nJehovah, Captain of the host\nWe bow to You\nJehovah, Captain of the host,\nWe praise Your name\nJehovah, Captain of the Host\nWe bow to You\nTranslation of “Wayi Ne ho\nadi Akyer1 Bio”\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-110",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 110,
+    "title": "He’s the faithfullest of friends,",
+    "lyrics": "He’s the faithfullest of friends,\nto me, to me;\nHe’s unchanging to the end,\nIs he, Is he;\nWhen the surging waters roll,\nHe’s the comfort of my soul;\nHe’s the faithfullest of friends\nto me, to me\nPH 6",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-111",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 111,
+    "title": "Help me Jesus",
+    "lyrics": "Help me Jesus\nHelp me O Lord\nI am wearied, tired and despised\nHelp I can find in no one else\nHelp me Jesus, help me O\nLord\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-112",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 112,
+    "title": "Here I am, Oh Lord,",
+    "lyrics": "1. Here I am, Oh Lord,\nReady to be poured on the altar\nPierce my ears, Oh Lord,\nReady to be used for Your\nservice.\nConsecrated unto You, my\nLord,\nTo bear Your marks in my body\n2. To your cross I come,\nReady to share in Your suf-fer-\ning\nTo the field I go,\nReady to keep watch over\nYour flock.\nTouch my ears, my eyes, my\nmouth,\nOh Lord,\nTo do the works of Your Father\n3. Lifting hands to You,\nReady to carry Ark of Covenant\nNothing do I hold,\nReady to take on Your sacred\ncharge.\nBreak my flesh, my will, my\nstrength,\nOh Lord\nTo use me as Your good servant\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-113",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 113,
+    "title": "His love for me brought Jesus",
+    "lyrics": "His love for me brought Jesus\nto earth as my saviour,\nHis love for me brought Jesus\nto die on the tree\nHis love for me is bringing\nme nearer to glory\nOne day I’ll know all the\ndepths of His love for me\nPH 5",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-114",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 114,
+    "title": "His Name is Wonderful",
+    "lyrics": "His Name is Wonderful\nHis Name is Wonderful\nHis Name is Wonderful\nJesus my Lord\nHe is the mighty King\nMaster of every thing\nHis Name is Wonderful\nJesus my Lord\nHe's the Great Shepherd\nThe Rock of all Ages\nAlmighty God is He\nBow down before Him,\nLove and adore Him\nHis name is wonderful\nJesus my Lord.\nAudrey Mieir",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-115",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 115,
+    "title": "Holy Spirit, Holy Spirit",
+    "lyrics": "Holy Spirit, Holy Spirit\nDescend upon your Church (2x)\nCause us to work signs and\nwonders in your Name,\nThe gift of healing and others\nto display;\nHoly Spirit, Holy Spirit,\nDescend upon your Church.\nTranslation of Sunsum\nKronkron, hwie gu w’asafo so",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-116",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 116,
+    "title": "Holy words long preserved",
+    "lyrics": "1. Holy words long preserved\nFor our walk in this world\nThey resound with God's own\nheart\nOh, let the ancient words\nimpart\n2. Words of Life, words of\nHope\nGive us strength, help us cope\nIn this world, where e'er we\nroam\nAncient words will guide us\nhome\nAncient words ever true\nchanging me and changing you\nWe have come with open hearts\nOh, let the ancient words impart\n3. Holy words of our Faith\nHanded down to this age\nCame to us through sacrifice\nOh heed the faithful words of\nChrist\n4. Holy words long preserved\nFor our walk in this world\nThey resound with God's own\nheart\nOh let the ancient words\nimpart\n5. Martyr’s blood stains each\npage\nThey have died for this faith\nHear them cry through the\nyears\nHeed these words and hold\nthem clear\nMichael W. Smith\nLynn Deshazo",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-117",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 117,
+    "title": "Holy, holy, holy!",
+    "lyrics": "1. Holy, holy, holy!\nLord God Almighty!\nEarly in the morning our song\nshall rise to thee;\nHoly, holy, holy!\nMerciful and mighty\nGod in three Persons, blessed\nTrinity\n2. Holy, holy, holy!\nAll the saints adore thee;\nCasting down their golden\ncrowns\nAround the glassy sea;\nCherubim and Seraphim\nFalling down before thee;\nWhich wert, and art, and\nevermore shall be\n3. Holy, holy, holy!\nThough the darkness hide thee\nThough the eye of sinful man\nThy glory may not see\nOnly thou art holy,\nThere is none beside thee\nPerfect in power, in love and\npurity\n4. Holy, holy, holy!\nLord God Almighty\nAll thy works shall praise thy\nname,\nIn earth, and sky and sea;\nHoly, holy, holy!\nMerciful and mighty!\nGod in three Persons,\nblessed Trinity!\nReginald Heber (1738-1826)\nBBC Songs 170",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-118",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 118,
+    "title": "Holy, holy, holy, holy;",
+    "lyrics": "Holy, holy, holy, holy;\nHoly, You fill this vast world;\nWith your majesty and glory\nO, our Lord, receive your praise\nXhosa Spiritual\nPAN (T) 1287",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-119",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 119,
+    "title": "How lovely on the",
+    "lyrics": "1. How lovely on the\nmountains are the feet of Him\nWho brings good news, good\nnews,\nProclaiming peace, announcing\nnews of happiness,\nOur God reigns, our God\nreigns.\nOur God reigns, our God\nreigns,\nOur God reigns, our God\nreigns.\n2. You watchmen lift your\nvoices joyfully as one,\nShout for your King, your King.\nSee eye to eye the Lord\nrestoring Zion;\nYour God reigns, your God\nreigns!\n3. Waste places of Jerusalem\nbreak forth with joy,\nWe are redeemed, redeemed.\nThe Lord has saved and\ncomforted His people:\nYour God reigns, your God\nreigns!\n4. Ends of the earth, see the\nsalvation of your God,\nJesus is Lord, is Lord.\nBefore the nations He has\nbared His holy arm:\nYour God reigns, your God\nreigns!\nLeonard E. Smith (Jnr.)\nSongs of Fellowship, 192",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-120",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 120,
+    "title": "How sweet the name of",
+    "lyrics": "1. How sweet the name of\nJesus sounds\nIn a believer’s ear\nIt soothes his sorrows, heals\nhis wounds\nAnd drives away his fear\n2. It makes the wounded spirit\nwhole,\nAnd calms the troubled breast;\n‘Tis manna’ to the hungry soul\nAnd to the weary rest.\n3. Dear name, the Rock on\nwhich I build\nMy shield and hiding place\nMy never-failing treasury filled\nWith boundless stores of\ngrace.\n4. Jesus, my Shepherd,\nBrother, Friend\nMy Prophet, Priest and King\nMy Lord, my Life, my Way\nmy End\nAccept the praise I bring.\n5. Weak is the effort of my\nheart,\nAnd cold my warmest thought;\nBut when I see Thee as Thou\nart\nI’ll praise Thee as I ought.\n6. I would Thy boundless\nlove proclaim\nWith every fleeting breath;\nAnd may the music of Thy name\nRefresh my soul in death.\nAmen\nJohn Newton, MHB 99",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-121",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 121,
+    "title": "How to reach the masses,",
+    "lyrics": "1. How to reach the masses,\nmen of every birth,\nFor an answer, Jesus gave the\nkey:\n“And I, if I be lifted up from\nthe earth,\nwill draw all men unto me.”\nLift Him up, Lift Him up,\nStill He speaks from eternity:\n“And I, if I be lifted up from\nthe earth,\nWill draw all men unto Me.”\n2. Oh! The world is hungry\nfor the Living Bread,\nLift the Saviour up for them\nto see;\nTrust Him, and do not doubt\nthe words that He said,\n“I’ll draw all men unto Me.”\n3. Don’t exalt the preacher,\ndon’t exalt the pew,\nPreach the Gospel simple full\nand free;\nProve Him and you will find\nthat promise is true,\n“I’ll draw all men unto Me.”\n4. Lift Him up by living\nas a Christian ought,\nLet the world in you the\nSaviour see;\nThen men will gladly follow\nHim Who once taught,\n“I’ll draw all men unto Me.”\nJohnson Oatman Jnr.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-122",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 122,
+    "title": "I am delivered, praise the Lord!",
+    "lyrics": "I am delivered, praise the Lord!\nI am delivered by His Word;\nOnce I was bound by the\nchains of Satan,\nI am delivered praise the Lord'\nGreat change in me, great\nChange in me,\nI am so happy I am so free;\nHe brought me out of\nbondage into His marvelous\nlight\nO, O, O, O, great change in me.\nPH. 106",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-123",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 123,
+    "title": "I am serving the God of",
+    "lyrics": "I am serving the God of\nmiracles\nI know, yes, I know\nI am serving the God of miracles\nI know, yes, I know",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-124",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 124,
+    "title": "I am so glad that our father",
+    "lyrics": "1. I am so glad that our father\nin heaven\nTells of His love in the Book\nHe has given\nWonderful things in the Bible\nI see;\nThis is the dearest, that Jesus\nloves me.\nI am so glad that Jesus loves\nme,\nJesus loves me, Jesus loves\nme\nI am so glad that Jesus loves\nme,\nJesus loves even me.\n2. Jesus loves me and I know\nI love Him\nLove brought Him down my\nlost soul to redeem;\nYes, it was love made Him\ndie on the tree.\nOh, I am certain that Jesus\nloves me.\n3. In this assurance I find\nsweetest rest\nTrusting in Jesus I know I am\nblest;\nSatan dismayed from my soul\ndoth now flee\nWhen I just tell him that\nJesus loves me.\n4. Oh, if there’s only one\nsong I can sing,\nWhen in His beauty I see the\ngreat King,\nThis shall my song in eternity\nbe,\n‘Oh, what a wonder that Jesus\nloves me!”\n5. If one should ask of me,\nhow can I tell\nGlory to Jesus, I know very well\nGod’s Holy Spirit with mine\ndoth agree,\nConstantly witnessing Jesus\nloves me\nPP. Bliss, RH 670",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-125",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 125,
+    "title": "I am so secured",
+    "lyrics": "I am so secured\nYou’re here with me\nYou stay the same\nYour love remains\nHere in my heart\nSo close I believe\nYou are holding me now\nIn your hand, I belong\nYou will never let me go\nYou gave your life\nYour endless love\nYou set me free\nAnd show the way\nNow I am found\nReuben Morgan",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-126",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 126,
+    "title": "I am swimming in the River",
+    "lyrics": "1. I am swimming in the River\nThe River of God\nI am swimming in the River\nI am swimming in the River\nThe River of God\n2. I am dancing in the River\nThe River of God\nI am dancing in the River\nI am dancing in the River\nThe River of God\n3. I am praying in the River\nThe River of God\nI am praying in the River\nI am praying in the River\nThe River of God\n4. I am fishing in the River\nThe River of God\nI am fishing in the River\nI am fishing in the River\nThe River of God\n5. I am drinking from the River\nThe River of God\nI am drinking from the River\nI am drinking from the River\nThe River of God\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-127",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 127,
+    "title": "I am the Lord, I am the Lord",
+    "lyrics": "I am the Lord, I am the Lord\nI am the Lord that changeth\nnot,\nI am the Lord, that changeth\nnot\nI am the Lord that changeth not\nThat changeth not;\nI am the Lord that changeth not\nSarpong Asomani\nPH 127",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-128",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 128,
+    "title": "I am Thine, O Lord, I have",
+    "lyrics": "1. I am Thine, O Lord, I have\nheard Thy voice\nAnd it told thy love to me\nBut I long to rise in the arms\nof faith\nAnd be closer drawn to Thee.\nDraw me near ... er ... nearer\nBlessed Lord\nTo the Cross where Thou hast\ndied, Draw me nearer, nearer,\nnearer, blessed Lord\nTo Thy precious, bleeding side\n2. Consecrate me now to Thy\nservice, Lord\nBy the power of grace divine\nLet my soul look up with a\nsteadfast hope,\nAnd my will be lost in Thine\n3. O the pure delight of a\nsingle hour,\nThat before Thy throne I spend;\nWhen I kneel in prayer, and\nwith\nThee my God\nI commune as friend with friend.\nFanny J. Crosby\nRH 578",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-129",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 129,
+    "title": "I am travelling to heaven",
+    "lyrics": "I am travelling to heaven\nHeaven is my home\nThere are storms on the way\nBut with Jesus in my heart\nI have my salvation\nI am working my way through\nI shall be in heaven\nHeaven is my home\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-130",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 130,
+    "title": "I give you praise my Lord my",
+    "lyrics": "I give you praise my Lord my\nKing\nI give you praise my Lord my\nKing\nI worship you, I worship\nI give you praise, my Lord\nmy King\nJ. Odoi Korang",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-131",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 131,
+    "title": "I have an anchor, I have a hope",
+    "lyrics": "I have an anchor, I have a hope\nI know the saving power of\nJesus\nI have an anchor, I have a\nhope\nI know the saving power of\nJesus",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-132",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 132,
+    "title": "I have been made out of",
+    "lyrics": "I have been made out of\nnothing but miry clay\nStruggling through this world\nof sin\nFeelings of hopelessness and\nfailure\nPleasures of sin keep on striking\nYet your love constrains me\nI have become your object of\nlove\nObject of mercy and grace\nYour love never lets me go,\noh, oh\nI surrender to your love\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-133",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 133,
+    "title": "I have come to You",
+    "lyrics": "I have come to You\nLord I’ve come, just as I am\nI’ve opened up to You\nFor a touch of you.\nI’ve opened up to You\nFor a touch of you\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-134",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 134,
+    "title": "I have Jesus within my heart",
+    "lyrics": "I have Jesus within my heart\nI have Jesus within my heart\nHe is My Lord,\nI’ll always serve Him\nFor He is everything to me\nTranslation of “Mew4 Jesus\na 4te me Mu”\nP. B. Appiah-Adu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-135",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 135,
+    "title": "I hear the words of love",
+    "lyrics": "1. I hear the words of love\nI gaze upon the blood,\nI see the mighty sacrifice,\nAnd I have peace with God\n2. ’Tis everlasting peace\nSure as Jehovah’s name;\n’Tis stable as his steadfast\nthrone\nFor evermore the same\n3. The clouds may go and come,\nAnd storms may sweep my\nsky,\nThis blood-sealed friendship\nchanges not;\nThe cross is ever nigh.\n4. My love is of times low,\nMy joy still ebbs and flows;\nBut peace with him remains\nthe Same;\nNo change Jehovah knows\n5. I change, he changes not,\nThe Christ can never die,\nHis love, not mine, the resting\nplace\nHis truth not mine, the tie.\nHoratius Bonor, PH. 173",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-136",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 136,
+    "title": "I hear Thy welcome voice",
+    "lyrics": "1. I hear Thy welcome voice\nThat calls me, Lord to Thee\nFor cleansing in Thy precious\nblood\nThat flowed on Calvary.\nI am coming Lord,\nComing now to Thee;\nWash me cleanse me in the\nblood\nThat flowed on Calvary.\n2. Though coming weak and\nvile,\nThou dost my strength assure;\nThou dost my vileness fully\ncleanse,\nTill spotless all and pure.\n3. ‘Tis Jesus calls me on\nTo perfect faith and love,\nTo perfect hope, and peace\nand trust\nFor earth and heaven above\n4. ‘Tis Jesus who confirms\nThe blessed work within,\nBy adding grace to\nwelcomed grace,\nWhere reigned the power of sin\n5. And He the witness gives\nTo loyal hearts and free\nThat every promise is\nfulfilled,\nIf faith but brings the plea.\n6. All hail, atoning blood!\nAll hail, redeeming grace!\nAll hail, the gift of Christ, our\nLord,\nOur strength and righteousness!\nL. Hartsough\nMHB 351",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-137",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 137,
+    "title": "I heard a sound from Heaven",
+    "lyrics": "I heard a sound from Heaven\nAnd the anthem loud did\nswell\nI saw the saints in glistering\nrobes\nA number no man could tell;\nI saw the King of glory\nAnd the angels around the Throne\nSinging glory, Halleluia!\nFor the glory of the Lamb is\ncome!\nSinging glory, Halleluia!\nSinging glory around the\nThrone!\nWaving palms with loud\nHosannas\nFor the marriage of the Lamb\nis come\nQuintet Choruses",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-138",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 138,
+    "title": "I know He is wonderful;",
+    "lyrics": "I know He is wonderful;\nI know He is wonderful;\nHe’s the Saviour, Healer,\nSanctifier;\nI know He is wonderful.\nPH330",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-139",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 139,
+    "title": "I know Him, the Lord",
+    "lyrics": "1. I know Him, the Lord\nWho holds my hands and\nleads me on\nTo cross the Jordan.\nLife may be hard and gloomy,\nThe Lord will never forsake\nHis own.\nMy strength may dry up,\nAnd the shadow of death may\novertake me.\nThe Lord will never abandon\nHis chosen ones\nIn death and in life\nIn death, in life\nI know Him the Lord,\nThe Lord holds my life and\nleads me\nIn death, in life\nI know Him the Lord,\nThe Lord holds my life and\nleads me\n2. I’m owned by the Lord\nWho knew me before I was\nformed\nIn my mother’s womb\nYet life is dim and fearful.\nHe assures me of His ever\npresence.\nDeath stings, body decays,\nYet I wake up clothed with\nheavenly body.\nI’m welcomed by the host of\nangels and saints\nTo heaven’s sweet home\nAt Home! At Home!\nIn heaven’s sweet home\nI’m welcomed to heaven’s\nsweet home\nAt Home! At Home!\nIn heaven’s sweet home\nI’m welcomed to heaven’s\nsweet home\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-140",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 140,
+    "title": "I love to tell the Story",
+    "lyrics": "1. I love to tell the Story\nOf unseen things above,\nOf Jesus and His glory\nOf Jesus and His love;\nI love to tell the Story\nBecause I know it’s true;\nIt satisfies my longings\nAs nothing else would do.\nI love to tell the Story\n’T will be my theme in glory\nTo tell the old, old Story\nOf Jesus and His love\n2. I love to tell the Story\nMore wonderful! it seems\nThan all the golden fancies\nOf all our golden dreams;\nI love to tell the Story\nIt did so much for me;\nAnd that is just the reason\nI tell it now to thee.\n3. I love to tell the Story\n‘Tis pleasant to repeat\nWhat seems, each time I tell it,\nMore wonderfully sweet;\nI love to tell the Story,\nFor some have never heard\nThe message of salvation\nFrom God’s own holy Word.\n4. I love to tell the Story;\nFor those who know it best\nSeem hungering and thirsting\nTo hear it like the rest;\nAnd when in scenes of glory\nI sing the new, new song,\n‘Twill be the old, old Story\nThat I have loved so long\nGolden Bells 444",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-141",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 141,
+    "title": "I love You Lord,",
+    "lyrics": "I love You Lord,\nAnd I lift my voice\nTo worship You,\nO my Soul rejoice\nTake joy, my King\nIn what you hear,\nLet it be a sweet\nsweet sound in Your ear",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-142",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 142,
+    "title": "I need Thee ev’ry hour",
+    "lyrics": "1. I need Thee ev’ry hour\nMost gracious Lord;\nNo tender voice like Thine\nCan peace afford\nI need Thee, Oh, I need Thee\nEv’ry hour I need Thee;\nOh, bless me now, my saviour\nI come to Thee!\n2. I need Thee every hour\nStay Thou near by;\nTemptations lose their power,\nWhen thou art nigh\n3. I need Thee every hour\nIn joy or pain;\nCome quickly and abide,\nOr life is vain.\n4. I need Thee every hour\nTeach me Thy will\nAnd Thy rich promises\nIn me fulfill.\nAnny Hawkes,\nRH, 541",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-143",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 143,
+    "title": "I see the Lord , I see the Lord;",
+    "lyrics": "I see the Lord , I see the Lord;\nHe is high and lifted up and\nhis train fills the temple,\nHe is high and lifted up and\nhis train fills the temple\nHis angels cry Holy !\nHis angels cry Holy!\nHis angels cry Holy is the\nLord !\nPH 140",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-144",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 144,
+    "title": "I surrender my life To Jesus",
+    "lyrics": "I surrender my life To Jesus\nI surrender my all to Him\nHe is King, He is Lord,\nI give my life to Him.\nHe is king, He is Lord\nI give my life to Him.\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-145",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 145,
+    "title": "I was glad when they said",
+    "lyrics": "I was glad when they said\nunto me (x3)\nLet us go into the house of\nthe Lord\nIn the house of the Lord\nHalleluya joy (x2)",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-146",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 146,
+    "title": "I was sinking deep in sin",
+    "lyrics": "1. I was sinking deep in sin\nSinking to rise no more,\nOverwhelmed by guilt within,\nMercy I did implore,\nThen the Master of the sea\nHeard my despairing cry\nChrist my Saviour lifted me\nNow safe am I.\nLove lifted me!... Love lifted\nme!..\nWhen no one but Christ could\nhelp\nLove lifted me.\n2. Souls in danger, look above\nJesus completely saves;\nHe will lift you by His love\nOut of the angry waves,\nHe’s the Master of the sea\nBillows His will obey;\nHe your Saviour wants to be,\nBe saved today!\n3. When the waves of sorrow\nroll,\nWhen I am in distress\nJesus takes my hand in His,\nEver He loves to bless,\nHe will every fear dispel\nSatisfy every need;\nAll who heed His loving call\nFind rest indeed\nJames Rowe\nRH 626 (Arranged)",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-147",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 147,
+    "title": "I will bless the Lord and give",
+    "lyrics": "I will bless the Lord and give\nhim the glory\nI will praise His name and\ngive Him all the glory",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-148",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 148,
+    "title": "I will build My church for",
+    "lyrics": "I will build My church for\nMy own glory\nI will build My church for\nMy own glory\nAnd the gates of hell shall not\nprevail,\nI say, I will build My church\nEunice Addision",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-149",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 149,
+    "title": "I will enter His gates with",
+    "lyrics": "I will enter His gates with\nthanksgiving in my heart,\nI will enter His courts with\npraise,\nI will say this is the day that\nthe Lord has made\nI will rejoice for He has made\nme glad\nHe has made me glad, He has\nmade me glad;\nI will rejoice for He has made\nme glad\nHe has made me glad (x2)\nI will rejoice for he has made\nme glad\nLeona Von Brethorst\nBBC Songs 208",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-150",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 150,
+    "title": "I will follow Thee, my",
+    "lyrics": "1. I will follow Thee, my\nSaviour,\nWheresoe’er my lot may be;\nWhere Thou goest I will\nfollow,\nYes, my Lord, I’ll follow Thee\nI will follow Thee, my Saviour,\nThou didst shed Thy blood for\nme;\nAnd though all men should\nforsake Thee,\nBy Thy grace I’ll follow Thee.\n2. Though the road be rough\nand stormy,\nTrackless as the foaming sea,\nThou hast trod this way before\nme,\nAnd I gladly follow Thee.\n3. Though ’tis lone and dark\nand dreary,\nCheerless though my path may\nbe,\nIf Thy voice I hear before me,\nFearlessly I’ll follow Thee.\n4. Though I meet with\ntribulation,\nSorely tempted though I be,\nI remember Thou wast\ntempted,\nAnd rejoice to follow Thee.\n5. Though Thou leadest\nthrough afflictions,\nPoor, forsaken though I be,\nThou wast destitute, afflicted,\nAnd I only follow Thee.\nJames L. Elginburg",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-151",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 151,
+    "title": "I will lift up my voice",
+    "lyrics": "I will lift up my voice\nand sing to your praise\nHallelujah You are King of\nkings\nI will lift up my voice\nand sing to your praise\nHallelujah You are King of\nkings\nHallelujah, You are King of\nkings\nHallelujah, You are Lord of\nlords\nI will lift up my voice\nand sing to your praise\nHallelujah You are King of\nkings",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-152",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 152,
+    "title": "I will render praises to my God,",
+    "lyrics": "I will render praises to my God,\nI will praise Him as long as I\nlive;\nIn Hades, there are no praises,\nGlory be unto the Most High\nKing.\nTranslation of Ayeyi na mede ma\nOnyame",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-153",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 153,
+    "title": "I’ll build my house upon the",
+    "lyrics": "I’ll build my house upon the\nRock,\nWith all patience, I will build\nit well,\nAnd with Jesus, I shall dwell\nI will build my house upon the\nRock\nI shall not fear the rain,\nIn the storm I’ll not be moved\nI’ll build my house upon the\nRock,\nAnd with Jesus, I shall dwell.\nTranslation of “Mesi me\ndan w4 $botan so”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-154",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 154,
+    "title": "I’ll do what I can for your",
+    "lyrics": "1. I’ll do what I can for your\nglory, Lord,\nIn this journey of our lives\nBy singing and telling your\nstory, Lord,\nThat others may know your\nlove.\nI will, dear Lord; I will\nMy promise I will fulfill,\nIn life and death I’ll faithful be,\nI will, dear Lord; I will.\n2. I’ll render true service to\nyou, dear Lord,\nA part of my debt to pay;\nBy pressing your goodness to\nme, dear Lord,\nTo those who are still astray.\n3. Thy service shall be my\ndelight, dear Lord,\nUntil I am called above;\nAnd then with the angels of\nlight, dear Lord,\nForever I’ll praise Thee, Lord.\nFaith Gospel Message\nPH 311",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-155",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 155,
+    "title": "I’ll keep on serving you",
+    "lyrics": "I’ll keep on serving you\nIn all faithfulness\nI know that my labor\nWon’t be in vain\nTranslation of “Mεk4 so m’asom\nWo”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-156",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 156,
+    "title": "I’m at the foot of the",
+    "lyrics": "I’m at the foot of the\nmountain\nClimbing higher to you\nStony places are on the\nmountain\nLift me up high, Lord unto you\nTo You, I come\nI come to follow you\nThere are depths of knowing you\nStretch your hand, help me\ncome to you\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-157",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 157,
+    "title": "I’m glad that my Saviour has",
+    "lyrics": "I’m glad that my Saviour has\nfinished for me, on the cross\nhe died for me.\nHe loved me, He suffered ,\nHe made me whole,\nOn the cross He died for me.\nOn the cross that day, my\nfather in heaven,\nOn the cross that day, he set\nme free\nI’m glad that my Saviour has\nfinished for me,\nOn the cross he died for me.\nM.L. Awuku",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-158",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 158,
+    "title": "I’m pressing on the upward",
+    "lyrics": "1. I’m pressing on the upward\nway,\nNew heights I’m gaining\nevery day;\nStill praying as I onward\nbound,\n“Lord plant my feet on higher\nground\nLord, lift me up and let me\nstand\nBy faith, on heavens table-\nland;\nWhere love and joy, and light\nabound,\nLord plant my feet on higher\nground\n2. My heart has no desire to stay\nWhere doubts arise, and fear\ndismay\nThough some may dwell\nwhere these abound\nMy constant aim is higher\nground\n3. Beyond the mist I fain\nwould rise,\nTo rest beneath unclouded skies,\nAbove earth’s turmoil peace\nis found;\nBy those who dwell on higher\nground\n4. I long to scale the utmost\nheight\nThough rough the way, and\nhard the fight,\nMy song, while climbing\nshall resound\nLord, lead me on to higher\nground\n5. Lord, lead me up the\nmountain side\nI dare not climb without my\nGuide;\nAnd, heaven gained, I’ll gaze\naround\nWith grateful heart from\nhigher ground\nRH 393",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-159",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 159,
+    "title": "I'm rejoicing night and day",
+    "lyrics": "1. I'm rejoicing night and day\nAs I walk the pilgrim way,\nFor the hand of God in all my\nlife I see,\nAnd the reason of my bliss;\nYes, the secret all is this:\nThat the Comforter abides\nwith me\nHe abides… he abides…\nHallelujah, he abides with me!\nI’m rejoicing night and day,\nAs I walk the narrow way,\nFor the Comforter abides with\nme\n2. Once my heart was full of sin,\nOnce I had no peace within\nTill I heard how Jesus died\nupon the tree,\nThen I fell down at his feet,\nAnd there came a peace so sweet\nNow the Comforter abides\nwith me.\n3. He is with me everywhere,\nAnd he knows my every care,\nI'm as happy as a bird and\njust as free\nFor the spirit has control,\nJesus satisfies my soul,\nSince the Comforter abides\nwith me.\n4. There's no thirsting for the\nthings\nOf the world - they've taken\nwings;\nLong ago I gave them up, and\ninstantly;\nAll my night was turned to day,\nAll my burdens rolled away,\nNow the Comforter abides\nwith me.\nHerbert Buffum\nRH.217",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-160",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 160,
+    "title": "I’m trading my sorrows,",
+    "lyrics": "I’m trading my sorrows,\nI’m trading my shame\nI’m laying them down for the\njoy of the Lord\nI’m trading my sickness\nI’m trading my pain\nI’m laying them down,\nFor the joy of the Lord\nYes Lord,\nYes Lord,\nYes yes Lord (x3)\nAmen\nI’m pressed but not crushed,\nPersecuted not abandoned,\nStruck down but not destroyed,\nI’m blessed beyond the curse\nFor his promise will endure\nAnd his joy’s gonna be my\nstrength\nThough the sorrows may last\nfor the night\nHis joy comes with the morning\nIsrael Houghton",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-161",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 161,
+    "title": "I’m walking arm in arm with",
+    "lyrics": "I’m walking arm in arm with\nJesus\nI trust in Him to lead the way\nI know that if I only cling to\nHim\nHe will never let me go astray\nFor I am walking with Jesus\nWalking everyday\nAlong the way\nFor I am walking with Jesus\nWalking with Jesus alone",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-162",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 162,
+    "title": "I’ve a message from the Lord,",
+    "lyrics": "1. I’ve a message from the Lord,\nHallelujah!\nThe message unto you I’ll give,\nTis recorded in His word,\nHallelujah!\nIt is only that you “look and\nlive”\n“Look and live” ... my\nbrother live\nLook to Jesus now and live\nTis recorded in His word,\nHallelujah!\nIt is only that you “look and\nlive”\n2. I’ve a message full of love\nHallelujah!\nA message, O my friend, for\nyou.\n‘Tis a message from above\nHallelujah!\nJesus said it, and I know ‘tis\ntrue.\n3. Life is offered unto you,\nHallelujah!\nEternal life your soul shall\nhave\nIf you’ll only look to Him,\nHallelujah!\nLook to Jesus who alone can\nsave.\nW.A Ogden\nRH 299",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-163",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 163,
+    "title": "I’ve believed the true report,",
+    "lyrics": "1. I’ve believed the true report,\nHallelujah to the Lamb!\nI have passed the outer court,\nO glory be to God!\nI am all on Jesus’ side\nOn the altar sanctified,\nTo the world and sin I’ve died,\nHallelujah to the Lamb!\nHallelejuh! Hallelujah!\nI have passed the riven veil,\nHere the glories never fail,\nHallelujah! Hallelujah!\nI am living in the presence of\nthe King.\n2. I’m a king and priest to God,\nHallelujah to the Lamb!\nBy the cleansing of the blood,\nO glory be to God!\nBy the Spirit’s pow’r and\nlight,\nI am living day and night,\nIn the holiest place so bright,\nHallelujah to the Lamb!\n3. I have passed the outer veil,\nHallelujah to the Lamb!\nWhich did once God’s light\nconceal\nO glory be to God!\nBut the blood has brought me in\nTo God’s holiness so clean,\nWhere there’s death to self and\nsin,\nHallelujah to the Lamb!\n4. I’m within the holiest pale,\nHallelujah to the Lamb!\nI have passed the inner veil,\nO glory be to God!\nI am sanctified to God\nBy the power of the blood,\nNow the Lord is my abode\nHallelujah to the Lamb!\nCharles Price Jones",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-164",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 164,
+    "title": "If you would serve the",
+    "lyrics": "1. If you would serve the\nLord a-right,\nSpend some time in pray'r\nIf you would keep your\narmour bright\nSpend some time in pray'r\nPray'r, its value none can\nmeasure,\nIt will bring you lasting\ntreasure;\nPresent help and present\npleasure\nSpend some time in pray'r\n2. If you would daily do His\nwill,\nSpend some time in pray'r.\nFor strength, his bidding to\nfulfil,\nSpend some time in pray'r.\n3. For pow'r to run the\nChristian race,\nSpend some time in pray'r\nCome often to the throne of\ngrace,\nSpend some time in pray'r\n4. God only can your needs\nsupply,\nSpend some time in pray'r\nThe blessings cometh from\non high,\nSpend some time in pray'r\nFaith Gospel Message\nPH 301",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-165",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 165,
+    "title": "Immortal, Invisible God",
+    "lyrics": "1. Immortal, Invisible God\nonly wise\nIn light inaccessible hid from\nour eyes\nMost blessed, most glorious,\nThe Ancient of Days\nAlmighty, victorious,\nThy great name we praise\n2. Unresting, unhasting,\nAnd silent as light\nNor wanting, nor wasting,\nThou rulest in might\nThy justice like mountains\nhigh soaring above,\nThy clouds which are\nfountains\nof goodness and love\n3. To all life Thou givest –\nto both great and small\nIn all life Thou livest,\nthe true life of all;\nWe blossom and flourish\nas leaves on the tree,\nAnd wither and perish –\nbut nought changeth thee.\n4. Great father of Glory,\nPure Father of light\nThine angels adore Thee,\nAll veiling their sight;\nAll laud we would render,\nO help us to see:\n‘Tis only the splendour\nof light hideth Thee\n5. Immortal, Invisible,\nGod only wise,\nIn light inaccessible\nhid from our eyes\nMost blessed, most glorious;\nThe Ancient of Days\nAlmighty, victorious,\nThy great name we praise\nWater Chalmer Smith\nRH 36",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-166",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 166,
+    "title": "In my heart (x3)",
+    "lyrics": "In my heart (x3)\nI will praise the Lord\nFor His goodness\nfor His kindness\nHis faithfulness ever sure\nIn my heart (x3)\nI will praise the Lord\nRosina Aninkora",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-167",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 167,
+    "title": "In our dear Lord’s garden,",
+    "lyrics": "1. In our dear Lord’s garden,\nPlanted here below,\nMany tiny flowerets\nIn sweet beauty grow\n2. Christ, the loving Gardener,\nTends these blossoms small;\nLoves the little lilies\nAs the cedars tall\n3. Nothing is too little\nFor His gentle care;\nNothing is too lowly\nIn His love to share\n4. Jesus loves the children,\nChildren such as we;\nBlest them when their mothers\nBrought them to His knee\n5. Jesus calls the children,\nBids them come and stand\nIn His pleasant garden,\nWatered by His hand\n6. Lord, Thy call we answer\nTake us in Thy care;\nTrain us in Thy garden,\nIn Thy work to share\nElla Sophia Armitage, 1841-1931\nMH 843",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-168",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 168,
+    "title": "In the same old way, in the",
+    "lyrics": "In the same old way, in the\nsame old way\nThe Lord is doing business in\nthe same old way;\nIn the same old way, in the\nsame old way,\nThe Lord is doing business in\nthe same old way.\nHerbert Buffum - PH 232",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-169",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 169,
+    "title": "In Times Like These",
+    "lyrics": "In Times Like These\nYou need a Saviour\nIn times like these\nYou need an Anchor\nBe very sure\nBe very sure\nYour anchor holds\nAnd grips the solid Rock\nThis Rock is Jesus\nYes He’s the One\nThis Rock is Jesus\nThe only one\nBe very sure\nBe very sure\nYour anchor holds\nAnd grips the solid Rock.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-170",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 170,
+    "title": "Into my heart, into my heart,",
+    "lyrics": "Into my heart, into my heart,\nCome into my heart, Lord\nJesus\nCome in today, come in to stay\nCome into my heart, Lord Jesus.\nHarry D. Clarke",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-171",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 171,
+    "title": "Is there a heart that is waiting",
+    "lyrics": "1. Is there a heart that is waiting\nLonging for pardon today?\nHear the glad message\nproclaiming\nJesus is passing this way\nJesus is passing this way\nThis way, this way\nJesus is passing this way\nHe is passing this way today\n2. Is there a heart that has\nwandered?\nCome with thy burden today;\nMercy is tenderly passing\nJesus is passing this way\n3. Is there a heart that is broken\nWeary and sighing for rest?\nCome to the arms of thy Saviour,\nPillow thy head on his Breast\n4. Come to thy only Redeemer\nCome to His infinite love,\nCome to the gate that is leading\nHomeward to mansion above\nAnnie L. James\nPH 286",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-172",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 172,
+    "title": "Is there anybody here that",
+    "lyrics": "Is there anybody here that\nloves my Jesus?\nAnybody here that loves my\nLord?\nI want to know, I want to know\nif you love my Lord.\nMy soul is happy when I love\nmy Jesus\nMy soul is happy when I love\nmy Lord,\nI want to know, I want to\nknow if you love my Lord\nPH. 13",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-173",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 173,
+    "title": "It is no longer I that liveth,",
+    "lyrics": "It is no longer I that liveth,\nbut Christ that liveth in me\nIt is no longer I that liveth, but\nChrist that liveth in me\nHe lives, He lives, Christ\nJesus is alive in me\nIt is no longer I that liveth, but\nChrist that liveth in me.\nLiving Songs 64",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-174",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 174,
+    "title": "It may not be on the",
+    "lyrics": "1. It may not be on the\nmountain's height\nOr over the stormy sea;\nIt may not be at the battle front\nMy Lord will have need of me;\nBut if by a still small voice\nHe calls\nTo paths I do not know\nI'll answer, dear Lord, with\nmy hand in Thine\nI'll go where you want me to go\nI'll go where you want me to\ngo dear Lord\nO'er mountain, or plain or sea;\nI'll say what you want me to\nsay, dear Lord\nI'll be what you want me to be\n2. Perhaps today there are\nloving words\nWhich Jesus would have me\nto speak;\nThere may be now, in the\npaths of sin,\nSome wand'rer whom I\nshould seek,\nO Saviour, if thou wilt be my\nGuide\nTho' dark and rugged the way,\nMy voice shall echo the\nmessage sweet\nI'll say what you want me to say\n3. There's surely somewhere\na lowly place\nIn earth's harvest-fields so wide\nWhere I may labour thro’\nlife's short day\nFor Jesus, the Crucified.\nSo, trusting my all unto Thy\ncare,\nI know Thou lovest me!\nI'll do Thy will with a heart\nsincere,\nI'll be what you want me to be.\nMary Brown, Melodies of Praise\n106, PH 145",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-175",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 175,
+    "title": "It will come to pass",
+    "lyrics": "It will come to pass\nAll His promises\nThey will come to pass, says\nthe Lord\nPray every day\nBelieve in the word\nFor there is joy, fullness of joy\nRosina Aninkora",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-176",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 176,
+    "title": "It’s not by our strength, but",
+    "lyrics": "1. It’s not by our strength, but\nby Your strength\nPower of the Holy Ghost\nPerforms wondrous works\n2. Not our righteousness, but\nYour own!\nBy the Holy Spirit moved,\nThe good fruit we bear.\n3. O Holy Spirit, Spirit\nDivine\nDaily strength we ask of You\nTo Christ glorify\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-177",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 177,
+    "title": "Jehovah God,",
+    "lyrics": "1. Jehovah God,\nWho over rules,\nI trust in You\nFor evermore\nAt Your mercies, Lord\nAt your mercies, Lord\nStanding in Your presence\nJehovah God, the Lord of Hosts\nYour will be done\n2. The Most High God,\nThe God we serve,\nYou are our hope\nIn times of trouble\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-178",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 178,
+    "title": "Jehovah is Your majestic",
+    "lyrics": "1. Jehovah is Your majestic\nName;\nYou are the God of the living\nAnd now You are my God\ntoday;\nI give myself entirely to You.\n2. Jesus Name is the pow’r of\nthe just;\nYou are the Lord of all\nChristians\nYou are my Redeemer and\nmy King;\nI give myself entirely to You.\n3. Holy Spirit, Lov’r of my soul;\nFaithful Friend of all who\nbelieve;\nYou are the Great Comforter\nto me;\nI give myself entirely to You.\nTranslation of Yehowa ne Wo\nDin K1se”\nVerse 1: Kwasi Annor\nVerse 2: Opoku Onyinah\nVerse 3: G.Y. Asiedu\nPAN (T) 1252",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-179",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 179,
+    "title": "Jehovah is your name",
+    "lyrics": "Jehovah is your name\nJehovah is your name\nMighty Warrior, great in battle\nJehovah is your name",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-180",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 180,
+    "title": "Jehovah, blessed be Your Name",
+    "lyrics": "Jehovah, blessed be Your Name\nJehovah, blessed be Your Name\nAll creation glorify Your\ngreat Name\nJehovah, blessed be Your Name\nXhosa Spiritual\nPAN(T) 1287",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-181",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 181,
+    "title": "Jesus calls us, o'er the tumult",
+    "lyrics": "1. Jesus calls us, o'er the tumult\nOf our life's wild, restless sea;\nDay by day His sweet voice\nsoundeth\nSaying, \"Christian, follow Me;\"\n2. As of old, apostles heard it\nBy the Galilean lake,\nTurned from home and toil\nand kindred,\nLeaving all for His dear sake.\n3. Jesus calls us from the worship\nOf the vain world's golden store;\nFrom each idol that would keep\nus,\nSaying, \"Christian, love Me\nmore.\"\n4. In our joys and in our sorrows,\nDays of toil and hours of ease,\nStill He calls, in cares and\npleasures,\n\"Christian, love Me more than\nthese.\"\n5. Jesus calls us: by Thy\nmercies,\nSaviour, may we hear Thy call,\nGive our hearts to Thy\nobedience,\nServe and love Thee best of all.\nCecil Frances Alexander (1823-95)",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-182",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 182,
+    "title": "Jesus Christ, I come to you;",
+    "lyrics": "Jesus Christ, I come to you;\nThere is none like you, O God;\nYou are far above all;\nYou are great God;\nKing of kings; Lord of lords;\nFar above all things;\nYou are great,God\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-183",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 183,
+    "title": "Jesus Christ is Wonderful",
+    "lyrics": "1. Jesus Christ is Wonderful\nCounsellor, God Almighty,\nEternal Father, Prince of peace;\nWe shall glorify His Name\nBlessed is He, Blessed is He\nBlessed is our God;\nBlessed, blessed, blessed is\nour God\n2. Jehovah, our God is with us;\nEmmanuel is in our midst;\nAnd His Kingdom spreads\nthrough the earth;\nEmmanuel will not depart\nTranslation “Yesu Kristo y1\n$nwonwani” by Opoku Onyinah\nPAN (T) 1261",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-184",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 184,
+    "title": "Jesus Christ shall never lose",
+    "lyrics": "Jesus Christ shall never lose\nHis power\nNo never; No never\nJesus Christ shall never lose\nHis power\nHe shall never ever lose His\npower\nGod’s power is so great, is so\ngreat, is so great\nGod’s power is so great, is so\ngreat, is so great\nGod’s power is gre-a-t\nMan’s power is so small, is so\nsmall, is so small\nMan’s power is so small, is so\nsmall, is so small\nMan’s power is so small–a-a-ll\nand at last it will fa-i-l\nElijah Agyemang",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-185",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 185,
+    "title": "Jesus, Friend of my soul",
+    "lyrics": "1. Jesus, Friend of my soul\nDrawing me close to know\nThe loving Father’s desire\nThat keeps on seeking me\nIf I really meet You\nI will worship You in truth\nWorship You in Spirit\nNever turn You down\n2. Jesus Friend of my soul\nI’m searching for You\nYet You are with me\nHelp me know You are close\n3. Jesus, Friend of my soul\nNo longer I hear You\nHelp me clearly discern\nYou are always with me.\n4. Jesus, Friend of my soul\nHas drawn me to Eternal God\nI’ve known the depth of Your\nlove\nIn joy I’ll worship You\nTranslation Me kra ‘damfo’\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-186",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 186,
+    "title": "Jesus, how lovely you are!",
+    "lyrics": "Jesus, how lovely you are!\nYou are so gentle, so pure\nand so kind;\nYou shine like the morning star:\nJesus, how lovely you are!\nPH 314",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-187",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 187,
+    "title": "Jesus, I my cross have taken,",
+    "lyrics": "1. Jesus, I my cross have taken,\nAll to leave and follow Thee.\nDestitute, despised, forsaken,\nThou from hence my all shall be.\nPerish every fond ambition,\nAll I’ve sought or hoped or\nknown.\nYet how rich is my condition!\nGod and heaven are still my own\n2. Let the world despise and\nleave me,\nThey have left my Saviour, too.\nHuman hearts and looks\ndeceive me;\nThou art not, like them, untrue.\nO while Thou dost smile\nupon me,\nGod of wisdom, love, and\nmight,\nFoes may hate and friends\ndisown me,\nShow Thy face and all is bright.\n3. Man may trouble and\ndistress me,\n’Twill but drive me to Thy\nbreast\nLife with trials hard may press\nme;\nHeaven will bring me sweeter\nrest.\nOh, ’tis not in grief to harm me\nWhile Thy love is left to me;\nOh, ’t’were not in joy to\ncharm me,\nWere that joy unmixed with\nThee.\n4. Go, then, earthly fame and\ntreasure,\nCome disaster, scorn and pain\nIn Thy service, pain is\npleasure,\nWith Thy favor, loss is gain\nI have called Thee Abba\nFather,\nI have stayed my heart on Thee\nStorms may howl, and clouds\nmay gather;\nAll must work for good to me.\n5. Soul, then know thy full\nsalvation\nRise o’er sin and fear and care\nJoy to find in every station,\nSomething still to do or bear.\nThink what Spirit dwells\nwithin thee,\nThink what Father’s smiles\nare thine,\nThink that Jesus died to win\nthee,\nChild of heaven, canst thou\nrepine.\n6. Haste thee on from grace to\nglory,\nArmed by faith, and winged\nby prayer.\nHeaven’s eternal days before\nthee,\nGod’s own hand shall guide\nus there.\nSoon shall close thy earthly\nmission,\nSoon shall pass thy pilgrim\ndays,\nHope shall change to glad\nfruition,\nFaith to sight, and prayer to\npraise.\nHenry Lite",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-188",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 188,
+    "title": "Jesus is King",
+    "lyrics": "Jesus is King\nWonderful King\nJesus is King\nWonderful King\nJesus is King\nWonderful King\nJesus is King\nWonderful King\nJohnson Larbi Appiah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-189",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 189,
+    "title": "Jesus is Lord (x4)",
+    "lyrics": "Jesus is Lord (x4)\nHe is the King of kings (x3)\nHe is Lord\nHe is the King of kings (x3)\nHe is Lord\nEunice Johnson",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-190",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 190,
+    "title": "Jesus is Lord!",
+    "lyrics": "1. Jesus is Lord!\nCreation's voice proclaims it\nFor by his power\nEach tree and flower\nWas planned and made\nJesus is Lord! The universe\ndeclares it\nSun, moon and stars in heaven\ncry;\nJesus is Lord!\nJesus is Lord, Jesus is Lord!\nPraise him with Alleluias\nFor Jesus is Lord\n2. Jesus is Lord!\nYet from his throne eternal\nIn flesh he came\nTo die in pain\nOn Calvary's tree\nJesus is Lord!\nFrom him all life proceeding\nHe gave his life a ransom\nthus setting us free.\n3. Jesus is Lord!\nO'er sin the mighty conqueror\nFrom death he rose\nAnd all his foes\nshall own his name\nJesus is Lord! God sent his\nHoly Spirit\nTo show by works of power that\nJesus is Lord!\nDavid Mansel\nBBC Song 153",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-191",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 191,
+    "title": "Jesus is the Bread of Life;",
+    "lyrics": "Jesus is the Bread of Life;\nHe’s the Bread of Life.\nJesus is the Spring of Life;\nHe’s the Spring of Life.\nWhoever feeds on Him shall\nhunger not,\nWhoever drinks of Him shall\nnever thirst.\nJesus is the Bread of Life,\nHe’s the Bread of Life.\nJesus is the Spring of Life;\nHe’s the Spring of Life.\nTranslation of “Yesu yε\nnkwa Aboodoo no”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-192",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 192,
+    "title": "Jesus! Jesus, my Saviour,",
+    "lyrics": "Jesus! Jesus, my Saviour,\nYou are King of kings\nindeed!\nJesus! Jesus, my Saviour,\nYou are King of kings\nindeed!\nTranslation of Jesus Agyenkwa\nWo na Woyε 4hene ampa",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-193",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 193,
+    "title": "Jesus, keep me near the cross",
+    "lyrics": "1. Jesus, keep me near the cross\nThere a precious fountain,\nFree to all, a healing stream,\nFlows from Calv'ry's\nmountain.\nIn the cross, (x2)\nBe my glory ever,\nTill my raptured soul shall find\nRest beyond the river.\n2. Near the cross, a trembling\nsoul,\nLove and mercy found me;\nThere the bright and morning\nstar\nShed its beams around me.\n3. Near the Cross! O Lamb of\nGod,\nBring its scenes before me;\nHelp me walk from day to day,\nWith its shadow o’er me\n4. Near the cross I'll watch\nand wait,\nHoping, trusting ever,\nTill I reach the golden strand,\nJust beyond the river.\nFanny J. Crosby\nRH. 396",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-194",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 194,
+    "title": "Jesus, let me ever be",
+    "lyrics": "1. Jesus, let me ever be\nFirmly grounded upon thee\nEver in thy work abide,\nEver in thy wounds reside.\n2. Plant, and root, and fix in\nme\nAll the mind that was in thee;\nSettled peace I then shall find;\nJesu's is a quiet mind.\n3. Anger I no more shall feel,\nAlways even, always still\nMeekly on my God reclined\nJesu's is a gentle mind.\n4. I shall suffer and fulfil\nAll my father's gracious will,\nBe in all alike resigned;\nJesu's is a patient mind\n5. When ‘tis deeply rooted here;\nPerfect love shall cast out fear,\nFear doth servile spirits bind,\nJesu’s is a noble mind.\n6. I shall nothing know beside\nJesus, and Him crucified;\nPerfectly to Him be joined\nJesu’s is a loving mind\n7. I shall triumph evermore,\nGratefully my God adore\nGod so good, so true, so kind,\nJesu’s is a thankful mind.\n8. Lowly, loving, meek and pure\nI shall to the end endure\nBe no more to sin inclined;\nJesu’s is a constant mind.\n9. I shall fully be restored\nto the image of my Lord,\nwitnessing to all mankind,\nJesu’s is a perfect mind\nCharles Wesley\nRH 399",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-195",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 195,
+    "title": "Jesus, lover of my soul,",
+    "lyrics": "1. Jesus, lover of my soul,\nLet me to Thy bosom fly,\nWhile the nearer waters roll,\nWhile the tempest still is high\nHide me, O my saviour, hide\nTill the storm of life is past\nSafe into the haven guide;\nOh, receive my soul at last.\n2. Other refuge have I none\nHangs my helpless soul on thee;\nLeave, ah! Leave me not alone,\nStill support and comfort me\nAll my trust on thee is stayed\nAll my help from Thee I bring;\nCover my defenceless head\nWith the shadow of Thy wing.\n3. Thou, O Christ! art all I\nwant\nMore than all in thee I find;\nRaise the fallen, cheer the faint,\nHeal the sick, and lead the\nblind\nJust and holy is Thy name\nI am all unrighteousness;\nVile and full of sin I am,\nThou art full of truth and grace.\n4. Plenteous grace with thee\nis found\nGrace to cover all my sin;\nLet the healing streams abound\nMake and keep me pure within;\nThou of life the fountain art,\nFreely let me take of Thee;\nSpring Thou up within my heart\nRise to all eternity.\nCharles Wesley\nRH. 312",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-196",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 196,
+    "title": "Jesus, my King, my",
+    "lyrics": "1. Jesus, my King, my\nwonderful Saviour,\nAll of my life is given to thee.\nI am rejoicing in thy salvation;\nThy precious blood now\nmaketh me free.\nWonderful Saviour,\nwonderful Saviour,\nThou art so dear, so\nprecious to me!\nWonderful Saviour,\nwonderful Saviour,\nMy heart is full with praises\nto Thee!\n2. Freedom from sin, o\nwonderful story –\nAll of its stains washed\nwhiter as snow!\nJesus has come to live in His\ntemple,\nAnd with His love my heart is\naglow.\n3. Jesus, my Lord, I’ll ever\nadore Thee,\nLay at Thy feet my treasures\nof love.\nLead me in ways to show\nforth Thy glory,\nWays that will end in heaven\nabove.\n4. When in that bright and\nbeautiful city\nI shall behold thy glories untold,\nI shall be like Thee,\nwonderful Saviour,\nAnd I will sing while ages\nunfold\nJohn M. Harris\nTranslation of Jesus, me Hen,\nm’Agyenkwa Nwanwanyi\nPAN",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-197",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 197,
+    "title": "Jesus, my Saviour, came",
+    "lyrics": "1. Jesus, my Saviour, came\nfrom on high\nTo die for you, to die for me;\nSinful, unworthy though I\nmay be,\nAll this He did for me.\nWonderful story, how can it be?\nJesus has died for me and for\nyou:\nHe left His crown and His\nthrone\nAll this He did for me.\n2. Where the bright angels\ne’er sing His praise,\nRound the white throne,\nround the white throne\nMe from the depths, He came\ndown to raise,\nClaiming me as His own.\n3. What can I do my Lord to\nrepay?\nOn Calvary’s tree, dying for me:\nI’ll trust Thee, Lord, and e’er\nfaithful be:\nThis I will do for Thee.\nTranslation of Agyenkwa Yesu firii\nsoro ton\nFaith Gospel Message PH 307",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-198",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 198,
+    "title": "Jesus, Name above all names",
+    "lyrics": "Jesus, Name above all names\nBeautiful Saviour\nGlorious Lord\nEmmanuel, God is with us\nBlessed Redeemer,\nLiving Word",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-199",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 199,
+    "title": "Jesus only is our message",
+    "lyrics": "1. Jesus only is our message\nJesus all our theme shall be\nWe will lift up Jesus ever\nJesus only we will see.\nJesus only, Jesus ever\nJesus all in all we see\nSaviour, Sanctifier, Healer,\nBaptizer, and coming King\n2. Jesus only is our Saviour\nAll our guilt He bore away\nAll our righteousness He gives\nus\nAll our strength from day to\nday.\n3. Jesus is our Sanctifier\nCleansing us from self and sin\nAnd with all His Spirit’s\nfullness\nFilling all our hearts within\n4. Jesus only is our Healer\nAll our sicknesses He bore\nAnd His risen life and fullness\nAll His members still may\nshare.\n5. Jesus only is our power\nHis the gift of Pentecost\nJesus, breathe Thy power upon us\nFill us with Thy Holy Ghost.\n6. For Jesus we are waiting\nListening for the trumpet’s\nsound\nThen, it will be us and Jesus\nLiving ever with our God.\nAlbert B. Simpson",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-200",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 200,
+    "title": "Jesus, our Light",
+    "lyrics": "Jesus, our Light\nJesus, our glory our glory for\never more\nJesus our, Light\nTogether, we shall praise Him,\nTogether we shall lift him high\nJesus our light,\nJesus our glory, our glory for\never more.\nM.L. Awuku",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-201",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 201,
+    "title": "Jesus, see me at thy feet,",
+    "lyrics": "1. Jesus, see me at thy feet,\nNothing but thy blood can\nsave me;\nThou alone my need canst meet,\nNothing but thy blood can\nsave me\nNo! No! Nothing do I bring,\nBut by faith I’m clinging,\nTo thy cross, O lamb of God!\nNothing but thy blood can\nsave me\n2. See my heart, Lord torn\nwith grief,\nNothing but thy blood can\nsave me;\nMe unpardoned do not leave,\nNothing but thy blood can\nsave me.\n3. Dark, indeed, the past has\nbeen,\nNothing, but thy blood can\nsave me,\nYet in mercy take me in\nNothing but thy blood can\nsave me.\n4. As I am, O, hear me pray,\nNothing but thy blood can\nsave me;\nI can ne’er remove a stain\nNothing but thy blood can\nsave me.\n5. Lord, I cast myself on thee,\nNothing but thy blood can\nsave me;\nFrom my guilt, O set me free\nNothing but thy blood can\nsave me,\nR Slater\nPH 210",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-202",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 202,
+    "title": "Jesus shall reign where’er",
+    "lyrics": "1. Jesus shall reign where’er\nthe sun\nDoth his successive journeys run;\nHis kingdom stretch from\nshore to shore\nTill suns shall rise and set no\nmore\n2. For Him shall endless\nprayer be made;\nAnd praises throng to crown\nHis head;\nHis Name like sweet perfume\nshall rise\nWith every morning sacrifice.\n3. People and realms of every\ntongue\nDwell on His love with sweetest\nsong;\nAnd infant voices shall\nproclaim\nTheir young hosannas to His\nName\n4. Blessings abound where’er\nhe reigns,\nThe prisoner leaps to loose his\nchains.\nThe weary find eternal rest,\nAnd all the sons of want are\nblest.\n5. Where He displays His\nhealing power;\nDeath and the curse are\nknown no more;\nIn Him the tribes of Adam\nboast\nMore blessings than their\nFather lost.\n6. Let every creature rise and\nbring,\nIts grateful honours to our King:\nAngels descend with songs\nagain,\nAnd earth prolong the joyful\nstrain.\nIsaac Watts, RH 190",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-203",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 203,
+    "title": "Jesus, stand among us",
+    "lyrics": "1. Jesus, stand among us\nIn Thy risen power,\nLet this time of worship\nBe a hallowed hour\n2. Breathe Thy Holy Spirit\nInto every heart;\nBid the fears and sorrows\nFrom each soul depart\n3. Thus with quickened footsteps\nWe’ll pursue our way,\nWatching for the dawning\nOf eternal day\nW. Pennefaher - RH 65",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-204",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 204,
+    "title": "Jesus, what a beautiful name",
+    "lyrics": "1. Jesus, what a beautiful name\nSon of God, Son of Man,\nLamb that was slain\nJoy and peace, strength and\nhope,\nGrace that blows all fear away\nJesus, what a beautiful name\n2. Jesus, what a beautiful name.\nTruth revealed, my future sealed,\nHealed my pain\nLove and freedom, life and\nwarmth,\nGrace that blows all fear away\nJesus, what a beautiful name\n3. Jesus, what a beautiful name\nRescued my soul, my\nstronghold,\nLift me from shame.\nForgiveness, security, power\nand love,\nGrace that blows all fear\naway;\nJesus, what a beautiful name\nTanya Rides",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-205",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 205,
+    "title": "Jesus, you are my friend",
+    "lyrics": "Jesus, you are my friend\nMy companion, brother\nMy Guide who always leads\nme,\nand orders my steps in your\npaths\nTranslation of Jesus wo y1\nm’adamfo by Opoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-206",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 206,
+    "title": "Jesus your name is great",
+    "lyrics": "Jesus your name is great\nWe love to sing your praise.\nThere is no name so great.\nWe love to lift up your name.\nWe lift up your name on high,\nJesus.\nWe lift up your name\nWe lift up your name on high,\nJesus.\nWe lift up your name.\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-207",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 207,
+    "title": "Joy to the world, the Lord",
+    "lyrics": "1. Joy to the world, the Lord\nis come!\nLet earth receive her King;\nLet every heart prepare him\nroom\nAnd heaven and nature sing\n2. Joy to the earth, the\nSaviour reigns!\nYour sweetest songs employ;\nWhile fields and streams sad\nhills and plains\nRepeat the sounding joy.\n3. He rules the world with\ntruth and grace\nAnd makes the nations prove\nThe glories of his\nrighteousness,\nThe wonders of his love\nIsaac Watts (1674-1785) altd\nBased on Psalm 98",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-208",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 208,
+    "title": "Joy, Joy, when we go",
+    "lyrics": "1. Joy, Joy, when we go\nto Heaven (x2)\n2. No more sorrow when we\ngo to Heaven (x2)\n3. No more weeping when\nwe go to Heaven (x2)\n4. No more pain when we go\nto Heaven (x2)",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-209",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 209,
+    "title": "Just as I am, without one",
+    "lyrics": "1. Just as I am, without one\nplea\nBut that thy blood was shed\nfor me,\nAnd that thou bidst me come\nto thee\nO, Lamb of God, I come\n2. Just as I am, though tossed\nabout\nWith many a conflict, many a\ndoubt\nFightings and fears within\nwithout\nO, Lamb of God I come.\n3. Just as I am, wretched, blind;\nSight riches, healing of the\nmind,\nYea all I need, in thee to find,\nO Lamb of God I come\n4. Just as I am, thou wilt receive,\nWilt welcome, pardon,\ncleanse relieve.\nBecause thy promise I believe,\nO Lamb of God, I come\n5. Just as I am, (thy love\nunknown\nHas broken every barrier down),\nNow to be thine, yea thine alone,\nO Lamb of God, I come\n6. Just as I am, of that free love\nThe breadth, length, depth and\nheight to prove,\nHere for a season, then above\nO Lamb of God I come.\nCharlotte Elliot\nBBC Songs 274",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-210",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 210,
+    "title": "Just as I am",
+    "lyrics": "1. Just as I am\nYour presence I come\nWith an Unveiling face\nGazing at your glory\nTransforming to Christ, your\nSon\nI come, oh my God, bless me\nI come, oh my God, bless me\n2. Fearless I come to you\nAbundance of grace\nLiving waters flowing\nDrinking from the rivers\nConforming to Christ, your\nSon\nI come, oh my God, bless me\nI come, oh my God, bless me\n3. Flowing of the Blood\nPleading for sinners\nInvitation to everybody\nAs I come to your presence\nTransform me to Christ, your\nSon\nI come, oh my God, bless me\n(x2)\n4. Sin, no longer, I live\nAs I catch the glimpse of\nglory\nHidden in the cleft of the Rock\nLifted up sanctified\nTo the image of Christ, your\nSon\nI come, oh my God, bless me\n(x2)\n5. Never-ceasing glory\nShining in the presence of\nChrist\nRaptured into such glory\nAs I gaze at him in glory\nConforming to Christ, his Son\nI come, oh my God, bless me\n(x2)\n6. Life-giving Spirit\nAbounds in the New Covenant\nWhosoever comes to the\nFather\nHe will never him cast out\nConforming to Christ, his Son\nI come, oh my God, bless me\n(x2)\nTranslation of “Mmerε me te yi\nara” by Opoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-211",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 211,
+    "title": "Just the same, just the same,",
+    "lyrics": "Just the same, just the same,\nGod is just the same today!\nJust the same, just the same,\nGod is just the same today!\nW. H. Jude",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-212",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 212,
+    "title": "Keep me true, Lord Jesus,",
+    "lyrics": "Keep me true, Lord Jesus,\nKeep me true!\nKeep me true, Lord Jesus,\nkeep me true!\nThere’s a race that I must run,\nThere are vict’ries to be won;\nGive me power ev’ry hour, to\nbe true!",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-213",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 213,
+    "title": "King of glory, King of peace",
+    "lyrics": "1. King of glory, King of peace\nI will love thee;\nAnd that love may never cease,\nI will move thee,\nThou hast granted my request,\nThou hast heard me;\nThou didst note my working\nbreast\nThou hast spared me.\n2. Wherefore with my utmost\nart\nI will sing thee\nAnd the cream of all my heart\nI will bring thee\nThough my sins against me\ncried,\nThou didst clear me;\nAnd alone, when they replied\nThou didst hear me\n3. Seven whole days, not one\nin seven\nI will praise thee;\nIn my heart, though not in\nheaven,\nI can raise thee\nSmall it is, in this poor sort\nTo enroll thee;\nE'en eternity's too short\nTo extol thee.\nGeorge Herbert\nBBC Songs 297",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-214",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 214,
+    "title": "Kissing the Son",
+    "lyrics": "Kissing the Son\nKissing the Son\nThe Son of God\nJesus, I bow to you (x2)\nJesus, the Son of God\nExalted above all things\nKissing the Son\nKissing the Son\nThe Son of God\nJesus, I bow to you\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-215",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 215,
+    "title": "Land of our Birth, we",
+    "lyrics": "1. Land of our Birth, we\npledge to thee\nOur love and toil in the years\nto be;\nWhen we are grown, and take\nour place\nAs men and women with our\nrace.\n2. Father in heaven, who lovest\nall\nO help thy children when they\ncall;\nThat they may build from age\nto age\nAn undefiled heritage.\n3. Teach us to bear the yoke\nin youth\nWith steadfastness and\ncareful truth\nThat, in our time, Thy grace\nmay give\nThe truth whereby the nations\nlive.\n4. Teach us to rule ourselves\nalway\nControlled and cleanly night\nand day;\nThat we may bring if need\narise\nNo maimed or worthless\nsacrifice.\n5. Teach us to look, in all our\nends,\nOn Thee for Judge, and not\nour friends;\nThat we, with Thee may walk\nuncowed\nBy fear or favour of the\ncrowd.\n6. Teach us the strength that\ncannot seek\nBy deed or thought to hurt the\nweak\nThat, under Thee, we may\npossess\nMan’s strength to succor\nman’s distress\n7. Teach us delight in simple\nthings\nAnd mirth that has no bitter\nsprings;\nForgiveness free of evil done\nAnd love to all men ‘neath\nthe sun!\n8. Land of our Birth, our faith,\nour pride\nFor whose dear sake our\nfathers died;\nO Motherland, we pledge to\nthee\nHead, heart, and hand through\nthe years to be\nMHB 899",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-216",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 216,
+    "title": "Let me walk just as Jesus",
+    "lyrics": "1. Let me walk just as Jesus\nwalked\nLet me serve just as He served\nThat I may give my whole\nbeing to you\nIn this work You’ve appointed\nfor me\nLet Your fullness be seen in me\n(x2)\nLet Your Holy Spirit fill me\nnow\nAnd let Your fullness be seen\nin me\n2. My Lord Jesus, how\nHimself He humbled\nWalked completely in His\nperfection\nHe went about doing good\nand wonders\nFill me, Lord, till I overflow\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-217",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 217,
+    "title": "Let praises ring,",
+    "lyrics": "1. Let praises ring,\nLet praises ring,\nLift voices up to love Him,\nLift hearts and hands to touch\nHim\nO let praises ring.\nAnd fill the skies with\nanthems high\nThat tell His excellencies\nAs priests and kings who rule\nwith Him\nThrough all eternity;\nLet praises ring,\nLet praises ring\nTo our glorious king.\n2. Let praises ring,\nLet praises ring,\nBow down in adoration,\nCry out His exaltation,\nO let praises ring.\nAnd lift the Name above all\nnames\nTill every nation knows\nThe love of God has come to\nmen,\nHis mercies overflow",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-218",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 218,
+    "title": "Let the beauty of Jesus be",
+    "lyrics": "Let the beauty of Jesus be\nseen in me\nAll His wonderful passion\nand purity\nOh Thou Spirit divine, all my\nnature refine\nTill the beauty of Jesus be\nseen in me.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-219",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 219,
+    "title": "Let the Fire fall",
+    "lyrics": "Let the Fire fall\nThe Fire of Pentecost\nLet it fall now\nMay it consume sin\nCleanse us of every guilt\nMake us whole again\nPlaced on the altar\nPrepared to be offered\nSend a burning coal\nLet the Fire fall\nPlaced on the altar\nPrepared to be offered\nBurn every chaff in us\nMake us whole again\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-220",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 220,
+    "title": "Let the fire fall on me",
+    "lyrics": "Let the fire fall on me\nLet the fire fall on me\nLord God, let your fire fall\nThat I may be a vessel\nA vessel of honour to You\nLet your fire, fire fall\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-221",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 221,
+    "title": "Let there be love shared",
+    "lyrics": "Let there be love shared\namong us\nLet there be love in our eyes,\nMay now your love sweep\nthis nation,\nCause us, O Lord to arise\nGive us a fresh understanding\nOf brotherly love that is real,\nLet there be love shared\namong us\nLet there be love.\nDave Billbrough, BBC Songs 364",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-222",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 222,
+    "title": "Let us talk, let’s talk about Jesus",
+    "lyrics": "Let us talk, let’s talk about Jesus\nTalk about Him today,\nTalk about Him tomorrow\nLet us talk, let’s talk about\nJesus\nLet’s talk about Jesus always\n1. Jesus, the Son of God,\nWonderful One\nGreat Counsellor, the Prince\nof Peace\nSaviour of the world\nHe’s my Lord and my God\nLet’s talk about Jesus always\n2. Jesus came from on high,\nlived without sin,\nWas crucified, rose from the\ndead\nHas gone above\nAnd is coming again\nLet’s talk about Jesus always\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-223",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 223,
+    "title": "Let us with a gladsome mind",
+    "lyrics": "1. Let us with a gladsome mind\nPraise the Lord for He is kind;\nFor His mercies shall endure,\never faithful, ever sure\n2. Let us sound His name abroad\nFor of gods He is The God;\n3. He, with all-commanding\nmight,\nFilled the new-made world\nwith light;\n4. All things living He doth feed,\nHis full hand supplies their need;\n5. He His chosen race did bless\nIn the wasteful wilderness;\n6. He hath with a piteous eye\nLooked upon our misery.\n7. Let us then with gladsome\nmind\nPraise the Lord, for He is kind.\nJohn Milton\nRH 109",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-224",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 224,
+    "title": "Let Your anointing fall on us;",
+    "lyrics": "Let Your anointing fall on us;\nLet Your grace abound;\nLet Your Holy Power;\nDwell upon us\nTranslation of “Ma wo Ngosra”\nSeth Asare Ofei Badu,\nPAN (T) 1253",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-225",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 225,
+    "title": "Let your fire burn (x2)",
+    "lyrics": "1. Let your fire burn (x2)\nSinful works consume\nLet Your fire burn (x2)\nSinful works consume\n2. Let Your fire burn (x2)\nWorks of flesh consume\nLet Your fire burn (x2)\nWorks of flesh consume\n3. Let Your fire burn (x2)\nWeaknesses consume\nLet Your fire burn (x2)\nWeaknesses consume\nTranslation of Ma Wo gya\nno nd1w\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-226",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 226,
+    "title": "Let Your living water flow",
+    "lyrics": "1. Let Your living water flow\nover my soul,\nLet your Holy Spirit come\nand take control,\nOf every situation that has\ntroubled my mind,\nAll my cares and burdens on\nto you I roll.\nFather, Father, Father.\n2. Give your life to Jesus, let\nHim fill your soul,\nLet Him take you in His arms\nand make you whole,\nAs you give your life to Him,\nHe'll set you free,\nYou will live and reign with\nHim eternally.\nJesus, Jesus, Jesus.\n3. Come now Holy Spirit and\ntake control,\nHold me in your loving arms\nand make me whole,\nWipe away all doubt and fear\nand take my pride,\nDraw me to your love and\nkeep me by your side.\nSpirit, Spirit, Spirit.\n4. Let your living water flow\nover my soul\nLet your Holy spirit come and\ntake control,\nOf every situation that has\ntroubled my mind,\nAll my cares and burdens\nonto you I roll.\nFather, Jesus, Spirit",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-227",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 227,
+    "title": "Let Your Love so dwell in",
+    "lyrics": "1. Let Your Love so dwell in\nme\nThat I’ll be rooted well in You\nThat I may bear fruit as you\ndesire\nThat You may be pleased with\nme (x2)\nRooted in Love\nBearing fruit\nLiving your word\nPleasing You\nThat I may bear fruit as you\ndesire\nThat you may be pleased\nwith me\n2. Let Your word so dwell in me\nThat with it I'll labour for you\nThat I’II live your word\nManifesting Christ\nThat the world may see you\nin me.\nRooted in love\nBearing fruit\nLiving your word\nPleasing you\nThat I’ll live your word\nmanifesting Christ\nThat the world may see you in\nme\nAugustus Blay Cobbinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-228",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 228,
+    "title": "Lift Jesus higher! Lift Jesus",
+    "lyrics": "Lift Jesus higher! Lift Jesus\nhigher!\nLift Him up for far the world\nto see\nHe said “if I be lifted up from\nthe earth,\nI will draw all men unto Me.”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-229",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 229,
+    "title": "Lift me up the higher mountain",
+    "lyrics": "Lift me up the higher mountain\nInto fellowship with You\nIn your light I see a fountain\nAnd the blood that cleanses me",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-230",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 230,
+    "title": "Light of God, lead me on;",
+    "lyrics": "Light of God, lead me on;\nIn my pilgrimage;\nYour guidance I need\nTo be victorious\nE. K. Asamoah\nPAN (T) 1258",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-231",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 231,
+    "title": "Like the woman at the well,",
+    "lyrics": "1. Like the woman at the well,\nI was seeking\nFor things that could not satisfy\nAnd then I heard my Saviour\nspeaking\n“Draw from my well that\nnever shall run dry”\nFill my cup Lord,\nI lift it up Lord,\nCome and quench this\nthirsting of my soul\nBread of heaven\nFeed me till I want no more\nFill my cup\nFill it up and make me whole\n2. There are millions in this\nworld who are craving\nThe pleasures earthly things\nafford\nBut none can match the\nwondrous treasure\nThat I find in Jesus Christ my\nLord.\n3. So, my neighbor, if the\nthings this world gave you\nLeave hungers that won’t\npass away\nMy blessed Lord will come\nand save you\nIf you kneel to Him and\nhumbly pray\nRichard E. Blanchard",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-232",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 232,
+    "title": "Lord God Almighty,",
+    "lyrics": "Lord God Almighty,\nAlpha and Omega,\nWe love You, Lord,\nfrom the depths of our hearts (x2);\nLord, You are worthy,\nTruly, You are holy,\nExceeding in grace,\nYou deserve all our praise,\nYour love is everlasting,\nWe come to You trusting\nYour Lordship, Your\nKingship,\nYour power and Your might,\nYou are so awesome,\nIt’s good to know that You\nare my Lord,\nI love you Lord, I really do (x2)\nLord God Almighty,\nAlpha and Omega,\nWe love You, Lord,\nfrom the depths of our hearts\n(x2)\nGina Asante",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-233",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 233,
+    "title": "Lord of heav'n and earth and sea",
+    "lyrics": "1. Lord of heav'n and earth and sea\nTo Thee all praise and glory be:\nHow shall we show our love\nto Thee\nWho givest all?\n2. Thou didst not spare Thine\nonly Son,\nBut gav'st Him for a world\nundone;\nAnd freely with the blessed\nOne\nThou givest all?\n3. We lose what on ourselves\nwe spend\nWe have a treasure without end\nWhatever Lord to Thee we\nlend.\nWho givest all;\n4 To thee from whom we all\nderive\nOur life our gifts our power to\ngive!\nO may we ever with Thee live\nWho givest all?\n5. Thou giv'st the Spirit\nblessed dower\nSpirit of life, and love and\npower.\nAnd dost His sevenfold graces\nshower\nUpon us all.\n6. For souls redeemed. For\nsins forgiven\nFor means of grace and hopes\nof heaven\nFather all praise to Thee be\ngiven\nWho givest all?\nC. Wordworth - RH 33",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-234",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 234,
+    "title": "Lord, prepare me to be a",
+    "lyrics": "Lord, prepare me to be a\nsanctuary\nPure and holy, tried and true\nWith thanksgiving, I will be a\nliving sanctuary for you",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-235",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 235,
+    "title": "Lord, reign here in my heart",
+    "lyrics": "Lord, reign here in my heart\nLord, reign here in Your\nchurch\nLet all the peoples see your\ngrace\nO reign here, Prince of peace\nLord, reign in every heart\nLord reign in every land\nAnd let Your peace cover the\nearth\nO reign here, Prince of peace\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-236",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 236,
+    "title": "Lord, Thy Word abideth",
+    "lyrics": "1. Lord, Thy Word abideth\nAnd our footsteps guideth,\nWho its truth believeth\nLight and joy receiveth\n2. When our foes are near us\nThen Thy Word doth cheer us,\nWord of consolation,\nMessage of salvation.\n3. When the storms are o’er us,\nAnd dark clouds before us,\nThen its light directeth,\nAnd our way protecteth.\n4. Who can tell the pleasure,\nWho recount the treasure,\nBy Thy word imparted\nTo the simple-hearted?\n5. Word of mercy, giving\nSuccour to the living\nWord of life, supplying\nComfort to the dying!\n6. O that we, discerning\nIts most holy learning,\nLord, may love and fear Thee,\nEvermore be near Thee!\nH. W. Baker\nMHB 308",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-237",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 237,
+    "title": "Low in the grave he lay",
+    "lyrics": "1. Low in the grave he lay...\nJesus, my saviour!\nWaiting the coming day-\nJesus, my Lord!\nUp from the grave he arose…\nWith a mighty triumph o'er\nHis foes…..\nHe arose, a victor from the\ndark domain,\nAnd he lives forever with his\nsaints to reign\nHe arose!...\nHe arose! ..\nHallelujah! Christ arose!\n2. Vainly they watch his bed\nJesus, my saviour!\nVainly, they seal the dead\nJesus, my Lord!\n3. Death cannot keep his prey\nJesus, my saviour!\nHe tore the bars away\nJesus, my Lord!\nRobert Lowry - RH.186",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-238",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 238,
+    "title": "Majesty, worship His",
+    "lyrics": "Majesty, worship His\nmajesty;\nUnto Jesus be all glory,\nhonour and praise;\nMajesty, kingdom authority,\nFlows from His throne unto\nhis own,\nHis anthem raise,\nSo exalt, lift up on high\nThe name of Jesus;\nMagnify, come glorify\nChrist Jesus the king\nMajesty, worship His\nmajesty;\nJesus who died, now glorified\nKing of all kings.\nJack Williams Hayford - PH 341",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-239",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 239,
+    "title": "\"Man of sorrows\", what a",
+    "lyrics": "1. \"Man of sorrows\", what a\nname!\nFor the son of God who came\nRuined sinners to reclaim!\nHallelujah! What a Saviour!\n2. Bearing shame and scoffing\nrude,\nIn my place condemned he stood;\nSealed my pardon with his\nblood;\nHallelujah! What a saviour!\n3. Guilty, vile and helpless we,\nSpotless lamb of God was he;\n\"Full atonement, can it be?\nHallelujah! What a saviour!\n4. Lifted up was he to die,\n\"It is finished\" was his cry;\nNow in heaven exalted high;\nHallelujah! What a saviour!\n5. When he comes, our\nglorious King.\nAll his ransomed home to bring,\nThen anew this song we'll sing;\nHallelujah! What a saviour!\nP P Bliss - RH 170",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-240",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 240,
+    "title": "Master speak! Thy servant",
+    "lyrics": "1. Master speak! Thy servant\nheareth\nWaiting for thy gracious word,\nLonging for thy voice that\ncheereth\nMaster, let it now be heard.\nI am listening, Lord, for thee;\nWhat hast Thou to say to me!\n2. Speak to me by name O\nmaster,\nLet me know it is to me,\nSpeak, that I may follow faster,\nWith a step more firm and\nfree,\nWhere the shepherd leads the\nflock\nIn the shadow of the rock.\n3. Master speak! Though least\nand lowest.\nLet me not unheard depart;\nMaster, speak for oh,\nThou knowest\nAll the yearning of my heart,\nKnowest all its truest need;\nSpeak! And make me blest\nindeed.\n4. Master, speak and make\nme ready,\nWhen thy voice is truly heard,\nWith obedience glad and steady,\nStill to follow every word,\nI am listening Lord, for Thee,\nMaster, speak, oh, speak to\nme!\nFrances R. Havergal\nRH. 487",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-241",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 241,
+    "title": "May Your Will be done, oh",
+    "lyrics": "May Your Will be done, oh\nmy Lord\nMay your will be done in my\nlife\nAt your feet I fall, oh my Lord\nMay your will be done\nNothing in my hand I bring\nTo your cross I cling, oh my\nLord\nIn mercy take me in, just as I am\nMay your will be done in my life\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-242",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 242,
+    "title": "Mighty revival’s coming so",
+    "lyrics": "Mighty revival’s coming so\nsoon\nMighty revival’s falling on\nHis Church,\nQuickening and waking dead\nsouls alive;\nGlory! Hallelujah! Praise the\nLord!",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-243",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 243,
+    "title": "Mighty warrior, man of",
+    "lyrics": "Mighty warrior, man of\nvalour;\nChildren of grace, children of\npeace;\nBlow the trumpet in Zion;\nLet the weak say I am strong;\nVictory, great victory;\nThe army of the Lord marches\non\nSamuel Tetteh Doku",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-244",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 244,
+    "title": "More about Jesus would I",
+    "lyrics": "1. More about Jesus would I\nknow\nMore of His grace to others\nshow\nMore of His saving fullness\nsee\nMore of His love who died for\nme\nMore, more about Jesus\nMore, more about Jesus\nMore of His saving fullness\nsee\nMore of His love who died for\nme.\n2. More about Jesus let me learn\nMore of His holy will discern\nSpirit of God my teacher be\nShowing the things of Christ to\nme.\n3. More about Jesus, in His\nWord\nHolding communion with my\nLord\nHearing His voice in every\nline\nMaking each faithful saying\nmine.\n4. More about Jesus on His\nthrone\nRiches in glory all His own\nMore of His kingdom’s sure\nincrease\nMore of His coming, Prince\nof Peace.\nEliza Edmunds Hewitt",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-245",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 245,
+    "title": "More and more, I want to",
+    "lyrics": "More and more, I want to\nmagnify Thy name\nMore and more, I want to\nspread abroad Thy fame\nMore and more, O make my\nlife a living flame\nMelt my heart, precious Lord,\nmore and more.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-246",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 246,
+    "title": "My faith has found a resting",
+    "lyrics": "1. My faith has found a resting\nplace,\nNot in device nor creed;\nI trust the Ever-living one,\nHis wounds for me shall plead.\nI need no other argument\nI need no other plea\nIt is enough that Jesus died\nAnd that he died for me\n2. Enough for me that Jesus\nsaves,\nThis ends my fear and doubt;\nA sinful soul I come to him\nHe'll never cast me out\n3. My heart is leaning on the\nword,\nThe written word of God,\nSalvation by my saviour's name,\nSalvation through his blood.\n4. My great Physician heals the\nsick\nThe lost he came to save:\nFor me His precious blood he\nshed,\nFor me His life he gave\nR.H 377, L.H.E'dmonds",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-247",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 247,
+    "title": "My heart is so full",
+    "lyrics": "My heart is so full\nis so full, is so full\nMy heart is so full\nI’ve taken a bath in the\ncleansing wave,\nI’ve trusted in Jesus, the\nmighty to save,\nMy heart is so full, is so full,\nis so full.\nPH 47",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-248",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 248,
+    "title": "My heart was distressed",
+    "lyrics": "1. My heart was distressed\n‘Neath Jehovah’s dread frown,\nAnd low in the pit where my\nsins dragged me down;\nI cried to the Lord from the\ndeep miry clay,\nWho tenderly brought\nMe out to golden day\nHe brought me out of the miry\nclay,\nHe set my feet on the rock to\nstay;\nHe puts a song in my soul\ntoday,\nA song of praise, Hallelujah!\n2. He placed me upon the\nstrong\nRock by his side,\nmy steps were established\nand here I’ll abide:\nNo danger of falling\nwhile here I remain,\nBut stand by His grace\nuntil the crown I gain.\n3. He gave me a song\n‘Twas a new song of praise;\nBy day and by night\nIts sweet notes I will raise;\nMy heart’s overflowing.\nI’m happy and free;\nI’ll praise my Redeemer,\nWho has rescued me\n4. I’ll sing of his wonderful\nmercy to me,\nI’ll praise him till all men\nHis goodness shall see;\nI’ll sing of salvation\nat home and abroad,\nTill many shall hear\nthe truth and trust in God.\n5. I’ll tell of the pit\nWith it’s gloom and despair\nI’ll praise the dear father\nWho answered my prayer,\nI’ll sing my new song,\nthe glad story of love,\nthen join in the chorus\nwith the saints above.\nHenry J. Zelley",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-249",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 249,
+    "title": "My hope is built on nothing",
+    "lyrics": "1. My hope is built on nothing\nless\nThan Jesus' blood and\nrighteousness\nI dare not trust the sweetest\nframe,\nBut wholly lean on Jesus' name.\nOn Christ, the solid rock, I\nstand;\nAll other ground is sinking\nsand\n2. When darkness seems to\nveil his face;\nI rest on his unchanging grace;\nIn every high and stormy gale,\nMy anchor holds within the\nveil.\n3. His oath, his covenant, and\nblood,\nSupport me in the 'whelming\nflood\nWhen all around my soul gives\nway,\nHe then is all my hope and stay\n4. When he shall come with\ntrumpet sound.\nOh, may I then in Him be\nfound:\nDressed in his righteousness\nalone,\nFaultless to stand before the\nthrone.\nEdward Mote - RH 378",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-250",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 250,
+    "title": "My Jesus, I love Thee",
+    "lyrics": "1. My Jesus, I love Thee\nI know Thou art mine\nFor Thee all the pleasures of\nsin I resign;\nMy gracious Redeemer, my\nSaviour, art Thou\nIf ever I loved Thee, my\nJesus, ‘tis now.\n2. I love thee because thou\nhast first loved me\nAnd purchased my pardon\nwhen nailed to tree\nI love thee for wearing the\nthorns on thy brow\nIf ever I loved Thee,\nMy Jesus, ‘tis now.\n3. I’ll love Thee in life\nI will love Thee in death\nAnd praise Thee as long as\nThou lendest me breath\nAnd say, should the death-\ndew lie cold on my brow\nif ever I loved Thee, my\nJesus, ‘tis now!\n4. In mansions of glory and\nendless delight;\nI’ll ever adore Thee in heaven\nso bright;\nI’ll sing, with the glittering\ncrown\nOn my brow;\n“If ever I loved Thee, my Jesus,\n‘tis now;\nRH 524",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-251",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 251,
+    "title": "My redeemer is Jesus,",
+    "lyrics": "My redeemer is Jesus,\nHe is the friend of the lost.\nI was lost and He found me,\nHe has restored all my joy.\nJesus Christ is my story, my\nstory is Jesus Christ. (x2)\nM.L. Awuku",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-252",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 252,
+    "title": "My strength is waning away",
+    "lyrics": "1. My strength is waning away\nWorthless are the counsel of\nflesh and blood\nMy hope is built on You, my\nStrength\nI need you, I need you.\n2. I’m hard pressed on every\nside\nUtterly burdened beyond my\nstrength\nI rely on you, who raise the\ndead\nI need you, I need you\n3. There’s fear and terror\neverywhere\nMy friends are helpless as\nsinking sand\nYou are my anchor, my\nStronghold\nI need you, I need you\n4. I’ve come to the end of\nmyself\nNothing do I hide from you\nmy Lord\nClothe me with your very\nself, my Righteousness\nI need you, I need you\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-253",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 253,
+    "title": "My soul is seeking after you",
+    "lyrics": "My soul is seeking after you\nMy creator and my God\nMy soul desires your\nfellowship\nHold my hand commune with\nme\nThat I’ll know you, that I’ll\nknow you\nHold my hand commune with\nme\nTo be like you, to be like you\nHold my hand commune with\nme.\nTranslation of “me kra repre”\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-254",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 254,
+    "title": "My soul, rejoice and praise the",
+    "lyrics": "My soul, rejoice and praise the\nLord\nRejoice and praise the Lord,\nMy soul, rejoice and praise\nthe Lord\nRejoice and praise the Lord\nRejoice and praise the Lord\nRejoice and praise the Lord\nMy soul, rejoice and praise the\nLord,\nRejoice and praise the Lord\nPH 255",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-255",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 255,
+    "title": "Nearer, my God to thee,",
+    "lyrics": "1. Nearer, my God to thee,\nNearer to thee;\nE'en though it be a cross\nThat raiseth me,\nStill all my song shall be,\nNearer my God to thee,\nNearer to thee.\n2. Though, like the wanderer,\nThe sun gone down,\nDarkness be over me,\nMy rest a stone,\nYet in my dreams l'd be\nNearer, my God to thee,\nNearer to thee!\n3. There let the way appear\nSteps unto heaven;\nAll that thou send'st to me\nIn mercy given;\nAngels to beckon me\nNearer, my God, to thee\nNearer to thee!\n4. Then, with my waking thoughts\nBright with thy praise\nOut of my stony griefs\nBethel l'll raise;\nSo by my woes to be\nNearer, my God, to thee\nNearer to thee!\n5. Or if on joyful wing\nCleaving the sky,\nSun, moon, and stars forgot,\nUpwards I fly,\nStill all my songs shall be\nNearer, my God, to thee\nNearer to thee!\nRH. 400, Sarah F. Adams",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-256",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 256,
+    "title": "Now I feel the sacred fire,",
+    "lyrics": "1. Now I feel the sacred fire,\nKindling, flaming, glowing\nHigher still, and rising higher,\nAll my soul o’er flowing\nLife immortal I receive;\nOh, the wondrous story!\nI was dead, but now I live,\nGlory! Glory! Glory!\n2. Now I am from bondage\nfreed\nEvery bond is riven\nJesus makes me free indeed,\nJust as free as heaven;\n‘Tis a glorious liberty,\nOh, the wondrous story;\nI was bound, but now I’m free\nGlory! Glory! Glory!\n3. Let the testimony roll,\nRoll through every nation\nWitnessing from soul to soul\nThis immense salvation\nNow I know it’s full and free\nOh, the wondrous story!\nFor I feel it saving me\nGlory! glory! glory!\n4. Glory be to God on high\nGlory be to Jesus\nHe hath brought salvation nigh\nFrom all sin He frees us;\nLet the golden harps of God,\nRing the wondrous story;\nLet the pilgrims shout aloud\nGlory! Glory! Glory!\n5. Let the trump of jubilee\nThe glad tidings thunder,\nJesus sets the captives free,\nBursts their bonds asunder,\nFetters break and dungeons fall\nOh, the wondrous story\nThis salvation’s free to all\nGlory! Glory! Glory!\nRH 216",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-257",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 257,
+    "title": "Now thank we all our God",
+    "lyrics": "1. Now thank we all our God.\nWith hearts, and hands, and\nvoices;\nWho wondrous things hath done\nIn whom His world rejoices;\nWho, from our mothers’ arms\nHath blessed us on our way\nWith countless gifts of love\nAnd still is ours to-day\n2. O may this bounteous God\nThrough all our life be near us,\nWith ever-joyful hearts\nAnd blessed peace to cheer us,\nAnd keep us in His grace,\nAnd guide us when perplexed,\nAnd free us from all ills\nIn this world and the next\n3. All praise and thanks to God\nThe Father now be given,\nThe Son, and Him who reigns\nWith them in highest heaven\nThe one, eternal God\nWhom earth and heaven adore;\nFor thus it was, is now\nAnd shall be evermore.\nMartin Rincart\nTrans: Catherine Winkworth\nRH 50",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-258",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 258,
+    "title": "Now the labourer’s task is",
+    "lyrics": "1. Now the labourer’s task is\no’er,\nNow the battle-day is past;\nNow upon the farther shore\nLands the voyager at last.\n2. There the tears of earth are\ndried;\nThere its hidden things are\nclear;\nThere the work of life is tried\nBy a juster Judge than here\n3. There the Shepherd,\nbringing home\nMany a lamb forlorn and strayed,\nShelters each, no more to roam,\nWhere the wolf can ne’er invade\n4. There the penitents who turn\nTo the cross their dying eyes\nAll the love of Jesus learn\nAt His feet in paradise\n5. There no more the powers\nof hell\nCan prevail to mar their peace;\nChrist the Lord shall guard\nthem well\nHe who died for their release\n6. Earth to earth, and dust to\ndust!\nCalmly now the words we say;\nLeft behind, we wait in trust\nFor the resurrection day\nJohn Ellerton, 1826-93\nMethodist-Hymn book 976",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-259",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 259,
+    "title": "O, come, all ye faithful",
+    "lyrics": "1. O, come, all ye faithful\nJoyful and triumphant\nCome ye, O come ye to\nBethlehem;\nCome and behold him\nBorn the King of angels:\nO come, let us adore him\nO come, let us adore him\nO come, let us adore him\nChrist the Lord!\n2. True God of true God\nLight of light eternal\nLo! He abhors not the\nVirgin's womb\nSon of the Father,\nBegotten, not created.\n3. Sing choirs of angels\nSing in exultation\nSing, all ye citizens of heaven\nabove,\nGlory to God in the highest\n4. Yea, Lord we greet Thee\nBorn this happy morning;\nJesus, to Thee be glory given\nWord of the Father,\nNow in flesh appearing\nAnonymous, 17th or 18 cent.\nTr. Frederick Oakeley (1802-80)\nMHB 118",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-260",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 260,
+    "title": "O, dear Lord, we praise your",
+    "lyrics": "O, dear Lord, we praise your\nname,\nForever be magnified;\nWe bless You, Lord; and\nworship You,\nAll power belongs to You.\nTranslation Awurade, yeyi\nW’ayε, yεkamfo Wo daadaa\nnyinaa",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-261",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 261,
+    "title": "O’ God I come before You",
+    "lyrics": "O’ God I come before You\nI cannot do without You\nI need You every time so that\nI will be strengthened\nHoly Spirit fill me to the brim\nthat I will work in Your\nservice\nHoly Spirit fill me to the brim\nUse me now and evermore.\nE. K. Asamoah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-262",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 262,
+    "title": "O God, our help in ages past,",
+    "lyrics": "1. O God, our help in ages past,\nOur hope for years to come,\nOur shelter from the stormy\nblast\nAnd our eternal home.\n2. Under the shadow of Thy\nthrone\nThy saints have dwelt secure;\nSufficient is Thine arm alone,\nAnd our defence is sure.\n3. Before the hills in order\nstood\nOr earth received her frame\nFrom everlasting Thou art God\nTo endless years the same.\n4. A thousand ages in Thy sight\nAre like an evening gone,\nShort as the watch that ends\nthe night\nBefore the rising sun.\n5. The busy tribes of flesh\nand blood\nWith all their cares and fears,\nAre carried downward by the\nflood,\nAnd lost in flowing years.\n6. Time like an ever rolling stream,\nBears all its sons away;\nThey fly forgotten, as a dream\nDies at the opening day.\n7. O God, our help in ages past,\nOur hope for years to come,\nBe thou our guard while\ntroubles last\nAnd our eternal home.\nIsaac Watts - RH. 104",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-263",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 263,
+    "title": "O Halleluia! we bless your",
+    "lyrics": "O Halleluia! we bless your\nHoly name\nO, Halleluia! we worship thee\nO Lord\nWhen we look upon thine throne\nHow wonderful you are\nO, Halleluia! we worship thee\nO, Lord\nRosina Aninkora",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-264",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 264,
+    "title": "O happy day, that fixed my",
+    "lyrics": "1. O happy day, that fixed my\nchoice\nOn Thee, my Saviour and my\nGod!\nWell may this glowing heart\nrejoice\nAnd tell its raptures all abroad\nHappy day, happy day\nWhen Jesus washed my sins away!\nHe taught me how to watch\nand pray\nAnd live rejoicing ev’ry day.\nHappy day, happy day\nWhen Jesus washed my sins away!\n2. ‘Tis done, the great\ntransaction’s done!\nI am my Lord’s and He is mine;\nHe drew me and I followed on\nCharmed to confess the voice\ndivine.\n3. Now rests my long-divided\nheart,\nFixed on this blissful centre,\nrest;\nNor ever from thy Lord depart\nWith Him of every good\npossessed\n4. High heaven, that heard the\nsolemn vow\nThat vow renewed shall daily hear,\nTill in life’s latest hour I bow\nAnd bless in death a bond so dear.\nP. Doddridge - RH 619",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-265",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 265,
+    "title": "O Jesus I have promised",
+    "lyrics": "1. O Jesus I have promised\nTo serve thee to the end;\nBe thou for ever near me,\nMy master and my friend:\nI shall not fear the battle\nIf thou art by my side,\nNor wander from the pathway\nIf thou wilt be my guide\n2. O let me feel thee near me:\nthe world is ever near;\nI see the sights that dazzle\nThe tempting sounds I hear;\nMy foes are ever near me,\nAround me and within;\nBut Jesus, draw thou nearer\nAnd shield my soul from sin.\n3. O let me hear thee speaking\nIn accents clear and still,\nAbove the storms of passion,\nThe murmurs of self-will\nO speak to reassure me,\nTo hasten, or control;\nOh speak, and make me listen\n4. O Jesus, thou hast promised\nto all who follow thee-that\nwhere thou art in glory\nThere shall thy servant be;\nAnd Jesus, I have promised to\nserve Thee to the end\nO give me grace to follow,\nmy master and my friend\n5. O let me see thy footmarks.\nAnd in them plant mine own;\nMy hope to follow duly\nIs in thy strength alone\nO guide me, call me, draw me,\nUphold me to the end;\nAnd then in heaven receive me,\nMy Saviour and my friend.\nJ.E. Bode, BBC Songs of Praise 339",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-266",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 266,
+    "title": "O Lord my God, when I in",
+    "lyrics": "1. O Lord my God, when I in\nawesome wonder\nConsider all the works thy\nhand hath made\nI see the stars, I hear the\nmighty thunder\nThy power throughout the\nuniverse displayed\nThen sings my soul, my\nSaviour God, to thee\nHow great thou art, how\ngreat thou art!\nThen sings my soul, my\nSaviour God to thee\nHow great thou art, how\ngreat thou art!\n2. When through the woods\nand forest glades I wander\nAnd hear the birds sing\nsweetly in the trees\nWhen I look down from lofty\nmountain grandeur\nAnd hear the brook, and feel\nthe gentle breeze\n3. And when I think that God\nhis Son not sparing\nSent him to die - I scarce can\ntake it in,\nThat on the cross, my burden\ngladly bearing\nHe bled and died to take\naway my sin;\n4. When Christ shall come\nwith shout of acclamation\nAnd take me home- what joy\nshall fill my heart\nThen shall I bow in humble\nadoration,\nAnd there proclaim my God,\nhow great thou art!\nTr. Stuart K. Hine",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-267",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 267,
+    "title": "O magnify the Lord",
+    "lyrics": "O magnify the Lord\nFor He is worthy to be praised,\nO magnify the Lord\nFor He is worthy to be praised\nHosanna! Blessed be the rock\nAnd may the God of my\nsalvation be exalted\nHosanna! Blessed be the rock\nAnd may the God of my\nsalvation be exalted\nPH 302",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-268",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 268,
+    "title": "O soul, are you weary and",
+    "lyrics": "1. O soul, are you weary and\ntroubled?\nNo light in the darkness you\nsee?\nThere's a light for a look at\nthe Saviour,\nAnd life more abundant and\nfree!\nTurn your eyes upon Jesus,\nLook full in His wonderful\nface,\nAnd the things of earth will\ngrow strangely dim,\nIn the light of His glory and\ngrace.\n2. Through death into life\neverlasting\nHe passed, and we follow Him\nthere\nOver us sin no more hath\ndominion-\nFor more than conquerors we\nare!\n3. His Word shall not fail\nyou-He promised;\nBelieve Him, and all will be\nwell:\nThen go to a world that is dying,\nHis perfect salvation to tell!\nHelen H. Lemmel\nP.H. 81",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-269",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 269,
+    "title": "O, sweet wonder",
+    "lyrics": "1. O, sweet wonder\nO, sweet wonder\nJesus the Son of God\nHow, I adore you\nO how, I love you\nJesus the Son of God\n2. Do you know Jesus\nOur Lord, our Saviour\nJesus, the son of God\nHow I adore you\nOh how I love you\nJesus, the son of God",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-270",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 270,
+    "title": "O when the saints go",
+    "lyrics": "1. O when the saints go\nmarching in\nO when the saints go marching\nin\nO Lord, I want to be in that\nnumber\nWhen the saints go marching\nin!\n2. O when they crown him\nLord of all\nO when they crown him Lord\nof all\nO Lord, I want to be in that\nnumber\nWhen they crown him Lord of\nall.\n3. O when all knees bow at his\nname\nO when all knees bow at his\nname\nO Lord, I want to be in that\nnumber\nWhen all knees bow at his name\n4. O when they sing the\nSaviour's praise\nO when they sing the Saviour's\npraise\nO Lord, I want to be in that\nnumber\nO when they sing the Saviour's\npraise\n5. O when the saints go\nmarching in\nO when the saints go marching\nin\nO Lord, I want to be in that\nnumber\nWhen the saints go marching in\nBBC Songs 203",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-271",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 271,
+    "title": "O worship the King",
+    "lyrics": "1. O worship the King\nAll glorious above,\nO gratefully sing\nHis power and His love;\nOur shield and Defender.\nThe Ancient of Days\nPavilioned in splendour,\nAnd girded with prais\n2. O tell of His might,\nO sing of His grace,\nWhose robe is the light\nWhose canopy space\nHis chariots of wrath\nThe deep thunder-clouds\nform,\nAnd dark is His path\nOn the wings of the storm.\n3. Thy bountiful care\nWhat tongue can recite?\nIt breathes in the air.\nIt shines in the light\nIt streams from the hills\nIt descends to the plain\nAnd sweetly distils\nIn the dew and the rain\n4. Frail children of dust.\nAnd feeble as frail;\nIn Thee do we trust.\nNor find Thee to fail:\nThy mercies how tender\nHow firm to the end\nOur Maker, Defender.\nRedeemer and Friend\n5. O measureless might!\nIneffable Love!\nWhile angels delight\nTo hymn Thee above.\nThe Humbler creation\nThough feeble their lays.\nWith true adoration\nShall lisp to Thy praise\nR. Grant\nRH 10",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-272",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 272,
+    "title": "O Ye sons of God,",
+    "lyrics": "1. O Ye sons of God,\nsing halleluia’\nTo Jesus Christ, the Son of\nGod;\nHe is King of kings and Lord\nof lords.\nSo sing Halleluia to the Messiah!\n2. All ye saints of the Lord,\narise and shine\nYour light is come through\nJesus Christ\nHe is Prince of peace,\nSaviour wonderful;\nSo sing Halleluia to the Messiah!\n3. Lamb of Calvary , no sinful\nman,\nHe lived and died, for you and\nme;\nThere is victory for ever more!\nSo sing Halleluia to the\nMessiah!\n4. Sing Halleluia! Shout\nHalleluia!\nWatch halleluia! Pray\nhalleluia!\nDance halleluia! Everything\nhalleuia!\nSo sing halleluia to the\nMessiah\nPH 243",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-273",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 273,
+    "title": "Oh, for a thousand tongues",
+    "lyrics": "1. Oh, for a thousand tongues\nto sing\nMy great Redeemer’s praise\nThe Glories of my God and\nKing\nThe triumphs of His grace!\n2. My gracious Master and\nmy God,\nAssist me to proclaim,\nTo spread through all the earth\nabroad\nThe honour of Thy name\n3. Jesus! The name that\ncharms our fears\nThat bids our sorrows cease;\n'Tis music in the sinner's ears,\n'Tis life and health and peace.\n4. He breaks the power of\ncancelled sin\nHe sets the pris'ner free;\nHis blood can make the foulest\nclean\nHis blood availed for me.\n5. Hear Him, ye deaf;\nHis praise, ye dumb,\nYour loosened tongues employ;\nYe blind, behold your Saviour\ncome;\nAnd leap, ye lame, for joy!\nCharles Wesley, RH 8",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-274",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 274,
+    "title": "Oh glory! Oh glory!",
+    "lyrics": "Oh glory! Oh glory!\nWhat rapture is mine\nThe King in His beauty I see\nI’m singing His praises\nSince Jesus divine\nextended His mercies to me",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-275",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 275,
+    "title": "Oh, teach me what it meaneth",
+    "lyrics": "1. Oh, teach me what it meaneth\nThat cross uplifted high,\nWith one-the Man of sorrow-\nCondemned to bleed and die!\nOh, teach me what it cost Thee\nTo make a sinner whole;\nAnd teach me, Saviour, teach me\nThe value of a soul! (x2)\n2. Oh, teach me what it meaneth\nThat sacred crimson tide-\nThe blood and water flowing\nFrom Thine own wounded side\nTeach me that if none other\nHad sinned, but I alone,\nYet still, thy blood, Lord Jesus,\nThine only, must atone. (x2)\n3. Oh, teach me what it meaneth\nThy love beyond compare,\nThe love that reacheth deeper\nThan depths of self-despair!\nYea, teach me, till there gloweth\nIn this cold heart of mine\nSome feeble, pale reflection\nOf that pure love of Thine (x2)\n4. Oh, teach me, what it meaneth,\nFor I am full of sin;\nAnd grace alone can reach me,\nAnd love alone can win.\nOh, teach me, for I need Thee,\nI have no hope beside-\nThe chief of all the sinners\nFor whom the saviour died!\n5. O infinite Redeemer!\nI bring no other plea,\nBecause Thou dost invite me\nI cast myself on Thee.\nBecause thou dost accept me\nI love and adore;\nBecause Thy love constraineth,\nI’ll praise Thee evermore!\nLucy Ann Bennett",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-276",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 276,
+    "title": "O the sweet and wonderful rest",
+    "lyrics": "O the sweet and wonderful rest\nO the sweet and wonderful rest\nFound in Jesus, in Jesus\nSweet and wonderful rest\nQuintet",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-277",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 277,
+    "title": "Oh, what a wonderful",
+    "lyrics": "1. Oh, what a wonderful\nwonderful day,\nDay I will never forget,\nAfter I’d wandered in\ndarkness away,\nJesus my Saviour I met\nOh, what a tender,\ncompassionate friend,\nHe met the need of my heart;\nShadows dispelling, with joy\nI am telling\nHe made all the darkness depart!\nHeaven came down and glory\nfilled my soul\nWhen at the Cross the\nSaviour made me whole;\nMy sins were washed away\nAnd my night was turned to day\nHeaven came down and glory\nfilled my soul!\n2. Born of the Spirit with life\nfrom above\nInto God’s family divine;\nJustified fully through Calvary’s\nlove\nOh, what a standing is mine!\nAnd the transaction so quickly\nwas made\nWhen as a sinner I came\nTook of the offer of grace He\ndid proffer\nHe saved me, Oh, praise His\ndear Name\n3. Now I’ve a hope that will\nsurely endure\nAfter the passing of time;\nI have a future in Heaven for sure,\nThere in those mansions\nsublime\nAnd it’s because of that\nwonderful day\nWhen at the Cross I believed;\nRiches eternal and blessings\nsupernal\nFrom His righteous hand I\nreceived\nJohn W. Peterson\nLiving Songs 70",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-278",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 278,
+    "title": "On a hill far away stood an",
+    "lyrics": "1. On a hill far away stood an\nold rugged cross\nThe emblem of suffering and\nshame\nAnd I love that old cross where\nthe dearest and best\nFor a world of lost sinners was\nslain\nSo I'll cherish the old rugged\ncross\nTill my trophies at last I lay\ndown\nI will cling to the old rugged\ncross\nAnd exchange it some day for\na crown\n2. O, the old rugged cross, so\ndespised by the world\nHas a wondrous attraction for\nme;\nFor the dear Lamb of God left\nhis glory above\nTo bear it to dark Calvary.\n3. In the old rugged cross,\nstained with blood so divine\nA wondrous beauty I see;\nFor 'twas on that old cross\nJesus suffered and died\nTo pardon and sanctify me\n4. To the old rugged cross I\nwill ever be true\nIts shame and reproach gladly\nbear,\nThen he'll call me some day to\nmy home far away,\nWhen his glory for ever I'll share\nGeorge Bernard (1873-1958)\nBBC Songs 88",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-279",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 279,
+    "title": "On the day of Pentecost",
+    "lyrics": "On the day of Pentecost\nIn the upper room\nWhere the saints had gathered\nTo tarry for the Spirit\nRevival broke out\nThe Holy Ghost descended\nAnd Peter preached\nAnd three thousand souls were\nsaved\nOh mighty revival, the power\nof the Spirit\nThe promise of the Lord has\nbeen fulfilled\nAnd so revival broke out\nThe Holy Ghost descended\nAnd Peter preached and three\nthousand souls were saved",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-280",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 280,
+    "title": "Onward Christian soldiers,",
+    "lyrics": "1. Onward Christian soldiers,\nMarching as to war,\nWith the cross of Jesus\nGoing on before\nChrist, the Royal Master\nLeads against the foe;\nForward into battle\nSee His banners go\nOnward Christian Soldiers!\nMarching as to War\nWith the Cross of Jesus\nGoing on before\n2. At the sign of truimph\nSatan’s host doth flee;\nOn then, Christian soldiers\nOn to Victory!\nHell’s foundations quiver\nAt the shout of praise\nBrothers, lift your voices\nLoud your anthems raise.\n3. Like a mighty army\nMoves the church of God;\nBrothers, we are treading\nWhere the saints have trod,\nWe are not divided\nAll one body we\nOne in hope in doctrine\nOne in charity.\n4. Crowns and thrones may\nperish\nKingdoms rise and wane,\nBut the Church of Jesus\nConstant will remain\nGates of hell can never\n‘Gainst that church prevail;\nWe have Christ’s own promise\nand that cannot fail.\n5. Onward then, ye people\nJoin our happy throng\nBlend with ours your voices\nIn the triumph song\n“Glory, laud and honour,\nUnto Christ the King”\nThis, through countless ages,\nMen and angels sing.\nBaring-Gould - MHB 822",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-281",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 281,
+    "title": "Open my eyes, Lord",
+    "lyrics": "Open my eyes, Lord\nI want to see Jesus.\nTo reach out and touch him\nAnd say that I love Him\nOpen my ears, Lord\nAnd help me to listen\nOpen my eyes, Lord\nI want to see Jesus\nRobert Call",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-282",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 282,
+    "title": "Our mighty tower is the Lord",
+    "lyrics": "Our mighty tower is the Lord\nOur mighty tower is the Lord\nOur mighty tower is the Lord\nOur mighty tower is the Lord\nHe’s been our shield and\nhiding Place;\nOur mighty tower is the Lord.\nTranslation of “Yεn abankεse ne\nYehowa”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-283",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 283,
+    "title": "Out of my bondage,",
+    "lyrics": "1. Out of my bondage,\nsorrow, and night,\nJesus, I come, Jesus, I come;\nInto thy freedom, gladness,\nand light,\nJesus, I come to Thee;\nOut of my sickness into thy\nhealth\nOut of my want and into thy\nwealth,\nOut of my sin and into thyself,\nJesus, I come to Thee.\n2 Out of my shameful failure\nand loss,\nJesus, I come, Jesus, I come;\nInto the glorious gain of Thy\ncross\nJesus, I come, to Thee;\nOut of earth’s sorrows into\nThy balm,\nOut of my want and into thy\nwealth\nOut of life’s storms and into\nThy calm,\nJesus, I come to Thee.\n3. Out of unrest and arrogant\npride\nJesus, I come, Jesus, I come;\nInto Thy blessed will to abide,\nJesus, I come to Thee;\nOut of myself to dwell in Thy\nlove\nOut of despair into raptures\nabove,\nUpward for aye on wings like\na dove,\nJesus, I come to Thee.\n4. Out of the fear and dread\nof the tomb,\nJesus, I come, Jesus, I come;\nInto the joy and light of my\nhome\nJesus, I come, to Thee;\nOut of the depths of ruin untold\nInto the peace of Thy sheltering\nfold,\nEver Thy glorious face to\nbehold\nJesus, I come to Thee.\nW.E. Witter - RH 416",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-284",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 284,
+    "title": "Over the river they call me,",
+    "lyrics": "1. Over the river they call me,\nFriends that are dear to my\nheart\nSoon shall I meet them in glory,\nNever, no never to part.\nOver the river to Eden,\nHome to their dwelling so fair;\nAngels will carry me safely.\nJesus will welcome me there.\n2. Over the river they call me,\nHark, ’tis their voices I hear,\nBorne on the wings of the\ntwilight,\nMurmuring softly and clear.\n3. Over the river, how lovely,\nThere is no sorrow nor night;\nThere they are walking with\nJesus,\nClothed in His garment of light\n4. Over the river they call me,\nWatching with glad, beaming\neyes;\nOver the river I’m coming,\nJoyful my spirit replies.\nFanny J. Crosby",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-285",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 285,
+    "title": "Pass me not, O gentle Saviour",
+    "lyrics": "1. Pass me not, O gentle Saviour\nHear my humble cry;\nWhile on others Thou art calling\nDo not pass me by\nSaviour, Saviour\nHear my humble cry;\nWhile on others Thou art\ncalling.\nDo not pass me by\n2. Let me, at Thy throne of\nmercy\nFind a sweet relief,\nKneeling there in deep contrition\nHelp my unbelief.\n3. Trusting only in Thy merit\nwould I seek Thy face,\nHeal my wounded, broken spirit\nSave me by Thy grace\n4. Thou, the spring of all my\ncomfort,\nMore than life to me\nWhom have I on earth beside\nThee?\nWhom in heaven but Thee?\nFanny J. Crosby - RH 314",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-286",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 286,
+    "title": "Peace, perfect peace, in",
+    "lyrics": "1. Peace, perfect peace, in\nthis dark world of sin?\nThe blood of Jesus whispers\npeace within\n2. Peace, perfect peace, by\nthronging duties pressed?\nTo do the will of Jesus, this is\nrest\n3. Peace, perfect peace, with\nsorrows surging round?\nOn Jesus' bosom naught but\ncalm is found.\n4. Peace, perfect peace, with\nloved ones far away?\nIn Jesus' keeping we are safe\nand they.\n5. Peace, perfect peace, our\nfuture all unknown\nJesus we know, and He is on\nthe throne.\n6. Peace, perfect peace, death\nshadowing us and ours?\nJesus has vanquished death\nand all its powers\n7. It is enough; earth's\nstruggles soon shall cease,\nAnd Jesus calls us to\nHeaven's perfect peace.\nE.H. Bickersteth - RH.529",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-287",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 287,
+    "title": "Pleasant are Thy courts",
+    "lyrics": "1. Pleasant are Thy courts\nabove,\nIn the land of light and love;\nPleasant are Thy courts below\nIn this land of sin and woe,\nOh, my spirit longs and faints\nFor the converse of Thy\nSaints\nFor the brightness of Thy face\nFor Thy fullness, God of Grace!\n2. Happy birds that sing and fly\nRound Thy altars, O Most High!\nHappier souls that find a rest\nIn a heavenly Father’s breast!\nLike the wandering dove that\nfound\nNo repose on earth around\nThey can to their ark repair\nAnd enjoy it ever there.\n3. Happy souls! Their praises flow\nEven in this vale of woe;\nWaters in the desert rise,\nManna feeds them from the\nskies\nOn they go from strength to\nstrength\nTill they reach Thy throne at\nlength;\nAt Thy feet adoring fall,\nWho hast led them safe\nthrough all.\n4. Lord, be mine this prize to\nwin\nGuide me through a world of\nsin;\nKeep me by Thy saving grace;\nGive me at Thy side a place\nSun and shield alike Thou art;\nGuide and guard my erring\nheart;\nGrace and glory flow from Thee;\nShower, Oh shower them,\nLord on me!\nH.F. Lyte - RH. 100",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-288",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 288,
+    "title": "Pour out your Spirit on me",
+    "lyrics": "Pour out your Spirit on me\nIgnite your fire in me\nTouch and make me anew\nMy Lord Jesus\nTouch and make me anew\nMy Lord Jesus\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-289",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 289,
+    "title": "Praise God, from whom all",
+    "lyrics": "Praise God, from whom all\nblessings flow,\nPraise him all creatures here\nbelow,\nPraise him above, ye heavenly\nhost,\nPraise Father, Son and Holy\nGhost\nThomas Ken (1637-1711)\nBBC songs 172",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-290",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 290,
+    "title": "Praise Him, praise Him",
+    "lyrics": "Praise Him, praise Him\nPraise Him, Praise Him\nJesus, blessed saviour\nIs worthy to be praised\nFrom the rising of the sun\nUnto the going down of the same\nHe’s worthy, Jesus is worthy\nHe’s worthy, to be praised\nPraise Him, praise Him,\nPraise Him, praise Him,\nJesus, blessed saviour\nIs worthy to be praised",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-291",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 291,
+    "title": "Praise to the holiest in the height,",
+    "lyrics": "1. Praise to the holiest in the height,\nAnd in the depth be praise:\nIn all his words most wonderful,\nMost sure in all his ways.\n2. O loving wisdom of our\nGod!\nWhen all was sin and shame,\nA second Adam to the fight,\nAnd to the rescue came.\n3. O wisest love that flesh and\nblood\nWhich did in Adam fail,\nShould strive afresh against the\nfoe,\nShould strive and should\nprevail.\n4. And that a higher gift than grace\nshould flesh and blood refine;\nGod’s presence, and his very self\nAnd essence all-divine\n5. O generous love that he,\nwho smote\nIn man for man the foe,\nThe double agony in man\nFor man should undergo\n6. And in the garden secretly,\nAnd on the cross on high\nShould teach his brethren,\nand inspire\nTo suffer and to die\n7. Praise to the holiest in the height\nAnd in the depth be praise\nIn all his words most\nwonderful\nMost sure in all his ways\nJ.H Newman, RH 28",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-292",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 292,
+    "title": "Praise to the Lord, the Almighty",
+    "lyrics": "1. Praise to the Lord, the Almighty\nThe King of creation!\nO my soul, praise him, for he\nis thy health and salvation;\nCome ye who hear,\nBrothers and sisters, draw near,\nPraise him in glad adoration!\n2. Praise to the Lord, who o'er\nall things\nSo wondrously reigneth\nShelters thee under his wings, yea\nSo gently sustaineth,\nHast thou not seen\nAll that is needful hath been\nGranted in what he ordaineth?\n3. Praise to the Lord, who\ndoth prosper\nThy work and defend thee!\nSurely his goodness and mercy\nhere daily attend thee;\nPonder anew\nAll the Almighty can do\nHe who with love doth befriend\nthee.\n4. Praise to the Lord, who when\ntempests their warfare are\nwaging,\nWho, when the elements madly\naround thee are raging\nBiddeth them cease,\nTurneth their fury to peace,\nWhirlwinds and waters\nassuaging.\n5. Praise to the Lord, who\nwhen darkness of sin is\nabounding,\nWho, when the godless do\ntriumph, all virtue\nconfounding,\nSheddeth his light,\nChaseth the horrors of night,\nSaints with his mercy\nsurrounding.\n6. Praise to the Lord! O let all\nthat is in me adore him\nAll that hath life and breath\nCome now with praises before\nhim!\nLet the Amen sound from his\npeople again\nGladly for aye we adore him!\nJoachim Neander (1650-80)\nTr. Catherine Winkworth\n(1827-78) and others\nBBC Songs 19",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-293",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 293,
+    "title": "Praise, my soul, the King",
+    "lyrics": "1. Praise, my soul, the King\nof heaven\nTo His feet thy tribute bring;\nRansomed, healed, restored,\nforgiven,\nWho like thee His praise\nshould sing?\nPraise Him! Praise Him!\nPraise the everlasting King\n2. Praise Him for His grace\nand favour\nTo our fathers in distress;\nPraise Him, still the same for\never,\nSlow to chide and swift to bless;\nPraise Him! Praise Him!\nGlorious in His faithfulness.\n3. Father-like He tends and\nspares us,\nWell our feeble frame he knows;\nIn His hands He gently bears us,\nRescues us from all our foes;\nPraise Him! Praise Him!\nWidely as His mercy flows.\n4. Angels, help us to adore Him!\nYe behold Him face to face;\nSun and moon, bow down\nbefore Him;\nDwellers all in time and space,\nPraise Him! Praise Him!\nPraise with us the God of grace.\nRH 5, H.F Lyte",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-294",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 294,
+    "title": "Praises to the Lamb of God,",
+    "lyrics": "Praises to the Lamb of God,\nWho shed His blood on the\ncross\nTo redeem my soul from sin,\nFor His heavenly home,\nThank You, Jesus\nPraises to Thy name; (x2)\nO my Lord deep in my heart\nRender my thanks to Thee",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-295",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 295,
+    "title": "Prepare me, Lord, prepare me,",
+    "lyrics": "Prepare me, Lord, prepare me,\nPrepare me for Your work (x2)\nSouls are perishing, their\nlives being destroyed;\nTheir walls are demolished,\nCaptured by their foes,\nPrepare me for Your work.\nTranslation of Yε me krado na soma m’",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-296",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 296,
+    "title": "Preserve my life, keep me",
+    "lyrics": "1. Preserve my life, keep me\nEver at Your feet to sit\nBind me to Your will,\nYour will alone Oh Lord\n2. The work of my salvation\nYou wrought before I was born\n3. This divine call of mine\nTis a heavenly call\n4. You’ve called me, Lord to be\nCo-servant in your work\n5. Relieve me of my will\nFor in my will is death\nTranslation of “Kora me nkwa”\nEunice Johnson, 2007",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-297",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 297,
+    "title": "Purify my heart",
+    "lyrics": "1. Purify my heart\nLet me be as gold\nAnd precious silver\nPurify my heart\nLet me be as gold\nPure gold\nRefiner's fire\nMy heart's one desire\nIs to be holy\nSet apart for You, Lord\nI choose to be holy\nSet apart for You, My Master\nReady to do Your will\n2. Purify my heart\nCleanse me from within\nAnd make me holy\nPurify my heart\nCleanse me from my sin\nDeep within\nBrian Doerksen",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-298",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 298,
+    "title": "Reign in me, Sovereign Lord,",
+    "lyrics": "Reign in me, Sovereign Lord,\nreign in me,\nReign in me, Sovereign Lord,\nreign in me\nCaptivate my heart,\nLet your Kingdom come\nEstablish there your throne\nLet your will be done!\nReign in me, Sovereign Lord,\nreign in me\nReign in me Sovereign Lord,\nReign in me\nChris Bowater\nBBC Songs 158",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-299",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 299,
+    "title": "Rejoice in the Lord always",
+    "lyrics": "Rejoice in the Lord always\nAnd again I say, rejoice,\nRejoice in the Lord always\nAnd again I say, rejoice\nRejoice, rejoice\nAnd again I say rejoice,\nRejoice in the Lord always\nAnd again I say, rejoice\nPH 37",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-300",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 300,
+    "title": "Rejoice, the Lord is king,",
+    "lyrics": "1. Rejoice, the Lord is king,\nYour Lord and king adore,\nMortals, give thanks and sing,\nAnd triumph evermore;\nLift up your heart; lift up your\nvoice,\nRejoice, again I say, rejoice!\n2. Jesus the Saviour reigns,\nThe God of truth and love\nWhen he had purged our stains,\nHe took his seat above;\nLift up your heart; lift up\nyour voice,\nRejoice, again I say, rejoice!\n3. His kingdom cannot fail;\nHe rules o'er earth and\nheaven;\nThe keys of death and hell\nAre to our saviour given;\nLift up your heart; lift up\nyour voice,\nRejoice, again I say rejoice!\n4. Rejoice in glorious hope\nJesus the judge shall come,\nAnd take his servants up\nTo their eternal home\nWe soon shall hear the\narchangel's voice\nThe trump of God shall\nsound, rejoice!\nCharles Wesley - RH.195",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-301",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 301,
+    "title": "Rescue the perishing",
+    "lyrics": "1. Rescue the perishing\nCare for the dying\nSnatch them in pity from\nsin and the grave\nWeep o’er the erring one\nLift up the fallen\nTell them of Jesus\nThe Mighty to save\nRescue the perishing\nCare for the dying\nJesus is merciful,\nJesus will save\n2. Though they are slighting\nHim\nStill He is waiting\nWaiting the penitent child to\nreceive,\nPlead with them earnestly\nPlead with them gently.\nHe will forgive, if they only\nbelieve\n3. Down in the human heart\nCrushed by the tempter\nFeelings lie buried that grace\ncan restore\nTouched by a loving hand,\nWakened by kindness\nChords that were broken will\nVibrate once more.\n4. Rescue the perishing,\nDuty demands it;\nStrength for thy labour the\nLord will provide\nBack to the narrow way\nPatiently win them;\nTell the poor wand’rer a\nSaviour has died\nFanny J. Crosby - RH 561",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-302",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 302,
+    "title": "Revive me, O Lord",
+    "lyrics": "Revive me, O Lord\nLet Your Spirit lead me\nSo that I may know Your way\nSo that I will do Your will\nJustice Nana Aggrey",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-303",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 303,
+    "title": "Revive Thy work, O Lord",
+    "lyrics": "1. Revive Thy work, O Lord\nThy mighty arm make bare;\nSpeak with the voice that\nwakes the dead,\nAnd make Thy people hear!\nRevive Thy work, O Lord\nWhile here to Thee we bow;\nDescend, O gracious Lord\ndescend,\nOh, come and bless us now!\n2. Revive Thy work, O Lord!\nDisturb this sleep of death;\nQuicken the smouldering\nembers now\nBy Thine Almighty breath.\n3. Revive Thy work, O Lord!\nCreate soul-thirst for Thee;\nAnd hungering for the bread\nof life,\nOh may our spirit be!\n4. Revive Thy work, O Lord!\nExalt Thy precious name,\nAnd by the Holy Ghost, our love\nFor Thee and Thine inflame\nAlbert Midlane Err:\nF.J. Crosby - RH 246",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-304",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 304,
+    "title": "Rise now upon your feet,",
+    "lyrics": "Rise now upon your feet,\nPut on the armor of the Lord,\nThere is victory for you.\nThere is victory for those,\nWho will fight the fight of faith;\nA crown awaits those who\nendure,\nAnd eternal rest with Him\nP. B. Appiah-Adu\nTranslation of “S4re gyina\nw’anam4n so”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-305",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 305,
+    "title": "Rise, shine, give God the glory,",
+    "lyrics": "Rise, shine, give God the glory,\nRise, shine, give God the glory\nRise, shine, give God the glory,\nSoldiers of the Cross.\nTranslation of “S4re hyerεn, fa\nanounyam ma Onyame”\nPH 161",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-306",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 306,
+    "title": "River of God,",
+    "lyrics": "River of God,\nFull of grace\nFull of power and strength\nInvitation to all\nTo come and swim\nI am swimming in the river of\nGod\nSwimming in the river\nSwimming in the river\nI am swimming in the river of\nGod\nSwimming in the river\nSwimming in the river\nI am swimming in the river of\nGod\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-307",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 307,
+    "title": "Rock of Ages, cleft for me,",
+    "lyrics": "1. Rock of Ages, cleft for me,\nLet me hide myself in Thee!\nLet the water and the blood,\nFrom thy riven side which\nflowed,\nBe of sin the double cure;\nCleanse me from its guilt and\npower.\n2. Not the labours of my hands,\nCan fulfil thy law's demands;\nCould my zeal no respite\nknow,\nCould my tears for ever flow,\nAll for sin could not atone;\nThou must save and thou alone\n3. Nothing in my hand I bring,\nSimply to thy cross I cling;\nNaked, come to thee for grace\nHelpless, look to thee for grace;\nFoul, I to the fountain fly;\nWash me, saviour, or I die.\n4. While I draw this fleeting breath\nWhen my eyelids close in death,\nWhen I soar to worlds unknown,\nSee thee on thy judgement throne,\nRock of Ages, cleft for me,\nLet me hide myself in thee\nA M Toplady\nRH 341",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-308",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 308,
+    "title": "Saviour, blessed Saviour,",
+    "lyrics": "1. Saviour, blessed Saviour,\nListen whilst we sing,\nHearts and voices raising\nPraises to our King;\nAll we have to offer,\nAll we hope to be,.\nBody, soul, and spirit\nAll we yield to Thee.\n2. Nearer, ever nearer\nChrist, we draw to Thee,\nDeep in adoration\nBending low the knee:\nThou, for our redemption,\nCam’st on earth to die;\nThou, that we might follow\nHast gone up on high\n3. Clearer still, and clearer\nDawns the light from heaven,\nIn our sadness bringing\nNews of sin forgiven;\nLife has lost its shadows,\nPure the light within\nThou hast shed thy radiance\nOn a world of sin\n4. Onward, ever onward\nJourneying o’er the road\nWorn by saints before us,\nJourneying on to God;\nLeaving all behind us,\nMay we hasten on\nBackward never looking\ntill the prize is won\n5. Higher, then, and higher\nBear the ransomed soul,\nEarthly toils forgotten,\nSaviour, to its goal;\nwhere, in joys unthought of,\nSaints with angels sing,\nNever, weary, raising\nPraises to their King.\nGolden Bells 25",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-309",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 309,
+    "title": "Search me, O God,",
+    "lyrics": "1. Search me, O God,\nand know my heart today;\nTry me, O Lord and know my\nthoughts, I pray,\nSee if there be some wicked\nway in me;\nCleanse me from ev’ry sin\nand set me free.\n2. I praise thee, Lord,\nfor cleansing me from sin;\nFulfil thy Word and make me\npure within\nFill me with fire where once I\nburned with shame;\nGrant my desire to magnify\nthy name.\n3. Lord, take my life and\nmake it wholly thine;\nFill my poor heart with thy\ngreat love divine\nTake all my will, my passion,\nself, and pride,\nI now surrender, Lord, in me\nabide.\n4. O Holy Ghost, revival\ncomes from thee;\nSend a revival-start the work\nin me\nThy word declares thou will\nsupply our need\nFor blessings now, O Lord,\nI humbly plead.\nEdwin Orr - RH. 257",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-310",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 310,
+    "title": "See the victory",
+    "lyrics": "See the victory\nGranted in Jesus’ name\nWe shall overcome\nSee the victory\nGranted in Jesus’ name\nWe shall overcome\nSurely, we shall overcome\nSurely, we shall overcome\nSee the victory, we shall\novercome\nRosina Aninkorah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-311",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 311,
+    "title": "Seek ye first the kingdom",
+    "lyrics": "1. Seek ye first the kingdom\nof God\nAnd his righteousness,\nAnd all these things shall be\nadded unto you,\nHallelu! Halleluia!\nHalleluia!\nHalleluia! Halleluia!\nHallelu! Halleluia!\n2. Men shall not live by bread\nalone\nBut by every word\nThat proceeds from the mouth\nof God\nHallelu! Halleluia!\n3. Ask and it shall be given\nunto you,\nSeek and ye shall find;\nKnock and it shall be opened\nunto You;\nHallelu! Halleluia!\nPH 97",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-312",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 312,
+    "title": "Send us the Rain, Lord, send",
+    "lyrics": "Send us the Rain, Lord, send\nus the Rain,\nSend us the Latter Rain;\nWe need the Rain, Lord, we\nneed the Rain,\nSend us the Latter Rain.\nHealing the sick and raising\nthe dead,\nSend us the Latter Rain;\nWe need the Rain, Lord, we\nneed the Rain,\nSend us the Latter Rain.\nTranslation of Ma yεn nsu no bi,\nma yεn nsu\nPH 166",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-313",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 313,
+    "title": "Show us Thy glory, O Lord,",
+    "lyrics": "Show us Thy glory, O Lord,\nShow us Thy glory, O Lord;\nLet the dew of heaven bring\nus refreshing\nAnd show us thy glory once\nmore.\nPH 118",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-314",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 314,
+    "title": "Simply trusting everyday",
+    "lyrics": "1. Simply trusting everyday\nTrusting through a stormy way;\nEven, when my faith is small\nTrusting Jesus, that is all.\nTrusting as the moments fly\nTrusting as the days go by;\nTrusting him what'er befall,\nTrusting Jesus, that is all\n2. Brightly doth His Spirit shine\nInto this poor heart of mine;\nWhile he leads I cannot fall;\nTrusting Jesus, that is all.\n3. Singing if my way be clear;\nPraying if the path be drear;\nIf in danger for Him call;\nTrusting Jesus, that is all.\n4. Trusting Him while life\nshall last\nTrusting him till earth be past;\nTill within the jasper wall;\nTrusting Jesus that is all.\nE. Page - RH 480",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-315",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 315,
+    "title": "Sing unto the Lord a new song",
+    "lyrics": "Sing unto the Lord a new song\nSing unto the Lord, all ye earth,\nSing a holy song from your\nhearts\nOh Hallelujah, the Lord, is king,\nOh Hallelujah, Almighty king,\nOh Hallelujah the Prince of\npeace,\nWonderful, wonderful,\nWonderful is the Lord\nOh Hallelujah, the Lord is king",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-316",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 316,
+    "title": "Smile, my brother, smile",
+    "lyrics": "Smile, my brother, smile\nThough the days be long\nSmile, my brother, smile\nLet your heart be strong\nDark are the days we are\npassing through\nI know a friend who will keep\nyou through\nAnd He’ll lead you all the while\nAnd you’ll smile, smile, smile.\nPH 80",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-317",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 317,
+    "title": "Softly and tenderly Jesus is",
+    "lyrics": "1. Softly and tenderly Jesus is\ncalling\nCalling for you and for me\nSee on the portal He's waiting\nand watching\nWatching for you and for me.\nCome home, come home,\nYe who are weary come home;\nEarnestly, tenderly Jesus is calling\nCalling, \"O sinner, come home!\"\n2. Why should we tarry when\nJesus is pleading\nPleading for you and for me?\nWhy should we linger and\nheed not His mercies\nMercies for you and for me?\n3. Time is now fleeting, the\nmoments are passing\nPassing from you and from me,\nShadows are gathering,\ndeath-beds are coming\nComing for you and for me?\n4. Oh, for the wonderful love\nHe has promised\nPromised for you and for me\nThough we have sinned He\nhas mercy and pardon\nPardon for you and for me\nWill Thompson\nPH 282",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-318",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 318,
+    "title": "Sons of God, march forward",
+    "lyrics": "Sons of God, march forward\nIn the power of the latter rain\nSons of God, march forward,\nFor Jesus is ever the same,\nSons of God, march forward\nWe are more than conqu'rors\nin His Name\nSons of God, march forward,\nIn the power of the latter rain\nRH 94",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-319",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 319,
+    "title": "Sowing in the morning,",
+    "lyrics": "1. Sowing in the morning,\nsowing seeds of kindness\nSowing in the noontide and\nthe dewy eves;\nWaiting for the harvest, and\nthe time of reaping\nWe shall come rejoicing,\nbringing in the sheaves!\nBringing in the sheaves!\nBringing in the sheaves!\nWe shall come rejoicing\nBringing in the sheaves! (x2)\n2. Sowing in the sunshine,\nsowing in the shadows\nFearing neither clouds nor\nwinters chilling breeze\nBy and by the harvest, and\nthe labour ended\nWe shall come rejoicing,\nbringing in the sheaves!\nGolden Bells 438",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-320",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 320,
+    "title": "Speak to me now, my God",
+    "lyrics": "1. Speak to me now, my God\nSpeak to me now, my God\nLord\nI have opened my ears for you\nSpeak to me now, my Lord\nSpeak to me now.\n2. Fill me now my God\nFill me now my Lord\nI have emptied myself for you\nFill me now, my Lord\nFill me now.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-321",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 321,
+    "title": "Speak to me, Lord, speak,",
+    "lyrics": "1. Speak to me, Lord, speak,\nthat I may hear\nYour servant waits upon you\nLonging for you to show me\nyour ways\nThat bring me eternal life\nIf I daily keep your ways\nAnd I am obedient to you,\nI shall be like a vessel of\nhonour prepared for every\ngood work.\n2. Speak to me, Lord, speak,\nlet me hear you\nMy ears are itching for your\nword\nYour word is full of power\nand might\nYour word shows me your\ngood path\nIf my ears are opened to you\nAnd I am obedient to you\nI shall be like a tree by\nstreams\nof water yielding fruit in\nseason\n3. Speak to me, Lord speak,\nlet there be light\nYour servant waits upon you\nWaiting for your own good\ndirection\nThat brings me light on my\npath\nIf I live in your light\nAnd I am obedient to you,\nI shall be like a light that\nshines to show the right ways\nin this dark world.\n4. Speak to me, Lord, speak,\nspeak so sweetly\nYour servant waits upon you\nLonging for your word that is\nso sweet\nWhich soothes and comforts\nthe heart\nIf I walk in your good path\nAnd I am obedient to you\nI shall be like a tasty salt on\nearth that heals the world of\nsickness\n5. Speak to me, Lord, speak,\nlet me prosper\nYour servant waits upon you\nLonging for your very good\nstatutes\nFor they would make me\nprosper\nIf your word dwells in my heart\nAnd I am obedient to you\nI shall be like a kinsman\nredeemer who brings life to\nhis nation.\n6. Speak to me, Lord, speak,\nto me in Christ\nI am looking unto Christ\nFullness of Godhead in bodily\nform\nPerfection manifests in Christ\nIf I lift Christ up on high\nAnd I am obedient to you\nI shall be like a true servant who\ndraws all people to his Master\n7. Speak to me, Lord, speak,\nshow me your way\nWaiting on the Holy Spirit\nI am yielded to the Holy Spirit\nHe 's the One who shows me\nyour way\nIf I follow his leadings\nAnd I am obedient to you\nI shall be like a good mentor\nwho shows your way to\ngenerations\nTranslation of Awurade Kasa by\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-322",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 322,
+    "title": "Spirit Divine, attend our",
+    "lyrics": "1. Spirit Divine, attend our\nprayers\nAnd make our hearts Thy home;\nDescend with all Thy gracious\npowers.\nO come, great Spirit, come.\n2. Come as the light - to us\nreveal\nOur need of Thee below;\nAnd lead us in those paths of\nlife\nWhere all the righteous go.\n3. Come as the fire - and\npurge our hearts\nWith sacrificial flame;\nLet our whole self an offering be\nTo our Redeemer’s name\n4 Come as the dew - and\nsweetly bless\nThis consecrated hour\nMay barrenness rejoice to own\nThy fertilising power.\n5. Come as the Dove - and\nspread Thy wings\nThe wings of peaceful love;\nAnd let Thy Church on earth\nbecome\nBlest as the Church above.\n6. Come as the wind - with\nrushing sound\nAnd Pentecostal grace;\nThat all of woman born may see\nThe glory of Thy face\nA Reed, RH 210",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-323",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 323,
+    "title": "Spirit of God, take full control",
+    "lyrics": "Spirit of God, take full control\nI surrender to your lead\nSo that I will what you will\nAnd do what you do\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-324",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 324,
+    "title": "Spirit of the Living God",
+    "lyrics": "Spirit of the Living God\nFall afresh on me\nSpirit of the Living God\nFall afresh on me\nBreak me, melt me, mould me,\nfill me\nSpirit of the Living God\nFall afresh on me.\nDaniel Iverson\nPH 54",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-325",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 325,
+    "title": "Stand up! Stand up for Jesus",
+    "lyrics": "1. Stand up! Stand up for Jesus\nYe soldiers of the cross;\nLift high His royal banner\nIt must not suffer loss,\nFrom vict’ry unto vict’ry\nHis army shall he lead\nTill every foe is vanquished,\nAnd Christ is Lord indeed.\n2. Stand up! Stand up for Jesus!\nThe trumpet call obey;\nForth to the mighty conflict,\nIn this His glorious day;\nYe that are men now serve Him\nAgainst unnumbered foes;\nLet courage rise with danger,\nAnd strength to strength oppose.\n3. Stand up! Stand up for Jesus!\nStand in His strength alone;\nThe arm of flesh will fail you,\nYe dare not trust your own,\nPut on the gospel armour,\nAnd watching unto prayer;\nWhere duty calls, or danger,\nBe never wanting there.\n4. Stand up! Stand up for Jesus!\nThe strife will not be long;\nThis day the noise of battle\nThe next the victor’s song;\nTo him that overcometh,\nA crown of life shall be;\nHe with the king of glory\nShall reign eternally.\nRH 438 G. Duffield",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-326",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 326,
+    "title": "Sweep over my soul,",
+    "lyrics": "Sweep over my soul,\nSweep over my soul\nSweet Spirit, sweep over my\nsoul;\nMy rest is complete as I sit at\nThy feet,\nSweet Spirit, sweep over my\nsoul.\nRev. A. H. Ackley\nTranslation of B4 bra me kra do\nPH 171",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-327",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 327,
+    "title": "Take my life, and let it be",
+    "lyrics": "1. Take my life, and let it be\nConsecrated, Lord, to Thee,\nTake my moments and my\ndays,\nLet them flow in ceaseless\npraise\n2. Take my hands, and let them\nmove\nAt the impulse of Thy love;\nTake my feet, and let them be\nSwift and beautiful for Thee.\n3. Take my voice and let me\nsing\nAlways! Only, for my King\nTake my lips and let them be\nFilled with messages for\nThee.\n4. Take my silver and my\ngold;\nNot a mite would I withhold;\nTake my intellect, and use\nEvery power as Thou shalt\nchoose\n5. Take my will and make it\nThine\nIt shall be no longer mine;\nTake my heart, it is Thine\nown;\nIt shall be Thy royal throne.\n6. Take my love; my Lord, I\npour\nAt Thy feet its treasure-store;\nTake myself and I will be\nEver, only, all for Thee.\nRH 582\nFrances Ridley Havergal",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-328",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 328,
+    "title": "Tarry for the Spirit",
+    "lyrics": "1. Tarry for the Spirit\nHe shall come in showers,\nEnergising wholly\nAll your ransomed powers;\nSigns shall follow service\nIn the Holy Ghost,\nThen the Church of Jesus\nProve a mighty host\nOn, then, Church of Jesus\nClaim your Pentecost:\nGod shall now baptise thee\nIn the Holy Ghost\n2. Rivers is Thy promise,\nThis shall be our plea\nLess than this can never\nMeet our cry for Thee;\nTired of lukewarm service,\nAnd the loss it brings\nWe would live entirely\nFor eternal things\n3. When the Spirit cometh\nLoosened lips shall tell,\nOf the wondrous blessing\nWhich upon them fell;\nLife of Jesus springing\nLike a well within\nHearts with loud hosannas\nConstantly shall ring.\n4. When with joy we follow\nIn Christ’s triumph train,\nand our lives are flooded\nWith the Latter Rain;\nThen the world around us\nShall the impact feel,\nOf a Church with vision\nFired with holy zeal.\n5. Then the Lord of glory\nShall be magnified,\nHe who trod the winepress,\nfully satisfied:\nWalking in the Spirit,\nCondemnation o’er\nBlessed Life of worship,\nNow and evermore.\nE.C.W Boulton\nRH 235",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-329",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 329,
+    "title": "Thank You, my Lord",
+    "lyrics": "Thank You, my Lord\nThank You, Father\nThank You, for the blessings\nfrom above\nLord I thank you, Lord I thank\nyou\nThank You for the abundant\ngrace\nRosina Aninkora",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-330",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 330,
+    "title": "That day of Pentecost;",
+    "lyrics": "That day of Pentecost;\nThe source of Divine Power;\nCame down from above;\nTo revive the Church\nRevival, revival, revival,\nrevival\nRevival, revival, revival has\ncome today\nPeter Adjei",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-331",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 331,
+    "title": "The Ancient Pentecost Power",
+    "lyrics": "The Ancient Pentecost Power\nIs still with us today (2x)\nAll you need to do: take the\nWord of God;\nMake some time to fast, daily\nwatch and pray\nWhen you wait on the Lord in\nfervent pray’r\nThen you’ll see the Ancient\nPow’r\nTranslation of “Tete Pentekoste\nTumi no”\nEunice Johnson",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-332",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 332,
+    "title": "The blood that Jesus shed",
+    "lyrics": "1. The blood that Jesus shed\nfor me\nWay back on Calvary\nThe blood that gives me\nstrength\nFrom day to day\nIt will never lose its power\nIt reaches to the highest\nmountain\nAnd it flows to the lowest\nvalley\nThe blood that gives me\nstrength\nFrom day to day\nIt will never lose its power.\n2. It soothes my doubts and\ncalms my fears\nAnd it dries all my tears\nThe blood that gives me\nstrength\nFrom day to day\nIt will never lose its power.\nAndree Crouche",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-333",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 333,
+    "title": "The Church is marching on",
+    "lyrics": "The Church is marching on\nThe Church is marching on;\nThe gates of hell shall not\nprevail,\nThe Church is marching on.\nEunice Addison\nPH 340",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-334",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 334,
+    "title": "The Church’s one foundation",
+    "lyrics": "1. The Church’s one foundation\nIs Jesus Christ, her Lord;\nShe is his new creation\nBy water and the word;\nFrom heaven he came and\nsought her\nTo be his holy bride\nWith his own blood he bought\nher\nAnd for her life he died\n2. Elect from every nation\nYet one o’er all the earth\nHer charter of salvation\nOne Lord, one faith, one birth:\nOne holy name she blesses\nPartakes one holy food\nAnd to one hope she presses\nWith every grace endured.\n3. Though with a scornful\nwonder\nMen see her sore oppressed\nBy schisms rent asunder,\nBy heresies distressed,\nYet saints their watch are\nkeeping\nTheir cry goes up ‘How long?\nAnd soon the night of\nweeping\nShall be the morn of songs\n4. ‘Mid toil, and tribulation,\nand tumult of her war\nShe waits the consummation\nOf peace for evermore;\n‘Till with the vision glorious\nHer longing eyes are blest\nAnd the great Church\nvictorous\nShall be the Church at rest.\n5. Yet she on earth hath union\nWith God the three in One\nAnd mystic sweet communion\nWith those whose rest is won\nO happy ones and holy!\nLord, give us grace that we,\nLike them, the meek and\nlowly\nOn high may dwell with thee.\nSamuel John Stone - RH 682",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-335",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 335,
+    "title": "The cloud of glory is moving",
+    "lyrics": "The cloud of glory is moving\nMove with the cloud\nMove with the cloud\nLet your spirit arise\nAnd your mouth filled with\npraise\nCome, let us worship together\nAnd wherever He will be\nNew heights will be achieved\nMove with the cloud (x2)",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-336",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 336,
+    "title": "The conqueror in whose",
+    "lyrics": "The conqueror in whose\ncamp I am is my Lord Jesus\nThe Mighty One in whose\ncamp I am is my Lord Jesus\nHe overcame the evil one\nAnd He overcame this very\nworld\nAnd that is why I am\nvictorious in all I do (x2)\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-337",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 337,
+    "title": "The day Thou gavest, Lord",
+    "lyrics": "1. The day Thou gavest, Lord\nis ended.\nThe darkness falls at Thy\nbehest;\nTo Thee our morning hymns\nascended\nThy praise shall sanctify our\nrest.\n2. We thank Thee that Thy\nchurch unsleeping\nWhile earth rolls onward into\nlight\nThrough all the world her\nwatch is keeping\nAnd rests not now by day or\nnight.\n3. As o’er each continent and\nisland\nThe dawn leads on another day.\nThe voice of prayer is never\nsilent\nNor dies the strain of praise\naway.\n4. The sun that bids us rest is\nwaking\nOur brethren ‘neath the\nwestern sky,\nAnd hour by hour fresh lips are\nmaking\nThy wondrous doings heard on\nhigh.\n5. So be it, Lord, Thy throne\nshall never,\nLike earth’s proud empires\npass away;\nThy kingdom stands and\ngrows forever,\nTill all Thy creatures own Thy\nsway.\nJohn Ellerton, RH 798",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-338",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 338,
+    "title": "The Fire is burning in my soul",
+    "lyrics": "The Fire is burning in my soul\nThe fire is burning in my soul;\nThe flame of glory maketh\nwhole,\nHallelujah! It’s burning in my\nsoul.\nHugh Mitchell - PH 26",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-339",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 339,
+    "title": "The fire will never die",
+    "lyrics": "The fire will never die\nThe fire will never die\nThe fire will never die\nNever die, Never die\nJesus’ fire will never die\nTranslation of “Ogya no rennum\nda”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-340",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 340,
+    "title": "The God of Abraham,",
+    "lyrics": "The God of Abraham,\nIsaac and Jacob\nHe is the same to you and me\nHe is a mighty God\nWonderful God today and\nevermore\nRosina Aninkora",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-341",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 341,
+    "title": "The heavens are all Yours",
+    "lyrics": "The heavens are all Yours\nAnd all the earth is Yours\nThere is no other king like\nYou\nReign O Lord!\nReign O Lord!\nReign O Lord!\nReign O Lord!\nTranslation of “$soro y1 wo de”",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-342",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 342,
+    "title": "The Lord has set the fire of",
+    "lyrics": "The Lord has set the fire of\nPentecost\nThis fire will never die\nThe Pentecost fire burns\nThe Pentecost fire burns\nIt’s ablaze in my heart,\neveryday\nIt’s ablaze, it’s ablaze, ablaze\nThe fire burns, it will never die\nThe fire burns, it will never die\nThe fire burns, it will never die\nThe Pentecost fire burns\nTranslation of “Awurade as4\nPentekoste Gya n” by\nEbenezer Amissah Bimpong",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-343",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 343,
+    "title": "The Lord is mighty, in power",
+    "lyrics": "The Lord is mighty, in power\nand strength\nThe Lord is mighty, in all His\nworks\nThe Lord is Mighty, in all He\ndoes\nThe Lord, the Lord, Most\nHigh (x2)\nYou are the Lord, the Faithful\none\nWho keeps us on, to the very\nend\nNone is like you, in power\nand strength\nYou are the Lord, the Faithful\none.\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-344",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 344,
+    "title": "The Lord is the defender of",
+    "lyrics": "The Lord is the defender of\nthe helpless;\nHe is the protector of the\nvulnerable;\nA mighty rock and a solid\nfortress\nThe hope of the hopeless has\nloved you.\nPeter Adjei",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-345",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 345,
+    "title": "The Lord is the Sovereign",
+    "lyrics": "1. The Lord is the Sovereign\nOne\nHe knows and weighs\neverything He does\nI bow to him in humility\nMay His will be accomplished\nIt is the Lord; I look up to Him\nNothing can I offer to please\nHim\nI look to Him for grace and\nmercy\nIt is the Lord; may His will be\ndone\n2. The Lord is the First and the\nLast\nNo One can change His\nsovereign will\nHe brings one down and lifts\nanother up\nMay He cause me to do His will\n3. The Lord is the King of\nkings\nHe delights not just in sacrifice\nHe seeks to cap-ti-vate my\nheart\nAnd use me to accomplish His\nwill\n4. The Lord is the All-knowing\nOne\nHe shows no sign of injustice\nHe bestows gifts freely to all\nHis Will shall certainly be done\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-346",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 346,
+    "title": "The Lord’s my Shepherd,",
+    "lyrics": "1. The Lord’s my Shepherd,\nI’II not want\nHe makes me lie in pastures\ngreen,\nHe leads me by the still, still\nwaters,\nHis goodness restores my soul.\nAnd I will trust in You alone,\nAnd I will trust in You alone,\nFor Your endless mercy\nfollows me,\nYour goodness will lead me\nhome.\n(Descent)\nI will trust, I will trust in You.\nI will trust, I will trust in You.\nEndless mercy follows me,\nGoodness will lead me home.\n2. He guides my ways in\nrighteousness,\nAnd He anoints my head with\noil\nAnd my cup, it overflows with\njoy,\nI feast on His pure delights.\nAnd though I walk the darkest\npath,\nI will not fear the evil one,\nFor You are with me, and\nYour rod and staff\nAre the comfort I need to know",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-347",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 347,
+    "title": "The Lord’s my Shepherd,",
+    "lyrics": "1. The Lord’s my Shepherd,\nI’ll not want\nHe makes me down to lie\nIn pastures green; he leadeth\nme\nThe quiet waters by\n2. My soul he doth restore\nagain;\nAnd me to walk doth make\nWithin the paths of\nrighteousness,\nE’en for His own name’s sake.\n3. Yea, though I walk in\ndeath’s dark vale,\nYet will I fear none ill;\nFor Thou art with me; and Thy\nrod\nAnd staff me comfort still.\n4. My Table Thou has furnished\nIn presence of my foes;\nMy head Thou dost with oil\nanoint\nAnd my cup overflows\n5. Goodness and mercy all\nmy life\nShall surely follow me,\nAnd in God’s house for ever\nmore\nMy dwelling place shall be\nRH 99, Whitingham Rous",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-348",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 348,
+    "title": "The steadfast love of the Lord",
+    "lyrics": "The steadfast love of the Lord\nnever ceases\nHis mercies never come to an\nend,\nThey are new every morning\nNew every morning\nGreat is Thy faithfulness, O\nLord\nGreat is Thy faithfulness\nEdith McNeil\nSongs of fellowship 549",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-349",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 349,
+    "title": "The steps of a good man are",
+    "lyrics": "The steps of a good man are\nordered by the Lord\nAnd He delighteth in his ways\nThough he falls, though he\nfalls, he will not be cast down\nFor the Lord upholdeth him\nwith His hands.\nWith His hands\nWith His hands\nFor the Lord upholdeth him\nWith His hands\nThough he falls\nThough he falls\nHe will not be cast down\nFor the Lord upholdeth him\nwith His hands",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-350",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 350,
+    "title": "There is a fountain filled",
+    "lyrics": "1. There is a fountain filled\nwith blood\nDrawn from Emmanuel’s\nveins.\nAnd sinners plunged beneath\nthat flood\nLose all their guilty stains.\n2. The dying thief rejoiced to\nsee\nThat fountain in his day;\nAnd there may I, though vile\nas he,\nWash all my sins away.\n3. O dying Lamb!\nThy precious blood\nShall never lose his power,\nTill all the ransomed church\nof God\nBe saved to sin no more\n4. E’er since by faith I saw\nthe stream\nThy flowing wounds supply,\nRedeeming love has been my\ntheme\nAnd shall be till I die\n5. Then in a nobler sweeter\nsong\nI’ll sing thy power to some\nWhen this poor lisping,\nstammering tongue\nLies silent in the grave.\nWilliam Copwer\nMHB 201",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-351",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 351,
+    "title": "There is a Name I love to",
+    "lyrics": "1. There is a Name I love to\nhear,\nI love to sing its worth,\nIt sounds like music in mine ear,\nThe sweetest name on earth.\nOh how I love Jesus\nOh how I love Jesus\nOh how I love Jesus\nBecause he first loved me\n2. It tells me of a Saviour's\nlove,\nWho died to set me free,\nIt tells me of his precious\nblood,\nThe sinner's perfect plea\n3. It bids my trembling soul\nrejoice,\nAnd dries each rising tear,\nIt tells me in a 'still small voice\nTo trust and never fear.\n4. Jesus, the name I love so\nwell,\nThe name I love to hear,\nNo saints on earth its worth\ncan tell,\nNo heart conceive how dear.\n5. This name shall shed its\nfragrance still\nAlong this thorny road\nShall sweetly smooth the\nrugged hill\nThat leads me up to God.\n6. And there, with all the\nBlood bought throng\nFrom sin and sorrow free,\nI'll sing the new eternal song\nOf Jesus' love to me.\nFrederick Whitfiekd",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-352",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 352,
+    "title": "There is a Redeemer,",
+    "lyrics": "1. There is a Redeemer,\nJesus, God's own Son,\nPrecious Lamb of God, Messiah,\nHoly One\nThank you, O my Father\nFor giving us your Son,\nAnd leaving your Spirit till\nThe work on earth is done.\n2. Jesus, my Redeemer,\nName above all names,\nPrecious Lamb of God, Messiah\nO for sinners slain.\n3. When I stand in glory\nI will see his face\nAnd there I'll serve my King\nfor ever\nIn that holy place\nGreen Melody",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-353",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 353,
+    "title": "There is fire burning within",
+    "lyrics": "There is fire burning within\nmy heart\n‘Tis the fire of Pentecost\n‘Will fan Your fire ever\nburning in me\nTill the whole world comes to\nYou\nAbide, abide\nAnd move always in us\nIn the oneness of the Holy\nGhost\nWe surrender to Your will\nSeth Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-354",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 354,
+    "title": "There is no name so sweet",
+    "lyrics": "1. There is no name so sweet\non earth,\nNo name so sweet in heaven\nThe name before His\nwondrous birth,\nTo Christ, the Saviour given.\nWe love to sing of Christ our\nKing\nAnd hail Him, blessed Jesus!\nFor there’s no word ear ever\nheard,\nSo dear, so sweet as “Jesus”\n2. “Twas Gabriel first that did\nProclaim\nTo His most blessed mother,\nThat name which now and\nevermore\nWe praise above all other.\n3. And when He hung upon\nthe tree,\nThey wrote His name above\nHim\nThat all might see the reason we\nFor evermore must love Him.\n4. So now, upon His Father’s\nthrone,\nAlmighty to release us\nFrom sin and pain He ever\nreigns\nThe Prince and Saviour Jesus.\n5. O Jesus! By that matchless\nname\nThy grace shall fail us never,\nToday as yesterday the same.\nThou art the same forever.\n6. To Jesus ev’ry knee shall\nbow\nAnd ev’ry tongue confess Him\nAnd we unite with saints in light\nOur only Lord, to bless Him.\nGeo W. Bethune\nPH 280",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-355",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 355,
+    "title": "There is none holy as the Lord",
+    "lyrics": "There is none holy as the Lord\nThere is none beside Him\nNeither is there any rock like\nour God\nThere is none holy as the Lord",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-356",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 356,
+    "title": "There is victory for me,",
+    "lyrics": "There is victory for me,\nThere is victory for me,\nIn the Blood of Christ, my\nSaviour\nThere is victory for me,\nFor me, yes me, for me, yes me,\nIn the blood of Christ, my\nSaviour:\nThere is victory.\nHugh Mitchell",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-357",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 357,
+    "title": "There never was a day like",
+    "lyrics": "There never was a day like\nthis day to me,\nThere never was a day like\nthis day I see\nThere never was a light that\nshineth so bright\nAs this day, this glorious day\nPH 134",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-358",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 358,
+    "title": "There shall be showers of",
+    "lyrics": "1. There shall be showers of\nblessing\nThis is the promise of love;\nThere shall be seasons\nrefreshing,\nSent from the Saviour above.\nSho...wers of blessing\nShowers of blessing we need\nMercy drops round us are\nfalling\nBut for the showers we plead.\n2. “There shall be showers of\nblessing”\nPrecious reviving again;\nOver the hills and the valleys\nSound of abundance of rain\n3. “There shall be showers of\nblessing”\nSend them upon us, O Lord\nGrant to us now a refreshing;\nCome, and now honour Thy\nword.\n4. “There shall be showers of\nblessing”\nOh, that to-day they might fall\nNow, as to God, we’re\nconfessing,\nNow as on Jesus we call.\n5. “There shall be showers of\nblessing”\nIf we but trust and obey\nThere shall be seasons refreshing,\nIf we let God have His way\nEl Nathan, RH245",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-359",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 359,
+    "title": "There’s a fight to be",
+    "lyrics": "1. There’s a fight to be\nfought, and a race to be run\nThere are dangers to meet by\nthe way;\nBut the Lord is my light and\nthe Lord is my life\nAnd the Lord is my strength\nand stay\nOn His word I depend,\nHe’s my Saviour and Friend;\nAnd He tells me to trust and\nobey;\nFor the Lord is my light and\nthe Lord is my life\nAnd the Lord is my strength\nand stay.\n2. In His wonderful love, He\ncame down from above\nTo suffer and die on the tree\nNow He’s reigning up there;\nwhere He’s gone to prepare\nA place in His Kingdom for me\nLet us sing as we go, for He\nloveth us so\nWe can never be lost by the way;\n3. Then He’ll bring us at length,\nby His infinite strength\nTo the land that is fairer than\nday;\nSo we’ll sing to His praise, to\nthe end of our days\nAs we travel each dangerous\nway;\nGolden Bells 539",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-360",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 360,
+    "title": "There’s a fine, fine, fine, fine",
+    "lyrics": "There’s a fine, fine, fine, fine\nMorning coming soon, coming\nsoon, coming soon;\nThe sun will shine, shine,\nshine shine,\nBanishing the gloom very\nsoon, very soon,\nWe shall gather all together\nover on the other shore\nAll our trials and our troubles\nwill be gone for ever more;\nThere is a fine, fine, fine, fine\nMorning coming soon,\ncoming soon, yes soon.\nPH 190",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-361",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 361,
+    "title": "There’s a land that is fairer",
+    "lyrics": "There’s a land that is fairer\nthan day\nAnd by faith we can see it afar;\nFor the Father waits over the\nway,\nTo prepare us a dwelling\nplace there\nIn the sweet by and by\nWe shall meet on that\nbeautiful shore\nIn the sweet by and by\nWe shall meet on that\nbeautiful shore\n2. We shall sing on that\nbeautiful shore\nThe melodious songs of the blest,\nAnd our spirits shall sorrow\nno more,\nNot a sigh for the blessing of\nrest\n3. To our bountiful Father\nabove\nWe will offer our tribute of\npraise,\nFor the glorious gift of His love,\nAnd the blessing that hallow\nour days\nPH 273, S. Bennet",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-362",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 362,
+    "title": "There’s not a friend like",
+    "lyrics": "1. There’s not a friend like\nthe lowly Jesus\nNo, not one! No, not one!\nNone else could heal all my\nsoul’s diseases\nNo, not one! No, not one!\nJesus knows all about my\nstruggles\nHe will guide till the day is\ndone\nThere’s not a friend like the\nlowly Jesus\nNo, not one! No, not one!\n2. No friend like Him is so\nhigh and holy,\nNo, not one! No, not one!\nAnd yet no friend is so meek\nand lowly,\nNo, not one! No, not one!\n3. There’s not an hour that He\nis not near us,\nNo, not one! No, not one!\nNo night so dark, but His love\ncan cheer us.\nNo not one! No, not one!\n4. Did ever saint find this\nFriend forsake him?\nNo, not one! No, not one!\nOr sinner find that He would\nnot take him?\nNo, not one! No, not one!\n5. Was e’er a gift like the\nSavior given?\nNo, not one! No, not one!\nWill He refuse us the bliss of\nheaven?\nNo, not one! No, not one!\nJohnson Oatman, Jr.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-363",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 363,
+    "title": "There’s revival in the air",
+    "lyrics": "1. There’s revival in the air\ntoday,\nThere’s revival in the air today;\nThere’s revival in the air,\nWe can bring it down with\npray’r,\nThere’s revival in the air today.\n2. There’s revival in my heart\ntoday,\nThere’s revival in my heart\ntoday,\nThere’s revival in my heart,\nAnd you can have a part,\nThere’s revival in my heart\ntoday.\nThos Kemp\nP H 103",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-364",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 364,
+    "title": "They that wait upon the Lord",
+    "lyrics": "They that wait upon the Lord\nshall renew their strength\nThey that wait upon the Lord\nshall renew their strength\nThey shall mount up with\nwings as eagles\nRun their race and weary not\nThey that wait upon the Lord\nshall renew their strength\nThey shall mount up with\nwings as eagles\nThey shall walk and never faint\nThey that wait upon the Lord\nshall renew their strength\nIsaac Anane Sarfo\nW4n a w4tw1n Awurade no”\nTranslation by John Odoi\nKorang",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-365",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 365,
+    "title": "This is holy ground,",
+    "lyrics": "1. This is holy ground,\nwe're standing on holy ground\nFor the Lord is present\nand where He is is holy\nThis is holy ground,\nwe're standing on holy ground\nFor the Lord is present\nAnd where He is is holy\nWe are standing on holy\nground and\nI know that there are angels\nall around\nLet us praise Jesus now\nFor we are standing in His\npresence\nOn holy ground.\n2. These are holy hands\nHe's given us holy hands,\nHe works through these hands\nAnd so these hands are holy\nThese are holy hands\nHe's given us holy hands,\nHe works through these hands\nAnd so these hands are holy\n3. He works through these hands\nAnd so these are holy hand\nWe’re standing in your presence\nWe’re standing in your presence\nWe’re standing in your\npresence on holy ground\nChristopher Beatty, Joshua 5:15",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-366",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 366,
+    "title": "This world is not my home",
+    "lyrics": "1. This world is not my home\nI’m just a passing through\nMy treasures are laid up\nSomewhere beyond the blue;\nThe Saviour beckons me\nFrom heaven’s open door\nAnd I can’t feel at home\nIn this world any more\nO Lord, You know\nI have no friend like You:\nIf heaven’s not my home\nThen, Lord what will I do?\nThe Saviour beckons me\nFrom Heaven’s open door,\nAnd I can’t feel at home in\nthis world any more\n2. They’re all expecting me,\nAnd that’s one thing I know;\nMy Saviour pardoned me,\nNow onward I must go;\nI know He’ll take me through,\nThough I am weak and poor,\nAnd I can’t feel at home\nIn this world any more.\n3. Just over in glory\nWe’ll live eternally,\nThe saints on every hand\nAre shouting victory;\ntheir songs of sweetest praise\nDrift back from Heaven’s shore\nAnd I can’t feel at home\nIn this world any more.\nLiving songs 112\nAlbert E. Brumley",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-367",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 367,
+    "title": "Thou art worthy (x2)",
+    "lyrics": "1. Thou art worthy (x2)\nThou are worthy, O Lord\nThou art worthy to receive glory\nGlory and honour and power\nFor Thou hast created\nHast all things created\nFor thou hast created all things\nAnd for Thy pleasure they are\nCreated;\nThou art worthy, O Lord\n2. Thou art worthy (x2)\nThou art worthy, O Lord\nThou art worthy to receive\nblessing\nRiches and wisdom and power\nFor Thou has redeemed us,\nThy blood hast redeemed us,\nFor thou hast redeemed us to\nGod;\nAnd from all nations made us\na kingdom\nThou art worthy, O Lord\nLiving Songs 36",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-368",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 368,
+    "title": "Through all the changing",
+    "lyrics": "1. Through all the changing\nscenes of life\nIn trouble and in joy\nThe praises of my God shall still\nMy heart and tongue employ.\n2. Of His deliverance I will\nboast\nTill all that are distressed\nFrom my example comfort take,\nAnd charm their griefs to rest\n3. O magnify the Lord with me,\nWith me exalt His name;\nWhen in distress to Him I called,\nHe to my rescue came\n4. The Hosts of God encamp\naround\nThe dwelling of the just;\nDeliverance He affords to all\nWho on His succour trust\n5. O make but trial of His love;\nExperience will decide\nHow blest they are, and only\nthey,\nWho in His truth confide.\n6. Fear Him, ye saints, and\nyou will then\nHave nothing else to fear\nMake you His service your\ndelight\nHe’ll make your wants His Care\nMHB 427",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-369",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 369,
+    "title": "Through the love of God",
+    "lyrics": "1. Through the love of God\nour saviour,\nAll will be well;\nFree and changeless is his\nfavour,\nAll, all is well\nPrecious is the blood that\nhealed us;\nPerfect is the grace that sealed us\nStrong the hand stretched\nforth to shield us\nAll must be well.\n2. Though we pass through\ntribulation,\nAll will be well\nOurs is such a full salvation ,\nAll, all is well\nHappy still in God confiding,\nFruitful if in Christ abiding;\nHoly through the Spirit's\nguiding;\nAll must be well\n3. We expect a bright tomorrow\nAll will be well;\nFaith can sing through days\nof sorrow\nAll, all is well\nOn our father's love relying,\nJesus every need supplying\nOr in living or in dying\nAll must be well.\nMary Peters - RH.372",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-370",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 370,
+    "title": "Thy Kingdom come, O God",
+    "lyrics": "1. Thy Kingdom come, O God\nThy rule, O Christ, begin\nBreak with thine iron rod\nThe tyrannies of sin\n2. Where is thy reign of peace?\nAnd purity and love?\nWhen shall all hatred cease?\nAs in the realms above?\n3. When comes the promised\ntime?\nThat war shall be no more\nAnd lust, oppression, crime\nShall flee thy face before?\n4. We pray thee, Lord, arise,\nAnd come in thy great might;\nRevive our longing eyes,\nWhich languish for thy sight.\n5. O'er lands both near and far\nThick darkness broodeth yet;\nArise, O Morning star\nArise, and never set!\nLewis Hensley (1824-1905)\nBBC Songs 24",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-371",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 371,
+    "title": "‘Tis a glorious Church",
+    "lyrics": "‘Tis a glorious Church\nwithout spot or wrinkle\nWashed in the Blood of the\nLamb\n‘Tis a glorious Church\nwithout spot or wrinkle,\nWashed in the Blood of the\nLamb\nPH 76",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-372",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 372,
+    "title": "‘Tis so sweet to trust in Jesus,",
+    "lyrics": "1. ‘Tis so sweet to trust in Jesus,\nJust to take Him at His Word;\nJust to rest upon His promise,\nAnd to know, “Thus saith the\nLord!”\nJesus, Jesus, how I trust Him!\nHow I’ve proved Him o’er\nand o’er:\nJesus, Jesus, precious Jesus!\nOh, for grace to trust Him\nmore!\n2. Oh how sweet to trust in\nJesus,\nJust to trust His cleansing blood;\nAnd in simple faith to plunge me\n‘Neath the healing, cleansing\nflood!\n3. Yes, ‘tis sweet to trust in\nJesus,\nJust from sin and self to cease;\nJust from Jesus simple taking\nLife and rest, and joy and\npeace\n4. I’m so glad I learned to\ntrust Thee,\nPrecious Jesus, Saviour, Friend;\nAnd I know that Thou art with me,\nWilt be with me to the end.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-373",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 373,
+    "title": "To be in your presence",
+    "lyrics": "1. To be in your presence\nTo sit at your feet,\nWhere Your love surrounds me,\nAnd makes me complete.\nThis is my desire, O Lord,\nThis is my desire,\nThis is my desire, O Lord,\nThis is my desire\n2. To rest in Your presence\nNot rushing away;\nTo cherish each moment,\nHere I would stay\nNoel Richards\nSongs of Fellowship, 1067",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-374",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 374,
+    "title": "To be like Jesus, to be like",
+    "lyrics": "To be like Jesus, to be like\nJesus;\nAll I ask is to be like Him;\nThrough all life’s journey;\nFrom earth to glory;\nAll I ask is to be like Him",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-375",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 375,
+    "title": "To God be the glory,",
+    "lyrics": "1. To God be the glory,\nGreat things He hath done,\nSo loved he the world that He\ngave us His son\nWho yielded His life an\natonement for sin\nAnd opened the Life Gate\nthat all may go in\nPraise the Lord, Praise the\nLord\nLet the earth hear His voice\nPraise the Lord, Praise the Lord\nLet the people rejoice;\nO come to the Father through\nJesus the Son\nAnd give Him the glory, great\nthings He hath done.\n2. O perfect redemption, the\npurchase of blood\nTo every believer the promise\nof God;\nThe vilest offender who truly\nbelieves;\nThat moment from Jesus a\npardon receives.\n3. Great things He hath taught\nus,\nGreat things He hath done,\nAnd great our rejoicing\nthrough Jesus the Son\nBut purer, and higher, and\ngreater will be\nOur wonder, our transport\nwhen Jesus we see\nFanny J. Crosby - RH. 47",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-376",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 376,
+    "title": "Upon the hill of Calvary,",
+    "lyrics": "1. Upon the hill of Calvary,\nGod’s only Son, Jesus, was\ncrucified;\nIt is Jesus, my own Saviour,\nIt is Jesus, my own Saviour\n(x2)\n2. l shall not forget the\nsuffering of Christ,\nFrom Gethsemane to Calvary;\nA precious price He paid for me,\nA precious price He paid for me.\nTranslation of W4 Kalvary\nbep4 no so",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-377",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 377,
+    "title": "Victory! Victory!",
+    "lyrics": "Victory! Victory!\nPrecious blood -bought victory\nVictory! Victory! Victory all\nthe time\nAs Jehovah liveth,\nStrength divine He giveth\nUnto those who trust Him\nVict'ry all the time\nMrs. C.H. Morris - PH 231",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-378",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 378,
+    "title": "Waiting for His coming",
+    "lyrics": "Waiting for His coming\nTo the mansions in the sky\nI’m waiting for Jesus,\nFor He’s coming by and by\nI’m watching His returning\nto the clouds far up on high\nI’m waiting for Jesus\nFor He’s coming by and by\nHe’s promised to take me\nTo dwell with Him in His\nglory fair\nHe’s promised to give me\nA crown of victory to wear\nI’m waiting and I’m listening\nFor the sound of the mid-night\ncry\nI’m waiting for Jesus\nFor He’s coming by and by\nGospel Quintet Choruses",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-379",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 379,
+    "title": "We are able to go up and take",
+    "lyrics": "We are able to go up and take\nthe country\nTo possess the land from\nJordan to the sea;\nThough the lions may be\nthere our way to hinder,\nGod will surely give the victory\nPH. 187",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-380",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 380,
+    "title": "We are in your hands, O Lord",
+    "lyrics": "We are in your hands, O Lord\nPrepare us, give us grace and\nhelp\nPrepare us, give us grace\nHelp us in every way\nWe are in your hands, O Lord\nPrepare us, give us grace and\nhelp\nTranslation of “Wo Nsam na Y1 w4”\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-381",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 381,
+    "title": "We are laying a foundation",
+    "lyrics": "We are laying a foundation\nA very strong foundation\nFor the coming generation\nWe are laying a foundation\nA very strong foundation\nFor the children behind us now.\nWith Jesus, the solid Rock\nWe shall lay for our children\nWith Jesus the solid Rock\nWe shall lay and never fail.\nEbenezer Amissah Bimpong",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-382",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 382,
+    "title": "We are often tossed and",
+    "lyrics": "1. We are often tossed and\ndriv’n\nOn the restless sea of time,\nSombre skies and howling\ntempest\nOft succeed a bright sun-shine\nIn that land of perfect day,\nWhen the mists have rolled\naway\nWe will understand it better\nby and by\nBy and by, when the morning\ncomes\nWhen all the saints of God\nare gathered home\nWe’ll tell the story how we’ve\novercome;\nFor We’ll understand it better\nby and by\n2. We are often destitute\nof the things that life demands,\nWant of food and want of\nshelter\nThirsty hills and barren lands,\nWe are trusting in the Lord,\nAnd according to His Word,\nWe will understand it better by\nand by\n3. Trials dark on ev’ery hand,\nAnd we cannot understand\nAll the ways that God would\nlead us to that blessed\nPromised Land;\nBut He guides us with His eye\nAnd we’ll follow till we die\nFor we’ll understand it better\nby and by\n4. Temptation, hidden snares\nOften take us unawares,\nAnd our hearts are made to\nbleed\nfor many a thought-less word\nor deed\nAnd we wonder why the test\nWhen we try to do our best\nBut we’ll understand it better\nby and by\nMelodies of Praise 91",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-383",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 383,
+    "title": "We give glory to the Lord,",
+    "lyrics": "We give glory to the Lord,\nHe reigns\nWe give glory to the Lord,\nHe reigns\nHe reigns, He reigns, He reigns\nWe give glory to the Lord,\nHe reigns",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-384",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 384,
+    "title": "We have come into His house",
+    "lyrics": "1. We have come into His house\nAnd gathered in His Name to\nworship Him\nWe have come into His house\nAnd gathered in His Name to\nworship Him\nWe have come into His house\nAnd gathered in His Name to\nworship Christ the Lord\nWorship Him, Christ the\nLord.\n2. So forget about yourself\nAnd concentrate on Him, and\nworship Him\nSo forget about yourself\nAnd concentrate on Him, and\nworship Him\nSo forget about yourself\nAnd concentrate on Him, and\nworship Christ the Lord\nWorship Him, Christ the\nLord.\n3. He is all my righteousness,\nI stand complete in Him and\nworship Him\nHe is all my righteousness,\nI stand complete in Him and\nworship Him\nHe is all my righteousness\nI stand complete in Him and\nworship Christ the Lord\nWorship Him, Christ the\nLord.\n4. Let us lift up holy hands\nAnd magnify His Name and\nworship Him\nLet us lift up holy hands\nAnd magnify His Name and\nworship Him\nLet us lift up holy hands\nAnd magnify His Name, and\nworship Christ the Lord\nWorship Him, Christ the Lord",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-385",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 385,
+    "title": "We have no power of our own",
+    "lyrics": "We have no power of our own\nWe have no power of our own\nWe depend on you, Holy Spirit\nWe have no power of our own",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-386",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 386,
+    "title": "We love the blessed Bible",
+    "lyrics": "1. We love the blessed Bible\nThe glorious Word of God;\nThe lamp for those who travel\nO’er all life’s dreary road\nThe watchword in life’s battle\nThe chart on life’s dark sea;\nThe everlasting Bible\nIt shall our teacher be.\n2. Who would not love the Bible\nSo beautiful and wise!\nIts teaching charm the simple,\nAnd all point to the skies,\nIts stories all so mighty\nOf men so brave to see,\nDivinely-given Bible\nIt shall our teacher be.\n3. But most we love the Bible,\nFor there we Children learn\nHow Christ took on our\nchildhood,\nOur hearts to Him to turn;\nAnd how He bowed to sorrow,\nThat we His face might see;\nThe Bible, oh! the Bible-\nIt shall our teacher be\n4. Then we will hold the Bible\nThe glorious Book of God;\nWe’ll ne’er forsake the Bible,\nThrough all life’s future road.\nAnd when we shall be dying,\nWhenever that may be,\nThe comfort of the Bible\nshall still our solace be.\nGolden Bells 573",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-387",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 387,
+    "title": "We praise Thee O God",
+    "lyrics": "We praise Thee O God\nFor the son of thy love\nFor Jesus who died\nAnd is now gone above\nHalleluyah Thine the glory\nHalleluyah Amen\nHalleluyah Thine the glory\nRevive us again",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-388",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 388,
+    "title": "We praise you, O Lord,",
+    "lyrics": "We praise you, O Lord,\nWe lift high Your Name\nYou are Lord of lords\nYou we glorify\nWho’s like unto You?\nYou are Christ, our King\nWe praise You, O Lord\nWe lift high Your Name\nTranslation of “Yeyi Wo Din Ay1”\nby Opoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-389",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 389,
+    "title": "We praise you, wonderful God,",
+    "lyrics": "We praise you, wonderful God,\nWe glorify your name.\nWe glorify your name:\nAmen, hallelujah!\nHere on earth with hymns\nand songs\nWe extol your holy name;\nThen one day we’ll sing above:\nAmen, hallelujah!\nAsempa Hymns 1",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-390",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 390,
+    "title": "We praise your name",
+    "lyrics": "1. We praise your name\nWe praise your name\nTo you, the Lord, our God\nOn our knees we bow\nTo you the Lord our God\nOn our knees we bow\nTo you the Lord our God\n2. We praise your name\nWe praise your name\nTo you the Lord our God\nOn our knees we fall\nTo you the Lord our God\nOn our knees we fall\n3. We praise your name\nWe praise your name\nTo you the Lord our God\nOn our knees we plead\nTo you the Lord our God\nOn our knees we plead\n4. We praise your name\nWe praise your name\nTo you the Lord our God\nOn our knees we pray\nTo you the Lord our God\nOn our knees we pray\n5. We praise your name\nWe praise your name\nTo you the Lord our God\nOn our knees we serve\nTo you the Lord our God\nOn our knees we serve\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-391",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 391,
+    "title": "We will celebrate our God;",
+    "lyrics": "We will celebrate our God;\nWe will celebrate our God;\nLet His banner be raised,\nAnd His glory be seen\nWe will celebrate our God.",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-392",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 392,
+    "title": "We will praise your holy name,",
+    "lyrics": "We will praise your holy name,\nYou’ve won the victory.\nThe Lamb that was slain,\nIs worthy to be praised,\nO, Lamb of God, we will\npraise your holy name.\nTranslation of Yεbeyi Wo din ayε",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-393",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 393,
+    "title": "We’ll be like Him,",
+    "lyrics": "We’ll be like Him,\nWhen Jesus Christ the Son of\nGod appears,\nWe shall be like Him\nWe’ll be like Him,\nWhen Jesus Christ the Son of\nGod appears,\nWe shall be like Him\nPresently, He’s preparing us\nPresently, He is nurturing our\nsouls with His Word\nWe’ll be like Him, when\nJesus Christ the Son of God\nappears,\nWe shall be like Him\nTranslation of “Y1b1s1 No”\nEunice Addison",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-394",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 394,
+    "title": "We’ll follow Him together",
+    "lyrics": "We’ll follow Him together\nwherever He leads.\nBeside the living waters, our\nsouls He doth feed;\nWhatever be the conflict,\nHe’ll meet our every need.\nWe’ll follow Him together\nWherever He may lead\nPH 41",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-395",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 395,
+    "title": "We’re building a road,",
+    "lyrics": "We’re building a road,\nBuilding a road\nHelping the weak and blind,\nWe’re smoothening the road\nThat leads to heaven above,\nTo make easy for those behind.\nPH 143",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-396",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 396,
+    "title": "What a friend we have in",
+    "lyrics": "1. What a friend we have in\nJesus\nAll our sins and griefs to bear,\nWhat a privilege to carry\nEv’rything to God in prayer\nOh, what peace we often forfeit\nOh, what needless pain we\nbear\nAll because we do not carry\nEv’rything to God in prayer.\n2. Have we trials and\ntemptations?\nIs there trouble anywhere?\nWe should never be\ndiscouraged,\nTake it to the Lord in prayer,\nCan we find a Friend so\nfaithful,\nWho will all our sorrows\nshare?\nJesus knows our ev’ry weakness\nTake it to the Lord in prayer\n3. Are we weak and heavy\nladen,\nCumbered with a load of care?\nPrecious Saviour, still our\nrefuge,\nTake it to the Lord in prayer\nDo thy friends despise,\nforsake thee?\nTake it to the Lord in prayer;\nIn His arms He’ll take and\nshield thee\nThou wilt find a solace there.\nJoseph Scriven - RH 532",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-397",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 397,
+    "title": "What a Master I follow;",
+    "lyrics": "1. What a Master I follow;\nHis name is the Lord Jesus;\nWill serve Him, never deny him;\nWhat a master I follow\nA true disciple I will be always,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nWhat a master I follow\n2. I am a disciple of Christ;\nHe’s promised He’ll not leave\nme;\nI will preach and make disciples;\nI 'm a disciple of Christ\nA true disciple I will be always,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nI 'm a disciple of Christ\n3. On His faithful Word I’ll\nstand;\nAnd teach others all His ways;\nThere is power for those who\nbelieve;\nOn His faithful Word I’ll stand\nA true disciple I will be\nalways,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nOn His faithful Word I’ll\nstand;\n4. My Lord is Jesus Christ;\nAnd all pow’r belong to Him;\nHe is the world’s one Saviour;\nMy Lord is Jesus Christ\nA true disciple I will be always,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nMy Lord is Jesus Christ\n5. He has promised He’s\nwith us;\nTo the very end of the world;\nFaithful is He who has promised\nHe has promised He’s with us.\nA true disciple I will be\nalways,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nHe has promised He’s with us\n6. The Comforter is with us;\nFrom the Father and the Son;\nFaithful, He, the Holy Spirit;\nThe Comforter is with us\nA true disciple I will be always,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nThe Comforter is with us\n7. I will go preaching Good\nNews;\nThat the Christ rose from the\ndead;\nHe is King of our Salvation;\nI will go preaching Good News\nA true disciple I will be always,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nI will go preaching Good News\n8. He‘ll reward obedient ones;\nWho will walk by His good\nWord\nMany crowns the Lord will\ngive them;\nHe‘ll reward obedient ones\nA true disciple I will be\nalways,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nHe‘ll reward obedient ones\n9. I will be among the\ncrowned ones;\nI will receive it with great joy;\nI will see the King in glory;\nI will be among the crowned\nones\nA true disciple I will be\nalways,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nI will be among the crowned\nones\n10. I’ll rejoice greatly that day;\nIn the Kingdom of the Christ;\nI will sing to glorify Him;\nI’ll rejoice greatly that day\nA true disciple I will be\nalways,\nFollow Him, deny Him not;\nWill love Him, and take up\nmy cross always;\nI’ll rejoice greatly that day\nTranslation of “Owura bi a”\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-398",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 398,
+    "title": "What a Sovereign God He is!",
+    "lyrics": "What a Sovereign God He is!\nWhat a mighty God He is!\nHe is the Sovereign God,\nHe is the mighty God.\nTranslation of Onyame kokuroko\nbεn ni!",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-399",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 399,
+    "title": "What a wonderful treasure;",
+    "lyrics": "What a wonderful treasure;\nGift of God without measure;\nWe will travel together;\nMy Bible and I",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-400",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 400,
+    "title": "What an example I have",
+    "lyrics": "1. What an example I have\nIn Christ Jesus!\nYou alone I look to\nImitating your works\nIn all my ways\nI will follow you\nThen others will follow me\nWhat an example I have!\nChrist Jesus I love You\nRely on You Lord\nDepend on, look to You\nmy all\n2. What an example I have\nChrist the Son of God!\nYou left Your glory\nTook the form of a servant\nIf I learn your meekness\nMy life will be like Yours\nThen others will follow me\n3. What an example I have!\nChrist the Son of Man!\nNo sin was found in\nYour human nature\nIf I trust in You\nI will become like You\nThen others will follow me\n4. What an example I have\nChrist the Righteous One!\nYou went to the tree\nBecause of my sins\nConsumed of this love\nI deny myself\nThen others will follow me\n5. What an example I have\nChrist the Victorious One!\nResurrected from death\nWent to heaven above\nPondering on Your victory\ngives me a-ssurance\nThen others will follow me\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-401",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 401,
+    "title": "What can I offer to your,",
+    "lyrics": "1. What can I offer to your,\noh Lord\nFor Your grace has taken me\nthrough.\nI bring up my sacrifice of praise\nFor Your grace has done it\nagain.\nYour grace has taken me\nthrough, oh Lord\nYour grace has done it again,\noh Lord\nGracious One, I bow down to\nyou\nGracious One, I bow down to\nyou\n2. What can we offer to you,\noh Lord\nFor your grace has tean us\nthrough\nWe bring our sacrifice of\npraise\nFor your grace has done it\nagain\nYour grace has taken us\nthrough, oh Lord\nYour grace has done it again,\noh Lord\nGracious One, we bow down\nto you\nGracious One, we bow down\nto you\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-402",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 402,
+    "title": "What can wash away my",
+    "lyrics": "1. What can wash away my\nstain?\nNothing but the blood of Jesus\nWhat can make me whole\nagain?\nNothing but the blood of Jesus.\nO! Precious is the flow;\nThat makes me white as snow\nNo other fount I know,\nNothing but the blood of Jesus\n2. For my cleansing this I see,\nNothing but the blood of\nJesus\nFor my pardon ,this my plea.\nNothing but the blood of\nJesus.\n3. Nothing can for sin atone.\nNothing but the blood of\nJesus,\nNought of good that I have\ndone,\nNothing but the blood of Jesus.\n4. This is all my hope and\npeace,\nNothing but the blood of Jesus,\nHe is all my righteousness\nNothing but the blood of\nJesus.\n5. Now by this I overcome;\nNothing but the blood of Jesus;\nNow by this I’ll reach my home\nNothing but the blood of Jesus!\nR. Lowry - RH. 33",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-403",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 403,
+    "title": "What name is given here",
+    "lyrics": "What name is given here\namong all men\nAnd by which men must be\nsaved? (x2)\nO, what name has got all\npower?\nO, what pow’r beyond compare!\nIt is the mighty Name of Jesus\nChrist\nWho rose up from the dead\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-404",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 404,
+    "title": "What singing there will be up",
+    "lyrics": "What singing there will be up\nthere,\nWhat singing there will be up\nthere,\nWhen face to face with Jesus\nwe shall stand.\nAnd join the heavenly choir in\nthe better land;\nWhat singing there will be up\nthere,\nWhat glory for the saints to\nshare,\nO Glory, glory, glory!\nWhat singing there will be up\nthere.\nHugh Mitchell\nPH 151",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-405",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 405,
+    "title": "When I consider Your love",
+    "lyrics": "1. When I consider Your love\nfor me\nIt gives me hope of eternal life\nShould you take your love\naway from me\nSin would make me wander\naway.\n2. You called me with Your\nvery own voice\nAnd I followed Your love and\ncame to You\nTo find the hope of eternal life\nI am walking in righteousness\n3. Let Your voice of love\nalways speak to me\nSo I should see and do what\nYou would do\nTo bear much fruit in my\ngeneration\nBringing others the hope of glory.\nSeth Asare Ofei Badu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-406",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 406,
+    "title": "When I feel the touch",
+    "lyrics": "When I feel the touch\nOf your hand upon my life\nIt causes me to sing a song\nThat I love you, Lord.\nSo from deep within\nMy spirit singeth unto Thee\nYou are my King, You are\nmy God\nAnd I love You, Lord.\nKeri Jones & David Matthew\nSongs of fellowship 594",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-407",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 407,
+    "title": "When I look into your holiness",
+    "lyrics": "When I look into your holiness\nWhen I gaze into your\nloveliness\nWhen all things that surround\nBecome shadows in the light\nof you!\nWhen I’ve found the joy of\nreaching your heart\nWhen my heart becomes\nenthroned in your love,\nWhen all things that\nsurround,\nBecome shadows in the light\nof you\nI worship you, I worship you\nThe reason I live is to worship\nyou\nI worship you, I worship you\nThe reason I live is to worship\nyou\nKent Henry",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-408",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 408,
+    "title": "When I survey the wondrous",
+    "lyrics": "1. When I survey the wondrous\nCross\nOn which the Prince of Glory\ndied,\nMy richest gain I count but\nloss,\nAnd pour contempt on all my\npride\n2. Forbid it, Lord, that I\nshould boast\nSave in the death of Christ my\nGod;\nAll the vain things that charm\nme most,\nI sacrifice them to His blood\n3. See, from His head, His\nhands, His feet,\nSorrow and love flow mingled\ndown;\nDid e'er such love and sorrow\nmeet,\nOr thorns compose so rich a\ncrown\n4. Were the whole realm of\nnature mine,\nThat were an offering far too\nsmall;\nLove so amazing, so divine\nDemands my soul, my life, my all.\nIsaac Watts - RH. 161",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-409",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 409,
+    "title": "When peace, like a river",
+    "lyrics": "1. When peace, like a river\nattendeth my way\nWhen sorrows, like sea\nbillows roll;\nWhatever my lot, Thou hast\ntaught me to know,\n\"It is well, it is well with my\nsoul\nIt is well… with my soul…\nIt is well, it is well with my\nsoul\n2. Though, Satan should buffet,\nIf trials should come\nLet this blest assurance\ncontrol,\nThat Christ hath regarded my\nhelpless estate,\nAnd hath shed his own blood\nfor my soul.\n3. My sin-oh, the bliss of this\nglorious thought\nMy sin - not in part but the\nwhole\nIs nailed to his cross; and I\nbear it no more;\nPraise the Lord, praise the Lord,\nO my soul.\n4. For me, be it Christ, be it\nChrist hence to live!\nIf Jordan above me shall roll,\nNo pang shall be mine, for in\ndeath as in life.\nThou wilt whisper thy peace\nto my soul.\n5. But Lord, 'tis for thee, for\nthy coming we wait\nThe sky, not the grave, is our\ngoal\nOh, trump of the angel! Oh,\nvoice of the Lord'\nBlessed hope! Blessed rest of\nmy soul.\nH.G. Spatted\nR.H. 527",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-410",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 410,
+    "title": "When upon life’s billows",
+    "lyrics": "1. When upon life’s billows\nyou are tempest- tossed,\nWhen you are discouraged,\nthinking all is lost\nCount your many blessings,\nname them one by one,\nAnd it will surprise you what\nthe Lord hath done.\nCount your blessings, name\nthem one by one,\nCount your blessings, see\nwhat God hath done.\nCount your blessings, name\nthem one by one,\nAnd it will surprise you what\nthe Lord hath done.\n2. Are you ever burdened\nwith a load of care?\nDoes the cross seem heavy\nyou are called to bear?\nCount your many blessing,\nevery doubt will fly,\nAnd you will be singing as\nthe days go by\n3. When you look at others\nwith their lands and gold,\nThink that Christ has promised\nyou His wealth untold,\nCount your many blessings,\nmoney cannot buy\nYour reward in heaven, nor\nyour home on high\n4. So amid the conflict,\nwhether great or small,\nDo not be discouraged, God\nis over all,\nCount your many blessings,\nangels will attend,\nHelp and comfort give you to\nyour journey’s end.\nJohnson Oatman Jr.\nRH 427",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-411",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 411,
+    "title": "When we walk with the Lord",
+    "lyrics": "1. When we walk with the Lord\nIn the light of His word,\nWhat a glory He sheds on our\nway!\nWhile we do His good will\nHe abides with us still,\nAnd with all who will trust\nand obey\nTrust and obey!\nFor there's no other way\nTo be happy in Jesus but to\ntrust and obey\n2. Not a shadow can rise,\nNot a cloud in the skies,\nBut His smile quickly drives\nit away\nNot a doubt nor a fear,\nNot a sigh nor a tear\nCan abide while we trust and obey\n3. Not a burden we bear,\nNot a sorrow we share,\nBut our toil he doth richly\nrepay,\nNot a grief nor a loss,\nNot a frown nor a cross.\nBut is blest if we trust and obey.\n4. But we never can prove\nThe delights of His love,\nUntil all on the altar we lay,\nFor the favour He shows,\nAnd the joy he bestows\nAre for them who will trust\nAnd obey\n5. Then in fellowship sweet\nWe will sit at His feet;\nOr we'll walk by His side in the\nway;\nWhat He says we will do,\nWhere he sends we will go,\nNever fear, only trust and obey\nJ.H. Sammis\nRH. 477",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-412",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 412,
+    "title": "Where will you spend",
+    "lyrics": "1. Where will you spend\neternity?\nThis question comes to you\nand me.\nTell me, what shall your\nanswer be?\nWhere will you spend eternity?\nEternity! Eternity!\nWhere will you spend\neternity?\n2. Many are choosing Christ\ntoday\nTurning from all their sins away\nHeav'n shall their happy\nportion be,\nWhere will you spend eternity\n3. Leaving the straight and\nnarrow way\nGoing the downward road\ntoday,\nSad will their final ending be\nLost thro' a long eternity\n4. Repent, believe this very\nhour,\nTrust in the Saviour's grace\nand power\nThen will your joyous answer\nbe,\nSaved thro' a long eternity",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-413",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 413,
+    "title": "While I was praying",
+    "lyrics": "1. While I was praying\nsomebody touched me (x3)\nIt might have been the hand\nof the Lord\n2. While I was wond’ring\nsomebody touched me (x3)\nIt might have been the hand\nof the Lord\n3. Glory, glory glory,\nsomebody touched me (x3)\nIt might have been the hand\nof the Lord\nPH 99",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-414",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 414,
+    "title": "Who am I to boast in Your",
+    "lyrics": "Who am I to boast in Your\npresence?\nDust and clay, I was made of\nAdam's seed, I’m flesh and\nblood\nI am saved by Your grace\nIt's only grace\nIt is grace that sets me free\nIt's only grace\nSurely grace will sail me\nthrough\n2. On my knees, I am before\nYour throne\nJar of clay, weak and feeble\nBy nature, I am a child of\nwrath\nMy only hope is Your grace\nIt's only grace\nIt is grace that makes me\nwhole\nIt's only grace\nSurely grace will take me\nhome\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-415",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 415,
+    "title": "Who is like You",
+    "lyrics": "Who is like You\nIn power and glory?\nWho is like You?\nMajestic and splendorous!\nWho is like You,\nIn beauty and radiance?\nMy Jesus, the Shining One (x2)\nShine on me, Bright Morning\nStar\nShine on me, my closest Friend\nShine on me, Jesus, shine on me\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-416",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 416,
+    "title": "Who is on the Lord's side?",
+    "lyrics": "1. Who is on the Lord's side?\nWho will serve the king?\nWho will be his helpers?\nOther lives to bring?\nWho will leave the world's side?\nWho will face the foe?\nWho is on the Lord's side?\nWho for him will go?\nBy Thy call of mercy,\nBy Thy grace divine,\nWe are on the Lord's side,\nSaviour, we are thine!\n2. Not for weight of glory,\nNot for crown and palm,\nEnter we the army\nRaise the warrior psalm;\nBut for love that claimeth\nLives for whom he died;\nHe whom Jesus nameth\nMust be on his side;\nBy thy love constraining\nBy thy grace divine\nWe are on the Lord's side\nSaviour, we are thine!\n3. Jesus, thou hast bought us,\nNot with gold or gem,\nBut with thine own life-blood\nFor thy diadem;\nWith thy blessing filling\nAll who come to thee,\nThou hast made us willing\nThou hast made us free\nBy thy grand redemption.\nBy thy grace divine\nWe are on the Lord's side\nSaviour we are thine!\n4. Fierce may be the conflict,\nStrong may be the foe;\nBut the king's own army\nNone can overthrow,\nRound his standard ranging,\nVictory is secure,\nFor his truth unchanging\nMakes the triumph sure,\nJoyfully enlisting,\nBy thy grace divine,\nWe are on the Lord's side;\nSaviour, we are thine.\nFrances R Havergal - RH. 431",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-417",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 417,
+    "title": "“Whosoever heareth!”",
+    "lyrics": "1. “Whosoever heareth!”\nShout, shout, the sound!\nSend the blessed tidings all\nthe world around!\nSpread the joyful news\nwherever man is found\n“Whosoever will may come\n“Whosoever will! Whosoever\nwill!\nSend the proclamation over\nvale and hill!;\n‘Tis a loving Father calls the\nwanderer home\n“Whosoever will may come!”\n2. “Whosoever cometh! Need\nnot delay;\nNow the door is open, enter\nwhile you may;\nJesus is the true, the only\nLiving way;\n“Whosoever will may come”\n3. “Whosoever will! the\npromise is secure;\n“Whosoever will! for ever\nshall endure;\n“Whosoever will” ‘tis life for\nevermore;\n“Whosoever will may come!”\nGolden Bells 228",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-418",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 418,
+    "title": "Why did He love me? I never",
+    "lyrics": "Why did He love me? I never\ncan tell.\nWhy did He suffer to save me\nfrom hell?\nNothing but infinite grace\nfrom above\nCould have conceived such a\nstory of love.\nGrace! Grace! Infinite grace!\nFlowing to you and me.\nGrace! Grace! Infinite grace\nFrom the cross of Calvary!\nCentenary Praise SU choruses 35",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-419",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 419,
+    "title": "Will your anchor hold in",
+    "lyrics": "1. Will your anchor hold in\nthe storms of life?\nWhen the clouds unfold their\nwings of strife;\nWhen the strong tides lift and\nthe cables strain,\nWill your anchor drift, or\nfirm remain?\nWe have an anchor that keeps\nthe soul\nSteadfast and sure while the\nbillows roll:\nFastened to the Rock which\ncannot move,\nGrounded firm and deep in\nthe Saviour’s love!\n2. It is safely moored, ‘twill\nthe storm withstand,\nFor ‘tis well secured by the\nSaviour’s hand;\nAnd the cables passed from\nHis heart to mine,\nCan defy the blast, through\nstrength divine\n3. It will firmly hold in the\nstraits of fear,\nWhen the breakers have told\nthe reef is near,\nThough the tempest rave and\nthe wild winds blow,\nNot an angry wave shall our\nbark o’erflow.\n4. It will surely hold in the\nfloods of death,\nWhen the waters cold, chill\nour latest breath\nOn the rising tide it can never\nfail,\nWhile our hopes abide within\nthe veil!\n5. When our eyes behold,\nthrough the gathering night\nThe city of gold, our harbour bright,\nWe shall anchor fast by the\nheavenly shore,\nWith the storms all past for\nevermore\nPriscilla J. Owens\nRH 322",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-420",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 420,
+    "title": "With my lips I will praise you",
+    "lyrics": "With my lips I will praise you\nLord;\nThese my lips shall pra-ise You;\nWith my lips I will show you\nforth;\nFor the whole world to know\nyou\nThey shall tell of Your salvation;\nTo ev’ry perishing soul\nWith my lips I will praise you\nLord;\nThese my lips shall pra-ise You\nTranslation of “Mede m’ano”\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-421",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 421,
+    "title": "Wonderful! Wonderful!",
+    "lyrics": "Wonderful! Wonderful!\nThis man Jesus, He is wonderful\nWonderful! Wonderful!\nHe’s reconciled us unto our\nGod.\nE. K. Asamoah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-422",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 422,
+    "title": "Worshipping the Lord",
+    "lyrics": "1. Worshipping the Lord\nIn spirit and truth\nThat’s the kind the Father seeks\nI celebrate your awesome\ngreatness\nGlory and power belong to\nour king\nWorshipping the Lord\nIn spirit and truth\nThat’s the kind the Father seeks.\n2. Ascribing to the Lord\nGlory due His name\nWith my lifestyle\nLord, that’s my desire\nI celebrate\nYour awesome greatness\nGlory and power belong to\nour king\nAscribing to the Lord\nGlory due His name\nWith my lifestyle\nLord! That’s my desire\nJames Quaicoe",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-423",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 423,
+    "title": "Worthy, worthy is the Lamb",
+    "lyrics": "Worthy, worthy is the Lamb\nWorthy, worthy is the lamb\nWorthy , worthy is the lamb;\nthat was slain\nPraise the Lord, Hallelujah\nPraise the Lord, Hallelujah\nPraise the Lord, Hallelujah\nPraise ye the Lord\nPH 1",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-424",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 424,
+    "title": "Would you know why I",
+    "lyrics": "1. Would you know why I\nlove Jesus?\nWhy He is so dear to me?\n‘Tis because my blessed\nSaviour\nFrom my sins has ransomed me.\nThis is why... I love my Je...sus\nThis is why... I love Him so...\nHe has par... doned\nmy transgress..sions\nHe has washed me... white as\nsnow\n2. Would you know why I\nlove Jesus?\nWhy He is so dear to me?\n‘Tis because the blood of\nJesus\nFully saves and cleanses me.\n3. Would you know why I\nlove Jesus?\nWhy He is so dear to me?\n‘Tis because, amid temptation,\nHe supports and strengthens\nme.\n4. Would you know why I\nlove Jesus\nWhy He is so dear to me?\n“Tis because, in ev’ry conflict.\nJesus gives me victory.\n5. Would you know why I\nlove Jesus?\nWhy He is so dear to me?\n‘Tis because my Friend and\nSaviour\nHe will ever, ever be.\nE.A. Hoffmonn - RH 645",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-425",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 425,
+    "title": "Wounded for me, wounded",
+    "lyrics": "1. Wounded for me, wounded\nfor me,\nThere on the cross he was\nwounded for me,\nGone my transgressions and\nnow I am free\nAll because Jesus was\nwounded for me.\n2. Dying for me,dying for me\nThere on the cross he was\ndying For me,\nNow in his death my\nredemption I see,\nAll because Jesus was dying\nfor me\n3. Risen for me, risen for me\nUp from the grave he has\nrisen for me;\nNow evermore from death’s\nsting I am free,\nAll because Jesus has risen for\nme.\n4. Living for me, living for me,\nThere on the throne he is\nliving for me:\nSaved to the uttermost now I\nshall be.\nAll because Jesus is living for\nme.\n5. Coming for me ,coming for\nme.\nOne day to earth he is coming\nfor me;\nThen with what joy his dear\nface I shall see.\nO how I praise Him-He’s\ncoming for me.\nAGR - PH 228",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-426",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 426,
+    "title": "Yes, it's true, the Saviour of the",
+    "lyrics": "Yes, it's true, the Saviour of the\nworld,\nFound himself in the arms of\nSimeon.\nAnna got a glimpse of His glory\nJesus Christ, the Son of God\nShowed himself in the temple\nof the Lord\nHe that is greater than the\ntemple\nFound himself in the arms of\nSimeon\nBlessed is He who held the\nLord of glory\nHis glory has impacted him\nThe Most High God has\nblessed him by shining on him.\nCome and see the glory of the\ntemple\nGreater than the temple is here\nFound himself in the arms of\nSimeon\nAnna got a glimpse of Him\nCome to Him, the Centre of\nglory\nCome to Him, the Redeeming\nOne\nCome to Him, the Saviour of\nthe world\nJesus Christ, the Son of God\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-427",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 427,
+    "title": "Yesterday, to-day, forever",
+    "lyrics": "Yesterday, to-day, forever\nJesus is the same;\nAll may change, but Jesus never,\nGlory to His Name!\nGlory to His Name, glory to\nHis Name\nAll may change, but Jesus\nnever\nGlory to His Name\nLiving Songs 54",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-428",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 428,
+    "title": "You are Alpha and Omega,",
+    "lyrics": "You are Alpha and Omega,\nWe worship you, our Lord\nYou are worthy to be praised\nWe give you all the glory\nWe worship you, our Lord\nYou are worthy to be praised\nIsrael Houghton",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-429",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 429,
+    "title": "You are awesomely",
+    "lyrics": "You are awesomely\nwonderful, God\nCreator God, Almighty God,\nYou are awesomely\nwonderful, God\nOmnipotent God, there is\nnone like You\nWe worship You\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-430",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 430,
+    "title": "You are beautiful beyond",
+    "lyrics": "1. You are beautiful beyond\ndescription,\nToo marvellous for words\nToo wonderful for comprehension\nLike nothing ever seen or heard.\nWho can grasp Your infinite\nwisdom?\nWho can fathom the depth of\nYour love?\nYou are beautiful beyond\ndescription,\nMajesty, enthroned above.\nAnd I stand, I stand in awe of\nYou.\nI stand, I stand in awe of You.\nHoly God, to whom all praise\nis due,\nI stand in awe of You.\n2. You are beautiful beyond\ndescription\nYet God crushed You for my\nsin\nIn agony and deep affliction\nCut off that I might enter in\nWho can grasp such tender\ncompassion?\nWho can fathom this mercy so\nfree?\nYou are beautiful beyond\ndescription\nLamb of God who died for me\nMark Altrogge\nSongs of fellowship 621",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-431",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 431,
+    "title": "You are holy, You are holy",
+    "lyrics": "You are holy, You are holy\nYou are holy, oh Lord, our God\nYou are Majestic, You are Holy\nYou are Holy, oh Lord our God\nYou are Majestic, You are Holy\nYou are Holy, oh Lord our God.\nSamuel Otu Appiah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-432",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 432,
+    "title": "You are my Great Redeemer,",
+    "lyrics": "You are my Great Redeemer,\nGreat Redeemer You are\nMy God, Lo-rd of lords\nMy hope is built on you\nYou are my fortress\nHold me up, keep me on,\nBind me to Yourself, Oh Lord\nYou are my only hope\nTranslation of “Me Gyefo Kese\nAwurade” by - Opoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-433",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 433,
+    "title": "You are my Lord, You are my",
+    "lyrics": "You are my Lord, You are my\nKing\nYou are my everything (x2)\nI will not die, but I will live\nTo glorify the Lord (x2)\nJ. Odoi Korang",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-434",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 434,
+    "title": "You are the King of kings",
+    "lyrics": "You are the King of kings\nAnd the Lord of lords (x2)\nWho can be compared unto\nYou? (x2)\nJ. Odoi Korang",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-435",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 435,
+    "title": "You are the Lord, you never",
+    "lyrics": "You are the Lord, you never\nchange,\nWe bow to you, and worship you\nTranslation of Woyε Onyame a\nWonsakra da",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-436",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 436,
+    "title": "You are the one I need",
+    "lyrics": "You are the one I need\nCause me to know\nBring me to my knees\nYou are my desire\nCause me to see\nHold me in your arms\nBring me to your brook\nAnd feed me with your very\nself\nA touch of you can change\nmy life\nAnd set my soul on fire\nTo do your will\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-437",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 437,
+    "title": "You are the only Lord, Jesus",
+    "lyrics": "You are the only Lord, Jesus\nWe bow and worship You\nYour Name we glorify, Jesus\nYou deserve glory\nWe lift Your Name on high,\nJesus\nYour name is so great\nYou are the only Lord, Jesus\nWe worship You\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-438",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 438,
+    "title": "You are the potter, I am the",
+    "lyrics": "You are the potter, I am the\nclay\nMake me what you want me\nto be\nYou are the potter, I am the\nclay\nSamuel Otu Appiah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-439",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 439,
+    "title": "You are worthy of our thanks",
+    "lyrics": "You are worthy of our thanks\nYou are worthy of praise\nForever, we praise your name\nChrist Jesus: “The Lo-rd is\nConqueror, you are worthy of\no-ur praise\nYou are worthy of thanks and\npraise\nTranslation of “yeda w’ase a 1fata\nwo” by - Opoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-440",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 440,
+    "title": "You were born for me",
+    "lyrics": "You were born for me\nYou died for me\nTo save my soul (x2)\nYou suffered on the cross\nYou suffered to save me\nJesus my Lord, The King of\nkings\nYour death has set me free\nJesus my Lord, The Lord of\nlords\nYour death has set me free\nJesus my Lord, The Prince of\nPeace\nYour death has set me free\nA.L. Angoh",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-441",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 441,
+    "title": "You’ve got to move,",
+    "lyrics": "1. You’ve got to move,\nyou’ve got to move\nYou’ve got to move, you’ve\ngot to move\nWhen the Lord gets ready,\nYou’ve got to move, move,\nmove, move, move\n2. You may be high you may\nbe low,\nThe way to heaven; you may\nnot know,\nBut when the Lord gets ready,\nYou’ve got to move, move,\nmove, move, move\n3. You may be rich, you may\nbe poor,\nThe way to heaven; you may\nnot know,\nBut when the Lord gets ready\nYou’ve got to move, move,\nmove, move, move,\nPH 174",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-442",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 442,
+    "title": "Your Name is great above all",
+    "lyrics": "Your Name is great above all\nnames\nWe praise your Holy Name (x2)\nWe praise your Holy Name,\nWe praise your Holy name\nYour name is great above all\nnames,\nWe praise your Holy Name\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-443",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 443,
+    "title": "Your resting place! I come",
+    "lyrics": "1. Your resting place! I come\nTo Heaven's Holiest place\nPresence of Almighty\nFull of goodness and grace\nMy cup has overflowed\nAll goodness is now mine\nMy heart is full of praises\n2. Your Presence I desire\nThere I find rest in you\nYour presence soothes my heart\nSurrounded by Your love\nYou fill my mouth so full\nYour praises I will sing\nMy heart is full of praises\n3. Before your heavenly throne\nWhere angles surround You\nAdoring You always\nYour saints jointly declare\nYou are the only Lord\nWe glorify your name\nMy heart is full of praises\n4. Grace and Mercy descend\nFrom heaven’s holiest throne\nUpon the sons of God\nReceiving grace on grace\nEternal God you are:\nYour grace will never cease\nMy heart is full of praises\nTranslation of “Maba Wo\nnwunu ase”.\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-444",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 444,
+    "title": "Your will, not mine, be done,",
+    "lyrics": "Your will, not mine, be done,\nYour will, not mine be done;\nHelp me to know your will\nfor me,\nYour will, not mine be done.\nTranslation of Wopε, nyε me pε\nna εnyε\nP.B. Appiah-Adu",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-445",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 445,
+    "title": "Zion's Strong Tower",
+    "lyrics": "Zion's Strong Tower\nis You Christ Jesus\nWhoever believes in You\nWill not be put to shame (x2)\nA strong Tower is You Christ\nJesus\nThe Chosen Cornerstone\nWhoever believes won’t be\nput to shame\nZion's Strong Tower is You\nTranslation of Zion Abandenden\nby Opoku Onyinah\nINDEX OF FIRST LINES (ENGLISH)\nA charge to keep I have 1\nA greater rain is coming 2\nAbba Father, let me be 3\nAbide under his anointing 4\nAbide with me, fast falls the eventide 5\nAh! Lord God, thou has made 6\nAll hail the power of Jesu's name! 7\nAll heaven declares 8\nAll His ways are pleasantness 9\nAll my springs are in thee O Lord 10\nAll our weaknesses consume 11\nAll things praise Thee, Lord most high 12\nAll to Jesus I surrender 13\nAlleluia, Alleluia 14\nAmazing grace! how sweet the sound 15\nAmen, Amen, Blessings and Glory 16\nAncient fire at work in us 17\nAncient of days as old as you are 18\nAncient of days, rock of Ages is He 19\nAnd can it be, that I should gain 20\nAr-ise, shine, still move forward 21\nAs a father who so loved me 22\nAs I live; I will praise you 23\nAs the deer panteth for the waters 24\nAway far over Jordan 25\nBe gone, unbelief 26\nBe steadfast and Immovable 27\nBe still, my soul; the Lord is on thy side 28\nBeautiful Nazarene 29\nBehold He comes, in power and glory 30\nBehold He comes, Jesus Christ the King 31\nBind us together, Lord 32\nBless the Lord, O my soul 33\nBless the Lord oh my soul 34\nBlessed assurance, Jesus is mine! 35\nBlessing and honour be unto You 36\nBlow over me, the bretath of God 37\nBreak camp! Advance! 38\nBreathe on me, Breath of God 39\nBrightest and best of the sons 40\nCaptain of Israel’s host, and guide 41\nChrist is born for us today 42\nChrist is risen from the dead! 43\nChrist is the answer to all our problems 44\nChrist Our Lord comes once again 45\nCome and dine, Come and dine 46\nCome, let us all rejoice! 47\nCome, ye that love the Lord 48\nCourage, brother! do not stumble 49\nCover me with the Cloud of glory 50\nCrown him with many crowns 51\nCrucified with Christ 52\nDay by day, dear Lord 53\nDeclaring what I know 54\nDoing the work of the lord 55\nDon't give up yet, I’m in control 56\nDraw me to the Living stream 57\nEnough is Your grace to me, O Lord 58\nEverybody ought to love Him 59\nExalt the Lord, our God 60\nExalted one is He on the throne 61\nFairest of all the earth beside 62\nFaith, mighty faith 63\nFaithful One 64\nFather, we adore you 65\nFather, we love you, we 66\nFight the good fight with all thy might 67\nFor God so loved the world 68\nFor God so loved this sinful world 69\nFor I'm building a people of power 70\nFor your goodness, O, my Saviour 71\nFrom season to season He is God indeed 72\nGentle Jesus, meek and mild 73\nGive me oil in my lamp, keep me burning 74\nGlorious Lord of Lords 75\nGlory! Glory! Glory! 76\nGo, Labour on, spend, and be spent 77\nGo, tell it on the mountain 78\nGod be with you till we meet again 79\nGod said to Abram, come and follow me 80\nGod sent His Son, they called him Jesus 81\nGracious God you are 82\nGreat change, since I was born, 83\nGreat Is the Lord 84\nGreat is Thy faithfulness 85\nGreat Provider, He cares for you 86\nGreater one is our God 87\nGuide me, O Thou Great Jehovah 88\nHallelu Ya! Hallelu Ya 89\nHappiness is to know the Saviour 90\nHark! The herald-angels sing 91\nHark the voice of Jesus crying 92\nHark, my soul, it is the Lord 93\nHave Thine own way, Lord 94\nHe became sin, who knew no sin 95\nHe carried my shame 96\nHe died for me, He died for me 97\nHe is my everything 98\nHe is risen, He’s not here 99\nHe is the King of kings 100\nHe lives, he lives, Christ Jesus lives today 101\nHe lives, He lives, He’s risen from the dead 102\nHe paid a debt he did not owe 103\nHe reigns, He reigns, He reigns 104\nHe set me free, Yes, He set me free 105\nHe took my place and died for me 106\nHe Who has called you, the Faithful One 107\nHe’s been a friend to me many a time 108\nHe’s shown up Himself once again 109\nHe’s the faithfullest of friends 110\nHelp me Jesus 111\nHere I am, Oh Lord 112\nHis love for me brought Jesus to earth as my savior 113\nHis Name is Wonderful 114\nHoly Spirit, Holy Spirit 115\nHoly words long preserved 116\nHoly, holy, holy! 117\nHoly, holy, holy, holy 118\nHow lovely on the mountains are the feet of Him 119\nHow sweet the name of Jesus sounds 120\nHow to reach the masses, men of every birth 121\nI am delivered, praise the Lord! 122\nI am serving the God of miracles 123\nI am so glad that our father in heaven 124\nI am so secured 125\nI am swimming in the River 126\nI am the Lord, I am the Lord 127\nI am Thine, O Lord, I have heard Thy voice 128\nI am travelling to heaven 129\nI give you praise my Lord my King 130\nI have an anchor, I have a hope 131\nI have been made out of nothing 132\nI have come to You 133\nI have Jesus within my heart 134\nI hear the words of love 135\nI hear Thy welcome voice 136\nI heard a sound from Heaven 137\nI know He is wonderful 138\nI know Him, the Lord 139\nI love to tell the Story 140\nI love You Lord 141\nI need Thee ev’ry hour 142\nI see the Lord, I see the Lord 143\nI surrender my life to Jesus 144\nI was glad when they said unto me 145\nI was sinking deep in sin 146\nI will bless the Lord and give him the glory 147\nI will build My church for My own glory 148\nI will enter His gates with thanksgiving in my heart 149\nI will follow Thee, my Saviour 150\nI will lift up my voice 151\nI will render praises to my God 152\nI’ll build my house upon the Rock 153\nI’ll do what I can for your glory, Lord 154\nI’ll keep on serving you 155\nI’m at the foot of the mountain 156\nI’m glad that my Saviour has finished for me 157\nI’m pressing on the upward way 158\nI’m rejoicing night and day 159\nI’m trading my sorrows 160\nI’m walking arm in arm with Jesus 161\nI’ve a message from the Lord 162\nI’ve believed the true report 163\nIf you would serve the Lord a-right 164\nImmortal, Invisible God only wise 165\nIn my heart 166\nIn our dear Lord’s garden 167\nIn the same old way, in the same old way 168\nIn Times Like These 169\nInto my heart, into my heart 170\nIs there a heart that is waiting 171\nIs there anybody here that loves my Jesus? 172\nIt is no longer I that liveth 173\nIt may not be on the mountain's height 174\nIt will come to pass 175\nIt’s not by our strength, but by Your strength 176\nJehovah God 177\nJehovah is Your majestic Name 178\nJehovah is your Name 179\nJehovah, blessed be Your Name 180\nJesus calls us, o'er the tumult 181\nJesus Christ I come to you 182\nJesus Christ is Wonderful 183\nJesus Christ shall never lose His power 184\nJesus, Friend of my soul 185\nJesus, how lovely you are! 186\nJesus, I my cross have taken 187\nJesus is King 188\nJesus is Lord 189\nJesus is Lord! 190\nJesus is the Bread of Life 191\nJesus! Jesus, my Saviour 192\nJesus, keep me near the cross 193\nJesus, let me ever be 194\nJesus, lover of my soul 195\nJesus, my King, my wonderful Saviour 196\nJesus, my Saviour, came from on high 197\nJesus Name above all names 198\nJesus only is our message 199\nJesus, our Light 200\nJesus, see me at thy feet 201\nJesus shall reign where’er the sun 202\nJesus, stand among us 203\nJesus, what a beautiful name 204\nJesus, you are my friend 205\nJesus your name is great 206\nJoy to the world, the Lord is come! 207\nJoy, Joy, when we go to Heaven 208\nJust as I am, without one plea 209\nJust as I am, Your presence I come 210\nJust the same, just the same 211\nKeep me true, Lord Jesus, Keep me true! 212\nKing of glory, King of peace 213\nKissing the Son 214\nLand of our Birth, we pledge to thee 215\nLet me walk just as Jesus walked 216\nLet praises ring 217\nLet the beauty of Jesus be seen in me 218\nLet the Fire fall 219\nLet the fire fall on me 220\nLet there be love shared among us 221\nLet us talk, let’s talk about Jesus 222\nLet us with a gladsome mind 223\nLet Your anointing fall on us 224\nLet your fire burn 225\nLet Your living water flow over my soul 226\nLet Your love so dwell in me 227\nLift Jesus higher! Lift Jesus higher! 228\nLift me up the higher mountain 229\nLight of God, lead me on 230\nLike the woman at the well 231\nLord God Almighty 232\nLord of heav'n and earth and sea 233\nLord, prepare me to be a sanctuary 234\nLord, reign here in my heart 235\nLord, Thy Word abideth 236\nLow in the grave he lay... 237\nMajesty, worship His majesty 238\nMan of sorrows\", what a name! 239\nMaster speak! Thy servant heareth 240\nMay Your Will be done, oh my Lord 241\nMighty revival’s coming so soon 242\nMighty warrior, man of valour 243\nMore about Jesus would I know 244\nMore and more, I want to magnify Thy name 245\nMy faith has found a resting place 246\nMy heart is so full 247\nMy heart was distressed 248\nMy hope is built on nothing less 249\nMy Jesus, I love thee 250\nMy redeemer is Jesus 251\nMy stregnth is waning away 252\nMy soul is seeking after you 253\nMy soul, rejoice and praise the Lord 254\nNearer, my God to thee 255\nNow I feel the sacred fire 256\nNow thank we all our God 257\nNow the labourer’s task is o’er 258\nO, come, all ye faithful 259\nO, dear Lord, we praise your name 260\nO’ God I come before You 261\nO God, our help in ages past 262\nO, Halleluia! we bless your Holy name 263\nO Happy day, that fixed my choice 264\nO Jesus I have promised 265\nO Lord my God, when I in awesome wonder 266\nO Magnify the Lord 267\nO soul, are you weary and troubled? 268\nO, sweet wonder 269\nO when the saints go marching in 270\nO worship the King 271\nO Ye sons of God, sing halleluia’ 272\nOh, for a thousand tongues to sing 273\nOh glory! Oh glory! 274\nOh, teach me what it meaneth 275\nOh the sweet and wonderful rest 276\nOh, what a wonderful wonderful day 277\nOn a hill far away stood an old rugged cross 278\nOn the day of Pentecost 279\nOnward Christian soldiers 280\nOpen my eyes, Lord 281\nOur mighty tower is the Lord 282\nOut of my bondage, sorrow, and night 283\nOver the river they call me 284\nPass me not, O gentle Saviour 285\nPeace, perfect peace, in this dark world of sin 286\nPleasant are Thy courts above 287\nPour out your Spirit on me 288\nPraise God, from whom all blessings flow 289\nPraise Him, praise Him 290\nPraise to the holiest in the height 291\nPraise to the Lord, the Almighty 292\nPraise, my soul, the King of heaven 293\nPraises to the Lamb of God 294\nPrepare me, Lord, prepare me 295\nPreserve my life, keep me 296\nPurify my heart 297\nReign in me, Sovereign Lord, reign in me 298\nRejoice in the Lord always 299\nRejoice, the Lord is king 300\nRescue the perishing 301\nRevive me, O Lord 302\nRevive Thy work, O Lord 303\nRise now upon your feet 304\nRise, shine, give God the glory 305\nRiver of God 306\nRock of Ages, cleft for me 307\nSaviour, blessed Saviour 308\nSearch me, O God and know my heart today 309\nSee the victory 310\nSeek ye first the kingdom of God 311\nSend us the Rain, Lord, send us the Rain 312\nShow us Thy glory, O Lord 313\nSimply trusting everyday 314\nSing unto the Lord a new song 315\nSmile, my brother, smile 316\nSoftly and tenderly Jesus is calling 317\nSons of God, march forward 318\nSowing in the morning 319\nSpeak to me now, my God 320\nSpeak to me, Lord, speak 321\nSpirit Divine, attend our prayers 322\nSpirit of God, take full control 323\nSpirit of the Living God 324\nStand up! Stand up for Jesus 325\nSweep over my soul, sweep over my soul 326\nTake my life, and let it be 327\nTarry for the Spirit 328\nThank You my Lord 329\nThat day of Pentecost 330\nThe Ancient Pentecost Power 331\nThe blood that Jesus shed for me 332\nThe Church is marching on 333\nThe Church’s one foundation 334\nThe cloud of glory is moving 335\nThe conqueror in whose camp I am is my Lord Jesus 336\nThe day Thou gavest, Lord is ended 337\nThe Fire is burning in my soul 338\nThe fire will never die 339\nThe God of Abraham 340\nThe heavens are all Yours 341\nThe Lord has set the fire of Pentecost 342\nThe Lord is mighty, in power and strength 343\nThe Lord is the defender of the helpless 344\nThe Lord is the Sovereign One 345\nThe Lord’s my Shepherd, I’II not want 346\nThe Lord’s my Shepherd, I’ll not want 347\nThe steadfast love of the Lord never ceases 348\nThe steps of a good man are ordered by the Lord 349\nThere is a fountain filled with blood 350\nThere is a Name I love to hear 351\nThere is a Redeemer 352\nThere is fire burning within my heart 353\nThere is no name so sweet on earth 354\nThere is none holy as the Lord 355\nThere is victory for me 356\nThere never was a day like this day to me 357\nThere shall be showers of blessing 358\nThere’s a fight to be fought, and a race to be run 359\nThere’s a fine, fine, fine, fine 360\nThere’s a land that is fairer than day 361\nThere’s not a friend like the lowly Jesus 362\nThere’s revival in the air today 363\nThey that wait upon the Lord 364\nThis is holy ground 365\nThis world is not my home 366\nThou art worthy 367\nThrough all the changing scenes of life 368\nThrough the love of God our savior 369\nThy Kingdom come, O God 370\n‘Tis a glorious Church without spot nor wrinkle 371\n‘Tis so sweet to trust in Jesus 372\nTo be in your presence 373\nTo be like Jesus, to be like Jesus 374\nTo God be the glory 375\nUpon the hill of Calvary 376\nVictory! Victory! 377\nWaiting for His coming 378\nWe are able to go up and take the country 379\nWe are in your hands, O Lord 380\nWe are laying a foundation 381\nWe are often tossed and driv’n 382\nWe give glory to the Lord, He reigns 383\nWe have come into His house 384\nWe have no power of our own 385\nWe love the blessed Bible 386\nWe praise Thee O God 387\nWe praise you, O Lord 388\nWe praise you, wonderful God 389\nWe praise your name 390\nWe will celebrate our God 391\nWe will praise your holy name 392\nWe’ll be like Him 393\nWe’ll follow Him together 394\nWe’re building a road 395\nWhat a friend we have in Jesus 396\nWhat a Master I follow 397\nWhat a Sovereign God He is 398\nWhat a wonderful treasure 399\nWhat an example I have in Christ Jesus 400\nWhat can I offer to you, oh Lord 401\nWhat can wash away my stain 402\nWhat name is given here among all men 403\nWhat singing there will be up there 404\nWhen I consider Your love for me 405\nWhen I feel the touch 406\nWhen I look into your holiness 407\nWhen I survey the wondrous Cross 408\nWhen peace, like a river attendeth my way 409\nWhen upon life’s billows you are tempest- tossed 410\nWhen we walk with the Lord 411\nWhere will you spend eternity 412\nWhile I was praying 413\nWho am I to boast in Your presence 414\nWho is like You 415\nWho is on the Lord’s side 416\nWhosoever heareth! Shout, shout, the sound 417\nWhy did He love me? I never can tell 418\nWill your anchor hold in the storms of life 419\nWith my lips I will praise you Lord 420\nWonderful! Wonderful 421\nWorshipping the Lord 422\nWorthy, worthy is the Lamb 423\nWould you know why I love Jesus 424\nWounded for me, wounded for me 425\nYes, it’s true, the Saviour of the world 426\nYesterday, to-day, forever 427\nYou are Alpha and Omega 428\nYou are awesomely wonderful, God 429\nYou are beautiful beyond description 430\nYou are Holy, You are Holy 431\nYou are my Great Redeemer 432\nYou are my Lord, You are my King 433\nYou are the King of kings 434\nYou are the Lord, you never change 435\nYou are the one I need 436\nYou are the only Lord, Jesus 437\nYou are the potter, I am the clay 438\nYou are worthy of our thanks 439\nYou were born for me 440\nYou’ve got to move, you’ve got to move 441\nYour Name is great above all names 442\nYour resting place! I come 443\nYour will, not mine be done 444\nZion's Strong Tower 445\n1. Ababaawa a wo ho yɛ f1\nW1n w’aso na tie ns1mpa yi\n!renky1 na mf4te bebisa\nwo s1\nW’aho4f1 no w4 he?\n2. Aberante pa a wo ho y1 f1\nW1n w’aso na tie ns1mpa yi\n!renky1 na nsaamaa\nbebisa wo s1:\nW’aho4f1 no w4 he?\nPaul Boateng - PAN (T) 746\nAban dennen ne Yehowa\ndin;\nNe mu na ahotefo nyinaa\nguan k4toa\nNe mu na ahotefo nyinaa\nbenya fahodi\nAban dennen ne Yehowa\ndin\nPAN (T) 381\nAbere biara, abere biara\n$y1 Nyame;\n$b1ba abeyi Ne ho adi\nne bere mu;\nNea tete bere mu $gyee\nne nkor4fo n’;\n$b1ba! $b1ba! Abraham\nNyame\n2. Abere biara, abere\nbiara $y1 Nyame\n$b1ba abeyi Ne ho adi\nne bere mu;\nNea $gyee ne manfo w4\n$hene Farao nsam n’\n$b1ba! $b1ba! Abraham\nNyame\n3. Abere biara, abere\nbiara $y1 Nyame;\n$b1ba abeyi Ne ho adi\nne bere mu;\nNea $y1n ne manfo w4\nsare no so n’\n$b1ba! $b1ba! Abraham\nNyame\n4. Abere biara, abere\nbiara $y1 Nyame;\n$b1ba abeyi ne ho adi ne\nbere mu;\nNea $yii ne nkoa fii\nogya fononoo mu n’\n$b1ba! $b1ba! Abraham\nNyame\n5. Abere biara, abere\nbiara $y1 Nyame\n$b1ba abeyi Ne ho adi ne\nbere mu;\n$no ne Nyame a, nn1 nso\ny1som No n’\n$b1ba! $b1ba! Abraham\nNyame\nEunice Johnson\nAbere nyinaa, me Wura\nno hia me\n$no na wato nsa afr1 me\naba ne fie\nWay1 me somfo a mete\nna meka\nWahy1 me s1 mente me\nho mma No (2x)\nAbere nyinaa, m1tena\nase ama No\nM1te me ho, s1 adwinne1\nkronkron\nAsiesie me ho, ama\n‘teneneeni No\nAma me Wura Jesus\nOpoku Onyinah\nAb4de nyinaa ’ra,\nmonkotow Awurade\nAb4de nyinaa ’ra,\nmonkotow Awurade\nWadi nkonim, anuonyam\ns1 No\n$hene Yesu ne Awurade;\nWadi nkonim, anuonyam\nsɛ No,\n$hene Yesu ne Awurade\nPaul Boateng - PAN (T) 121\n1. Ab4ne’ mommra\n$tease no h4\n$no ara ne Jesus\nNea $nyan’ okunafo ba no\n$no ara ne Jesus\n$no ara ne Jesus\nNwanwa Odwumay1fo\nJesus\nMonhyira ne din\n$te saa daa\n$no ara ne Jesus\n2. S1 wo bra y1 gyigya\ngyigya a\n$no ara ne Jesus\nNea $ma 1po asor4kye\ngyae\n$no ara ne Jesus\n3. Mommra ne nky1n\n$no ne hann\n$no ara ne Jesus\nNea $ma anifrafo hu ade\n$no ara ne Jesus\nAbraham Nyame,\n$baatan pa n’\nFa wo ho nyinaa ma No;\nGye No di, $b1y1 ama wo;\n$y1 Onyame, $y1\nOnyame na Oye (x2)\nPAN (T) 127\nAbraham, Sarah, w4dze\nba b44 h4n anohoba\n!y11 h4n nwanwa,\nwonnhu dza w4nka;\nWonyim d1 dza Nyame\naka biara $botum ay1\nNa nd1 so Nyame no tum\nno 4tse d1m ara.\nNa nd1 so Nyame no tum\nno 4tse d1m ara\nDza nkor4fo b1ka biara,\n4mmfa ho\nWonyim d1 dza Nyame\naka biara, $botum ay1\nNa nd1 so Nyame no tum\nno, 4tse d1m ara.\nPAN (F) 202\nAde baako na mesr1 Awurade:\n!no na mehwehw1 akyiri\nkwan,\nS1 me nna a medi nyinaa;\nM1tena Awurade fie;\nNa mahw1 Awurade\nanimtew,\nNa madwen me tirim\nN’as4re fie.\nM1tena Awurade fie.\nM1tena Awurade fie\nGodwin Kasentinalowe\nPANT (T) 1262\nAdehye mogya bi at4 me\nAgyenkwa Yesu ne mogya\nW’abue m’ani, W’atew me\nho\nW’ama mafata N’aheman m’\nRosina Aninkora\nAdekyee f11f1, f11f1, f11f1\nbi reba\n!reba nt1m! !reba nt1m!\nOwia b1hyer1n, ahyer1n,\natu sum nyinaa\nNt1mnt1m! Nt1mnt1m!\nW4b1boa y1n nyinaa ano,\nAk4hyia asuogya h4\nY1n ahokyere ne y1n\nns4hw1 nyinaa b1k4,\n1remma bio\nAdekyee f11f1, f11f1, f11f1\nbi reba\n!reba nt1m, yiw, nt1m\nPAN (F) 304\nAdom bi w4 Jesus mu\nna me nsa aka (x2)\nAdom mu na mete ase\nEmu na mekeka me ho\nEmu na mey1 m’ade nyinaa\nAdom, Adom,\nAdom bi a manya\nAdom mu na mete ase\nEmu na mekeka me ho\nEmu na mey1 m’ade nyinaa\nE.B.A Yeboah - PAN (T) 475\nAdom na w4de nam\ngyidi so agye mo nkwa\nNa emfi mo ankasa,\n!y1 Onyame aky1de\nNa emfi nnwuma mu,\nNa obiara annhoahoa ne ho\nAdom na w4de nam\ngyidi so agye mo nkwa\nPAN(T) 598\nAdom na Wode afr1 me\nAdom na Wode afr1 me\nMede suro ne ahopopo\nm1y1 W’adwuma\nAma mahy1 mma Wo mu\ndaa\nHy1 me ma, Hy1 me ma\nWo Honhom Kronkron\nno mu\nMede suro ne ahopopo\nm1y1 W’adwuma\nAma mahy1 ma Wo mu\ndaa (x2) E.K. Asamoah\nAdom nsu na 1rehwie,\nAdom nsu na 1ret4\n!ref4w asase biara\nNa ay1 asase foforo\n2. Adom nsu na 1rehwie,\n!rehwie ama wo nso nn1\n!ref4w akoma biara\nNa woay1 nnipa foforo\n3. Adom nsu na 1rehwie,\n!rehwie ama nea 4gye di\nT4 nsu no mu 1nn1\nNa wo benya ahosan\nkoraa\nT. K. Owusu Boreh\nAdom Wura, Adom Wura\nWo na wow4 adom\nHwie W’adom gu me kra\nmu\nT4 nnepa gu me kra mu\nbio Adom Wura, Adom\nWura\nFa W’adom foforo dom me\nT. K. Owusu Boreh\nAd4fo, afei na y1y1\nNyame mma\nNa nea y1b1y1 no nnya\nnnaa adi\nYenim ampa s1 y1b1y1,\nYenim ampa s1 y1b1y1\nY1b1y1 s1 $no, y1b1y1 s1\n$no\nY1behu N’ s1nea $te.\nPAN (T) 698\n1. Adwuma wura ne me\nAdwuma yi y1 me de\nAdwuma wura ne Me\nAdwuma yi y1 Me de\nAdwuma yi y1 Me de\n!y1 Me de\nNa M1hw1 ay1\n2. As4re wura ne Me\nAs4re yi y1 Me de\nAs4re wura ne Me\nAs4re yi y1 Me de\nAs4re yi y1 Me de\n!y1 me de\nNa M1hw1 asi\nGrace Gakpetor\n1. Agya me trontrom Wo\nDe m’akwan nyinaa hy1\nWo nsa\nM1d4 Wo daa\n2. $ba me trontrom Wo\nDe m’akwan nyinaa hy1\nWo nsa\nM1d4 Wo daa\n3. Honhom me trontrom\nWo\nDe m’akwan nyinaa hy1\nWo nsa\nM1d4 Wo daa\nPAN (T) 188\nAgya no w4 tumi\nAgya no w4 tumi\nAgya no w4 tumi\nPAN (T) 351\nAgya Onyame Na Way1\nWay1 me yie;\nAgya Onyame na W’ay1,\nW’ay1 wo yie;\nWay1 me yie, Way1 wo\nyie\nWay1 me yie, Way1 wo\nyie\nWay1 me yie, Way1 wo\nyie\nWay1 me yie, Way1 wo yie\nGrace Gakpetor\n1. Agya pa bi refr1 wo s1\nbra fie\nAgya d4fo refr1 wo s1 bra\nfie\nOnim nea ehia wo,\n$b1y1 ama wo\n$y1 Kwankyer1fo,\n$b1kyer1 wo kwan\n2. Agya pa bi refr1 wo s1\nbra fie\nAgya d4fo refr1 wo s1 bra\nfie\nOnim nea ehia wo,\n$b1y1 ama wo\n$y1 $yaresafo,\n$b1sa wo yare\n3. Agya pa bi refr1 wo s1\nbra fie\nAgya d4fo refr1 wo s1 bra\nfie\nOnim nea ehia wo,\n$b1y1 ama wo\n$y1 $fotufo,\n$b1tu w’ fo pa\nPAN (T) 1104\nAgyenkwa a $d44\nwiase yi d4 wo ne me\n$w4 d4 ne ayamhyehye\nkoma ma y1n;\n$de y1n b4ne aky1 y1n\nWaba ab1tena y1n mu\nY1koto s4re No;\nY1koto s4re No;\nEunice Johnson\nPAN(T) 185\nAgyenkwa bi fi soro\nab1gye y1n,\n$de ne Sunsum\nKronkron ahy1 y1n ma.\nW’ama y1n tumi, w4\ny’atamfo no so,\nMomma yenni ahu-rusi\ndaa daa.\nSunsum, Onyame\nSunsum, di Wo he-ne w4\ny1n mu.\nSunsum, Onyame\nSunsum di Wo he-ne w4\ny1n mu\nM. L. Awuku\nAgyenkwa Yesu fii soro\nt4nn\nBewu maa me, bewu\nmaa wo\n$deb4nyeni a 4te s1 me\nNa W’ay1 me s11 yi\nAnwanwas1m yi de 1te\ns1n?\nS1 Yesu bewu maa me\nne wo\n$gyaa N’ahenky1w ne\nN’ahengua\nNa $y11 me s11 yi\nAgyenkwa Yesu wu maa\nme;\nMeda N’ ase daa,\nAgyenkwa Yesu wu maa\nme;\nMeda N’ ase daa;\nPAN (T) 9\nAgyenkwa Yesu, 4ka me\nho nti\nMinsuro 4tamfo b1mma\nne ne ky1m\nS1 4bra asor4kye bu fa\nme so mpo a\nMe wura Yesu ka me ho\nnti medi nim\nYesu ka me ho n-ti,\nN’abaatan nsa da me so\ndaa\nOwu mu o, nkwa mu o\nNsu ne ogya mu o\nMe Wura Yesu ka me ho\nnti medi nim\nAhen mu Hen na $reba\nn’ ampa\nNo tum k1se n’ b4wosow\nwiadze nyinaa\nEwufo b4so1r nye\natseasefo nyinaa\nB4b4 m’ ekehyia No w4\nwim h4\nM’b1ka ho, Alleluia!\nM’b1ka ho bi\nNo b4gyaa ntsi mo nso\nm’b1ka ho\nNdzeb4ny1fo runntum\nnnhw1 N’enyim hy1nhy1n n’\nAhotsewfo nye No\nb1tsena afeb44\nPAN (F) 423\n1. Ahenni nyinaa begu\nNe nyinaa b1ba awie1\nMedi hene 1nn1 da yi\nMedi hene daa ny’naa\nM’ahenni to renntwa da\nMedi hene 1nn1 da yi\nMedi hene daa ny’naa\nM’ahenni to renntwa da\n2. Ahenni nyinaa begu\nNe nyinaa b1ba awiei1\nWubedi hene 1nn1 da yi\nWubedi hene daa ny’naa\nW’ahenni to renntwa da\nWubedi hene 1nn1 da yi\nWubedi hene daa ny’naa\nW’ahenni to renntwa da\nP. B. Appiah-Adu\nAho4den bi w4 bep4w\nkronkron no so\nNa mede ma me mma (x2)\nHalleluya! Momm1gye;\nHalleluya! Momm1gye;\nHalleluya! Hallelu Ya!\nMomm1gye m’aho4den\nPAN(T) 364\nAhotefo momm4 Ose\nY1y1 nkunimdifo ampa\nAhotefo mom4 Ose\nNkunimdifo ne Awurade\nEfis1 wama Ne din so\nEdin boro din nyinaa so\nTeker1ma nyinaa mpae\nm’ nka s1:\nYesu Kristo ne Awurade\nE.K. Asamoah\nAhotewfo, Munhyira\nAwurade\nMomm4 Ne din nkyer1\naman nyinaa,\nWay1 y1n nkwagye ho\nadwuma\nN’4de N’adehye mogya at4\ny1n\nMogya a 1som bo n’,\n$hwie gu maa y1n\n‘Ma y1afata Ne nky1n h4\nEnti momfa nsanku-\ndwom ne ahokeka\nNhy1 Ne din anuonyam (x2)\nPAN (T) 56\nAhy1 ma, m’akoma ahy1\nma\nM’akoma ahy1 ma\nNgo, Nyame Ne ngo\n$dze ngo forfor asra m’\nNgo, Nyame Ne ngo\n$dze ngo fofor asra m’\nEunice Addison\nPAN (F) 559\n1. Akwantu bi w4 h4 a\nyebetu\n!ny1 wiase ha akwantu\nno bi,\nSoro h4 akwantu na\ny1retw1n,\nAnigye b1n na saa da no\nb1y1!\n2. S1 sum hy1 kabii ma\napranaa bobom,\nMa Kristo mu awufo s4re\nkan,\nNa s1 y1ne w4n bom\nk4hyia Kristo a,\nAnigye b1n na saa da no\nb1y1\n3. Anigye na y1de betu\nkwan no,\nAhurusi na y1de behyia\nKristo\nGyedifo nyinaa b1bom\nanantew,\nAnigye b1n na saa da no\nb1y1\n4. Y1behu y1n ho anim\nne anim\nBere a yebehyia w4\nahengua no anim,\nNa s1 ahotewfo nyinaa\nbom tena a,\nAnigye b1n na saa da no\nb1y1\n5. Y1w4 dwom foforo bi a\ny1b1to,\nSoro ab4fo mpo renntumi\nnnte ase\nY1n nkunimdi ho dwom\nna y1b1to,\nAnigye b1n na saa da no\nb1y1\nApostolic Twi Hymnal 297\nAlleluia, Nyame, Woy1\n4hen’ ampa\nW’ahenni boro ahenni\nnyinaa so\nAlleluia, Nyame, Woy1\n4hen’ ampa\nWahenni boro ahenni\nnyinaa so\nNne1ma nyinaa ka s1\nWoy1 4hen’ ampa\nWoama y1n nso y1ay1\nadehye\nY1b1som Wo Nyame\nYehyira Wo daa daa\nNyame di hene daa,\nAlleluia\n2. Me kra hyira Awurade\nMma wo wer1 mfiri ne\nnnepa\n‘Fis1 W’ay1 ade k1se w4\nwo mu\n$de wo mfomso afiri wo\nWasa wo nyarewa\nnyinaa\nW4agye wo afiri w‘amanne\nmu\nS1nea 4k4de1 te1 no\nSaa ara na Way1 wo\nWama wo meranteber1m\nnyinaa ay1 foforo\nMe kra hyira Awurade\nMma wo wer1 mfiri ne\nnnepa\nFis1 W’ay1 ade k1se w4 wo\nmu.\nFred Oware Jnr.\nAlleluia, y1w4 fawohodi\nW4 Yesu mogya no mu;\nNea 4tamfo no b1y1 biara,\nNkunimdi na 1y1 y1n\nfrankaa\nJane Quaye\nAmanaman 4baatan pa\nNyame Agya, y1ma W’amo\nY1nam Krist’ Ne din mu\na y1nsuro hwee\nYenim s1 ade rekye a\nesum di kan ba\nNyame Agya, 4baatan pa\nk4 y1n mmoa\nPAN (T) 1032\nAmansan Nyame\nWo na adom ahy1 Wo ma;\nTwereduamp4n, y1dan\nWo\nAkwan nyinaa mu.\nPAN (T) 576\nAmen, Amen,\nNhyira ne anuonyam\nNe nyansa ne aseda,\nNe nnidi ne tumi\nNe aho4den y1 y1n\nNyankop4n dea daa daa\nAmen!\nAdiyis1m 7:12\nAmpa ara, Onyame ye,\nAmpa ara Onyame ye,\nAmpa ara Onyame ye ma\nme\nAmpa ara Onyame ye\nAmpa ara Onyame ye\nAmpa ara Onyame ye\nma me\nE. Dankyi - PAN (T) 57\nAmpa, me kra y1 komm\nhw1 Wo\nOnyankop4n ma menya\nnkwa\nWo nsam na me kra\nnkwagye w4\nKae me s1nea w’ad4e1 te\nYehowa Wo ne me botan,\nM’abank1se ne me\nguank4bea,\nFa me sie wo nsa yam\nkorabea h4.\n2. Wiase hann mpo adan\nme sum\nM’ayera me kra nkwagye\nkwan;\nTe1 wo d4 nsa no s4 me mu,\nNa ma mente W’ad4e1 nka\n3. S1 merey1 m’awatiri a,\nKae me ma me nhu me\nmfomso;\nNa s1 me gyedi so hwan a\nAwurade boa me mmer1wy1\n4. S1 wo ba W’ahenni mu a,\nKae me Awurade\nm’agyenkwa;\nWo nkutoo ne m’anidaso,\nMa mente wo fr1 kronkron no\nApostolic Twi Hymnal 298\n1. Ampa, Nyankop4n\nN’adom ara kwa,\nNa nd1 $ama y1tse ase;\nS1 4bra n’akotorka y1\ndzen d1n ara,\n$agye h1n ne nyina mu\ns4nn.\nDwuma pa biara a yeedzi,\nOfir Nyame No mboa,\nNtsi y1b4tow Ebenezer\nna yeakyer1 ase\nD1 mbr1 Nyame aboa\nh1n ebodu nye ‘i.\nEbenezer, mbr1 Nyame\naboa h1n ebodu nye ‘i,\nEbenezer, nyew, Nyame\nN’adom ara kwa.\n2. Nyame b1hy1 h1n dzen,\nNo d4 b4boa h1n nyina,\nAsomdwee na ntseasee\nB1hy1 h1n som yi ma\nY1b4b4 m’ y1ay1 kor,\nY1asom Nyame d1 mbr1\n4s1\nAma s1 yewu k4 a\nY1nye Christ aasoa\nN’ahenky1w\nGaddiel R. Acquaah,\nChristian As4r Ndwom Fofor\nCAN 1039\nAn4pa bi reba\nB4ne su nyinaa ara b1twam\nAn4pa bi reba\nY1behu Jesus N’anim\nAn4pa bi reba\nYebehu Jesus N’anim\nAna W’akoma p1 nhyira?\nForo, foro bra sorsor\nForo b4hw1 Jesus\nN’aho4f1w;\nMbr1 enyimnyam ndzepa\nebu do\nEunice Addison - PAN (F) 155\nAnidaso nni baabiar’, onua,\nS1 Yesu Kristo mu (x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1ase ne awiei\nAnidaso nni baabiar’ onua,\nS1 Yesu Kristo mu\n2. Fa wo wer1 hy1 Yesu\nmu daa nyinaa,\n$r’nni wo hwamm4 da (x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1ase ne awiei\nFa wo wer1 hy1 Yesu\nmu daa nyinaa,\n$r’nni wo hwamm4 da\n3. S1 nnipa nyinaa yi wo\ntotwene a,\nYesu de1 $d4 wo (x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1ase ne awie1\nS1 nnipa nyinaa yi wo\ntotwene a,\nYesu de1 $d4 wo\n4. N-kwagye nni din bi-\nara mu,\nS1 Yesu Kristo din N’ (x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1ase ne awiei\nN-kwagye nni din biara\nmu,\nS1 Yesu Kristo din\n5. S1 wob1som N', adi\nN’as1m so a,\n$b1ma asi wo yie (x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1ase ne awiei\nS1 wob1som N', adi\nN’as1m so a,\n$b1ma asi wo yie\n6. $y1 Nyame a $nnsakra\nara da\nN’ahenni nni awiei (x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1 ase ne awiei\n$y1 Nyame a $nnsakra\nara da,\nN’ahenni nni awiei\n7. $kasa ma m-frama y1\nkomm,\nna po asor4kye nso taa\ndinn (x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1ase ne awiei\n$kasa ma m-frama y1\nkomm,\nna po asor4kye nso taa din\n8. M’agye No adi, na\nm’adi N’akyi,\nMerennyae N’akyi di da\n(x2)\nOnim ade nyinaa\n$y1 ade nyinaa\n$y1 ahy1ase ne awiei\nM’agye No adi, na m’adi\nN’akyi,\nMer’nnyae N’akyi di da\nGrace Gapketor\nAnigye b1n na y1anya s1\nsoro anigye?\nAhot4 b1n na y1anya s1\nsoro ahot4!\nFam mpo ni na soro h4\nFam mpo ni na soro h4\nFam mpo ni na soro h4\n!b1y1 anigye, 1b1y1\nnwonwa s1.\nPAN(T) 40\nAnigyes1m k1se\n$tse d1m yi, 4tse d1m yi\nY1n dimafo Nyame te ase\nNhyira nka y1n hen\nteasefo no\nW4 anwonwad4 a $de d4\ny1n daa\nNyame te ase oo,\nHalleluya\n$de N’adom no hw1 y1n\nso daa daa\n$ma y1n daa edziban,\n$y1 h1n ahiade nyinaa\nHalleluya Nyame te ase\noo daa\nAnka manya s1 mas1\nWo, Jesus\nAnka me suban nyinaa\nas1 Wo de\nAhobr1ase, nokware, 4d4,\nkommy1\nNe trenee ahy1 me ma.\nPAN (T) 711\nAnka mayera koraa\nAnka mayera koraa\nEny1 Yesu adaworoma a,\nAnka mayera koraa\nPAN(T) 365\nAnka nea mete no ware\npaa\nAnka nea mete no ware\npaa\nYesu Ne d4, Ne dom, ne\nNe wu a Owui no\nAma me nso maba fie\nEunice Johnson\nPAN (T) 1123\nAnuonyam! Anuonyam!\nD1w b1n ara nko ni!\nS1 mahu 4hen’ N’aho4f1\nM1to N’ayeyi dwom\nAma Jesus Nyame\nS1 N’ahumobor4 adur me\nso\nAnuonyam ‘wura mu\nOwura\nAnuonyam ‘wura mu\nOwura,\nAyeyi nka Wo daa daa\nnyinaa\nAnuonyam ‘wura mu\nOwura\nSeth Asare Ofei Badu\nPAN (T) 1267\nAnuonyam w4 sorosoro\nMa Nyankop4n, ma\nNyankop4n\nAnuonyam w4 soro soro\nma nyankop4n, ma\nnyankop4n,\nAsomdwoe w4 asase so\nAnis4 w4 nnipa mu\nAsomdwoe w4 asase so,\nAnis4 w4 nnipa mu\nPAN(T) 99\nAo, Awurade, mafe W’ dodo\nYi Wo ho kyer1 m’\n$d4 mu ara\nMat4 donsua fi W’as1m ho\nObi nni h4 s1 Wo nkutoo no\nAwurade, ma me so\nMa memfa gyidi\nNnyina Heaven asase\nt1tr1 no so\nBea a 1kor4n na 1tr1w\nsen bea a manya ’i\nAwurade fa m’anan si\nbea 1kor4n na 1tr1w.\nQuintet\nPAN (T) 1176\n1. Ao bra ma yendzi d1w!\nS1 nkan n’ mey11 hianyi a,\nAfei menya Nyame ho d4,\n$d4 a 4ky1n sika\n2. Ao bra ma yendzi d1w!\nS1 nkan n’ mot44 bahaw a,\nAfei menya Otumfo a\nN’abaw we4n me dabaa.\n3. Ao bra ma yendzi d1w!\nS1 nkan n’ mob44 eko a,\nNyame dze No d4 atwe\nme\nD1 mensan m’ Egya fie\n4. Ao bra ma yendzi d1w!\nN-ky1 me kra reyew,\nM’Agyenkwa Jesus\nab4twe m’\nW4 b4n na ab4nsam nsa.\n5. Ao bra ma yendzi d1w!\nAfei menya Ny1nko a\nNo d4 ky1n onua mpo no\nd4\n$d4 a onnyi ewiei a.\n6. Ao bra ma yendzi d1w!\n$wo a ed4 Jesus,\nNyame N’ab4dze nyinara,\nWonsuo m’ yenyi N’ ay1w\nChristian As4r Ndwom Fofor\nAo! M’agyenkwa,\nm’aho4den\nM’anidaso ne m’ayaresa\nMe Nyame, ‘ber1 a mete\nase yi\nMede me ho hy1 wo nsa\nS4 me mu\nMe Nyame, ‘ber1 a mete\nase yi\nMede me ho hy1 wo nsa\nMe Wura, maba\nAs1m bi a meka kyer11\nWo n’\n!no nti na maba\nAo, m’agyenkwa, ka\nbiribi kyer1 me\nMe Wura, maba\nKa biribi kyer1 me ansa\nna mak4\nKa biribi kyer1 me ansa\nna mak4\nMe wura, w’akoa retie\nMep1 s1 mehu\nW’anuonyam\nMep1 s1 mehu\nW’anuonyam\nMe wura, enti na maba\nJoe Beecham\nAo, Woy1 me de\nAo, Woy1 me de\nAo, Woy1 me de ampa\nMe nso mey1 Wo de\nApuei ne at4e y4nko,\ny4nko,\nY4nko biara nni h4 s1\nJesus\nApuei ne at4e y4nko,\ny4nko\nY4nko biara nni h4 s1\nJesus\nB.K.Arthur\nPAN(T) 205\nAsaase mba m’ nyinaa\nho4f1wfo\nEy1 dansewa ma W’ayefor;\nWo mu na emudzi\nKr4nkr4n w4\nCalvary $barimba\nnwanwanyi\nCalvary $barimba no\nOedzi m’akoma do nyim\nOwui maa m’ fahodzi\nCalvary Osiarfo no\nPAN (F) 527\n1. Asaase ne n'ade\ndodow\nNyinaa’ra, Yehowa dea;\nMu nnipa ne w4n\nagyapade nyinaa y1\nN'adwuma\n2. Wo a woy1 Yehowa dea\nFa woho to Yehowa so;\nSr1 w'ade nyinaa fi Ne h4;\nNa ade nyinaa, Yehowa\ndea;\n3. !mma 4k4m anaa ohia\nNntwe wo mmfi Yehowa\nho;\nSr1 w'ade nyinaa fi Ne h4;\nNa ade nyinaa Yehowa\ndea\nSeth Asare Ofei Badu\nPAN (T) 454\nAsafo Yehowa\nAb4de so Wura\nWo din y1 k1se, y1b1yi W’ay1\nY1b1hy1 wo din anuonyam\nPAN(T) 252\n1. Asafo Yehowa, s4re\nMa w’ahenni so kyer1 wiase\nBr1 wiase tumfo no ase\nAsafo Yehowa, s4re\n2. Asafo Yehowa, s4re\nWo nokware kwan reyera,\nAkyinnyefo ani agye\nAsafo Yehowa, s4re\n3. Asafo Yehowa, s4re\nSum ne wo hann redi asi\nGyedifo temmuafo Nyame e\nAsafo Yehowa, s4re\n4. S4re, Asafo Yehowa\nBedi tumi na wiase nhu\nYehowa b1ko gye wo\nmma,\nAsafo Yehowa, s4re\nApostolic Twi Hymnal 221\nAsafo Yehowa, Wo boro\nade nyinaa so\nMe wer1 hy1 wo mu,\nabere nyinaa\nMm4bor4hunu Agya ee!\nMm4bor4hunu Agya ee!\nMegyina W’anim,\nAwurade Nyankop4n\nAsafo Yehowa\nWo p1 ny1 h4\nTranslation of “Jehovah God”\nOpoku Onyinah\nAse a mete w4 wiase yi\nMete ma Kristo\nAse a mete w4 wiase yi\nMete ma Kristo\nMema No amo, ‘fis1 $ka\nme ho\nMema No amo, $y1 me\nboafo pa\nAse a mete w4 wiase yi\nMete ma Kristo\nP. B. Appiah-Adu\nAseda fata Wo\nAyeyi fata Wo,\nY1n hene, Kristo!\nAseda fata Wo,\nAyeyi fata Wo,\nY1n hene, Kristo!\nAseda ahy1 y1n ma y1de\nb1ma wo\nAseda wura ne Wo, y1de\nma wo daa\nAseda ahy1 y1n ma y1de\nb1ma Wo\nAseda wura ne Wo, y1de\nma wo daa\nOpoku Onyinah\n1. Aseda nka Onyame,\nNyame a $ne y1n w4 h4\nNne1ma 1y1 a $y1, 1y1\nnwonwa,\nNne1ma a 1y1 a efifi,\nNe nyinaa fi Awurade h4\nAseda af4re a 1s1 w4mfa\nmma No\nW4mfa mma No, w4mfa\nmma No\nW4mfa mma Awurade No\nNne1ma a 1y1 a efifi\nNe nyinaa fi Awurade h4\nAseda af4re a 1s1, w4mfa\nmma No\n2. Aseda nka Onyame,\nN’aky1de a enni kabea,\nDe N’D4ba ay1 mpata,\naf4reb4guan.\nAf4re a enni ahop1\nAf4re a 1ky1n so daa\nAyeyi aseda a 1s1,\nmomfa mma No.\n3. Aseda nka Nyame Ba\nAdom Hen’, y1n wura\nAgyenkwa;\nWasoa y1’ mmusu adesoa\nw4 ‘wuyaw mu;\nY1n dimafo, hen’ S4fo,\nWo nkwagye dom mu\nnnepa\nNa wode ama y1as1\nW’aheman mu.\n2nd and 3rd verses by M. K. Yeboah\nPAN (T) 207\nAseda nyinaa y1 Wo de,\nJesus y1n botantim Nyame\nAyeyi nyinaa y1 Wo de,\nJesus y1’akoky1m ne\ny’abank1se ne Wo\nAwurade nea W’ay1 d44so,\nW’adom nti na y1te ase\nAseda nyinaa y1 Wo de,\nJesus,\nY1b1ka nea Woay1 akyer1\naman\nJesus, y1b1b4 Wo din, daa\ndaa\nY1’akoky1m ne y’abank1se\nne Wo\nYaw Sekyi Baidoo\n1. As1m a yekura mu yi\ny1 Yesu Kristo de;\nna s1 1y1 Ne de no nti,\nyenim s1 1rens1e\nNanso 1te s1 brofua a\nwodua no ne berem’ a,\nenwu w4 fam a, 1remfi,\newu a, 1nna 1sow pii,\newu ansa,\newu asow aba.\n2. As1m a eye ma y1n s1:\nna w4de abr1 y1n;\nna 1kyer1 y1n kwan yiye\nma yedu Nyame nky1n;\n1ka s1: yennye Yesu nni;\n4no na y1n amane nti,\nofii soro begye y1n wom’\nde y1n rek4 n’ahot4 k’rom’.\nEnti momma\ny1mfa n’as1m so daa.\n3. O, Yesu a woy1 y1n ti,\nWuhuu amane pii\nk44 soro, na nea ogye di\nb1fa saa kwan so bi.\nEnti ma y1n nyinaa ‘ra\nnnya\nwo yaw ne w’ahenni no bi;\nfa y1n fa wo wu kwan no\nso\nkodu wo soro hann mu h4;\ngye y1n w4 sum\nne owu mu k4 nkwa mu!\nPresby As4re Dwom nhoma 276\n1. As1m bi ara a meka no\nAde biara a mey1,\nAnka 1s1 s1 mibisa\nS1 1b1y1 Yesu f1\n2. Daa 1s1 s1 mibisa s1\nYesu kaa no saa anaa?\nSo 4b1ma me ho kwan a?\nYesu ay1 saa anaa?\n3. So midi me Yesu akyi?\nSo m’adwene rehwehw1’\nnea wiase ak4nn4\nne af1f1de kyer1?\n4. Yesu, ma minhu wo\nkwan 1!\nNa ma minhu me koma!\nS4 me hw1, na hu\nm’adwene!\nMa minni wo akyi daa!\nChristoph Karl Ludwig von Pfeil\nPresby As4re Dwom Nhoma 603\n1. Asodzi da mo do\nD1 miyi Nyame ay1w\nMegye me kra a onnwu\nda nkwa,\nNa mema 4s1 sor\n2. Mosom mbersantsen yi,\nMidzi dwuma a w4ahy1 m’\nAo, nky1 medze m’ahom\nnyinaa\nMaay1 mo Wura Ne p1!\n3. Fa nhw1yie b4 me ban\nMa mentsena d1 ihu m’;\nNa, mo Wura, siesie Wo\nsomfo\nNa meebu nkontaa pa\n4. Boa m’ ma monwe4n,\nmons4r,\nNa montwer Wo nkotoo\nMinyim d1 mogor\nm’edwuma ho a,\nM’bowu wu a onnyi ewiei\nCharles Wesley\nChristian As4r Ndwom Fofor\nAs4r Wura, Nyame\nY1sr1 W’ b1hw1 Wo mma\nTie y1n abisade yi nyinaa\nNa ma W’as4r nnyina.\nPAN(F) 454\nAs4re no ti ne Jesus\nAs4re no ti ne Jesus\nNea $te ahengua a\n1kr4n no so n’\n$n’ne As4r’ no Wura\nJ. Odoi Korang\nAs4re yi ne fapem ne\nJesus\nAs4re yi ne fapem ne\nJesus\nAs4re yi ne fapem ne\nJesus\n$kae s1 “Mesi M’as4re”\nPAN (T) 383\n1. Ateasefo mma nyinaa\nMommra mmeyi Awurade\nay1\n$no na $b44 wiase\nMommra mmeyi N’ay1\n2. W4n a w4agye w4n\nnyinaa\nMommra mmeyi Awurade\nay1\n$no na W’agye y1n nkwa\nMommra mmeyi N’ay1\n3. Ahotewfo mma nyinaa\nMommra mm1s4re\nNyankop4n\n$no na W’atew y1n ho\nMommra mmeyi N’ay1\n4. Okyigyinafo Honhom no\nMomma yennyi N’ay1 daa\n$no na Ogyina y1n akyi\nMommra mmeyi N’ay1\nT.K. Owusu Boreh\nAtemmu da h4 ma y1n\nenti dwene ho me nua\nWo wer1 firi wo ho a\ndaakye wo nne1ma b1ka\nakyi\nNne1ma nyinaa di adanse\nWiase awie no reba\nAtemmu da h4 ma y1n\nenti dwene ho me nua\nWo wer1 firi wo ho a\nDaakye wo nne1ma b1ka\nakyi\nKofi Abraham\n1. Atumfo pii aba\nNa w4n nyinaa atwa mu\nk4\nY1n Nyame no de Otim h4\ndaa\nNa wonni nkwa nti\nW4se a wontumi nny1\nY1n Nyame no de ose a\n4y1\nY1kotow Wo, y1kotow Wo\nY1kotow Wo, na y1s4re\nWo\n2. $y1 Otumfo nti\nOwui W’anka ne da m’\n4s4re k44 N’anuonyam mu\nOnim y1n mmr1wy1 nti\nWannyaw y1n nyisaa\n$somaa N’aho4den br11\ny1n\nRosina Aninkora\nAwurade, Awurade,\nAwurade, meda W’ase\nM’anigye w4 Wo nko mu\nMe guank4bea ne Wo\nM’ade nyinaa ne Wo\nE. K. Asamoah\nAwurade abeyi y1n\nawer1how\nAwurade abeyi y1n\nanimguase\nW’aba ab1tena y1n kra\nmu bio\nMomma y1mmom nyi\nN’ay1 (x2)\nE. Oppong Donkor\nAwurade, aman nyinaa\nb1suro Wo\nNa y1ahy1 Wo din\nanuonyam\nEfis1 wo nko na Woy1\nKronkron;\nEfis1 W’akwan y1 nokware.\nAman aman hene,\nWo nnwuma y1 ak1se\nNa 1y1 nwanwa\nP.B. Appiah-Adu\nPAN(T) 308\nAwurade as4 P1ntekoste\n‘gya\nSaa gya ‘i, 1rennum da\nAwurade as4 P1ntekoste\n‘gya\nSaa gya ‘i, 1rennum da\nPentekoste gya 1red1w\nPentekoste gya 1red1w\n!red1w akoma mu daa\nnyinaa\n!red1w! !red1w! !red1w!\n!red1w! akoma mu daa\nnyinaa\n!red1w! !red1w! !red1w!\nOgya yi red1w, 1rennum\nda\nOgya yi red1w, 1rennum\nda\nOgya yi red1w, 1rennum\nda\nP1ntekoste gya red1w\nEbenezer Amissah Bimpong\nAwurade bue m’aniwa ma\nminhu W’\nAwurade bue m’aniwa\nma minhu W’\nWo mu na nkwa w4\nWo mu na tumi w4\nAwurade bue m’aniwa\nma minhu W’\nEunice Addison, PAN(F) 445\nAwurade d4m so Safohene\nY1w4 Wo a na y1w4 ade\nnyinaa\nB1ko ma y1n nn1 nso bio\nEfiri s1 4ko yi y1 Wo ko\nAwurade ka y1n ho ‘i\nAwurade nsa da y1n so ‘i\n$tanfo nhyehy1e nyinaa\nb1y1 kwa\nAwurade ka y1n ho ‘i\nAwurade nsa da y1n so ‘i\nAwurade, Awurade Yesu\nWo ne Awurade a Woka\ny1n ho\nWo ne y1n di ahy1mfiri daa\nWoka y1n ho kosi wiase\nawie1\nYehyira Wo din\nOpoku Onyinah\nAwurade kaee me, ber1\na mew4 ns4hw1 mu\n$kaee me, menam owu\namena mu\n$kaee me, ber1 a\nanidaso nyinaa asa\nAwurade de Ne nsa nifa\ngyee me\nP. B. Appiah-Adu\n1. Awurade, Kasa, Kasa,\nKasa, ma mente Wo nne\nW’akoa ay1 komm retw1n\nWo\nMeretw1n W’akwan-kyer1\npapa no\n!no n’ 1de nkwa br1 me\nS1 mitu mu anamm4n daa\nNa mey1 setie ma Wo a\nM1y1 s1 adwinne1 a\nw4asiesie de rey1\nadwuma pa biara\n2. Awurade Kasa, Kasa,\nKasa, ma mente W’as1m\nMaw1n m’aso retie Wo\nW’as1m no kura tu-mi\nne aho4den\n!no na 1kyer1 me kwan\npa\nS1 mey1 aso ma W’as1m\nNa mey1 setie ma Wo a\nM1y1 s1 dua fr4mfr4m a\nesi\nasuten ho a 1so aba ne\nber1 m’\n3. Awurade Kasa, Kasa,\nKasa, ma 1ny1 hann\nW’akoa ay1 komm retw1n Wo\nMeretw1n Wa-na-\nmm4ntu pa no\n!no na ‘de hann br1 me\nS1 metena Wo hann no mu\nNa mey1 setie ma Wo a\nM1y1 s1 kanea a 1hyer1n\nkyer1 kwan w4 wiase\nsum yi mu\n4. Awurade Kasa, Kasa,\nKasa, ma 1ny1 d1\nW’akoa ‘y1 komm retw1n Wo\nMeretw1n W’ano m’ as1m\nd11d1 no\n!no na ‘ma ‘koma t4 yam\nS1 menam Wo nney11 pa mu\nNa mey1 setie ma Wo a\nM1y1 s1 asaase so nkyene a\n1y1 d1, tum’ sa wiase yare\n5. Awurade Kasa, Kasa,\nKasa, ma ensi me yie\nW’akoa ay1 komm retw1n Wo\nMeretw1n W’ahy1de1 papa no\n!no na 1ma medi yie\nS1 W’as1m hy1 m’akoma mu\nNa mey1 setie ma Wo a\nM1y1 s1 abusua gyefo a 4de\nnkwa br1 ne manfo\nnyinaa\n6. Awurade Kasa, Kasa,\nKasa, w4 Kristo mu\nKristo na merehw1 no\nOnyamey1 a edi mu\nnipadua mu\nKristo m’ na mudi nyinaa\nw4\nS1 mema Kristo so s1n\nNa mey1 setie ma Wo a\nM1y1 s1 W’akoa nokwafo\na\n4twe nnipa nyinaa br1 Wo\n7. Awurade Kasa, Kasa,\nKasa, kyer1 me kwan\nMer’tw1n Honhom\nKronkron nne\nM’agyae me mu ama\nHonhom Kronkron\n$no na $ma mehu\nW’akwan\nS1 metie N’akwankyer1 no\nNa mey1 setie ma Wo a\nM1y1 s1 kwankyer1fo pa a\n$kyer1 nkyirimma\nnyinaa W’akwan\nOpoku Onyinah\n1. Awurade kasa na\nW'akoa retie\nBue m'aso na mente\nW'asumas1m\nM'ay1 komm w4 W'anim\nMay1 komm w4 W'anim\nAwurade kasa na W'akoa\nretie.\n2. Awurade kasa na\nW'akoa retie\nHo'ro m'ani so na minhu\nWo yie\nM'ay1 komm w4 W'anim\nM'ay1 komm w4 W'anim\nAwurade kasa na\nW'akoa retie\n3. Awurade kasa na\nW'akoa retie\nHome nnepa nyinaa gu\nme mu\nMay1 komm w4 W'anim\nMay1 komm w4 W'anim\nAwurade kasa na W'akoa\nretie\nKwasi Annor\nAwurade ma w4nhu Wo\ns1 Woy1 Onyankop4n\nAwurade ma w4nhu me s1\nmey1 W’akoa\nW4 m’abrab4 yi mu,\nns1nkyer1nne nni m’akyi\nW4 Sunsum mu 4honam\nko yi mu\nAwurade ma w4nhu Wo\ns1 Woy1 Onyankop4n\nE. K. Asamoah\n1. Awurade, Maba\nHwie me gu W’af4re\nmmuka so\nTue maso m’ Awurade\nSiesie me ma Wo\nadwuma no\nWoayi me s1 Awurade,\nW’akam na adi w4 me\nnipadua mu (x2)\n2. Maba ‘s1nnua ase,\nS1 w’amanehunu mu\nfafafo\nM1y1 W’adwuma\nMaboa me ho s1 m1hw1\nW’nguankuw n’\nKa maso, mani, mano,\nme Wura\nNa may1 W’agya no\nnnwuma (x2)\n3. Mama me nsa so,\nS1 W’apam adaka soafo\nMinni biribiara\nMaboa me ho ama W’asodi no\nDwiriw honam, me p1,\nne m’aho4den\nNa masom Wo s1 akoa pa\n(x2)\nOpoku Onyinah\nAwurade mema me kra\nso mekyer1 W’\nAwurade mema me kra\nso mekyer1 W’\nMe Nyankop4n\nMede me ho to Wo so\nMma m’ani nnwu da\nMma m’atamfo ho ns1p1\nw4n w4 me nti\n2. Nkae me mm4fra ase\nb4ne ne me mfomso\nNkae me mm4fra ase\nb4ne ne me mfomso\n3. W4n a w4suro Awurade\nNa w4hunu N’asumas1m\nW4n a w4suro Awurade\nNa w4hunu N’asumas1m\n(Unto Thee O Lord, do I lift up my\nsoul)\nTranslation by J. Agyemang-\nBaduh\nPAN (T) 1248\n1. Awurade ne me hw1fo,\nHwee renhia me;\n$ma meda nwura\nfr4mfr4m adidibea;\nOgyaw me k4 nsu a 1ho\ndwo ho\n$dwodwo me kra;\n$de me fa N’akwan\ntrenee so;\nNe din no nti\n2. Nso menam sum kabii\nb4n mu a\nMinsuro b4ne bi\nEfis1, Wo ne me na 1w4 h4\nW’abaa ne Wo poma\nkyekye me wer1\nJane Quaye\nAwurade ne me hw1fo\nHwee rennhia me\n$ma me da wura\nfr4mfr4m adidibea\n$gya me k4 nsu a 1ho\ndwo ho\n$de me fa kwan trenee so\nNe din no nti\nNe din no nti\nJ.R.K. Mensah\nAwurade, obiara nte s1 Wo\nW’anim ne W’akyi\nobiara nte s1 Wo\nS1 Woma Wo nsa so a,\nade nyinaa br1 ase\nS1 Wo kasa a, ade\nnyinaa y1 dinn\nAwurade, nnim b1n na\nWo din nni\nS1 Wo kasa a ade\nnyinaa y1 komm\nAwurade 4ko yi y1 wo ko\n’Nti ma wo tumi nso so\n$ko yi y1 wo ko, bra\nb1ko ma y1n\nNa nkunim ny1 wo mma dea\nNa nkunim ny1 wo mma dea\nA.L. Angoh\n1. Awurade, siesie Wo somfo\nMa adwuma pa a\nWoahyehy1\nMa meny1 adwinnade1 a\nWode b1y1 b'ribi pa\nAma W'adwuma ak4 so.\n2. Awurade siesie Wo somfo\nSra me ngo na meny1\nfoforo\n3. Ma meny1 4bo a nkwa\nw4 m’\nA w4de besi dan papa\n4. S1 wuhia $somfo pa\nAma adwuma papa yi a\n5. W4n a w4ay1 adwuma\npa\nW4n akatua w4 Wo nsam.\n6. Adwuma pa Wura Yesu\nS1 wuhia adwinnade1 a,\nFa me y1 adwinnade1 a\nWode b1y1 b'ribi pa,\nAma W'adwuma ak4 so.\nEunice Johnson\nPAN (T) 1126\nAwurade, Woay1 ade k1se\nAwurade, Woay1\nanwonwade\nWomaa Wo Honhom\nKronkron bae\nNa $b1hy11 W’as4re den\n(x2)\nHonhom Kronkron mu\nOgya\nHonhom Kronkron mu\ntumi\nHonhom Kronkron, Nyame\nGya\nB1kanyan W’as4re bio\nRosina Aninkora\nAwurade y1 aban denden\nY1twere No a yennsuro\nhwee\nAban denden, Aho4den\nY1twere N’ a yennsuro\nNe din nti y1adi nkunim\n(x2)\n1mfa ho nea ebesi biara\nNe din nti, y1adi nkunim\nAbandenden, Aho4den\nY1twere N’ a yennsuro\nNe din nti y1adi nkunim\n(x2)\nE. Oppong Donkor\nAwurade y1 ade foforo\nMa nnipa nyinaa nhunu.\nS1 Woda so y1 Onyame a\nWotumi ade nyinaa y1\nGrace Gakpetor\nAwurade y1 tumfo, w4\ntum' ne aho4den m’\nAwurade y1 tumfo, w4\nne nnwuma mu\nAwurade y1 tumfo, w4\nne nney4e mu 4so-ro-soro\nni\nWo ne Awurade, 4nokwafo\nWokura y1n mu k4si\nawie1\n4bi nte s1 wo, w4 tum’ ne\naho4den m’,\nWo ne Awurade, 4nokwafo\nno\nTranslation of “The Lord is\nmighty” by Opoku Onyinah\nAwurade, y1da W’ase\nAwurade, y1yi W’ay1\nW4 nkonim a, Woadi ama\ny1n\nY1hyira Wo din, abere\nnyinaa\nNkonimdifo hene ne Wo\n$hene k1se y1koto Wo\nAwurade, y1s4re Wo\nY1hyira wo din, abere\nnyinaa\nOpoku Onyinah\n1. Awurade Yesu Kristo,\nMe Wura ne Wo daa nyinaa,\nAwurade Yesu Kristo,\nMe Wura ne Wo daa nyinaa.\nS4 me mu\nS4 me mu\nFa me fa akwantu yi mu;\nAwurade Yesu Kristo,\nMe Wura ne Wo daa nyinaa\n2. $d4fo k1se b1n na manya yi\nW4 me Wura Yesu m’\n$d4fo k1se b1n na manya yi\nw4 me Wura Yesu m’\nMedan Wo,\nMedan Wo,\nMinni obi s1 Wo nkutoo\n$d4fo k1se b1n na manya yi\nw4 me Wura Yesu m’\n3. Y4nko nokwafo ne\nAwurade\nYesu Kristo a mahu No yi\nY4nko nokwafo ne Awurade\nYesu Kristo a mahu No yi\n$ka me ho\n$ka me ho\nBaabiara a m1fa w4\nakwantu yi mu;\nY4nko nokwafo ne\nAwurade\nYesu Kristo a mahu No yi\n4. $banb4fo pa ne Awurade\nYesu Kristo a manya No\nyi;\n$banb4fo pa ne Awurade\nYesu Kristo a manya No\nyi\nOdi m’akyi\nOdi m’akyi\n$rennya me da w4\nakwantu yi mu;\n$banb4fo pa ne Awurade\nYesu Kristo a manya No\nyi\nOpoku Onyinah - PAN (T) 1277\nAyayade a w4de y11 No no\n$de atua me b4ne ka\nAsennua so a 4k4e no\n$de apepa nsa ano\nnkyer1wee no\nNe wus4re tumi no\n$de asesa me hy1br1\nHy1br1-sesafo Yesu ee\nMeda W’ase oo!\nHy1br1-sesafo\nmeda W’ase oo\nHy1br1-sesafo meda wase\noo\nHy1br1-sesafo Yesu ee\nMeda W’ase oo!\nEunice Johnson\nAyefor kun’ no $reba\n$reba w4 wim;\nMomma y1mfa ahurusi\nnnwom\nNk4hyia N’ w4 wim\nMomm4 ose mma No (x3)\nPAN (F) 24\nAyeyi na mede ma Nyame\n!bere a mete ase yi na\nmeyi m’Awurade ay1\nAsaman ase nni ayeyi bio;\nAnuonyam nka\n$sorosoro hene\nPAN (T) 4\nAyeyi repem m’akoma m’\nDe ma Nyame a 4b4 ade\nNea 4ka a 1ba mu\nNea 4hy1 a 1gyina\nAyeyi nka Ne din daa\nGrace Gakpetor\nBedidi, bedidi\nBedidi w4 Yesu pon so\ndaa nyinaa\nNea $y1n nnipa mpempem\n$dan nsu no weyin;\nNea 4k4m de no na 4fr1\nn’ s1 ommedidi\nPAN(T) 900\n1. Ber a Apost4lek hy11\nase\nW4 tsetse nda no mu no,\nSaul fi Tarsus suaa\ndzendzendzen\nD1 4b1s11 as4r yi\nNa Damascus na\nw4somaa n’\nD1 4nk4s11 edwuma no\n$rok4 n’ Agyenkwa N’\nhyiaa no\nY11 no Apost4leknyi\nNtsi y1b1fa Christ Ne\nnkyer1kyer1\nApost4lek nokwarfo\nS1 wo so gye Christ\nns1mpa n’ dzi a\nEbey1 Apost4leknyi\n2. $nye Silas k4r efiadze,\nSiand1 w4som Christ, h4n\nHen\nNaaso Enyimnyam ka h4n\nho\n‘Nafa n’ h4n beenu toow\nndwom\nFiadehw1fo tsee h4n ndwom\nno\nOhun d1 dan n’ rowosow\nOhun d1 w4y1 Apost4lekfo\nNo so y11 Apost4leknyi\n3. $rok4 Rome ekedzi dase\nAma n’ Ewuradze no,\nEhum tuu k1se w4 po do\nPaul nko na 4dwedwee h4n;\nH1n mu panyin huu ne\nndam no\nBer a hon akom etutu n’\n4p11 d1 nky1 no so b1y1\nJewnyi Apost4leknyi\n4. Mfe pii ab1sen naaso\nYehu h4n, kuw\nnkakraba n’\nS1 nkor4fo b4 h4n adapaa\nmpo a\nH4n nyina y1 kor gyina h4\nS1 wo so betsie h4n\namandze1\nDadaa, naaso fofor no a\nWo so b1tse Christ mu\nns1m n’\nNa ay1 Apost4leknyi\nPAN (F) 538\nBer a wi da do yi,\nmframa rob4 yi\nAna mow4 biribi a\nmedze b1ma Ewuradze?\nBer a Christ agye mo\nnkwa yi,\nM’ahom aka mo ho\nMedze mo ho nyina\nb1ma No\nPAN (F) 25\n1. Bere a Yesu kasa\nkyer1 wo yi,\nBra, “b4n-y1ni, bra”\nBere a y1reb4 mpae ma\nw’ yi\nBra “b4n-y1ni bra”\nSaa ber’ yi na 1s1 w’ s1\nwofa No;\nBra, “b4n-y1ni bra”\nSaa ber’ yi na 1s1 w’ s1\nwofa No;\nBra, “b4n-y1ni bra”\n2. Nne1ma duruduru bi\nso wo a,\nBra, “b4n-y1ni bra”\nYesu b1soa ama w’ enti\nBra, “b4n-y1ni bra”\nYesu rennaadaa wo da.\nBra, “b4n-y1ni bra”\nYesu begye wo seesei\nBra, “b4n-y1ni bra”\n3. O Yesu redi ma wo;\nBra, “b4n-y1ni bra”\nO b1gye nhyira no\nBra, “b4n-y1ni bra”\nber’ a Yesu kasa kyer1\nwo yi\nBra, “b4n-y1ni bra”\nBer’ a y1reb4 mpae ma\nwo yi\nBra, “b4n-y1ni bra”\nTranslated from While\nJesus to you whispers\nH.R. Palmer - PAN (T) 772\n1. Beso me nsa gyigye me,\nm’Agyenkwa pa,\nw4 m’asetena mu nn1 yi\nne daa nyinaa\nMep1 s1 metena wo nky1n\nMinnyaw wo da;\nnea wode m’b1k4 h4 no,\nmep1 ara\n2. Fa dom ne ahumm4b4\nkyer1 me kwan.\nMa memfa d4 ne gyidi\nminni w’akyi\nM’anigyem’ ne m’amanem’\nMa meny1 komm.\nMebr1 a, ma me ho nnwo\nw4 wo kokom’\n3. Memp1 b’ribi mahu da\ns1 wo nkutoo.\nMe kwan so duru sum a,\nMe hann ne wo.\nNa enti beso me nsa\nNa ma y1nk4!\nMa minnu soro h4 a\nm1tena h4 daa.\nJulie von Hansmam, 1826-1901- J.G.C.\nPresby As4re Dwom Nhoma 518\nB1n me na wate me nne\nNa wahu mahintas1m\nHunu me kwan mu yie\nNa woay1 Me somfo pa\nA.L. Ango\nBoa me, Yesu, boa me,\nAwurade,\nMat4 baha, 4bra\nakyekyere me\nMmoa nni baabi s1 Wo\nnko mu\nBoa me, Yesu, boa me,\nAwurade,\nTranslation of “Help Me, Jesus”\nOpoku Onyinah\nB4 bra me kra do\nB4 bra me kra do\nNyame no sunsum\nB4 bra me kra do\nM’ahomgye dzi yi mu\nBere a metse wo nan ase\nyi\nNyame no Sunsum\nB4 bra me kra do\nEunice Addison\nPAN(F) 278\nB4gya a ofi Ne mfe m’\n$dze nkwa abr1 me nye wo\nAgyenkwa b4gya a ofi Ne\nmfem’ repem\n$dze nkwa abr1 me nye\nwo.\nEunice Addison - PAN (F) 278\nB4gya, Jesus b4gya\nB4gya, a 4tsew me kra ho (x2)\nB4gya, B4gya, B4gya,\nB4gya,\nB4gya, Jesus B4gya\nB4gya, B4gya, B4gya,\nB4gya,\nB4gya, B4gya kr4nkr4n\nPAN (F) 566\nBra b1hw1 Jesus N’aho4f1\nBra b1hw1 aho4f1 f11f1\nBra b1hw1 aho4f1 a 1nni ewiei\nBra b1hw1 aho4f1 mmoroso\nAdom bi w4 ne mu o,\nbra b1hw1\nNkwa bi w4 ne mu o, abu so\nAdom bi w4 ne mu o, abu so\nAdom bi w4 ne mu o, bra\nb1hw1\nPAN (F) 317\nBra Yesu nky1n\nBra Yesu nky1n\nBra Yesu nky1n $no na\n$refr1 wo\nAwaa-awaa-awaa\nAtuu-atuu-atuu\nAwaa-atuu\nBra, Nyame Sunsum, bra\nBra b1hy1hy1 me foforo;\nMa me ahotew sunsum;\nMa me deny1 sunsum;\nNa masom Wo yiye\nEunice Johnson - PAN (T) 919\nBue m’akoma aniwa, tew\nm’akoma ho\nBue m’akoma aso, Jesus,\n!firi s1 mey1 Wo de\nEliezer Yaw Arkoh-Larbi\nBue maso ma mente\nW’as1m\nNa mente ase yiye.\nBue m’ano na menka\nW’as1m\nNa menka nea woahy1\nme no\nNa s1 wobue maniwa\nMa mihu Wo yiye a,\nNa mehu wo mmara mu\nanwonwade\nEnti boa me na mensom\nwo yie\nW4 wo fr1 adwuma yi mu\nEunice Johnson\n1. Bura bi w4 h4 b4gya ma\nW4twee n’ Immanuel\nmfem’,\nNa ndzeb4ny1fo b4t4 m’ a,\nW4yew h4n ho fi nyina\n2. Owifo no 4dze d1w hun\nBura n’ w4 n’aber do;\nH4 na kaansa mo ho y1\nnk4w a\nM’b4hor mo ho b4n nyina\n3. Nyame Eguambaa,\nWo b4gyaa\nno tum 4nnk1pa da,\nGyed1 W’as4rmba nyina\nenya nkwa\nMma w4nk1y1 b4n bio\n4. Ofitsi d1 me gyedzi hun\nEsu a ofi Wo mfem’ n’,\nOnyame d4 ay1 mo ndwom,\nNa 4b1y1 edu wu m’\n5. Na owu ma me gyirama\nY1 komm da d1tsem’ a,\nMe kra b4tow ndwom\nd11d1w bi\nAkamfo Wo w4 sor\nWilliam Cooper\nChristian As4r Ndwom Fofor 201\nCalvary na m’Agyenkwa\nN’wui\n!h4 na menyaa me\nnkwagye\nCalvary na m’ Agyenkwa\nN’wui\n!h4 na menyaa ne\nnkwagye\n!h4 na $tseaam “Eli, Eli”\n!h4 na menyaa me\nnkwagye\n!h4 na 4teaam Eli Eli\n!h4 na menyaa me\nnkwagye\nPAN (F) 456\n1. Da no ab1n, da no ab1n\nTwiw b1n mogya a 1rekyi\nDa no ab1n\n2. Da no ab1n, da no ab1n\nWiase rek4 awiei1\nDa no ab1n\n3. Da no ab1n, da no ab1n\nAtemmuda n’adu\nDa no ab1n\n4. Da no ab1n, da no ab1n\nW’Agya no refr1 wo\nDa no ab1n\nS.A.K. Karikari, 2-4 Verses\nPAN (T) 732\nDa no b1y1 nkonim\nnkonimdi da,\nDa no b1y1 nkonim d1n\nara!\nY1b1to Hosiana w4\n$hene N’ahenfie\nDa no b1y1 nkonim d1n\nara!\nPAN (T) 697\n1. Da yiye d4fo 4br1fo,\nW’adwuma no, nn1 asa;\nAhomegye pa mmra wo so,\nNa d1w mapa ny1 wo de.\nDa yie, da yie,\nNyame mfa wo nsie.\nAde asa, ay1 sum; da yie.\n2. Nusu bon yim kwantuni pa,\nWoafi 4yaw ne hu nsa.\nWo br1 su mmusu asa\nnn1,\nYebehyiam 4soro h4.\n3. Yesu basa so, da komm\nNa Nyame d4 nhw1 wo so;\nTwere w’Agyenkwa\nkokom yie,\nNa b4ne bi anhaw wo.\n4. Kwantuni 4br1fo d4fo,\nw’akwantu awie sa.\nWoafi ha asian nyinaam\ns4nn,\nWoafi wiase aw’r1howm\nDa yie, da yie, Nyame\nmfa wo nsie,\nDi kan k4tw1n y1n w4 fie.\nDa yie.\nPresby As4re Dwom Nhoma 810\nDaa biara, Awurade\nNne1ma mmi1nsa yi na\nmesr1\nS1 mehu Wo yiye\nM1d4 Wo yiye\nMedi W’akyi yiye\nDaa nyinaa\nTranslation of “Day by Day”\nPAN (T) 1036\nDaa daa daa,\nOye ma me oo daa\nDaa, daa daa. Oye ma me\no!\nDaa, daa daa. Oye ma me\no! Daa\nDaa, daa daa. Oye ma me\no!\nChris Fleischer\nDaa daa, m1b4 me\nnsanku daa\n$sabarima, Dawid, m1b4\nme nsanku daa\nMede d1w na enyigye\nm1b4 me nsanku daa\nMede me ngyirama\nm1kamfo me gyefo, me\nNyankop4n\n$sabarima, Dawid m1b4\nme nsanku daa\nAnigye mu o, awer1ho mu o\nM1b4 me nsanku daa\nChris Fleischer\nDaa, $te saa daa daa daa\n$nnsakra, ara da\nDaa, $te saa daa daa daa\nNkwa ne adom ahy1 no\nma\nDaakye, daakye, daakye\nS1 mede animguase\nnnipadua yi\nTo h4 a, m1k4 anuonyam\nbea\nTo h4 a m1k4 anuonyam\nbea\nPAN (F) 308\nDavid n-sanku a\n$b4 ma Yehowa;\nDavid n-sanku a\n$b4 ma Yehowa\nMomma y1mm4, y1mfa\ny1n ano mm4\nY1mfa y1n koma nka ho\nY1mfa y1n koma nka ho\nPAN (T) 84\nDe1b1n na may1\nDe1b1n na may1\n4de ne mogya at4 me\nNe mogya dehye no\nEfi biara nni ho\nDe1b1n na may1 a\n4de ne mogya at4 me\nDe1b1n na may1 a\nAwurade Wod4 me s11 yi\nDe1b1n na may1 a\nAwurade Wod4 me s11 yi\nWosomaa wo d4ba koro no\nMa $bewu gyee me\n$wui yayaaya de gyee me\noo\n$wui yayaaya, $wui\nyayaaya, $wui yayaaya\nde gyee me oo\nD1m da n’, d1m ara n’\n4b1y1\nD1m da n’, d1m ara n’\n4b1y1\nSunsum b4hwehw1\nNa 4afa N’ ayefor\nN’ 4dze no ak1ma ayefor-kun.\nPAN (F) 603\nD1n na mede b1hy1\nAwurade anan mu\nW4 nea Way1 ama me?\nM1ma nkwagye kuruwa no\nso\nNa mab4 Awurade Ne din\nE.B.A.Yeboah\nPAN (T) 144\n1. D1n na memfa minyi\nW’ay1\nTumi Wura, Daasebr1?\nFa wo honhom pa no\nma me,\nNa m’as1m ay1 wo f1\nNa wo d4 ns1nkyer1nne\nNe wo dom no tra\nm’adwene\nTumfo ne $henk1se\nY1da W’ase, yi W’ay1\n2. S1 mekae me b4ne kwan\na\nMeb44 mu ka pii no a\n!ma mef1re me tirim daa\nS1 woky1e me so ara\nNa wukura me hiani\nNa woy1 timm4b4 ma me\nTumfo ne $henk1se\nY1da w’ase yi W’ay1\n3. Wura, wo na wudii\nm’akyi\nB1gyee me w4 daa ogyam\nDa a me ne nneb4ney1fo\nHwehw11 adefunu no\nWofr11 me s1\nmenhwehw1 wo\nW’ahenni ne wo trenee no\nTumfo ne $henk1se\nY1da w’ase yi W’ay1\n4. !t4 dabi a wop1 s1\nWode 4d4 ba y1n nky1n\nNa dabi nso wohw1 s1:\nWonam yaw bi so twe y1n\nS1 yensua wo nney1e,\nNa y1ny1 s1 W’as1m kyer1,\nTumfo ne $henk1se\nY1da w’ase yi W’ay1\n5. Agya, Woayi\nW’ahumm4b4\nNe wo d4 no akyer1;\nYesu, wo d4 ne wo dom no\nab1ma m’ani agye;\nNa wo, Honhom\nKronkron, da so rekyer1\nme soro kwan no.\nS1 woma midu h4 a,\nMeyi wo ay1 dabaa\nPresby As4re Dwom Nhoma 11\n1. D1w a onnyi ewiei,\nAhomgye a onnyi ewiei\nNa medze b1ma h4n a\nw4y1 M’adwuma nokware\nm’ si ase\n2. Akatua a 4som bo,\nTenabea papa bi\nNa medze b1ma h4n a w4y1\nM’adwuma nokware m’ si\nase\nGrace Gakpetor\nD1w d1w ahy1 m’akoma\nma D1w d1w ahy1\nm’akoma ma\nM’Agyenkwa b1n me\naber nyinaa\nD1m ntsi na d1w ahy1\nm’akoma ma\nPAN (F) 147\nDi bi na nom bi; Mene\nabodoo no,\nDi bi na nom bi; Mene\nabodoo no\nDi bi na nom bi; Mene\nabodoo no\nMunni bi na mobenya\nnkwa\nPAN(T) 903\nDi dwuma ma Awurade\nWo nkwa nna nyinaa\nFa wo ho ma Awurade\nTwere no aber1 biara\nY1de nisua regu\nJesus Christ aba\n4d1w w4 4br1 n’akyi\nDi dwuma n’ara\nDi dwuma n’ara\nKosi s1 owia b1t4\nMma wo nsa mpa ara da\n4d1w w4 4br1 n’akyi\nDi dwuma n’ara\nDi hene m’akoma mu,\nAwurade di hene\nM’akoma yi da h4 ma Wo\nAwurade di hene\nWo-ka me ho yi,\nTumi Wura Kristo,\nSesa m’akoma fa y1 Wo de,\nDi hene w4 m’akoma mu\nFa m’akoma yi y1 Wo de,\nDi hene m’akoma mu daa\nnyinaa\nTena m’akoma mu na hye-\nr1n\nHyer1n ma sum nwuma\nnyinaa ny1 kwa.\nNa W’ahenni no mu b1-tr1\nAma sum nnwuma abr1\nase\nOpoku Onyinah\nDin b1n na w4de ama w4\nnnipa mu\nS1 w4mfa nnye nnipa\nnkwa? (x2)\nEdin b1n na 1w4 tumi?\nTumi b1n na y1nnte ase1 yi?\n!y1 Awurade Yesu Kristo\nDin\nNea Onyan fii awufo mu n’\nSeth Asare Ofei Badu\n1. Din bi w4 h4 a 1y1 d1\n!y1 Yesu Kristo din\n!ma 4yeraba ba fie\nB1home fi ne br1 mu\nM1to n’ayeyi dwom no\ndaa\nW4 N’adom Nkwagye no\nnti\nYesu Kristo ne me gyefo\nAy1yi nka ne din daa\n2. Kristo ne me kra\nAgyenkwa\nN’adom nti manya\nnkwagye\nM’ahu ne nkwagye basa\nno\nNea tetefo hwehw11 no\n3. Ne mogya no y1 nkwa\nnsubura\nNea 1pem fi botan mu\nEtumi horo b4ne nyinaa\nMa 4kra nya anigye\n4. Kristo fr1 no y1 fr1\nkronkron\n!ma anigye bu so\nN’as1m no ne nkwagye\nkwan no\n!kyer1 4yeraba kwan\n5. Yesu Kristo y1 m’adamfo\n$mfa biribi nnhinta me\n$kyer1 me nea $p1\nnyinaa\nW4 ne Kyer1w Kronkron\nno mu\n6. Nokware Kristo din y1\nd1\nAma m’anya ahot4\nM’awer1how adan anigye\nMe kra di ahurusi daa.\n7. M1d4 Wo me kra d4fo pa,\nWo nkutoo na m1d4 Wo;\nM1bata Wo ho daa nyinaa,\nNa mate Wo d4 no nka\nApostolic Twi Hymnal 182\nDin koro na mede ayeyi\nb1ma No\nDin koro na mede ayeyi\nb1ma No\nDin koro na mede ayeyi\nb1ma No\nDin koro na mede ayeyi\nb1ma No\nPAN (T) 340\n1. ‘Domfo Nyame ne Wo;\nY1koto s4re Wo;\n‘Domfo Nyame ne Wo;\nY1kamfo Wo daa daa;\nWo mm4br4hunu to\nrentwa da;\nW’adom bosuo gu y1n so\ndaa;\nTe s1 asubura a 1repem a\n!rennwe dabiara da\n2. $ky1so Nyame ne Wo;\nWoky1 ma 1so obiara so;\n$ky1so Nyame ne Wo;\nY1dan wo aber1 nyinaa;\nW’atimm4b4 tim h4 daa;\nW’ayamye no so y1n\nnyinaa so\nT’s1 beremp4n nsuo ne\nasus4 a\n!t4 ne berem’ abere\nnyinaa\n3. Otumfo Nyame ne Wo;\nYehyira Wo din daa daa;\nOtumfo Nyame ne Wo;\nY1trontrom Wo\nmmanniny1;\nW’ahumm4b4 nni awiei;\nW’ad4y1 no to renntwa da;\nS1 nsuo aniwa a 1repem a\n!to renntwa da biara da\nOpoku Onyinah - PAN (T) 1266\n’Domfo Nyankop4n\nY1de W’ayeyi ma W’\nW4 mp1np1nso a Wode\ny1n adu yi\nY1da W’ase o, daa.\nE.K. Asamoah\n1.D4n bi reb4 m’akoma mu\nDe anigye1 aba m’akoma m’\nDe asomdwoe aba makoma\nmu\nHonhom Kronkron d4n no\nOpoku Onyinah\nDua W’aba pa no w4 me\nkra mu\nHonhom Kronkron,\nNokwafo\nNa matumi ako ak4 m’anim\nNa makodu Wo botae no\nho\nHonhom Kronkron,\nNokwafo\nHonhom Kronkron,\nOdwumay1ni\nTena me mu abere nyinaa\nMesr1 Wo, nnyaw me nko\nRosina Aninkora\nDwen papa a $y1 ma wo\nn’ ho\nDwen papa a $y1 ma wo\nn’ ho\nS1 ehum rotu a $dze W’\nbesie yie\nDwen papa a $y1 ma wo\nn’ ho\nPAN (F) 176\n1. Dzeb4ny1nyi k4besae a\nmahaw\n$domankoma, ma nnto\nme s’raha\n$bra n’ehum rutu, kwan\nm’ ay1 k4nn\n$kra no kwangyafo gya\nm’ kodu s4nn.\n2. Gya m’kodu fie, me\nkra no korabew,\nMbr1 ankonam b4b4fo biara\nnnyew\nMe bra n’ewiei to m’ a,\nOnyankop4n,\nSamanadze kanea, gya\nm’ kodu s4nn.\n3. $wo a ikitsa samanadze\nsaafee\nAkra a woenya wo no\nw4nnhwehw1 hwee\n$wo y1 Nokwar, $kwan,\nN-kwan ma ab4n\nAnk4-a-w4nk4 Christ e,\ngya m’ kodu s4nn\n3. Sum mu etumfo pii risi\nme mpa,\nWoetwa ayer m’, minnya\nbeebi memfa\nNaaso ber a medan Wo\nNyame d4 n’\nM’ad4ntsenhen tumfo!\nGya m’ kodu s4nn.\n4. Medan wo gy’ a\nmabra; adze ehu m’;\nMotwer Wo a, mewie,\nowu nnkotum me;\nM’adagyaw mu, boa me\nmeny1 tartwe4n;\nAnkor-n’ apem-Nyame,\ngya m’ kodu s4nn\n5. S1 $wo Christ gya m’\na mow4 asomdwoe\nMe hia mu W’as1m y1\nm’edzi-amee;\nMigyaa moho ma Wo\nSunsum Kr4nkr4n\nD1 ekyim o, nts1m o,\ngya m’ akodu s4nn.\nGaddiei R. Acquah\nChristian As4r Ndwom\nFofor 1042\nDzi d1w, 4kofo dzi d1w,\nDzi d1w, mma nnsan\nw’ekyir\nK4 w’enyim na konyim\nno reba\nDzi d1w, 4kofo, dzi d1w.\nPAN (F) 175\nDzi kan ma yendzi\nW’ekyir daa\nDzi kan ma yendzi\nW’ekyir;\nS1 4kwan no mu y1 sum\nd1n ara a\nWo na ‘y1 kandzea a\n‘rehyer1n\nEunice Addison -PAN (F) 459\nEguambaa N’ a wokum No n’\nEguambaa N’ a wokum No n’\nEguambaa N’ a wokum\nNo n’, $fata\nHom nyi N’ay1w, Alleluia\nHom nyi N’ay1w, Alleluia\nHom nyi N’ay1w, Alleluia\nHom nyi N’ay1w\nPAN (F) 40\nEmmanuel, Nyame ne\ny1n w4 h4\nEmmanuel Nyame ne\ny1n w4 h4\n$y1 ahohia m’ boafo pa a\nY1anya no nhunui\n$ne y1n w4 h4 nn1 k4si\nwiase awie1\nEmmanuel, Nyame ne\ny1n w4 h4\nEmmanuel, Nyame ne\ny1n w4 h4\nEunice Johnson\nPAN (T) 536\nEso sen adze nyinaa\nEdzi mu sen adze nyinaa\nEsom bo sen wiadze yi\nm’ ndz1mba papa nyinaa\nManya Wo ‘i,\nManya adze nyinaa\nEsom bo sen wiadze yi\nm’ ndz1mba papa nyinaa,\nManya Wo ’i;\nManya adze nyinaa\nGrace Gakpetor\nEwuradze bedzi ne hene\nw4 N’as4re mu\nAman nyinaa bohu ampa\n(x2)\nN’aho4f1w begu, begu\nN’ayamye b1y1, b1y1\nNe nsa a $ama do n’b1y1\nN’anwanwadwuma\nEwuradze bedzi ne hen\nw4 N’as4re mu\nAman nyinaa bohu ampa\nEunice Addison\nPAN (F) 590\nEwuradze, bue m’enyiwa\nma munhu W’ (x2)\nWo mu na nkwa w4,\nWo mu na tum w4\nEwuradze, bue m’enyiwa\nma munhu W’\nPAN(F) 445\n1. Ewuradze, W’as1m tsim,\n‘No na y1hw1 nantsew,\nNyia 4gye no nokwar\nNya kan nye enyigye\n2. Atamfo ba h1n do a,\nW’as1m yi hy1 h1n dzen\nAwer1kyekyer ns1mpa,\nN-kwagye amandz11\n3. $bra n’ehum tu h1n\nNa sum gye h1n do a\nNe kan hye-r1n ma h1n\nNa 4-kyer1 h1n kwan\n4. Woana botum akyer1\nAhot4 nye d1w a\nW’as1mpa yi dze ma\nN-tsetsekwaa nyina?\n5. Ehumb4b4r ns1mpa,\n$boa atseasefo;\nN-kwas1m, 4kyekye\nH4n a w4da wuso wer1\n6. Ewuradze, ma yenhu\nNo mu adzesua kr4nkr4n n’\nNa yaad4, yeesuro Wo,\nDaa nyinaa yaab1n Wo!\nAmen.\nHenry Williams Baker, 1821-77\nChristian As4r Ndwom Fofor 308\n!bere a merekyinkyin\n4bra sare so\nNa minnya baabi memfa,\nNa metee m’Agyenkwa\nNo nne\nNa $ka kyer11 me s1\nmemmra ne nky1n\nMinim Ne din,\nm’Agyenkwa no\nNa $maa m’akoma dii\nahurusi\n!bere biara $ka kyer1\nm’ s1\nMinyi Awurade ay1\nMagye no adi\nPAN(T) 129\n1. !nkaa ade papa bi a\nWode akame me\nMeda W’ase oo, daa\n!nkaa ade papa bi a\nWode akame me\nMeda W’ase oo daa\nMeda W’ase o, daa\nMeda W’ase o, daa\n!nkaa ade papa bi a\nWode akame me\nMeda W’ase o, daa\n2. Wosomaa Wo D4 Ba\nKoro No,\nWoama me daa nkwa\nMeda W’ase o, daa\nWokum Jesus Christ maa\nme,\nWoama me daa nkwa\nMeda W’ase o, daa\n3. Wama me Honhom\nKronkron No\nS1 me ‘Fotufo\nMeda W’ase o, daa\nWama me Honhom\nKronkron No\nS1 me ‘Kyigyinafo\nMeda W’ase o, daa\n4. M’adifi ne fieba mu\nWob4 me ho ban\nMeda W’ase o, daa\nM’akwantu nyina ‘ra mu,\nWo de me bedu fie\nMeda W’ase o, daa\nSeth Asare Ofei Badu\n1. !nso No y1 s1 4b1y1\n!nso no y1 s1 4b1y1\nBiribiara nso y1n Nyame y1\n!nso no y1 s1 4b1y1\n2. !nso no y1 s1 $b1y1\n!nso no y1 s1 $b1y1\nBiribiara nni h4 a\nNyame ntumi ny1\n!nso no y1 s1 $b1y1\nP.B. Appiah-Adu\nPAN (T) 570\n!ny1 aho4den so\n!ny1 tumi so\nNyame Sunsum,\nNa 1b1y1\nanwonwadwuma\nJ. Odoi Korang\n!ny1 m’aho4den,\nOnyame na W’ay1\nOnyame na W’ay1, W’ay1\nme s11 yi\n4gye1 soronko a,\nAwurade de agye me\nAd4e1 bebrebe a,\nAwurade de ay1 me\n!ny1 m’aho4den,\nOnyame na W’ay1\nOnyame na W’ay1, W’ay1\nme s11 yi\nOmono Asamoah\n1. !ny1 y1’ aho4den na\nW’aho4den\nHonhom Kronkron tumi no\nNa 1y1 anwonwade n’\n2. !ny1 y1n trenee, na\nWo trenee\nHonhom Kronkron\nnkanyan no\nMa y1sow aba pa n’\n3. Nyame ne Honhom,\nHonhom Kronkron,\nHy1 y1n den daa ma y1nhy1\nKristo anuonyam\nSeth Asare Ofei Badu\n!r’b4 gu me so s1 po asor4kye\nSaa na Yesu d4 no, 1r’b4\ngu me so\n!r’b4 gu me so s1 po asor4kye\nSaa na Yesu d4 no, 1r’b4\ngu me so\nW4 po no so, w4 po no so\nJesus m’Agyenkwa kyer1\nme kwan\nW4 po no so, w4 po no so\n$kyer1 me kwan\nQuintet\nTranslation by F.S. Safo\n1. !renky1 y1befiri wiase\nasetena yaaya yi mu\nNa y1ak4 y1n agya\nnky1n w4 soro ahenfie\nY1b1k4 oo, y1b1k4 oo\nY1b1k4 soro ak4gye y1’\nahome\n2. !renky1 yebehu w4n a\nw4adi kan k4 no\nNa y1’ ne w4n ab4 m’ ato\nahurusi nnwom\n3. !renky1 yebehu y1n\nnkwagye sahene no\nNea 4de ne nkwa ab4\nsoro kwan ama y1n\nEunice Johnson\n!s1 s1 obiara d4 no\nObiara w4 baabiara\n!s1 s1 obiara d4 no\n$beyi y1n dadwene\nnyinaa\n$n’ne nkwagye farebae\n$soaa afodi nyinaa\nYesu wui maa aman\nnyinaa\nObiara w4 baabiara\n!y1 me anigye s1 mahu\nme Yesu;\nMe ho at4 me s1 mafa N’ s1\nm’Agyenkwa (x2)\nS1 manhu No a, anka\nmayera\nS1 manfa No a, anka\nmawu o,\n!y1 m’ anigye s1 mahu me\nYesu;\nMe ho at4 me s1 mafa N’ s1\nm’ Agyenkwa (x2)\nPAN (T) 134\n!y1 me te s1 nea matua biribi\nAma Jesus, ama Jesus\n!y1 me te s1 nea matua biribi\n!y1 N’adom ara kwa\nPAN (T) 599\n1. !y1 Yesu n’adom ara\nkwa\nN’ ama mete s1nea mete yi\n$de Ne Mogya n’ at4 me\nama manya me fawohodi.\n2. !y1 Yesu mpatawu no,\nN’aka me ne Nyame abom\nManya N’abagye mu\nbembu\n1ne N’adom ngosra mu dom\n3. !y1 Yesu N’as4re mu\ntum’\nN’ama me ne No bom te\nase;\nNe nkonimdi tumi no mu\nN’ama maky1n\nnkonimdifo.\n4. !y1 Yesu N’adom mu\nnkwa\nN’1resiesie me daa nyinaa\nNa madu Ne p1y1 ‘mudi m’\nNa mas1 Ne daapem\nahenni\n5. Awurade Yesu ne me\nnkwa;\nMete ase a, mete ma No.\nMiwu nso a, mey1 Ne de\nM1s1 N’anuonyam\nNyame su\nVerse 2-5 by M.K. Yeboah\nPAN(T) 670\nFa me y1 nea wop1\nMey1 wo mogya n’ ho\nsomfo\nWode wo Mogya n’ at4 me\nAwurade e, fa me y1 nea\nWop1\nR. Asomaning Sarpong\nPAN(T) 838\nFa w’akwan hy1\nYehowa nsa m’\nNa fa woho to No so\nNa $no na $b1y1\nNa $no na $b1y1\nE.B.A. Yeboah\n1. Fa w’ani to me so na\nwoanhwe ase\nNa woant4 piti w4\nakwantu yi mu.\n2. Fa W’ani to me so na\nmaboa wo\nDe wo akodu 4soro fie\ndwoodwoo\nP B Appiah-Adu - PANT (T) 511\nFa wo nkwa b4 af4r ma\nNyame\nW’Agyenkwa refr1 wo nd1\nFa wo nkwa b4 af4r ma\nNyame\nSeesei na tsie w’Ewuradze\nN’aba no nyina’ra aber\nApaafo nyinaa apetse;\nFa wo nkwa b4 af4r ma\nNyame\nW’Agyenkwa refr1 wo nd1\nPAN (F) 324\nFa y1n hy1 W’ataban n’\nase\nFa y1n sie Wo nnwunu\nn’ ase\nS1 ahum retu a,\nS1 abrab4 no mu y1 den a,\nFa y1n sie Wo nnwunu\nn’ ase\nCynthia Portuphy\nFapem foforo, obiara\nnntumi nto\nMe na mey1 ade nyina’ ra\nMe na M’ahyehy1 M’ade\nw4 ne bere mu\nFapem foforo, obiara\nnntumi nto\nT. K. Owusu Boreh\nFr1 Me w4 hiada mu, na\nM’b1gye wo do\nKa w’as1m kyer1 M’ na\nM’b1y1 ne nyinaa\nMinyim akoma m’,\nMinyim adwen mu\nFr1 Me w4 hia da mu,\nna M’b1gye wo do\nEunice Addison\nPAN(F) 457\nGetsemane ahoyera\nmpaeb4 m’\nPilato anim asot4re mu;\nGolgota asennua no ho\nwu n’\nAy1 nhyira ama me\nYesu k44 Kalvari maa me;\nBep4w no so n’ 4soaa dua\nduruduru no\nOgyinaa yaw ne ahomtew\nmu w4 akokoduru mu\nAnwannwad4, anwannwad4\nEunice Johnson - PAN (T) 667\n1. Getsemane turo mu h4\nAwer1how t44 Yesu so;\nH4 na $kyer11 ne d4 no\nS1 $d4 me deb4ney1ni\n$d4 b1n ni? anwanwa d4!\nS1 $d4 me mmroso saa yi,\nO, anka me nso mad4 No.\n2. Owu adesoa t44 me so,\nYesu bae ma made me ho;\nOyii me fii owus1e mu,\nDe kyer11 ne d4 a $d4 me\n3. Meb44 musu yeraa me\nkra,\nNa Yesu bae b1hwehw11\nme\n$t44 mum’ ne twitwafo\nanim,\nDe gyee me san baa\nnkwa mu bio\nApostolic Twi Dwom 119\nGu me kanea mu ngo\nma menhyer1n daa:\nGu me kanea mu ngo\nmesr1 W’\nGu me kanea mu ngo na\nmenn1w daa\nMa menn1w kosi s1 ade\nb1kye\nTo Hosiana! To Hosiana!\nTo Hosiana ma ahemfo\nw4n Hene\nTo Hosiana! To Hosiana!\nTo Hosiana ma $hene\nPAN (T) 350\nGya bi red1w w4 m’akoma\nmu\n!y1 Pentekoste gya\nM1ma Wo gya no ak4 so\nad1w w4 me mu\n‘Ma wiase nyinaa ahu Wo\nTena y1n mu, tena y1n mu\nKeka Wo ho y1n mu daa\nW4 Honhom Kronkron\nno koroy1 mu\nYegyae y1n ho ma Wo\nkoraa\nSeth Asare Ofei Badu\nGya me k4 bep4 no atifi\nNa me ne Wo nya\nay4nkofa\nW4 hann mu, mihu asuten\nWo mogya n’ ate me ho\nPAN(T) 174\n1. Gyedzinyi, twer No,\ntwer No,\nS1 ko n’ kyer do d1n ara a;\n$y1 d1n ara a ibedzi nyim,\nWo Nyame b4ko ama w’\nTwer No, twer No,\nS1 sum n’ y1 hu d1n ara a;\nTwer No, twer No,\nNa adzekyee no ab1n.\n2. Twer No, na mbusu n’\nreb1n,\nNgyigye dzend1n reb1n;\nObokutow wo atra\n$bra n’awor huuhu n’\n3. Ewuradze botum agye\nh1n,\n$y1 Ny1nko ara ampa;\nGyedzinyi, twer No, twer\nNo,\nTwer N’ ara k4 ewiei\nEliza A. Walker\nChristian As4r Ndwom Fofor\nGyidi k1se ho b4hye no\n$hw1 Nyame nkutoo\n$serew ade a 1ntumi ny1\nN’4te1m s1: “1b1y1 yie”\nN’4te1m s1: “1b1y1 yie”\nN’4te1m s1: “1b1y1 yie”\n$serew ade a 1’ntumi ny1\nN’4te1m s1: “1b1y1 yie”\nTranslation of Faith, Mighty Faith\nPAN (T) 706\nGyina me nky1n, me kra\nd4fo pa\nGyina me nky1n, Nyame\nGuamma\nGyina me nky1n, me kra\nd4fo pa\nMinya wo a, manya ade\nnyinaa\nPAN (T) 1002\n185 \n1. Gyina s1 4sraani\nnokwafo\nMa me Awurade\nNa wo nkunim abotiri\nNo da h4 retw1n wo\nNhw1 benkum anaa nifa\nK4 w’anim, s4 gyidi no mu\nNa wo nkunim abotiri\nNo da h4 retw1n wo\n2. Gyina, Nyame ba, s4re\ngyina\nMma w’aba mu mmu\nWo Ntamgyinafo Yesu\nGyina mu r’di ma wo\nRosina Aninkora\nGyina wo mudi mu\nGyina nokware mu\nMma mpepere wo ho w4\nkwan yi mu\nAkwantu yi mu hy1 wo\nho den\nMede me nifa kura wo mu\nGyina wo mudi mu\nRosina Aninkora\nHeaven y1 anigye kuro,\nDaakye bi yebehyiam h4\n$man a w4ammfa nsa\nansi\nHeaven y1 anigye kuro.\nE. K. Asamoah\nHena na 4te s1 Wo\nW4 tumi ne anuonyam\nmu’?\nHena na 4te s1 Wo?\nAnuonyam ahyehy1 Wo\nHena na 4te s1 Wo,\nAho4f1 ne hyer1n mu?\nMe Jesus, $hye-r1nfo\nHyer1n me so, ‘N4pa\nHyer1n Nsoroma\nHyer1n me so, M’adamfo\npa\nHyer1n me so, Jesus,\nhyer1n me so\nOpoku Onyinah\nPAN(T) 1426\n1. Hena na 4te s1 Wo,\nAwurade?\nHena na 4te s1 Wo,\nAwurade?\nHena na 4te s1 Wo,\nAwurade?\nHena na 4te s1 Wo,\nAwurade?\n2. Obi nni W’anim nni\nW’akyi, Awurade\nObi nni W’anim nni\nW’akyi, Awurade\nObi nni W’anim nni\nW’akyi, Awurade\nObi nni W’anim nni\nW’akyi, Awurade\nOpoku Onyinah\nPAN (T) 1429\nHena ne me koraa a\nmafata N’ayeyi\nHena ne me koraa na\nmas1 No bi\nHena ne me koraa a\nmafata N’ayeyi\n$y1 ‘Nyame Tumfo\n$y1 m’ade nyinaa\nM1da N’ase! M1da N’ase!\n$y1 Onyame K1se!\n$y1 Onyame Tumfo, 4y1\nm’ade nyinaa\nE. K. Asamoah\nHena ne me, Yehowa a\nWode w’aho4den ama me?\nHena ne me, Jesus,\nWode wo mogya at4 me?\nEyi y1 4d4, 4d4 na ay1\nsaa;\nWode Wo d4 na agye me\nEyi y1 4d4, 4d4 na ay1\nsaa;\nJesus, d4 me k4si wu m’\nPAN (T) 971\nHo4f1wfo Nazarene ni\nMe Ny1nko Nwanwanyi\nAo, ma m’enyi ntsim Wo\ndo\nWo, Nyame ne Ba\nKr4nkr4n\nPAN (F) 499\nHonhom Kronkron\nrepem w4 me mu\n$y1 Ogya a 1red1w\nframfram me mu\n$y1 me kwankyer1fo,\nfotufo 4ho4denfo\n$y1 me kasamafo.\nE. K. Asamoah\nHonhom Kronkron, me kra\nd4fo\nMa minhu W’akwan mu\nyiye\nS1 4honam rekata me so a\nGye m’ taataa na fa me k4\noo\nWiase resakyera m’adwen a\nGye m’ taataa, na fa me k4\noo\nPAN(T) 1162\nHonhom Kronkron, me\nkyigyinafo,\nWo ne m’adamfo pa (x2)\nMefam Wo ho, aber1\nnyinaa,\nNa W’ay1 me Kwankyer1fo\n4kyer1kyer1fo, 4fotufo,\nNa madi nim aber1 nyinaa\nGrace Gakpetor\nPAN (T) 1423\nHwan koraa mpo na\nHwan koraa mpo na\nHwan koraa mpo na 4te\ns1 Awurade\nHwan koraa mpo na\nHwan koraa mpo na\nHwan koraa mpo na 4te\ns1 Awurade\nW4 tumi mu, w4 nyansa\nmu\nW4 nimde1 mu, hwan na\n4te s1 Wo\nHwan koraa mpo na\nHwan koraa mpo na\nHwan koraa mpo na 4te\ns1 Awurade\n1. Hwan na $reba yi,\nW4 tumi ne aho4den mu\nyi,\nOfura hann s1 ntoma, na\naho4den akyekyere no yi?\n!y1 me Wura Kristo,\nOtumfo Nyame\n$no ne awura mu\nAwurade,\nOtumfo Nyame (x2)\n2. Hwan na $kasa a O-bi\nntumi nka bi yi?\n$ka ma 1ba mu, na $hy1\nnso a egyina\n3. Hwan na $te soro a\nasase y1 ne nan ntiaso yi?\nAb4fo mpempem atwa\nNe ho ahyia, na w4s4re\nno yi?\n4. Hwan na $b44 wiase,\nne emu nne1ma nyinaa;\nOwia, nsoroma, 1po ne e-\nmu nne1ma nyinaa\n5. Hwan na $b44 kwae1:\nEmu nnua ne emu mmoa;\n$ma mmoa nyinaa aduane\nma 1so aboa t1tea so\n6. Hwan na $nim onipa\nawiei1 firi n’ahy1ase n’;\n$ma hiani so firi sumina\nso na $de no si\nmmap4nma adwa so\nGrace Gakpetor\nHwehw1 Wo Nyame som no\nansa na woawu\nWiase nne1ma nyinaa\nbetwam ak4\nPANT (T) 780\nHw1 Me w4 dua no so,\nWo nti na Mes1n h4\nNu wo ho na bra na\nwubenya nkwagye (x2)\nT4 m’ na tew wo ho w4\nAgyenkwa mogya no mu\nT4 m’ na tew wo ho w4\nAgyenkwa mogya no mu\nT4 m’ na tew wo ho w4\nAgyenkwa mogya no mu\nT4 m’ na tew wo ho koraa\nPAN (T) 735\n1. Hw1, Nyimpa b1n nye\nOyi a ogyina\nNyame na nyimpa ntam?\nN’enyiwa tse d1\nOgyaframa\nNe papaa dze Ne nsamu\nJohn hun N’ w4 ’’sor\nesuon no mu\nD1 ewia ne hyer1n\ndzendzen\nHw1 Nyimpa b1n nye Oyi?\nOnyimpa b1n nye $no?\n$no nye Enyimnyam\nHen no\nMara nye Mara no\n$y1 Alpha nye Omega\nAhy1ase nye ewiei\nNe dzin nye $nwanwani\n$y1 Asomdwoe Hene\n$no ne $domankoma Egya\nMbersantsen nyinara\n2. Hw1, Nyimpa b1n na\n$rekasa kyer1\nbasia n’ nsubura n’ do h4 n’\n“Mb1ma wo nkwa a\nonnyi ewiei, 4sombo\nKy1n dza nyimpa b1ma\nNa obiara a 4b1nom bi no\n$b1tsena h4 daa nyinaa\nHw1 Nyimpa b1n nye Oyi?\nOnyimpa b1n nye $no?\n3. Hw1, Nyimpa b1n nye\nOyi a\n$kasa ayarfo ho?\n$se, “W4dze w’ b4n aky1 w’\nFa wo k1t1, nantsew”\nOgyina h4 nd1 d1 ‘yarsafo\nNa $tse1m, d1 “Hom\nnhw1 Me”\nHw1 Nyimpa b1n nye Oyi?\nOnyimpa b1n nye $no?\nPAN (F) 537\n1. Hw1fo k1se no dwene wo ho;\n$b1ma wo nea wo hia nyinaa;\nW4 N’anuonyam ahonya no mu\n$no na $b1hw1 wo\n2. W’ahohia mmere mu,\nmma wo koma nntu;\n$b1ma wo nea wo hia nyinaa;\nTwere no ara na $b1hw1 wo;\n$no na $b1hw1 wo\nTranslation of Great Provider\nFrancis Agyemang Badu,\nPAN (T) 1320\nHwie ma 1ny1 ma;\nHwie ma 1mmu so;\nAdom nkwa nsu na yehia nn1\nAdom nkwa nsu na yehia nn1\nP.B. Appiah-Adu\nPAN (T) 966\nHwim me k4 soro daa\nnyinaa\nHwim me k4 soro daa\nnyinaa\nHwim me k4 soro daa\nnyinaa, Awurade\nHwim me k4 soro daa\nnyinaa\nWiase nne1ma nyinaa\nara y1 kwa\nAsase nne1ma nyinaa\nara ye hunu\nHwim me k4 soro daa\nnyinaa, Awurade\nHwim me k4 soro daa\nnyinaa\nKissiedu\nPAN (T) 815\n1. Hy1 dzen na mma\nnsuro\nHy1 dzen w4 Jesus mu,\nWo Nyame a esom no\ndaa daa n’\n$no na $b1gye wo\nWo Nyame a esom no\ndaa daa n’\n$no na $b1gye wo\n2. K4 kan na mma nnsuro\nK4 kan w4 Jesus mu,\nWo Nyame a esom no\ndaa daa n’\n$no na $b1gye wo.\nWo Nyame a esom no\ndaa daa n’\n$no na $b1gye wo\n3. Hom do na mma nsuro\nHom do w4 Jesus mu,\nWo Nyame a egye N’dzi\ndaa daa n’\n$no na $betsie w’ su\nWo Nyame, a egye N’\ndzi daa daa n’\n$no na $b1gye wo\n4. Twer no na mma nnsuro\nTwer No w4 Jesus mu\nWo Nyame a egye N’dzi\ndaa daa n’\n$no na $b1gye wo.\nWo Nyame a egye N’dzi\ndaa daa n’\n$no na $b1gye wo\nPAN (F) 181\n1. Hyer1n, Nyame\nKanea, hyer1n\nHyer1n w4 sum mu\nHyer1n, Nyame Kanea,\nhyer1n\nMa wiase nyinaa nhu\nWo hann\n2. Pem, Nyame nkwa nsu,\npem\nPem w4 akomam\nPem, Nyame nkwa nsu,\npem\nMa akoma biara ani nnye\n3. D1r’, Nyame gya, d1r’\nD1r’, w4 wiase\nD1r’, Nyame gya, d1r’\nMa wiase nyinaa nhu Wo\ntumi\nP. B. Appiah-Adu\nJerusalem y1 ahotew\nkurow\n$man no y1 4man\nkronkron\nDa bi yebehyiam na y1’\nne Awurade b1to Hallelu\nYa!\nPAN (T) 702\nJesus a w’ahu no a\n$te wo mu no\n$no ne wo kwankyer1fo\nW4 akwantu yi m’\nJesus a w’ahu no a\n$te wo mu no\n$no ne wo kwankyerefo\nEnti, di n’akyi\n$ka wo ho daa nyinaa\nKosi awie1\nEnti ma nsuro\nGrace Gakpetor\nJesus b4gya nko na\notum hor me kra ho\nOtum hor mo b4n ma me\ny1 fitaa\nBiribiara nkotum ahor’\nm’ ma meedzi mu\nGyed1 Jesus b4gya no nko,\nB4gya a 4hor fi, 4sor\naho4dzen\nNyew, Jesus No b4gyaa\nn’ sombo\nAf4rb4dze yi, b4gya ahy1\nno ma\nNyew, Jesus no b4gya n’ sombo\nAlleluia! Kamfo Nyame\nAlleluia! Kamfo Nyame.\nPAN (F) 268\nJesus b4gya repram\nJesus b4gya repram\nJesus b4gya repram b4n do\n$refa wiadze ndomum m’\nak1ma Jesus\nJesus b4gya edzi nyim\nEunice Addison\nPAN (F) 271\nJesus bepue bep4 n’ atifi\nna aniwa behu N’\nJesus bepue bep4 n’atifi\nna aniwa behu N’\nAhotewfo behyia no kwan\nJesus bepue bep4 n’ atifi\nna aniwa behu N’\n1. Jesus fr1 h1n! S1 h1n bra\npo\nWor mpo a, y1tse Ne ndze,\nNe ndze d11d1w n’ gyigye\ndaa daa,\n4se: Christian, ka Mo do.\n2. Tsetseber do asomafo n’\nTsee w4 Galilee po do n’\nWogyaa ebusua, fie nye\nedwuma,\nK1kaa’ 4no a w4d4 No do.\n3. Jesus fr1 h1n d1 mma\ny1nnsom\nWiadze mu ndz1mba\nhuhuw;\n4hw1 ndz1mba a w4som\nh1n bo a,\n$se: Christian, d4 M’ ky1n\nh4n.\n4. Enyigye nye awer1how\nmu,\nDwumadzim’ nye ahomgyem’\n$da ho fr1 h1n d1 y1nd4 N’\nMa $nky1n adze nyina.\n5. Jesus fr1 h1n! O\nAgyenkwa\nY1ser1 W’, ma y1ntse Wo\nfr1 n’,\nH1n akoma ny1 setsie\nmma Wo\nY1nd4 W’ nky1n adze nyina\nCecil France Alexander\nChristian As4r Ndwom Fofor 157\nJesus, Jesus\nKonyim ndwom na y1b4tow\nAo! Jesus w4ak’r4n No\nAo! Jesus w4ak’r4n No\nW4akr4n No, aman\nm’b4hw1\nEunice Addison\nPAN(F) 67\nJesus, Jesus, Jesus\nJesus, nye mo botantsim;\nJesus, Jesus, Jesus\nJesus na motwer No.\nPAN (F) 195\nJesus m’adamfo pa\nMade nyinaa ne wo\nDi hene w4 me mu\nNa mafata w’ayeyi (x2)\nE. K. Asamoah\nJesus, me kra adamfo pa\nne Wo;\nMaba W’anim nn1 da yi;\nJesus, me kra adamfo pa\nne Wo;\nFa Wo nsa ka me nn1;\nYehowa, m’abank1se;\nYehowa, me botantim;\nJesus, me kra adamfo\npa ne Wo;\nMma ntwa me ho nnk4\nnn1\nOpoku Onyinah\nPAN(T) 1251\nJesus, $ky1n w4n nyinaa\nWadi nkunim ama wo\nTu gyidi kwan w4 as1m\nno mu\nEfis1 4ka wo ho (x2)\nE. K. Asamoah\nJesus, $no ara y1 Onyame\n4no ara y1 Nkwa ti\n4y1 ade nyinaa mu ade\nnyinaa\nJesus, w4de 4soro ne\nasase, asaase ase ahy1\nne nsa\nAhy1 ne nsa, ahy1 ne nsa\n4y1 Onyame pr1ko p1\nJesus, 4no ara y1 Onyame\n4no ara y1 nkwa ti\n4y1 ade nyinaa mu ade\nnyinaa\nE. K. Asamoah\nJesus resiesie tenabea w4\nSor’\n$de sika ne Jaspa abo\n$b1ba ber1 a ani nna\nNa wab1fa n’ahotewfo\nnyinaa ak4\nAna y1b1k4 h4, Alleluia\n!me m1k4 h4, Alleluia\nWo nso wob1k4 h4 Alleluia\nAlleluia, y1n nyinaa b1k4\nh4.\nPAN (F) 281\n1. Jesus siarfo! Jesus\nsiarfo\n‘Wo a edze Woho maa\nme ntsi,\nMma nngyaa m’ mma\nminnkyin w4 b4n mu;\nMa membra mb4hom Wo\nmu.\n2. Abr1fo nyina enyidar\nB1y1 mo so m’enyidar;\nJesus siarfo! Jesus siarfo!\nMa membra mb4hom Wo\nmu.\n3. Twe m’ ekyir fi b4n\nnyina ho,\nGye m’ mara mo suban\nnsam’;\nJesus siarfo! Jesus siarfo!\nMa membra mb4hom Wo\nmu.\n4. Enyigye pa, ahot4 kr4nn\nNa Wo som dze b1ma me!\nJesus siarfo! Jesus siarfo!\nMa membra mb4hom Wo\nmu.\nChristian As4r Ndwom Fofor\n1037, CAN 133\nJesus, Wo so, Woky1n\nw4n nyinaa;\nY1aba W’anim 1nn1 da yi;\nY1kotow Wo, y1s4re Wo;\nWoy1 Onyame ba\nOpoku Onyinah - PAN (T) 278\nJesus, wokum N’ maa me\nW4 Calvary\nW4dze ns4eky1w soaa No\nW4 Calvary\nH4 na Owuu ahomtsew wu;\nH4 na wobuee Ne mfem;\nMa b4gya nsu fi pemee\nW4 Calvary\nRH 177 - PAN (F) 480\nJesus, Wo y1 m’adamfo\nMe y4nko ne me nua\nMe kwankyer1fo pa\nWogye me taataa\nDe m’anamm4n sisi\nW’akwan m’\nOpoku Onyinah\nJesus, Woy1 me Botantim\nJesus, Woy1 me Guank4bea\nM1ka Wo k1sey1 no,\nakyer1 amansan\nS1 me nkotokoto na\nminyi W'ay1\nS1 me munimuni, na\nmenna W'ase!\nM1ka Wo k1sey1 no\nakyer1 amansan\nJesus w4 y1n ntam ha\nJesus w4 ha\nJesus w4 y1n ntam ha,\nJesus w4 ha\nWiase twam s1\nmununkum,\nsoro ba nt1m,\n‘Wura d4fo w4 ha,\nJesus w4 y1n ntam ha,\nJesus w4 ha\nAgnes Manko\nPAN (T) 561\nJesus y1 4hene\nJesus y1 Owura\nN’ahenni rentwa mu da\nN’ahenni tim h4 daa\nRosina Aninkora\nJesus y1 4hene, $y1 $hen’\nk1se\n$no na 4y1 m’ade nyinaa\nJesus y1 4hene, $y1 $hen’\nk1se\nNe mu na y1’ nkwagye w4\nY1n nkwagye sombo\n'Ky1n wiase ade nyinaa\nY1n nkwagye a y1anya yi\nDe y1n rek4 N’anuonyam\nm’\nJesus y1 4hene, $y1 4hen’\nk1se\n$no na $y1 m’ade nyinaa\nOpoku Onyinah\nJesus y1 me de, N’ade\nnyinaa nso y1 me de (x3)\nN’ade nyinaa nso y1 mede\nN’ade nyinaa nso y1 me de\nP.B. Appiah-Adu\nPAN (T) 657\nKan no na anka mey1 akoa\nNa afei made me ho\nYesu, Nyame Ba no bae\nWaba ab1y1 me 4ba\nYesu, Nyame Ba no bae\nNa Wab1y1 me 4ba\nEunice Johnson\nPAN (T) 673\n1. Kanea a y1dze hw1\nh1n kwan mu\nMma y1ammfom kwan\ny1annyew;\nAdom N-su a ofi sor t4\nMa akwantufo nom bi;\n2. Edziban a ofi sor t4\nMa y1dze ny1n h1n kra\nNwoma a y1kenkan a\nyehu\nMbr1 4sor man mu tse;\n3. $y1 gyafadum anago,\nMununkum adzekyee;\n$bra po tu ne tsir gu do a\nH1n seky1 nye tabon\n4. Onyame Twerammpon\nN’as1m,\nN’enyimnyam Ba N’\nAhy1mu\nYeenya Wo a yeentum\nbra yi b4,\nYenntum nnya Nyame\nman.\n5. Ewuradze, dom h1n\nma yensua\nW’as1m mu nyansa n’ yie,\nNa y1mfa mbofra ‘koma\nngye\nNe nkyer1kyer1 kr4nkr4n\nno.\nBernard Barton\nChristian As4r Ndwom Fofor 1023\nKans1 wiase yi nyinaa\n‘ra y1 me de\nNa menni Awurade a,\nmenns1 hwee\nS1 apuei ne at4e nyinaa\n‘ra y1 me de\nNa me din nni nkwa\nnwoma no mu a\nKans1 wiase nyinaa ‘ra\ny1 me de\nNa menni Awurade a\nmenns1 hwee\nPAN(F) 361\nKasa ma y1nte wo nne\nKasa ma y1nte wo nne\nTetefo tee wo nne no w4\nsare so\nKasa ma y1nte no nn1\nP.B Appiah-Adu\nPAN (T) 946\nKasa, $hene kasa\nMa nsu no ny1 komm w4\nm’anim\nKasa, $hene kasa\nMa nsu no ny1 komm\nw4 m’anim\nM’awer1ho nyinaa m’\nM’ahokyere nyinaa m’\nKasa na nsu no ny1 komm\nM’awer1ho nyinaa m’\nM’ahokyere nyinaa m’\nKasa na nsu no ny1 komm\nEunice Addison - PAN (F) 466\n1. Kenyan W’edwuma yi,\nEwuradze, kyer1 Wo tum;\nB4 Wo ndze a onyan\newufo n’\nNa ma Wo nkor4fo ntse\nKenyan W’edwuma yi,\nBer a y1kotow W’ yi\nSian, ao, Ewuradze\ndomfo, sian!\nBra behyira h1n sesei\n2. Kenyan W’edwuma yi,\nMa akra nhwehw1\nnkwa-nsu n’;\nO ma h1n esunsum k4n\nnd4\nN-kwa edziban no!\n3. Kenyan W’edwuma yi,\nKr4n W’enyimnyam dzin\nno;\nWo Sunsum mma h1n d4\nm-fram\nMma Wo nye Wo mba\nnyinaa\n4. Kenyan W’edwuma yi,\nMa W’as1m no nnya tum;\nMa w4mfa enyikan\ngyedzi ntsie\nW’as1mpa a nhyira w4 m’ n’\n5. Kenyan W’edwuma yi,\nT4 Pentecost b4w no;\nNa enyimnyam no b1y1\nWodze\nNa nhyira n’ aka h1n\nAlbert Midlan\nChristian As4r Ndwom Fofor\nKo gyidi ko pa;\nTu 4d4 mmirika\nAwiei n’ $b1se wo s1:\n“Mmo!”\nAkoa pa nokwafo, woadi\nnkonim\nAwiei n’ $b1se wo s1:\n“Mmo!”\nAkoa pa nokwafo, woadi\nnkonim\nPAN(T) 453\nKo gyidi ko pa no\nFa asade, fa nnomum\nW4 Sunsum akode\nnyinaa mu\nDum gya tumi nyinaa,\nNa siw gyata ano\nNkunim b1y1 wo de daa\nNkunim b1y1 wo de daa\nNkunim b1y1 wo de daa \nDum gya tumi nyinaa\nNa siw gyata ano\nNkunim b1y1 wo de daa\nPeter Adjei, PAN(T) 1304\nKonyimdzi w4 h4 ma h4n\na w4twer Jesus,\nNa No b4gya nye h4n\nakoky1m\nN’as1m no y1 egyapadze\nk1se ma h4n\nNa N’adom no bu do ma\nh4n daa\nW4mb4 mu ntow ay1yi\nndwom mma No,\n‘B1n ay1yi ndwom na 4s1\nNo?\nY1b4tow, y1b4tow\nAlleluia ndwom na\ny1b4tow\nTranslation from Ga by F.O.\nAdjartey PAN (F) 77\n1. Kora me nkwa, s4 me mu\nNa mentena Wo nan ase\nMa meny1 Wo p1\nMa meny1 Wo p1 nko\n2. Me nkwagye ho adwuma\nno\nWoy11e ansa na w4r’wo me\n3. $fr1 a W’afr1 me yi\n!y1 $soro fr1\n4. Woafr1 me s1 meny1\nWo som adwuma yi bi\n5. Gye me p1 firi me nsam\nMe p1 de’ 1y1 owu\nEunice Johnson\nKronkron, Kronkron,\nKronkron, Kronkron;\nKronkron, Wo na\nW’anuonyam\nAhy1 asaase nyinaa ma;\nAo, y1’ Wura gye\nW’ayeyi\nXhosa Spiritual\nPAN (T) 1283\nKr4nkr4n! Kr4nkr4n!\nKr4nkr4n!\nD4m Ewuradze Nyankop4n\nWo na Sor ab4fo nyinaa\nkotow Wo,\nWo na W‘ahotsewfo\nnyinaa kotow Wo\nEunice Addison - PAN (F) 58\nKwasida, mew4 anigye,\nDwowda, d1w ahy1 me ma\nBenada mew4 asomdwoe\nbiribiara ntumi ns1e no;\nWukuda 1ne Yawda,\nmenantew w4 hann mu;\nFida soro aba fam;\nMemeneda, animtew da\nAnuonyam, anuonyam,\nanuonyam\nAnuonyam, nka Oguamba\nn’\nO Hallelu Ya! Manya nkwa\nM’ani gye s1 manya nkwa\nAnuonyam, anuonyam,\nanuonyam\nAnuonyam, nka Oguamba\nn’\nO Hallelu Ya! Manya nkwa\nMerek4 soro fie\nOn Sunday I am happy\nPAN(T) 328\nKyer1 y1n W’anuonyam,\nOwura;\nKyer1 y1n W’anuonyam,\nOwura\nMa 4soro obosu mmr1\ny1n ahodwo,\nNa kyer1 y1n W’anuonyam\nbio\nTranslation of “Show Us Thy\nGlory O Lord”\nPAN(T) 1021\nMa adom kuruwa no ny1 ma;\nMa adom kuruwa no ny1 ma,\nMa 1ny1 ma mmu so\nNa b4ne antumi antra m’\nMa adom kuruwa no ny1\nma nn1\nP.B. Appiah-Adu\nPAN(T) 382\nMa Awurade Nyame so\nTwa hwe ne nan ase\nNa y1n Nyankop4n y1\nkronkron\nGrace Gakpetor\nMa Elijah atade no ngu\nme so\nMa Elijah atade no ngu\nme so\nNa mafata ama 4ko no\nNa mak4 4ko no anim\nMa Elijah atade no ngu\nme so\nPAN (T) 978\n1. Ma Honhom Kronkron\nmu ogya no mmra\nNa soma y1n k4 wiase\nnyinaa,\nNa y1nk4b4 Wo ns1mpa\nno dawur’\nNkyer1 w4n a wohia\nnkwagye nyinaa\nMa ogya no mmra, ma\nogya no mmra\nMa Honhom Kronkron\nmu ogya no mmra,\nMa ogya no mmra,\nMa ogya no mmra,\nMa Honhom Kronkron\nmu ogya no mmra\n2. Ma Honhom Kronkron\nmu ogya no mmra\nNa bebubu ‘tamfo bonsam\nmpokyer1\nB1gye wo nkor4fo fi ’wu\nahama mu\nMa Honhom kronkron\nmu ogya no mmra\n3. Ma Honhom Kronkron\nmu Ogya no mmra\nAwurade b1y1 W’ara\nW’adwuma;\n$tamfo bonsam ama nabaa\nso,\nMa Honhom Kronkron\nmu ogya no mmra\n4. Ma Honhom Kronkron\nmu ogya no mmra\nY1gye W’as1mpa mu\ntumi no di;\nMa Pentekoste da ogya\nno mmra\nMa Honhom Kronkron\nmu ogya no mmra\n5. Ma Honhom Kronkron\nmu ogya no mmra\nAwurade ma W’adom\nnsu no nt4\nMa Honhom Kronkron\nmu ogya no mmra\nMa Honhom Kronkron\nmu ogya no mmra\nApostolic Twi Dwom 153\nMa menka nea mahu;\n!ne nea mate nkyer1 wo;\nJesus y1 nkwa, $ma\nnkwa,\nNe mu w4 nkwa daa\nP.B. Appiah-Adu,\nPAN(T) 1141\nMa menka W’as1mpa no\ndaa\nNkosi me wuda m’\nNa manya anuonyam\nabotire\nw4 da k1se no mu\nAwurade boa m’ 1nn1 da\nyi\nMa menka W’as1mpa no\nNa manya anuonyam\nabotire\nw4 da k1se no mu\n\n1. Ma mennantew s1nea\nJesus nantewee\nMa mensom s1nea\n$somee\nAma mede me ho nyinaa\nama Wo koraa\nW4 Wo fr1 adwuma yi mu\nMa wo mmay1 nna adi\nw4 me mu\nMa Wo mmay1 nna adi\nw4 me mu\nMa Wo Honhom\nKronkron nhy1 me ma\nNa ma wo mmay1 nna\nadi w4 me mu.\n2. Me Wura Yesu, $br11\nne ho ase\nNantewee Ne p1y1 nyinaa\nmu\nOkyin y11 yie, y11\nanwonwade pii\nAwurade, hy1 me ma ma\nemmu so\nSeth Asare Ofei Badu\nMa mens1 Kristo me suban m'\nMa mens1 Kristo me suban m'\nNa me nney1e afata no\nNa me nante1 as1 no\nNa me nney1e afata no\nNa me nante1 as1 no\nSamuel Otu-Appiah\nMa mente Wo nne daa\nMe wura ne me hene\nNa mahu nea Wo p1\nDaa nyinaa na may1\nMa mente Wo nne\nKasa na m1tie\nMesr1 Wo ma mente Wo\nnne\nGrace Gakpetor\n\nMa mente Wo nne\nm’Awurade\nMa mente Wo nne\nm’Agyenkwa pa\nS1 wo kasa a me kra ho\nsane no\nna 4hy1 ne ho den s1\n4b1y1 wo p1 nko\nEmmanuel Gyesi Addo\n\nMa mentena wo p1 mu\ndaa\nWo p1 na 1ma nkwa, me\nWura\nMede me ho nyinaa to\nWo so,\nMe Wura, daa\nOpoku Onyinah\nMa meny1 d1 'Wo, mo\nWura\nMa meny1 d1 'Wo, Jesus\nMa meny1 d1 'Wo, mo\nWura\nMa meny1 d1 'Wo, Jesus\nMe kasa m', m'abrab4 m',\nm'anamm4ntu m'\nMe nda w'aho4f1w nye\nW'enyimnyam edzi\nMa meny1 d1 'Wo, mo Wura\nMa meny1 d1 'Wo, Jesus\nGrace Gakpetor\nMa meny1 s1nea tetefo no\ny1e\nMa minnyina s1nea\nwogyinae\nJesus, mesr1 Wo,\nMe Wura, mesr1 Wo daa\nnyinaa\nMa Pentekoste gya no\nmmra me mu.\nP. B. Appiah-Adu\nPAN (T) 1026\n1. Ma minhu Wo,\nS1 tete mpanimfo no\nhuu Wo n’\nWohuu Wo w4 mmep4w\nahorow no so no.\nMa minhu Wo, na me\nkra b1mee;\nMa minhu W’anuonyam\naho4f1 f11f1 no;\nMa minhu Wo, Ma minhu\nWo,\nMa minhu Wo, na mekra\nb1mee\n2. Ma minhu Wo,\nS1 tete mpanimfo no\nhuu Wo n’;\nW4tee Wo nne Horeb\nogya bep4 no so\nMa minhu Wo na mekra\nb1mee;\nMa mente Wo nne ne\nw’akwankyer1 no bi;\nMa minhu Wo, ma minhu\nWo,\nMa minhu Wo, Na me\nkra b1mee\n3. Ma minhu Wo\nS1 tete mpanimfo no\nhuu Wo n’\nWohuu W’anuonyam w4\nSinai bep4w n’ so n’;\nMa minhu Wo, na me\nkra b1mee;\nMa w’anuoyam aho4f1 no\nnkata me so bi;\nMa minhu Wo, na mens1\nWo;\nMa minhu Wo, na me\nkra b1mee\n4. Ma minhu Wo s1 tete\nmpanimfo no huu Wo n’\nS1 w4hwehw1 Wo a\nWoma wohu Wo\nMa minhu Wo na me\nkra b1mee,\nNa me kra ant4 piti w4\nakwantu yi mu\nMa minhu Wo, na mens1\nWo\nMa minhu Wo, na me\nkra b1mee\nEunice Johnson - PANT (T) 1329\n1. Ma mununkum no\nnkata me so;\nMa Ogya fadum nkyer1\nme kwan;\nFa me twa 1po k4k44 yi;\nNa manka asuogya\n2. Sunsum Kronkron,\nwoy1 ogya fadum;\nMe nan ’se kanea ne me\nkwan so hann;\nKyer1 me kwan w4 sare yi\nso\nNa mak4du fie s4nn\n3. M’akwantu yi mu\nkanea ne Wo;\nHyer1n ma me w4 fam\nhanom\nOwu sum mu nk4du soro\nW4 Wo nky1n ahenfie\n4. Hyer1n o hyer1n,\nhyer1n ma me;\nSunsum Kronkron kanea\nhyer1n daa\nDaa nyinaa hyer1n ma\nme,\nMesr1 Wo hyer1n daa\nEunice Johnson - PAN (T) 1432\nMa ogya no mmra,\nMa ogya no mmra\nMa ogya no mmra,\nMa ogya no mmra\nMa ogya no mmra,\nMa ogya no mmra\nMa ogya no mmra seesei\nPAN (T) 822\n1. Ma Wo gya no nd1w,\nMa Wo gya no nd1w,\n!nhyew b4n’ nyinaa,\nMa Wo gya no nd1w,\nMa Wo gya no nd1w,\n!nhyew b4n nyinaa,\n2. Ma Wo gya no nd1w\nMa Wo gya no nd1w\n!nhyew honam nnwuma\nMa Wo gya no nd1w\nMa Wo gya no nd1w\n!nhyew honam nnwuma\n3. Ma Wo gya no nd1w\nMa Wo gya no nd1w\n1nhyew mmer1wy1 nyinaa\nMa Wo gya no nd1w\nMa Wo gya no nd1w\n!nhyew mmer1wy1 nyinaa\nGrace Gakpetor\nMa wo ngosra mmra y1n\nso;\nMa W’adom no nn44so;\nMa Wo Tumi Kronkron no;\n!ntena y1n so\nSeth Asare Ofei Badu\nPAN (T) 1253\nMa wo nsa so, ma wo nsa so\nMa wo nsa so nn1,\nAgya Onyame, e!\nMa Wo nsa so nn1\nC.E. Apau Asante - PAN (T) 387\n1. Ma Wo d4 no ntena me\nmu\nNa matim w4 Wo mu yi-e\nNa maso aba s1nea Wo p1\nNa matumi as4 W'ani\nM‘atim Wo d4 m'\nAso aba\nAtena W’as1m m'\nAs4 w'ani\nNa maso aba s1nea Wo p1\nNa matumi as4 W’ani\n2. Ma W'as1m no ntena me\nmu\nNa matumi de ay1\nW'adwuma\nNa matena W'as1m mu\nayi Yesu akyer1\nNa wiase ahu wo w4 me\nmu\nMatim wo d4 m'\nAso aba\nAtena W’as1m m'\nAs4 W’ani\nNa matena W’as1m mu\nayi Yesu akyer1\nNa wiase ahu Wo w4 me\nmu.\nAugustus Blay Cobbinah\nMa y1n nsu no bi; ma y1n\nnsu\nMa y1n 4hyewb4 nsu\nY1hia nsu no bi, y1hia nsu\nMa y1n 4hyewb4 nsu\nB1sa yare na benyan awufo\nMa y1n 4hyewb4 nsu\nYehia nsu no bi, y1hia nsu\nMa y1n 4hyewb4 nsu\n“Give us the Rain Lord”\nPent Hymn 166 - PAN (T) 375\nMa yenhu Wo p1, Awurade\nW4 W’adwuma y1 yi mu\nNa y1anantew mu daa\nnyinaa\nNa y1as4 W’ani\nNa y1anantew mu daa\nnyinaa\nNa y1as4 W’ani\nGrace Gakpetor\nMa Yesu aho4f1 nna adi\nme mu\nN’ayamhyehye\nnwonwaso ne ahotew\nnyinaa\nNyame Honhom Kronkron,\nSakra me su nyinaa,\nAma Yesu aho4f1 ada\nadi me mu\nAlbert W. T. Osborn\nTranslation of Let the\nbeauty of Jesus by Seth\nOfei Badu\n1. M’agyenkwa Yesu\nama me gyinabea foforo\nGyinabea a 1kor4n,\ngyinabea a 1tr1w\n!s1 me s1 mehw1\nm’akwan so yiye\nNa me gyinabea no annyera\n2. M’agyenkwa Yesu\nama me tenabea foforo’\nTenabea a 1kor4n,\ntenabea a 1tr1w\n1s1 me s1 mehw1\nm’akwan so yiye\nNa me tenabea no annyera\nP.B. Appiah-Adu\nPAN (T) 886\nM’aho4den ne Awurade\nampa,\nM’ahome ne No\nMe guank4bea, m’aban\ndenden\nNe Jesus Christ, Nyame ne\nBa\nNe mu na me nkwa hy1\nE.K. Asamoah\nPAN (T) 1077\nM’aho4den sa a Wo ne\nm’aho4den\nM’anuonyam sa a Wo ne\nm’anuonyam\nM’anidaso sa a Wo ne\nm’anidaso\nYesu Kristo, Woy1 m’ade\nnyinaa\nEunice Johnson\n1. M’akoma ahy1 ma,\nahy1 ma abu so\nM’akoma ahy1 ma,\nM’ak4t4 ahosan s’r4kye no mu\nAfei metwere Jesus\nNea $w4 tumi s1 4gye\nnkwa\nM’akoma ahy1 ma, ahy1\nma abu so\n2. Midi d1w m’akoma m’\nM’akomam, m’akoma m’\nMidi d1w m’akoma m’\nYesu Kristo mogya n’\naguare me\nAtew me ho ma may1\nOnyankop4n ba\nMidi d1w m’akomam;\nm’akomam, m’akoma m’\n3. Anigye ahy1 me ma;\nAhy1 me ma, abu so\nAnigye ahy1 me ma;\nAgyenkwa Yesu ahy1 me\nb4 s1:\n$b1ba ab1fa me ak4tena\nNe nky1n daa\nAnigye ahy1 me ma;\nAhy1 me ma, abu so.\nVerse 2&3 by S.A.K. Karikari\nPAN (T) 632 RH 47\n1. M’akoma mu, m’akoma\nmu\nBra m’akoma mu, ‘Wura\nJesus\nBra mu nn1 da yi, bra\nna b1tram\nBra m’akoma mu, ‘Wura\nJesus\n2. M’akoma nyinaa,\nm’akoma nyinaa\nFa m’akoma nyinaa,\n‘Wura Jesus\nFa ne nyinaa nn1, fa n’\nnyinaa, mesr1 W’\nFa m’akoma nyinaa,\n‘Wura Jesus\nPAN (T) 990\nM’as1m y1 Yiw! 1y1 Yiw!\nAmen!\nAs1m biara a m’aka ato h4\n!y1 Yiw! Amen!\nB4hy1 biara a mahy1 wo no\n!y1 Yiw! Amen!\nRosina Aninkora\nM’asomdwoe apam w4\nh4 ma w4n a\nW4fa M’as1m na w4y1\nW4b1y1 s1 dua a esi\nasub4nten ho\nNa w4b1sow aba w4 ne\nbere mu\nW4renwu da, w4b1tena ase\nNa w4ahy1 me\nanuonyam\nEunice Addison\nPAN (T) 1154\nMas4r’ b1k4 so ay1 hann\nAma wiase aman nyinaa\nMenam tumi basa so\nB1gye w4n a w4ayera\nMe gya a M’as4 rennum\nda\nMe ngo rennwe mo mu\nda\nNa mo ak4so ay1\nM’adwuma\nGrace Gakpetor\nM’as4re yi asraafo ne mo\nM’as4re yi, asraafo ne mo\n4ko biara nni h4 a\nmontumi nko\nM’as4re yi asraafo ne mo\nGrace Gakpetor\n1. Maba Wo nwunu ase;\n$soro kronkron m’\nkronkron;\nOtumfo N’anim h4;\n$dom nnepa ahy1 Wo ma;\nMe kuruwa ay1 ma abu\nso;\nNnepa nyinaa y1 me de;\nM’akoma ahy1 nnaase ma\n2. Wo nky1n tena na 1y1;\nAhome w4 Wo mu;\nWo dwodwo me koma;\n$d4 na Wode awowaw me;\nWoahy1 m’afono mu ma;\nAyeyi dwom na m1to;\nM’akoma ahy1 nnaase ma\n3. W'ahengua n’anim h4\nAb4fo atwa Wo ho ahyia\nRetrontrom Wo daa\nnyinaa\nW’ahotewfo bom’ ka s1\nWo nko ne Awurade\nY1hy1 Wo din anuonyam\nM’akoma ahy1 nnaase ma\n4. $dom ne mm4burohunu\nEfi ahennwa n’anim\nRehwie gu Wo mma so\nDe dom reb4 4dom so\nMmeresanten\nNyankopon\nWad4e1 rensa da\nM’akoma ahy1 nnaase ma\nOpoku Onyinah\nVs. 4:Samuel Obeng Eshun\nMahu Nyame anya biribi\nNe Sunsum Kronkron no\ny1 ogya\nM1s4 mu yie gyidi pa mu\nAhy1 Ne din no anuonyam\nM.L. Awuku\nMahu Yesu, Yosef ba no,\nNea Tetefo kaa ne ho as1m\nn’\nSo biribi pa bi betumi\nafi Nasaret aba?\nMommra mm1hw1\nMommra mm1hw1 Yesu,\nAgyenkwa no\nMommra mm1hw1\nPAN(T) 1113\nMahyia No, Jesus\nNea $ma nkwa n’, mahyia\nN’\nMahyia No, Jesus\nNea $ma nkwa n’,\nmahyia N’\nW4asesa m’ ay1 me foforo\nW4ay1 me wura, na 4ne\nme nam\nMahyia No, Jesus\nNea 4ma nkwa n’, mahyia\nN’\nGrace Gakpetor\nManya ny1nko, ny1nko a\n4mmpa da\nManya mo ho sunsum\nmu ahonya\nMenny1 akoa mma b4n bio\nNa osiand1 Christ awo me\nPAN (F) 138\nManya y4nko Jesus mu;\n$y1 m’ade nyinaa;\n$se me s1 memfa me haw\nnyinaa ngu No so\n$y1 mm4nsa m’ asukooko\nan4pawi hy1nhy1n\n$y1 y4nko, d4fo ma me kra,\n$y1 m’akyekyewer1\n$y1 me kyitaani\n$se me s1 memfa me haw\nnyinaa ngu no so\n$y1 mm4nsa m’ asukooko,\nan4pawi hy1nhy1n\n$y1 y4nko, d4fo ma me kra\nPAN(T) 464\nMbeamudua n’ase, m’b4k4\nh4\nMbeamudua n’ase m’b4k4\nh4\nMbr1 Jesus bowui gyee\nme nkwa\nMbeamudua n’ase m’b4k4\nh4\nPAN (F) 125\nM’beyi Jesus akyer1\nMedze Jesus b1kasa\nMedze Jesus b1hy1\nm’akoma m’\nNa $akyer1kyer1 me daa\nAlleluia! Y1b1ma No do!\nAlleluia! Y1beyi N’ay1w!\nAlleluia! Alleluia!\nAlleluia!\nAlleluia!\nAlleluia! Y1b1ma No do!\nPAN(F) 380\nM’b1y1 d1 Jesus; m’b1y1\nd1 Jesus;\nM’adzesr1 nyinaa nye,\nm’b1y1 d1 $no\nM’akwantu nyinaa mu;\nWiadze rok4 enyimnyam\n‘m’\nM’adzesr1 nyinaa nye,\nm’b1y1 d1 $no\nTranslation of ‘To be like Jesus’\nPAN (F) 405\nCAN 353\n1. Mbr1 Jesus Ne dzin\ndua y1 d1w\nW4 gyedzinyi asom’ a!\nOtu ne yaw, y1 ne yar\nedur,\nNa otu no suro nyinaa\n2. $b4 sunsum a oepira esu,\nNa 4dwe akoma a 4ahaw;\nEdziban ma 4kra a k4m\ndze n’\nAhomgye ma fonafo\n3. Dzin pa! Botan a motow\ndo\nMe ky1m na mo sumabew,\nM’egyapadze a 4mmpa da,\nAdom na 4ahy1 n’ ma!\n4. Jesus, mo Hw1fo, Nua,\nNk4mhyeni S4fo Hen\nMo Wura, mo Nkwa,\nmo Kwan, m’ Ewiei,\nBra b1gye m’ay1yi.\n5. Mo mb4dzemb4 4y1\nmber1w,\nM’akoma y1 w44w4w;\nNa ber a m’bohu W’ d1\nmbr1\n$wo tse n’\nM’beyi W’ ay1w d1 mbr1\n4s1\n6. K1pem da n’ na\nm’b1kyer1 Wo d4 n’,\nMedze nkwanhwea\ntsiabaa ‘i;\nNa ma Wo nsanku dzin\nd11d1w n’\n$nhom me kra w4 wum’.\nAmen.\nJohn Newton - 1725-1807\nChristian As4r Ndwom\nFofor 99\n1. Mbr1 metse yi ara\nminnyi hwee ka\nD1 w4kaa Wo b4gyaa gui\nmaa m’\nNa efr1 m’ d1 membra\nWo nky1n\nNyame Eguambaa, maba’\n2. Mbr1 metse yi ara\nmonnk4twe4n d1\nMara meper tu m’ kra\nho fi,\n‘Wo na Wo b4gyaa tum\ntu fi,\nNyame Eguambaa, maba\n3. Mbr1 metse yi ara,\nkaansa aperper,\n$nye ekyingye piinara,\nKo nye suro amen me\nmpo a,\nNyame Eguambaa, maba!\n4. Mbr1 metse yi ara,\nhianyi, furafo;\nEnyiwa 4nye ahonya,\nDza mihia nyinaa w4 Wo\nmu,\nNyame Eguambaa, maba\n5. Mbr1 metse yi ara,\neb1gye m’, ‘beyi m’,\nEdze b1ky1 m’, na atsew\nmo ho;\nMegye W’anos1m midzi\nntsi,\nNyame Eguambaa, maba!\n6. Mbr1 metse yi ara,\nWo d4 k1se n’\nEbubu mpampi nyinaa mu,\nN-kyii m’b1y1 Wo nko\nWodze,\nNyame Eguambaa, maba\n7. Mbr1 metse yi ara,\nadehye d4 n’\nNe tr1, no war, no bun,\nno kr4n,\nM’b4s4 w4 ha na sor mahw1;\nNyame Eguambaa,\nmaba!\nCharlotte Elliot\nChristian As4r Ndwom 353\n1. Me br1 reny1 kwa,\nMe br1 reny1 kwa\nS1 mede Nyamesom pa\nTena ase m’abrab4 yi mu\na me br1 reny1 kwa\n2. Me br1 reny1 kwa\nMe bre reny1 kwa\nS1 mede Nyamesom pa\nTena ase me nkwa yi\nmu a\nMe br1 reny1 kwa\nP.B. Appiah-Adu - PAN (T) 566\n1. Me br1 reny1 kwa\nW4 otwa adwuma yi mu\nMe br1 renny1 kwa’ ra da (x2)\nM1k4 so masom Wo\nMedi wo nokware daa\nMedi W’akyi ak4si awie1\nNa W’ahy1 me ahenky1w (x2)\n2. Wo br1 renny1 kwa\nW4 otwa adwuma yi mu\nWo br1 renny1 kwa’ ra da (x2)\nK4 so na som No\nDi no nokware daa\nDi Nakyi k4si awie1\nNa 4b1hy1 wo ahenky1w (x2)\n3. Mo br1 renny1 kwa\nW4 otwa adwuma yi mu\nMo br1 renny1 kwa’ ra da\n(x2)\nMo nk4 so nsom no\nMonni no nokware daa\nMonni Nakyi nk4si awie1\nNa 4b1hy1 mo ahenky1w (x2)\n4. Y1n br1 renny1 kwa\nW4 otwa adwuma yi mu\nY1n br1 renny1 kwa’ ra da (x2)\nY1b1k4 so asom Wo\nAdi Wo nokware daa\nAdi W’akyi ak4si awie1\nNa Woahy1 y1n ahenky1w\n(x2)\nGrace Gakpetor\n1. Me d4fo ne Wo, me\nWura\nM1som Wo daa, (x2)\nMe Nyankop4n, Wo so,\nWoboro ade nyinaa so\nMe d4fo ne Wo, Me Wura\nM1som Wo daa.\n2. Me d4fo ne Wo, me\nWura\nM1som Wo daa, (x2)\nMe Nyankop4n, Wo so,\nWutumi ade nyinaa y1\nMe d4fo ne Wo, Me\nWura\nM1som Wo daa.\nOpoku Onyinah\nMe Guank4bea ne Wo\nM’Abandenden ne Wo\nMe Nyankop4n, Wo tumi\nso\nW’ad4e1 so y1n so\nRosina Aninkora\nMe gyefo k1se, Awurade\nMe gyefo k1se ne Wo\nAwura mu Awurade\nM’ani da wo so\nWo na metwere Wo\nKora me, kuta me,\nKa me fam Wo ho,\nKristo\nWo so na m’ani da\nOpoku Onyinah\nMe gyefo ne Wo, Awurade\nWo kura me mu\nMe gyefo ne Wo, Kristo\nWo ka me ho\nWoahy1 me b4 s1\nWo kura me mu\nNa Wo rennyae me da\nEnti minsu-ro b4ne bi\nWo kura me mu.\nMe gyefo ne Wo, Awurade\nMe gyefo ne Wo, Kristo\nWo kura me mu\nWo ka me ho\nOpoku Onyinah\nMe honhom, kra ne me\nhonam\nJesus mede rebr1 wo\nAf4reb4de a 1ho te kr4nn\n!y1 wo de daa nyinaa\nMade nyinaa gu pata no\nso\nMeretw1n ma ogya no aba\nMeretw1n, Meretw1n,\nMeretw1n\nMeretw1n ma ogya no aba\nChristian As4r Ndwom Fofor 1000\nMe hye hama afa nea\neye ama me\nAp1gyade no y1 me f1\nBer1 a w4kyeky11 4soro\nnnepa no\nMe de me nsa kaa Yesu\nHallelu Ya! Hallelu Ya!\nMe hye hama afa nea\neye\nHallelu Ya! Hallelu Ya!\nMe hye hama afa nea\neye\nEunice Johnson\nPAN (T) 669\n1. Me kra ‘Damfo, Jesus,\nRegye me taataa,\n‘k4ma Agya D4fo no,\n$no na $hwehw1 me\nS1 mihu Wo yie a;\nM1som Wo nokware mu,\nHonhom mu, m1som Wo;\nMerensan m’akyi\n2. Me kra ‘Damfo Jesus,\nMerehwehw1 Wo,\nNanso Woka me ho,\nBoa me ma minhu Wo\n3. Me kra ‘Damfo Jesus,\nMennte Wo nka bio,\nBoa me ma minhu Wo,\nWo a Woka me ho.\n4. Me kra ‘Damfo Jesus,\n‘Ma mahu Daapem Nyame\nMahu Wo d4 bunu no,\nAnigye mu m1som Wo\nOpoku Onyinah\nMe kra repere hwehw1 Wo\nMe b4fo ne me Nyame\nMe kra k4n d4 w’ay4nkofa\nS4 me nsa na 'ne me\nnhyia\nNa mahu Wo, na mahu\nWo\nS4 me nsa na ne me nhyia\nNa mas1 Wo, na mas1 Wo\nS4 me nsa na 'ne me nhyia\nGrace Gapketor\nMe kra, di d1w na wo\nnkwagye aba,\n4de adom fi soro ab1dom\nwo (x2)\nEnti s4re, di ahurusi,\nMa wo nne so to dwom\nkamfo Awurade\nMe kra, di d1w na wo\nnkwagye aba\n4de adom fi soro ab1dom\nwo\nAgnes Manko\nPAN(T) 279\nMe kra, di d1w na yi\nAwurade ay1;\nDi d1w na yi Awurade ay1.\nMe kra, di d1w na yi\nAwurade ay1;\nDi d1w na yi Awurade ay1.\nDi d1w na yi Awurade ay1.\nDi d1w na yi Awurade ay1.\nMe kra di d1w na yi\nAwurade ay1;\nDi d1w, na yi Awurade ay1.\nPAN (T) 201\nMe kra, hyira Awurade\nMa me mu ade nyinaa\nNhyira ne din kronkron no\nMe kra, hyira Awurade\nE. K. Asamoah\nMe kra, hyira Ewuradze\nNa dza 4w4 wo mu\nnyinara\nNhyira Ne dzin kr4nkr4n\nno.\nMe kra, hyira Ewuradze\n(x2)\nMe kra, hyira Ewuradze\nMe kra, hyira Ewuradze\nMe kra, hyira Ewuradze\nMe kra, hyira Ewuradze\n(x2)\nPAN (F) 573\nMe kuruwa nie, Awurade\nMema so mema Wo\nBra na me kra suk4m no\nennyae\nSoro abodoo, mee me\nmma ennhia me bio\nMe kuruwa nie\nHy1 no ma, ma minni mu\nTranslation by “Here is my\nCup, Lord” – PAN(T) 1016\nMe mpokyer1 nyina ebubu\nMe mpokyer1 nyinaa ebubu\nMe mpokyer1 nyinaa ebubu\nMe mpokyer1 nyinaa ebubu\nMehu m’Agyenkwa\nM’Agyenkwa nwanwanyi,\n$som me bo\nMe mpokyer1 nyina ebubu\nPAN (F) 132\nMe mu ade nyinaa\nbehyira Wo,\nMeyi W’ay1 m1kamfo Wo.\nW’adom a 1boro so ma me,\nMeyi W’aye m1kamfo wo.\nWoy1 Kronkron,\nWonnsesa da,\nAhene mu hene ne W’\nAwurade,\nMe mu ade nyinaa\nbehyira Wo,\nMeyi W’ay1 m1kamfo Wo.\nM.L. Awuku\nMe na Nyame afr1 me\nS1nea W4ahy1 m’ no m1y1\nMe na Nyame afr1 me\nS1 nea W4ahy1 m’ no m1y1\nEunice Johnson\nMe ne No bedi d1w daa\nW4 soro ahemfie\nS1 me wie m’adwuma\nnkonim mu a\nMe ne No bedi d1w daa\nP.B. Appiah-Adu - PAN (T) 564\nMe ne Nyame b1k4 awie1\nMe ne Nyame b1k4 awie1\nMe ne Nyame b1k4 awie1\nMe ne Nyame b1k4 awie1\nR. Sackey\nPAN(T) 851\n1. Me nhw1so pa ne Wo,\nKristo Yesu.\nWo nko na mehw1 Wo\nNa masua wo nwuma no\nNa me nney11 nyinaa,\nafata wo\nAma ‘binom nso ahw1\nasua me\nMe nhw1so pa ne Wo\nKristo Yesu med4 Wo\nMedan Wo, Awurade\nMetwere Wo, mehw1 Wo\nM’ade nyinaa\n2. Me nhw1so pa ne Wo\nNyame Ba Kristo.\nWogyaa W’anuonyam\nFaa akoa tebea no\nMefa wa-hobr1ase a\nMe su b1y1 s1 wo\nAma ‘binom nso ahw1\nasua me\n3. Me nhw1so pa ne Wo\nNi-pa ba Kristo.\nW4anhunu b4ne bi\nW4 Wo nnipaban mu,\nMede meho to Wo so a\nM1sesa ‘y1 s1 Wo\nAma ‘binom nso ahw1\nasua me\n4. Me nhw1so pa ne Wo\nTreneeni Kristo.\nWo k44 dua no so\nMe b4ne no nti\nMehw1 Wo d4 yi a\nMe pa me ho a-kyi\nAma ‘binom nso ahw1\nasua me\n5. Me nhw1so pa ne Wo\n‘Kunimdifo Kristo.\nWonyan’ firi awufo m’\nK44 soro-mu-soro h4\nS1 mehw1 W’ nkunimdi a\n1ma me anidaso\nAma ‘binom nso ahw1\nasua me\nOpoku Onyinah\n1. Me nnamfo pa a med4\nw4n no\nRetw1n me w4 asuogya h4\n!r’nky1 na mehu w4n\nanuonyam m’\nNa y1renni ntetew mu da\nJordan asub4nten no ho\nSoro ahenfie kwan so h4\nAb4fo b1soa me dwoodwoo\nYesu b1ma me akwaaba\n2. Amansan ne soro agya\nYesu Kristo m’agyenkwa\nWo fi wum’ no wok44 soro\nWok4tenaa W’agya nifa\nMehw1 w’anuonyam k1se yi a,\nEnti na me ho at4 me\nSorofo koto w’anim\nS1 nea me nso mey1 ne n’\n\nMe Nya-me ye\nMe Nya-me ye\nW’ad4e so\nW’ahumm4b4 so\nEnti boa me ma mensom\nWo yi-ye\nE. K. Asamaoh\n1. Me wer1 remfi\nMe wer1 remfi ara da\nAdehyedi k1se yi,\nYesu mogya at4 aky1 me;\nMe wer1 remfi ara da.\n2. Me wer1 remfi\nMe wer1 remfi ara da\nS1 nkan n’ mefom Agya\nn’ a,\nYesu mogya ab1pata;\nMe wer1 remfi ara da\n3. Me wer1 remfi\nMe wer1 remfi ara da\nS1 nkan n’mey11 akoa\nmpo a,\nYesu mogya ay1 m’4dehye;\nMe wer1 remfi ara da.\n4. Me wer1 remfi\nMe wer1 remfi ara da\nS1 nkan n’ midii f4 mpo a,\nYesu mogya abu me bem;\nMe wer1 remfi ara da\nEunice Johnson\nPAN(T) 902\nMe Wura Jesus, Me\nWura Jesus\nBue m’aso na mente Wo\nnne\nBue m’ani na minhu Wo\nyie\nMe Wura Jesus, Me\nwura Jesus\nKasa na mente Wo nne\nA.K. Miah\nMe Wura ne Wo,\nkyer1kyer1 me W’akwan\nMe Wura ne Wo,\nkyer1kyer1 me W’akwan\nW’akwan y1 nhyira\nW’akwan y1 asomdwoe\nO, me Wura, kyer1 me\nW’akwan\nT. K. Owusu Boreh\nMe Wura Yesu y1 nkwa\nnsu a 1repem\n!p1m firi 4dom ahengua\nno anim\nObiara a 4p1 mm1nom bi\nkwa\nObiara a 4p1 mm1nom\nnkwa nsu no bi\nP.B. Appiah-Adu\nMe Wura, m’ Agyenkwa\nMerennyae Wo nkae da;\nMe Wura m’Agyenkwa,\nMerennyae Wo nkae da\nHa-lle-lu-ya! Ha-lle-lu-ya!\nHa-lle-lu-ya! Amen\nPAN(T) 1089\nMed4 wo fi m’akoma mu\nMed4 wo fi m’akoma mu\nE. K. Asamoah\nMeda W’ase; Meda W’ase\nMeda W’ase; Meda W’ase\nJesus d4 me daa\nJesus d4 me daa\nWahy1 me anounyam\nEfis1 mahu N’\nWahy1 me anounyam\nEfis1 mahu N’\nPAN (T) 1\n1. Meda wo ase o\nMiyi wo ay1\nW4 4dom a wode adom\nme ‘i\n$soro bosuo ne ngo a\n1ntwa da\nWode ama me abere\nnyinaa $soro bosuo ne\nngo a 1ntwa da\nWode ama me abere\nnyinaa\n2. Mekamfo wo o\nMe trontrom wo\nW4 4dom a ɛky1n so yi\n$soro ahonya ne 1fam\nnnepa\nWode ahyehy1 me abere\nnyinaa\n3. Me pagya wo o\nMehy1 wo anuonyam\nW4 wo tumi k1se no\nSunsum Kronkron ne\nowus4re\ntumi yi a Wode ama me\nOpoku Onyinah\n1. Meda Yesu basa so,\nne ne kokom’ h4 komm;\nne d4 kata me so h4,\nme kra b1home komm.\nTie ab4fo no nnwom a\negyigye nn1 w4 ha,\nFi anuonyam sare so,\nFi Yaspa po agya.\nMeda Yesu basa so,\nne ne kokom’ h4 komm;\nne d4 kata me so h4\nme kra b1home komm\n2. Meda Yesu basa so\nm’afi dadwene nsam’,\nb4ne renhaw me honhom,\nm’afi ha nnyigye mu\nM’afi suro, akyinnye\nNe aw’r1how nyinaam’\nS4hw1 kumaa bi n’ aka,\nNe nusuwa kakra.\n3.Yesu me kra\nGuank4bea,\nme Yesu wu maa me;\ntete botan no mu h4,\nna me wer1 b1hy1.\nH4 na m1fam na matw1n,\nadesae sum nyinaa mu;\nkosi s1 ade b1kye\nasuogya h4nom.\nFrances Jane Alsthne\nPresby As4re Dwom Nhoma 503\nMedan Wo, me Nyame\nMabue me mu ama\nW’as1m\nMihia Wo, boa me\nMa mentena Wo dom mu\ndaa\nE. K. Asamoah\nMede m’akoma m1da W’ase\nMede m’akoma meyi W’ay1\nMede m’akoma m1da W’as1\nMede M’akoma meyi W’ay1\nPAN (T) 49\nMede m’ano beyi Wo ay1;\nM’ano yi beyi Wo ay1;\nMede m’ano beyi Wo\nakyer1;\nAma wiase nyinaa ahu W’\nM’ano b1ka Wo nkwagyes1m;\nAkyer1 w4n a w4ayera;\nMede m’ano beyi Wo ay1;\nM’ano yi beyi Wo ay1\nGrace Gakpetor\nMede m’anofafa b1ka\nMede m’anofafa b1ka\n4gye k1se a Yesu agye me\nM1ka ama amansan\nnyinaa ate\nRosina Aninkora\n1. Mede m’aseda ‘br1 Wo\nMede m’aseda ‘br1 Wo\nWo ne me Nyame a,\nwaboa me abeduru nn1 yi.\nMede m’aseda ‘br1 wo oo\nAseda y1 wo de.\n2. Mede m’ayeyi ‘br1 Wo\nMede m’ayeyi br1 Wo\nWo ne me Nyame a, waboa\nMe abeduru nn1 yi\nMede m’ayeyi ‘br1 wo oo\nAyeyi y1 wo de.\nA.L. Angoh\nMede me honam ne me\nkra\nBeyi me Nyame ay1\nMede m’akoma nyina’ra\nB1da me Nyame ase\nS1 mehw1 nea Onyame ay1\nNe d4, 1ne Ne\nmm4bor4hunu\n1s1 s1 mede me nipadua\nnyinaa\nB4 af4re ma Yesu\nMede me t1kyer1ma\nM1kamfo No\nEfis1 4no na W’agye me\nAfi $bonsam s1e1 mu\nNe ne nkoa-som mu\nKofi Ani Johnson\nMede meho b1hy1 Yesu\nKristo ase\n4haw ne amane nyinaa m’\nMede me ho b1hy1 Yesu\nKristo ase\nW4 m’abrab4 nyinaa mu\nM1k4 so masom w4\nnokware mu\nYesu w4 mafa, minnsuro\n4haw\nMede me ho b1hy1 Yesu\nKristo ase\nMew4 abotire w4 soro da bi\nE. K. Asamoah\nMede 4hyewb4 gya ne\nJesus b1nantew;\nMede 4hyewb4 gya ne\nJesus b1nantew.\nMede 4hyewb4 gya ne\nJesus b1nantew 1nn1 ne\ndaa nyinaa\nJ.C. Quaye - PAN (T) 373\n1. Medi W’akyi daa\nM’Agyenkwa\nWode wo mogya at4 me;\nS1 Wiase nyinaa b1pa\nme mpo a\nW’adom nti, medi W’akyi\ndaa.\n2. M1b4 Wo din daa\nm’Agyenkwa\nWo din no y1 me nwonwa\ns11\nEdwudwo me kra,\nm’akoma t4 me yam\nWo din no tu me suro\nnyinaa\n3. Yesu, ma memfa me\nho nto Wo so\nNa manya nkwa a enni\nawiei;\nHy1 me den na matumi\nagyina\nWo din nti medi nkonim\ndaa\nVerse 2-3 by S.A.K. Karikari\nPAN (T) 844\nMedi Wo din ho adanse\nakyer1 aman\nJesus; Woay1 ade1 yiye\nM1ka W’anwonwadwuma\na Woay1\nJesus, Woay1 ade1 yiye\nMafi d4te p4t44 no mu\nMafi sum ‘tumi ase\nMaba hann k1se a 1y1\nnwonwa no mu\nJesus, Woay1 ade1 yiye.\nMargaret Akuffo\nPAN(T) 868\n\n1. Meenya ngyirama\napem maatow ndwom\nMeeyi mo P4mfo ay1w\nMaakamfo me Hen\nN’enyimnyam\nN’adom no konyimdzi\n2. Mo Wura d4y1fo, me\nNyankop4n\nBoa m’ ma momb4 dawur,\nMemfa Wo dzin n’enyidzi\nno\nMentahye mbea nyina\n3. Jesus! dzin a otu h1n\nsuro,\n$ma awer1how b4 adze;\n$y1 sanku w4 ab4n asom’\n$y1 nkwa nye asomdwee.\n4. $kasa, na wotsie Ne ndze a\nEwufo nya nkwa bio,\nAkoma wer1honyi dzi d1w\nHianyi buroburo gye dzi\n5. Odwuruw b4n no tum\nkoraa,\nOtu daduanyi dua m’;\nNo b4gyaa tum san fifo ho,\nOdzii nyim maa mo so.\n6. Hom b4n nyinaa da\nJesus do:\nWokum Nyame Eguambaa\nW4dze Ne kra so b44 af4r\npr1ko\nMaa obiara ne kra\nCharles Wesley - CAN 1\nChristian As4r Ndwom Fofor 1\nMegye Nyame edzi\nMegyaa b4ne y1\nMay1 Nyame ne ba\nMow4 nkwa a onnyi\newiei\nN’as1m, N’as1m\nN’as1m tse mo mu\nN’as1m tse mo mu\nNtsi mo d4 mo nua\nEunice Addison, PAN (F) 576\nMehu N’anuonyam s1nea\n1te\nS1 mihyia Me Wura\nYesu w4 aheman m’ a\n$b1ma me amo ne tenabea\npa\n1h4 na me wer1 befi me\nbr1 nyinaa\nGrace Gakpetor\nMehwehw1 Wo, Yesu nko\nMehwehw1 Wo, Yesu nko\nNa w4atwer1 s1: “Nkwa nsu\nB1sen afiri wo yam” (x2)\nPAN (T) 975\nMeka wo ho, na mma nsuro\nTu anamm4n w4 gyidi mu\nMidi w’anim, Midi w’akyi\nTweaduamp4n ne Me din\nMe na M’ahy1 wo b4\nOpoku Onyinah\nMeky1n 4honyani,\nmeky1n 4honyani\nMew4 Jesus m’\nAgyenkwa\na $d44so ma me\nMeky1n 4honyani (x2)\nPAN (T) 550\nMene nkwagye farebae\nNea 4hwehw1 me no behu me\nMadi 4tamfo no so\nnkunim ama mo\nMadi 4tamfo no so nkunim\n1. Mene no anante mfe1\nkakra ni\nMene Yesu anante mfe1\nkrakra ni\n$y1 4y4nko a $nnii me\nhwamm4 da\nTebea nyina‘ra mu,\nMene No ar’ na 1nam\n4y1 4y4nko a $nnii me\nhwamm4 da\nTebea nyina‘ra mu,\nMene No ar’ na 1nam\n2. Mafa ogya mu,\nnanso ogya no anhyehye\nme\nahokyer1 mu, 1sum kabii\nb4n mu mpo\n$y1 4y4nko a…\n3. Mafa ogya mu,\nAtamfo ne me adi asi\nbebree\nahokyere mu, 1sum\nkabii bun mu mpo\n4y1 4y4nko a…\n4. Onii me hwamm4 da\n1ne wo nso, 4nni wo\nhwamm4 da\nJesus Christ y1n ahohia\nmu boafo\n$y1 4y4nko a…..\nMoses O.K.\n335 \n1. Mene Onyankop4n\nW’Awurade no\nMe na me b44 asaase mu\nnne1ma nyinaa\nMemmr1 na mempa abaw\nMema nea w4abr1 no\nTumi nya ahome ne\naho4den foforo.\n2. W4n a w4tw1n Me no\nnya M’aho4den\nW4de ntaban foforo foro\ns1 ak4re\nWotu mmirika na\nw4mmpa abaw ara da\nW4nantew na w4mmr1,\nEfis1 w4’ahome ne me\n3. Enti tu gyidi anamm4n\nme mu\nN-hw1 w’akyi ne benkum\nne nifa\nTw1n me ara nko,\nM’animpa di wanim.\n1no na ebesi wo yie\nNa wahu m’anuonyam\nE. K. Asamoah\nMene Yehowa, Me din ne\nno\nMene Yehowa, Me din\ny1 k1se\nMene Yehowa, Mensakra\nda\nMene Yehowa, Me din\nne no\nBeatrice Ako – PAN(F) 1090\nMenim s1 Awurade\nbebue kwan bi ama m’\nS1 meb4 bra pa a 1ho te a,\nYi b4ne akwa, na mey1\npapa a,\nMinim s1 Awurade\nbebue kwan bi ama m’\nMenya nhyira, nhyira a\n4bor do;\nMow4 Nyame a 4tse\nakoma m’\n$y1 Pentekost w4 me\nkra mu\n$y1 ogya a 4tamfo no\nsuro.\nEunice Addison - PAN (F) 569\nMer’hwehw1 W’ na\nmahu s1-nea Wote\nBoa me na mahu\nW’akwan nyinaa mu\nMihu Wo a, m1y1 nea\nWo’kyer1 me nyinaa\nBoa me na me ‘nhw1so’\nadwuma yi as4 W’ani\nBoa me, boa me,\nAwurade\nMa minhu W’akwan\nnyinaa mu\nMep1 s1 mihu Wo, boa\nme ma minhu Wo,\nMe Wura, Jesus, boa me\nma minhu Wo\nOpoku Onyinah\nMer’mma m’abam mmu da\nM1k4 so masom Nyame\n$ka me ho yi\nMer’ nni nkogu da\n$y1 k1se w4 m’abrab4 yi mu\nGrace Gakpetor\n1. Merehwehw1 Wo\nMerehwehw1 Wo\nW4 Asennua n’so\nM’Agyenkwa(x2)\nS1nea Wo d4 me,\nMe nso med4 Wo\nW4 asennua n’so\nM’Agyenkwa\n2. Minni ahot4 bi w4\nm’akoma m’\nYesu yi Wo ho kyer1 me\nWiase rey1 afa me\nnnommum\nYesu, ma minhu wo\n1nn1\nS1nea Wod4 me, me nso\nme-d4 Wo;\nYesu, ma minhu Wo 1nn1.\n3. Wo ho 4k4m ne suk4m\nde me kra;\nYesu, 1he mpo na Wok4?\nMesr1 ho, enyi Wo ho\nnhintaw me\nYesu, bra ma minhu Wo\n1nn1\nS1nea Wod4 me, me nso\nmed4 Wo\nMesr1 W’ bra ma minhu\nWo 1nn1.\n4. Nhw1 me mfomso n-\ntua me ka;\n!no de Yesu, m1t4\nbahaw\nKae W’adehye mogya a\nWuhwie gui n’\nNa fa me mfomso nyinaa\nfiri me\nS1nea Wod4 me, me nso\nmed4 Wo\nW4 asendua n’ so, m’\nAgyenkwa\n2-4 by S.A.K. Karikari\nPAN (T) 954\nMerennyaw Wo da biara da\nMerennyaw Wo da biara da;\n(x2)\nWofam me ho yi,\nM1hy1 wo anuonyam\nWusu fr1 me a, M1gye Wo so;\nWofam me ho yi,\nM1hy1 wo anuonyam\nWusu fr1 Me a, M1gye wo so.\nPAN (T) 473\n1. Merensesa me Nyame da:\nMerensesa me Nyame da.\nNs4hw1 biara a 1b1ba me\nso\nMerensesa me Nyame da (x2) \n2.Yesu nkutoo ne m’ Awurade\n$no nkutoo na m1som No\n$kwan biara a $de m’b1fa\nso no\nMedi N’akyi, merensan da (x2)\n3.$no nko ne kwankyer1fo pa;\n$kwankyer1fo bi nni h4\nbio\n$bedi m’anim de m’ak4\nsoro fie;\n$b1ma me nkwa a enni awiei\n(x2)\n\n4. Yesu Kristo, b1hy1 me\nden;\n$bra akwantu ns4hw1 yi\nmu\nHonhom Kronkron,\nb1hy1 me ma;\nMatumi ako adi nkonim\n(x2)\n1st verse by Rosina Sakaa\n2-4 verses by S.A.K. Karikari\nMerepem so k4;\nJesus, merepem so k4\nS1 me nkur4fo y1 me d1n\nara a merensan\nMe ne w4n a w4apo\nwiase b1k4\nMasim yi, mede,\nmerepem so k4\nPAN (T) 363\nMeresiesie nnipa bi ama\nw4n tumi\nNa Mama m’ ayeyi atra\nw4n anom\nMe honhom bedi w4n kan\nw4 asase so\nNa w4ahy1 Me din\nanimuonyam\nSi W’as4re, hy1 y1n den,\nOwura\nKa y1n bom w4 Wo ba no\nmu;\nMa y1ny1 koro Wo nipadua\nmu\nNe Wo ba no ahenni mu\nTranslation by Johnson\nAgyemang Baduh – PAN(T) 1017\nMesi m’as4re asi ogya so,\nNe gya tum’ no rennum da\nMay1 mo ogya, may1 mo\nogya\nMay1 mo ogya ama M’as4re-\nsi\nPAN(T) 1279\nMesi me dan w4 4botan so\nM1to me bo na masi no yie\nNa me ne Jesus b1tena m’\nMesi me dan w4 4botan so\nS1 osu ret4 a, minsuro,\nS1 ahum retu a m’akoma ntu\nMesi me dan w4 4botan\nso\nNa me ne Jesus b1tena m’\nPAN (T) 447\nMete ase yi, m1to Yehowa\ndwom;\nMew4 h4 yi, m1to me\nNyame dwom,\nMa Yehowa N’anuonyam\nntra h4 daa\nYehowa ani nnye Ne\nnnwuma mu\nP.B. Appiah-Adu\nPAN (T) 123\nMete nne bi firi soro\n!rekasa, 1rekasa ma me\nMa m’akoma at4 me yam\nNa nkonim ay1 me de\nJesus ne nne 1rekasa,\n!rekasa, 1rekasa ma me\nEliezer Yaw Arkoh- Larbi\nMete w4 soro s1 w4reb4\nsanku\nMete w4 soro s1 w4rehy1\nW’ anuonyam\nAsafo d4m yi monka me ho\nNto ay1yi dwom mma\ny1n hene No\nNea W’adi nkunim ama\ny1n\nAyeyi dwom na m1to,\nAyeyi dwom na m1to,\nKristo na m1to ama Wo\nOpoku Onyinah\nMetse 4d4 ne ns1m\nS1 mehw1 b4gya n’ a\nMuhu af4rb4dze a 4so\nMinya Nyame m’\nasomdwee\nTranslation of “I hear the words\nof love” - PAN (F) 264\nMetse Ne nka m’akoma mu\nMetse Ne nka m’akoma mu\nMetse Ne nka m’akoma mu\nMetse Ne nka aber nyinaa\nPAN (F) 122\n1. Mew4 agyapade w4\nKristo mu,\nAdom mmoroso a\nmenntumi nka;\nNe mogya a tumi w4 mu\nNa 4de atua me ti ka\nD1n na mew4 y1 ma\nKristo?\nM1b4 ne din na mad4 no.\n2. Mew4 agyapade w4\nKristo mu\n$no ne me kra gyefo pa;\nNneb4ney1fo\nmmobor4hunufo\nW’apopa me b4ne no\nnyinaa,\nNe nkwagye no ay1 me\nnkwagye,\nM1b4 ne din na m’ad4 no\n3. Mew4 agyapade w4\nKristo mu,\nGetsemane kuruwa kae\nme;\nM’adesoa y11 no adesoa,\nEnti ohunuu amane\nmaa me\nD1n na mew4 ka w4\nKristo ho?\nM1b4 ne din na m’ad4 no.\n4. Mew4 agyapade w4\nKristo mu,\nMogya bi a 1horo b4ne;\n1y1 adom nkwa nsu bi a\n1pem fi Kristo apirakuru\nmu;\nAdom bi na 4de agye me,\nM1b4 ne din na m’ad4 no\n5. Mew4 agyapade w4\nKristo mu,\nN’af4bu no abu me bem;\nM’awer1how adan me\nanigye,\nMe b4ne a Kristo soaae1\nnti,\nAwurade Kristo Kronkron\ngyefo,\nM1b4 ne din na m’ad4 no.\n6. Mew4 agyapade w4\nKristo mu,\n$d44 me kosii wu mu mpo;\nW’asie me nipa dedaw no\nW’ama m’ahu ne d4\nmmoroso;\n4b1kae me w4 N’ahenni mu\nM1b4 ne din na m’ad4 no.\nApostolic Twi Hymnal 190\nMew4 anuonyam bi w4\nsoro h4\nW4 me Wura Yesu mu\n1da a Obeyi Ne ho adi\nMehu no s1nea 4te\nAnuonyam a 1ns1e da\nAnuonyam a 1hyer1n\ndaa\nNa Yesu de b1hy1 me\nW4 N’Agya aheman no\nmu h4\nRosina Aninkora\nMew4 Jesus a 4te me mu\nMew4 Jesus a 4te me mu\nMe Wura ne No\nM1som No daa nyinaa\n‘fis1 4y1 m’ade1 nyinaa\nP. B. Appiah-Adu\nMew4 Jesus me nkwa\nnyinaa mu;\nMew4 Jesus me nkwa\nnyinaa\n$y1 me nantew, $y1 me\nkasa\n$y1 me nna, $y1 me s4re\nMew4 Jesus me nkwa\nnyinaa mu\nPAN (T) 356\nMew4 Nyame Otumfo w4\nm’anim\nNokware Nyame\n$kyer1 me nsa akodi daa\nnyinaa\nM’atamfo so\n$ka me ho yi, minsuro\nbiribi\nNyame Tumfo meyi\nN’ay1 daa daa\nPsalm 18:34\nWords by M.K. Yeboah – PAN(T)\nMey1 honam ne mogya\nna wofr11 me s1\nmemmra\nmm1y1 W’adwuma\nMey1 honam ne mogya\nna wofr11 me s1\nmemmra mm1y1\nW’adwuma\nHy1 me ma; hy1 me ma\nNa matumi ay1\nW’adwuma\nMey1 honam ne mogya\nna wofr11 me s1\nMemmra mm1y1\nW’adwuma\nPAN(T) 834\n359 \nMey1 Ogya a Mered1r’\nw4 wo mu\nMey1 Ogya a Mered1r’\nw4 wo mu\nM1ma wo tumi\nNa woanya aho4den,\nNa wako ak4 w’anim\nM1ma way1 nnam\nNa woadi nkonim\nNa wafa asade kwa\nA.L. Angoh\nMey1 ogya mframa a,\nMered1w w4 wo mu,\nAma woako adi nkunim\nAgnes Manko\nPAN (T) 379\nMey1 Onyame, mey1\nOnyame,\nMey1 Onyame a\nmensakra da (x2)\nMey1 Onyame a\nmensakra da (x2)\nMensakra da\nMey1 Onyame a\nMensakra da\n“I am the Lord”\nTranslation by R. Sarpong Asomani\nPAN 577\nMeyi wo din ay1 daa\nnyinaa\nM1trontrom wo Awurade\nMeyi wo din ay1 daa\nnyinaa\nM1trontrom Wo\nAwurade\nMeyi Yesu ay1,\n$d4 a $de ad4 me\nW’ama afepa ato me a\nMeyi N’ay1 daa (x2)\nMmo ne y1 oo! mmo ne y1 oo!\nMmo ne y1 oo! mmo ne y1 oo!\nM1br1 m’akoma ase;\nNa may1 nea wahy1 me no;\nNea Awurade p1 s1 $y1 no;\n$de me ay1\nEunice Johnson - PANT (T) 1263\n1. M1d4 wo O Kristo\nM1d4 Wo daa\nTie me nankroma anim\nmpaeb4\nNea mesr1 Wo ne s1\nM1d4 Wo Kristo nko\nM1d4 Wo daa, M1d4 wo\ndaa.\n2. Kan no mep11 wi-ase\nanigye\nAfei me hwehw1 Wo ma\nnea 1y1\nMe p1 ara ne s1 m1d4\nWo Kristo nko\nM1d4 Wo daa, M1d4 wo\ndaa.\n3. Mma awer1how nni\nme dwuma daa\nNanso W’ab4fo no dwom\ny1 d1\nW4ne m’b1to dwom s1;\nM1d4 wo Kristo nko\nM1d4 Wo daa, m1d4 Wo\ndaa\n4. Megu ahome maka\nW’ayeyi\nEyi ara na me koma\nb1y1\nMe mpae ara ne s1; m1d4\nWo Kristo nko.\nM1d4 Wo daa, m1d4 Wo\ndaa.\nPAN (T) 831\nM1d4 wo, me Wura\nm1som Wo\nM1d4 Wo, me Wura\nm1som Wo\nW4 nkunim a W’adi ama\nme\nW4 Kalvary bep4 no so\nW4 Kalvary bep4 no so\nOpoku Onyinah\nM1da W’ase, meyi W’ay1\nNea Woy1 ma me nti\nMeyi W’ay1\nJ. Odoi Korang\nM1hyehy1 m’adamude w4\nsoro\n1h4 na nwewee nni h4\n1h4 na nkannare nni h4\nM1hyehy1 m’adamude w4\nsoro\nM1k4 bep4w no so\nM1k4 bep4w no so\nS1 4b4n’ ne ne d4m twa\nme ho hyia a,\nM1k4 Awurade ne bep4w\nno so\nTranslation of “On the mount I’II\ngo” (PH212) – PAN(T) 411\nM1to Awurade ho dwom\nNa ma na Wama ne ho\nso M1to Awurade ho\ndwom\nNa ma na Wama ne ho so\nM’aho4den ne me\nnnwomto ne Yehowa\nNa Way1 me nkwagyefo\n$no ne me Nyankop4n\n$y1 m’Agya\nNa m1kamfo No\nNa m1ma No so\nP.B. Appiah-Adu – PAN(T) 286\n1. M1to dwom mama\nOnyame\nNa mada no ase daa;\nNa mihu ade nyinaa mu\nS1 4p1 me yiye pa\nAyamye ne mm4bor4hunu\n!ne d4 ahy1 no ma\n$de d4 hw1 ne mmofra\nW4 w4n asetena nyinaa\nmu\nNne1ma nne1ma sen ak4\nNa w4nne me Nyame d4\n2. Nyame de ne nsa\nakata\nMe honam ne me kra so,\nS1 4k4re ntaban a\n$de tr1w ne mma so no,\n!fi s1 4maa me nkwa,\nMew4 me na yam no po\nNe me nna nyinaa nso\nAbedu nn1 na wahw1 me\nNne1ma, nne1ma ... n a\n3. Ne ba koro a 4d4 no\nNa oyii no mae maa me,\nS1 onnye me mfi me b4ne\nm’\nNe amanehunukrom,\nAmpa, saa 4d4 yi d44so;\nMe honhom hwehw1 mu a,\nEnhu ne nyinaa mu da;\nEnti na me nso med4 no.\nNne1ma, nne1ma ... n a\n4. Ne honhom n’4de no\nma me\nS1 4mfa n’as1m no so\nMmra me mu na 4nkyer1\nme\nKwan a 1de k4 soro,\nNa 4mm1tew me koma mu;\nNa 4mma me gyidi a\n!b1d1w s1 ‘kanea\nW4 awer1how ne wu mu,\nNne1ma, nne1ma... n a\n5. $de saa hw1 me kra yiye;\n$hw1 me honam nso;\nOnim nea ehia me\nAnsa na mesr1 no po.\nS1 m’aho4den nn44so\nN’ anka mehwe ase a,\n$no Nyame no ara\nB1s4 me mu ama me so\nNne1ma, nne1ma ... n a\n6. Meda a, Nyame na\n4w1n me\nNa 4hw1 me anadwo,\nnanso 4ma ade kye me\ns1 minhu dom foforo.\nS1 me Nyankop4n anhw1\nme\nna wamma ne honhom pa\nankyer1kyer1 me a,\nanka meyerae aky1.\nNne1ma nne1ma sen ak4\nna w4nne me Nyame d4\n7. Satan de haw ne amane\nAhorow pii ba nnipa so;\nnanso wantumi ans1e\nme,\nme nkwagye fi Nyame d4\n4n’na wasoma ne b4fo\ns1 4mmeyi 4bonsam\nb4ne a 4b44 ne trim\ns1 4b1y1 me mfi me so.\nNne1ma nne1ma n.a.\n8. S1 4ba bi afom n’agya\nna wabu n’as1m so a,\nn’agya no b1twe n’aso de,\nnanso ontu no koraa;\nsaa ara na mefom\nOnyame\nna me wer1 fi no a,\nm’agya pa no hwe me\nmmaa,\nna 4mfa nkrate mm4 me.\nNne1ma nne1ma n.a.\n9. N’asotwe no ne ne hwe\nno,\n1ny1 me honam d1 de,\nnanso s1 mehw1 yiye a,\n1kyer1 s1 4kae me;\nna 4d4 nti na Onyame\nde amane ba me so,\nna honam ne wiase antwe\nme amfi ne kwan so.\nNne1ma nne1ma n.a.\n10. Nanso 4kyekye me\nwer1\nw4 m’amanehunu po;\nwasusuw ne mma amane,\n4mma 1mmoro w4n so.\nMa osu nhwe me ara;\nowia befi bio,\nna mede boaset4\nmetw1n da a m’ani begye\nno\nNne1ma nne1ma n.a\n11. Yiw, Onyame d4 nsa da,\nna ne d4 no so ampa\nM’agya pa, meyi w’ay1 daa,\nNa mesr1 wo s1 4ba,\ns1, fa me koraa y1 wo de,\nna ma minso wo mu daa\nanadwo ne awia,\nna memfa wo kwan so\nyiye\n1nkodu s1 mehu wo\nne wo d4 no 4soro!\nPresby As4r Nwom Homa 38\nM1trontrom Wo, meyi\nW’ay1\nM1hy1 Wo din anuonyam\nM1trontrom Wo, meyi\nW’ay1\nM1hy1 Wo din anuonyam\nM1to dwom mama Wo\nNyame\nW4 nea woay1 ama me no\nM1trontron Wo, meyi\nW’ay1\nM1hy1 Wo din anuonyam\nE.K. Asamoah\nPAN(T) 139\nM1y1 d1n na makamfo\nWo m’Agya e?\nW4 ade k1se a W’ay1\nama me\nM1y1 d1n na makamfo\nWo m’Agya e?\nW4 ade k1se a W’ay1\nama me\nM1som Wo, m1som Wo\nM1som Wo, daa nyinaa\nM1y1 d1n na makamfo\nWo m’Agya e?\nW4 ade k1se a Woay1\nama me\nPAN(T) 346\n1. M1y1 nea metumi ahy1\nW’anuonyam\nM’asetra akwantu yi m’\nM1to dwom, maka\nW’as1m Awurade\n‘Ma ebinom ahu Wo d4\nM1y1 Awurade pa, m1y1\nMedi me b4hy1 no so\nNkwa ne owu m’ medi\nWo nokware\nAwurade; eyi na m1y1\n2. M1y1 W’adwuma\nnokware m’ Awurade\nDe atua me kaw no bi\nW’ad4e a woay1 akyer1\nme no nti\nDe atwe w4n a w4ayera\n3. M’ani b1gye Wo som\nho, Awurade,\nKosi s1 wob1fr1 me\nNa me ne hann soro ab4fo\nno\nBeyi wo din ay1 daa.\nI’ll do what I can for Thy Glory,\nLord Faith Message, Translated\ninto Twi by Eld. Sefa Dwamena\nPAN(T) 840, PH 311\nMifi nkoasom yaw ne\nsum no mu\nJesus maba! Jesus maba!\nW4 fawohodi anigye ne\nhann mu\nJesus maba Wo h4\nFi me yare mu\nMaba W’ayaresa m’\nFi me hia mu\nMaba W’ahonya no mu\nFi me b4ne mu\nMaba W’ara Wo nky1n\nJesus maba Wo h4\nW.E. Witter (Rtd.)\nMigyina Calvary bep4 no\nso\nNa mehw1 de1 Onyame\nay1 (x2)\nNa mehw1 de1 Onyame\nay1\nNa mehw1 de1 Onyame\nay1\nMigyina Calvary bep4 no\nso\nNa mehw1 de1 Onyame\nay1\nPAN(F) 510\nMigyina $botantim no so\nNa matena ne me ak4si\nase\nMegyina Awurade\nKristo so\nNa s4hw1 bi anhwe me ase\nMegyina no so, Megyina\nKristo so\nNa matumi ako akosi ase\nMegyina no so, megyina\nKristo so\nNa m´ay1 nkunimdifo\nEunice Johnson\nMihunuu wo akyiri, na\nmefr11 wo\nNa may1 wo m’agyapade1\nTena me mu, na m1y1 wo\nyie\nM1y1 wo yie daa nyinaa\nMinim wo din na mafr1\nwo\nM1hw1 ama n’ asi wo yie\nTena me mu, na m1y1 wo\nyie\nM1y1 wo yie daa nyinaa\nGrace Gakpetor\nPAN(T) 1282\nMihuu w4 bep4 n’ atifi\nS1 Awuradze reba\nJesus reba, Jesus reba;\n$de d1w b1ba;\nNa d1w b1ba adekyee n’ mu\nNa d1w b1ba adekyee n’ mu\nOsu ba b1so1 anadwo\nNa d1w b1ba adekyee n’ mu\nPAN(F) 421\nMinim Ne din, 4n’ ne\nJesus;\nMinim Ne din, 4n’ne\nJesus\n$y1 ahene mu Hene,\n$y1 awura mu Owura\nMinim Ne din, 4n’ ne\nJesus\nP.B.Appiah-Adu - PAN(T) 306\n381 .\n1. Minim No, Awurade\n$s4 me nsa de me twa\nA-sub4ntenYordan\nAbrab4 m’ y1 sum, ‘mu\ny1 den\nAwurade ntumi mpa ne\nnkur4fo\nM’aho4den so betumi\nahwan\nOwu sunsum betumi abu\nafa me so\nAwurade ntumi nto w4n\na w4apaw w4n ntwene\n‘W4 wum’ne nkwa mu\nOwu m’, nkwa m’\nMinim no Awurade\nAwurade s4 me mu\nkyer1 me kwan\nOwu m’, nkwa m’\nMinim no Awurade\nAwurade s4 me mu\nkyer1 me kwan\n2. Mey1 Awurade dea\nNea Onim me ansa na\n4r’nwene me\nW4 me na yam no\nAbrab4 mu y1 kusuu ne hu\nW4ahy1 me b4 s1 4ka me\nho daa\nOwu wow4! Nipadua por4!\nM1te m’ani na W’ama\nme soro nipadua fofor4\n4soro ab4fo ne ahotefo\nd4m behyia m’ kwan\nDe me ak4 soro fie\nW4 s’ro ahenfie\nW4 d1w ahenfie h4\nW’agye m’k4 soro d1w\nahenfie h4\nW4 s’ro ahenfie\nW4 d1w ahenfie h4\nW4agye m’k4 soro d1w\nahenfie h4\nTranslation of “I know Him the\nLord” by Opoku Onyinah\n1. Minim s1 mogya no,\nMinim s1 mogya no\nMinim s1 mogya no di\nmaa me\nDa bi meyerae,\nOwui w4 dua no so\nMinim s1 mogya no di\nmaa me\n2. $too Ne nsa gyee me,\n$too Ne nsa gyee me\n$too Ne nsa gyee me\ngyee me\n3. Mihuu N’ w4 dua no so;\nMihuu N’ w4 dua no so;\nMihuu N’ w4 dua no so;\nno so\n4. Mogya no ka maa me;\nMogya no ka maa me;\nMogya no ka maa me;\nmaa me.\nPAN (T)613\nMinyim d1 $y1 nwanwanyi\nMinyim d1 $y1 nwanwanyi\n$yarsarfo, Gyefo, Hotsewnyi\nMinyim d1 4y1 nwanwanyi\nPAN (F) 11\nMitwa W’af4remuka ho\nhyia\nS1 merema W’ate\nm’aseda nnwom\nNa maka wo anwanwade\nnyinaa\nYehowa med4 Wofi trabea\nAmpa, Yehowa med4 Wo\nfi trabea\nYehowa med4 Wofi trabea\nNnown 26:6-8\nMma nnwen’ ntra so\nOnipa kae s1 woy1 d4te\nMma nnwen’ ntra so\nOnipa kae s1 woy1 d4te\nPAN (F) 312\nM-ma wo wer1 mmfiri,\nOnyame a $yii wo firi\nw’amane mu\nM-ma wo wer1 mmfiri\nOnyame a $yii wo firii\nwo haw yi mu\nS1 w’abrab4 mu ns1m\nY1 yiye ma wo a\nHw1 yiye na\nwoanhoahoa wo ho\nEfis1 Onyame N’adom ara\nkwa\nNa wote s1nea wote yi\n1. Mmer1 mete yi ara;\nMaba W’anim nn1 da ‘i;\nNkatanim biara nni h4;\nMer’hw1 W’ w4 anuoyam\nmu;\nMer’sesa as1 W’ ba\nKristo;\nMaba oo, me Nyame ee,\nhyira me (x2)\n2. Suro biara nni h4;\nAdom nko na abu so;\nNkwa nsuo na 1repem;\nMer’nom nsu no bi nn1;\nMa mafata Wo Ba Kristo;\nMaba oo, me Nyame ee,\nhyira me (x2)\n3. Mogya no repem;\nRepata ‘ma ‘b4n’y1fo;\nObiara ka ho bi;\nManya ‘du W’anim nn1 yi;\nWoresesa m’ ma mas1\nW’ ba Kristo;\nMaba oo, me Nyame ee,\nhyira me (x2)\n4. Mihu Wo a, mer’ntena\nase bio;\n!mma b4ne nnwuma;\nWode me ahy1 Bo4\ntokuro n’ mu;\nWoayi me afiri m’ w4\nahotew mu;\nNa me su res1 W’ ba Kristo;\nMaba oo, me Nyame ee,\nhyira me (x2)\n5. ‘Nuonyam a 1boro so;\nRehyer1n Kristo N’ anim;\nW’ahwim me ak4 saa\nanuonyam n’ mu\nMerehw1 N’ w4\nanuonyam n’ mu;\n$resesa m’ ma mas1 ne\nba Kristo;\nMaba oo, me Nyame ee,\nhyira me (x2)\n6. Honhom a 1ma nkwa;\n!repem Apam Foforo yi\nmu;\nMa obiara a 4ba Agya\nno nky1n;\n$rento no ntwene da;\n$b1sesa n’ na was1 ne ba\nKristo;\nMaba oo, me Nyame ee,\nHyira me (x2)\nOpoku Onyinah\n1. Mmeresanten No\nTete Botantim n’, ne 4no,\nNyame Ba no, de1 4hy11\nne ho nk4m n’\n$ka me ho w4 ha\nYesu 4ne me w4 h4\nYesu ne me w4 h4\n2. Tete ntredee Nyame\nAgya a 4firi tete n’, ne 4no\nAwurade Yesu, nea 4reba\nno\n$ka me ho seesei\nYesu 4ne me w4 h4\nYesu ne me w4 h4\nTranslation of Ancient of Days\nOpoku Onyinah\nMo ho d4 ntsi na Jesus\nbaa wiadze d1 m’\nAgyenkwa;\nMo ho d4 ntsi na Jesus\nbowui w4 dua no do;\nMo ho d4 ntsi na $dze\nm’ rok4 n’enyimnyam\nmu\nDabi m’bohu No d4 bun\nnyinaa D1 mbr1 4tse\nPAN(F) 516\nMo ne me nkamfo\nAwurade ne k1sey1\nMo ne me nkamfo\nAwurade ne k1sey1\nNa momma y1mmom\nmma Ne din no so;\nMo ne me nkamfo\nAwurade ne k1sey1 (x2)\nPAN (T) 114\nMogya n’ atue emuk4\nkwan ama y1n nso\nama ahotefo y1anya\nkwan as4re No\nHalleluya! Halleluya!\nHalleluya nka Nyame\nAguammaa (x2)\nEunice Johnson - PAN (T) 1128\nMogya nti na manya\nnkwa\nYesu mogya nti na\nmanya nkwa\nYesu mogya nti na\nmanya nkwa\nMogya nti, mogya nti na\nmanya nkwa\nPAN(T) 1116\nMomfa aseda nhy1n\nN’aponk1se no mu\nNa momfa ayeyi mmra\nN’abangua no so\nMonna N’ase, munhyira\nNe din\nW’adi 4tamfo no so ama\ny1n\nMonna N’ase munhyira\nNe din\nW’ama y1anya y1n fahodi.\nE.K. Asamoah\nMomfa oseb4 mmra N’anim\nMomfa nne k1se mma No so\nMonyi N’ay1, Momma No so\n$y1 $hene, $henk1se\nGrace Gakpetor\nMomma yenni Yesu ho\nnk4mm4\nYesu ho nk4mm4 nn1,\nYesu ho nk4mm4 4kyena\nMomma yenni Yesu ho\nnk4mm4\nYenni Yesu ho nk4mm4\ndaa\n1. Yesu y1 Onyame Ba,\nOnwonwani,\nOfotufo, Asomdwoe Hene,\nWiase Agyenkwa ne me\nNyankop4n\nYenni Yesu ho nk4mm4\ndaa\n2. Yesu a ofi soro bae,\nWanny1 b4ne\nNa wokum No, Nso Was4re\nWaforo k4 soro na\n$resan aba bio\nYenni Yesu ho nk4mm4\ndaa\nSeth Asare Ofei Badu\nMomma yenni y1n\nNyankop4n akyi;\nMomma y1mfa y1n ho\nnto No so\nNa $no na $boro ade\nnyinaa so;\nNa $no na $b1y1\nNa $no na $b1y1\nNa $no na $b1y1\nPAN (T) 408\nMomma y1mm4 ‘se\n$soro ne asaase mmom\nnyi N’ay1\nWadi owu ne asaman so\nnkonim\nWama y1n daa nkwa\nanidaso asi pi (x2)\nAhotefo, monto Hossiana\n$soro d4m, monto\nHalleluia\nNyame Aguammaa,\nN’ayeyi to rentwa da\nYesu e! Amansan hy1 Ne\ndin anuonyam\n4hen’ k1se, N’ayeyi to\nrentwa da\nYesu e! Amansan hy1\nNe din anuonyam\nPAN (T) 1354\nMomma y1nkamfo Yehowa\nNa ne mu na nkwagye w4;\n!s1 s1 y1kotow no na\ny1da N’ase\nNa ne mu na nkwagye w4\nPAN(T) 119\nMonhw1 nnomaa a\nwokyin w4 wim\nW4nn4, w4mpam,\nw4mmu nhy1 asan\nAgya Onyame, $ky1 a 1so\nw4n so\nNa $ma w4n daa daa\naduan\nEunice Addison - PAN (T) 477\nMonhw1 y1n Hene Jesus,\nAhemfo Hene;\nAman nyinaa Hene,\nJesus, 4reba o,\n$no na $kasa a obi nka bi o,\nOsuo a odum gya\nJesus, $reba o (x2)\nPAN (T) 190\nMonhy1 Me din\nkronkron no anuonyam\nNa M’adi nkonim ama mo\nMomma Me din no so\ndaa nyinaa\nNa nkonim b1y1 mo de\nA. L. Angoh\nPAN (T) 7\nMonkeka s1 Yesu ye\nMonkeka no an4pa ne\nanwummere;\n$y1 mm4bor4hunufo, $y1\nkasamafo\nMonkeka s1 Yesu ye.\nPAN(T) 112\nMonna Nyame ase\nOye na N’ad4e w4 h4 daa\nYiw N’ad4e w4 h4 ma\nw4n a w4suro ne din no\nNa N’ad4e1 so w4n so\nNa N’ad4e1 so w4n so\nE. K. Asamoah\n1. Monna Nyame ase daa\nW4 wiase mmaa nyinaa!\n$somaa ne ba koro\nB1yii y1n awer1ho\n2. Nea tetefo hwehw11e\nNea w4n nyinaa ‘ra p11e\nNea w4n ani gyinae,\n!nna anya aba yi.\n3. Dawid ba k1se no bae,\nN’ahengua no rensakra;\nY1n kra hann 1ne\nnkwagye\nYesu mu n’ 1da adi.\n4. D4fo pa, Woasiesie\ndaa nkwagye de ama y1n;\nMeda W’ase na mesr1\nS1: ma minnya me de bi.\n5. Me nkwagye ne m’ahode,\nMema wo akwaaba nn1\nMe wura, b1b4 wo kwan\nNa fa so bra me komam\n6. Me Hempa, fa w’anu’nyam\nBra b1hy1n mu, na b1tenam;\nBetutu mu nea enye,\nB1y1 mu nea wop1.\n7. Da bi wode anu’nyam\nB1ba abebu at1n.\nMede f1w mehyia wo,\nNa m’ani agye wo ho\nPresby As4re Dwom Nhoma 115\nMontintim,\nMma monhinhim da\nMonk4 so Nyame\nadwumay1 yi mu\nNa mo br1 renny1 kwa da\nNa mobenya akatua pa\nGrace Gakpetor\n1. Monto dwom d1d1 nyi\nAwurade ay1\nMonto dwom d1d1 mma no;\nMomfa oseb4 nyi\nAwurade ay1\nMonto dwom d1d1 mma no\nKristo y1 nkunimdi hene\nampa\nNe mogya adi nkunim\nW’agye ‘deb4ney1ni a 4te\ns1 me\nMonto dwom d1d1 mma no\n2. Monto dwom d1d1 nyi\nAwurade ay1\nMonto dwom d1d1 mma no\n$de me b4ne nyinaa aky1\nme\nMonto dwom d1d1 mma no.\n3. Monto dwom d1d1 nyi\nAwurade ay1\nMonto dwom d1d1 mma no\nNe mogya nti manya\nahofadi\nMonto dwom d1d1 mma no\n4. Monto dwom d1d1 nyi\nAwurade ay1\nMonto dwom d1d1 mma no\n$sahene Kristo adi\nnkunim\nMonto dwom d1d1 mma no\n5. Monto dwom d1d1 nyi\nAwurade ay1\nMonto dwom d1d1 mma no\nS1 mihu m’agyenkwa\nanim a\nM1to dwom d1d1 ama no\nApostolic Twi Hymnal 191\n1. Monto dwom pa mma\nagyenkwa,\n$ne Yehowa!\nMonna n’ase, munyi n’\nay1 W4 mmaa nyinaa’ra\n!s1 Kristo gyidifo s1 w4ma\nS1 w4ma ne din no so\nMonna n’ ase, munyi n’ay1,\nmunhyira no daa!\n2. Kristo manfo ne ne\nmpamfo\nho ka w4n ho p1;\nna w4n yiye ne asomdwee\ny1 w4n wura f1\n$d4 ne mmofra papa,\nna wohu amane a\n$boa w4n ma w4tena komm\nhy1 no anuonyam\n3. S1 atamfo atrosomfo\nd44so pii nso a,\nYesu mmofra bo rentu da,\nw4de f1w k4 sa;\nWokura anyames1m\nna w4b4 mpae dennen nso;\nSaa nkrant1 ne akode\nna w4de yi d4m\n4. Mo, Israelfo, Nyame\nnkur4fo!\nmo ani nnye daa\nS1 mo y1fo ne mo Gyefo\nhw1 mo so yiye\nMo a moy1 Sion mma,\nmomma mo ani nka daa\nS1 mo hene anya tumi\n4soro ne fam!\nPresby As4r Dwom Nhoma 3\nMonto dwom, mommo ose\nMunhuro mma Asafo\nYehowa\nAnwanwade a W’ay1 no\nnti\nAde k1se a W’ay1 ama y1n\nMunhuro mma Asafo\nYehowa\n1. Monto Yehowa akwan\nho dwom\nS1 n’anuonyam no y1\nk1se\n4no ne y1n kra hintabea\n4remma b4ne bi nto y1n\nMonto ay1yi nnwom mma\nno\nNa ne nnwuma y1 nokware,\nNhyira nka Onyankop4n\n2. $ka po nsu boa ano kuw\n$de bun sie nea 1h4 d4,\nNe nyansa mu nni\nhwehw1bea\nD1n na w4de b1to ne ho?\n3. $remma wo nan nwatiri,\nNea 4hw1 wo no rent4 nko,\nOwia renhye wo awia,\nNa 4sram rensi wo so\nanadwo\n4. D1n na memfa mma\nAwurade,\nM1to N’ayeyi dwom no daa,\nMa me kra ntena ase nyi\nwo ay1\nNa menka wo nkwagye no\nnkyer1\nApostolic Twi Hymnal 36\nMorotw14n ne mbae no\nW4 Sor adampan mu\nMorotw14n me Jesus,\n$nk1ky1r na waba\nMerets1w, na meretsie\nNdze a 1b1tse1m 4dasum\nMorotw14n me Jesus,\n$nk1ky1r na waba\nWahy1 b4 d1 4b1fa m’\nDze me ak1tsena\nN’enyimyam mu\nWahy1 b4 d1 $b1ma m’\nKonyim ahenky1w na\nm’asoa\nMerets1w, na meretsie\nNdze a 1b1tseam 4dasum\nMorotw14n me Jesus,\n$nk1ky1r na waba\nPAN (F) 588\nNa w4awo $ba ama y1n;\nW4ama y1n $babanin\nNa w4awo $ba ama y1n;\nW4ama y1n $babanin,\nN’ahenni b1da Ne mmati\nso,\nNa w4b1fr1 Ne din:\n$pamfo nwanwani,\nOnyame katakyi\n$domankoma Agya,\nAsomdwoe Hene\n$domankoma Agya,\nAsomdwoe Hene\nUnto us a Child is born\nEunice Johnson - PAN (T) 245\nNa w4too Onyankop4n\nakoa Mose dwom\nNe Oguamma no dwom s1:\n“Awurade Nyankop4n\nAde nyinaa so tumfo,\nWo nnwuma y1 ak1se\nNa 1y1 nwonwa” (x2)\nMerensanten Hene,\nW’akwan tene\nMerensanten Hene,\nW’akwan tene\nMerensanten Hene,\nW’akwan tene\nNa 1y1 nwanwa\nPAN (T) 331\nN’as1m, N’as1m y1\nsunsum\nOnyame as1m y1 nkwa\nNas1m, Nas1m y1\nsunsum\nOnyame as1m y1 nkwa\nE. Dankyi\nPAN (T) 386\nN’ayeyi rensa da\nN’ayeyi rensa da\nW’ama me a mens1\nManya Nyame\nN’anuonyam\nN’ayeyi rempa mano m’\nda\nJane Quaye\nPAN (T) 1330\nN’enyimnyam b1hyer1n\nh1n do\nDaa nyinaa, beebiara\nN’enyimnyam b1hyer1n\nh1n do\nDaa nyinaa, beebiara\nEunice Addison\nPAN (F) 214\nNe d4, Ne d4\nNa Ne frankaa n’ ay1 d4\nama me;\n$de me aba N’adidibea\nno ase\nNa Ne frankaa n’ ay1 d4\nama me.\nPAN (T) 359\nNe dzin 4nnye Jesus,\n$y1 me ny1nko\n$y1 onyimpa na $y1\nOnyame (x2)\nMep1 d1 mehyia N’, mep1\nd1 misua N’\nNa $y1 me ny1nko\nNwanwani\nEunice Addison\nNe mogya no adi bem;\nYesu Ne mogya no adi\nbem\nNe mogya no adi bem;\nYesu Ne mogya no adi\nbem\nAyi y1n afi b4ne mu\nAsa y1n nyarewa nyinaa\nAyi y1n afi 4bonsam nsam\nNe mogya no adi bem\nP. B. Appiah-Adu\nPAN (T) 661\nNea as1e nyinaa\nW’ay1 no yiye\nNea enye yiye nyinaa\n$b1y1 no yiye\n$y1 Onyame a\n$y1 ade1 yiye\nGye no di\nNa $b1y1 wo yiye.\nGrace Gakpetor\nNea Owui w4 Kalvary\nsunsum no\nRey1 anwanwa dwuma\nRetu mmonsam, resa\nnyarewa\nSiw gyata ano, redum\n‘gya tum’\nReka ananafo mpasua\nnyinaa gu\nNea Owui w4 Kalvary\nsunsum no\nRey1 anwanwa dwuma\nEunice Addison\nPAN(T) 469\n1. Nea 4ma sukooko fifir\nNea 4ma wim nnomaa nso\ndidi\nFa w’as1m nyinaa hy1 ne\nnsa\nAwurade b1hw1 ne nyinaa\n2. Nea 4tum’ s1 4ma\nnkwa fofor\nNea ne tenabea w4 sor’sor\n$b1ma w’ nea 1hia w’biara\nAwurade b1hw1 ne nyinaa\n3. Akwantu m’ 1ka wo nko a\nS1 4d4fo bi gya w’ h4 k4 a\n$d4fo pa no ne wo b1tena\nAwurade b1hw1 ne\nnyinaa\n1. Nea wafr1 me no,\n$nim nea 4de me b1y1\nMe de mey1 adwinnade w4\nne nsam ara\nMe Wura mate Wo fr1\nFa me y1 nea Wop1 s1\nWode me y1\n2. Adwuma Wura no, $no\nna wafr1 me\n$de adwuma bi agya me\ns1 meny1\nOwura no p1 nokwaredi\nMedi mu nokwar’, anya\nakatua pa.\n3. Mede aho4har’, ne anidah4\nM1y1 me wura a wafr1 me\nno adwuma\nM1hw1 na may1 no yie\nS1 $ba a W’ab1ma me\nakatua pa\nEunice Johnson\nNea Way1 ama me,\n$s1 nnaase\nNea Way1 ama me\n$s1 ayeyi\nMeyi N’ay1, m1da N’ase\nNea W’ay1 ama me,\n$s1 ayeyi\nPAN (T) 117\nNea w4kyeree no w4\nGetsemane n’\nNea w4b44 N’ataade so\nntonto no n’\nNea wokum no w4 Kalvary\nWadi nkunim, Wadi nkonim,\nWadi nkunim ama nnipa\nmma\nWadi nkunim, Wadi nkonim,\nWadi nkunim ama nnipa\nmma\nEunice Johnson\nPAN (T) 1224\nNhyira ne Yehowa, me\nNyankop4n,\nIsrael Nyankop4n\n$no nkutoo n’ 4y1\nanwanwade\nNhyira, nhyira nka No\n$no nkutoo n’ 4y1\nanwanwade\nNhyira, nhyira nka No.\nPAN (T) 255\nNhyira nka Awurade\nW’afr1 y1n afi y1n abusua\nm’\nFi kasa horow nyinaa-ra\nmu (x2)\nAmanfrafo a yenni ky1fa\nWay1 y1n aheman ne as4fo\nAma y1n Agya\nOnyankop4n\nNhyira nka Ne din\nNhyira nka Ne din,\nAnuonyam nka Ne din\nWay1 y1n 4man kronkron\nNhyira nka Ne din.\nNhyira nka nea obuee\nadom pon\nMaa y1n nneb4ney1fo\nY1b1ka Ne dom daa\nnyinaa\nY1b1ka Ne dom daa\nnyinaa\nPAN (T) 45\nNhyira nka Wo, nhyira\nnka Wo\nNhyira nka Wo, Nyame\nteasefo (x2)\nW’adom, Wo d4, banb4 a\nemu y1 den\nWo mma y1bom to\nnnwom ka s1\nNhyira nka Wo daa\nRosina Aninkora\nNhyira Wura ne Wo\nDomfo, Mm4bor4hunfo,\nYehowa,\nY1hyira Wo din daa\nnyinaa\nY1n Nyankop4n ne Wo\nY1n Nyankop4n ne Wo\ndaa nyinaa\nY1n D4fo, y1hyira Wo din\nY1n Nyankop4n ne\nWo daa nyinaa\nY1n d4fo, y1hyira Wo din\nOpoku Onyinah\nNka emi nko a\nNky1 meehu Wo yie\nNka emi nko a\nNky1 meehu Wo yie\nNa maad4 Wo\nNa maasom Wo\nMedze mo ho nyinaa ama\nWo\nEunice Addison\nPAN (F) 370\nNkunimdi! Nkunimdi!\nMogya dehye t4 nkunim\nNkunimdi! Nkunimdi!\nNkunim abere nyinaa\nS1 Yehowa te ase yi\n$ma sunsum m’ aho4den\nMa w4n a w4twer’ no\nDi nkunim abere nyinaa\n(x2)\nPAN (F) 229\nNkunimdifo a mew4 ne\nnsraban mu ne me\nWura Jesus\nNkunimdifo a mew4 ne\nnsraban mu ne me Wura\nJesus\n$no na Wadi 4tamfo no so\n$no na Wadi wiase so\nEnti na m’akodi nyinaa\nmu medi nkunim (x2)\nSeth Asare Ofei Badu\n1. Nkwa aboodoo, Yesu\nne nkwa aboodoo no\nNkwa aboodoo no\nNkwa aboodoo, Yesu ne\nnkwa aboodoo no\nNkwa aboodoo no\nObiara a 4bedi bi n’\n4k4m renne no\nObiara a 4bedi bi n’\n$k4m renne no\n2. Nkwa asuten, Yesu y1\nnkwa asuten no\nNkwa asuten no,\nNkwa asuten, Yesu y1\nnkwa asuten no\nNkwa asuten no,\nNea osuk4m de no no.\n$mmra mm1nom bi\nNea osuk4m de no no,\n$mmra mm1nom bi\nPAN(T) 901\nNkwa nsu repem\nAdom nsu repem\nNom bi na woannwu\nNa wo kra anya nkwa\nRosina Aninkora\nNkwa nsu resen\nObiara a 4p1\n4mmra Yesu nky1n\nNa 4mm1nom bi kwa\nNkwa nsuo no repem\nRepem w4 Jesus mu\nW4n a w4abr1 nyinaa\nmm1nom bi\nNkwa nsuo no repem\nRepem w4 Jesus mu\nW4n a w4abr1 nyinaa,\nmm1nom bi\nMe wura maba o\nMa me bi nom nn1,\nS1 menom a suk4m\nrenne me da\nAwurade, W’as1m so na\nmigyina\nMaba wo nky1n h4\nOpoku Onyinah\n1. Nkwa nsuti ne Wo\nOwura Yesu Kristo\nMenom Wo nkwa nsu no bi a\nMe honhom ho san no\n2. Me kra rehwehw1 wo\nNyame Honhom Kronkron\nBra b1hy1 me honhom ma\nNa masom wo yiye\nRosina Aninkora\nNnipa nyinaa besi d1n\nate ns1mpa yi?\nNo ho mmuae no Jesus\nde maa y1n\n“Na s1 w4ma me so fi\nasaase so a,\nM1twe nnipa nyinaa ama\nMe ho” (x2)\nMa No so, Ma No so;\n$da ho fi sor’ h4 kasa;\n“Na s1 w4ma Me so fi\nasaase so a\nM1twe nnipa nyinaa\nama Me ho”\nPAN(T) 90\nNnommaa de w4n\nnnwomto yi N’ay1\n‘Po nso de n’as4rekye\nkamfo No\nAhum de n’ahumtu da\nN’ase\nN’4no n’4s1 ayeyi\nOnyame fata ayeyi\nOnyame fata ayeyi\nPAN(T) 1094\nNnsuro na gye Me di\nMe na meso nkwagye nam\nM1ma wo nkwa, M1ma\nwo nkwa\nM1ma wo nkwa, na woadi\nyiye;\nM1ma wo nkwa, M1ma\nwo nkwa,\nM1ma wo nkwa, na woadi\n‘nim\nP.B. Appiah-Adu\nPAN (T) 510 - Isaiah 63:1-2\nNnwom bi a y1b1to w4\nsoro h4 a!\nNnwom bi a y1b1to w4\nsoro h4!\nBer1 a y1behu Jesus\nanim ne anim\nNa y1ad4m sor’\nadwontofo n’ w4 sor h4 a!\nNnwom bi a y1b1to w4\nsoro h4 a!\nAnuonyam a ahotewfo\nn’ benya\nAo, anuonyam, anuonyam\nanuonyam\nNnwom bi a y1b1to w4\nsoro h4 a!\nPAN (T) 674\nNwanwani! Nwanwani!\nSaa Yesu yi, 4y1 Nwanwani\nNwanwani! Nwanwani!\nWaka y1n afam Onyame ho\nE. K. Asamoah\n1. Nyame a tete nna no\nmu,\n$nam Pentekost tum’ so\nHy11 as4re yi ase no\n$te saa nn1 da yi nso\n$de ns1nkyer1nne ne\ntum’ nnwuma\nDii w4n as1nka nyinaa\nakyi\nS1ee mmonsam tum’, saa\nnyarewa ahorow.\nNyan awufo, y11\nanwanwade,\nSiw’ gyata ano, dum ‘gya\ntum’\nSaa Pentekost tum’ yi\nno,\n1te saa nn1 ne daa nyinaa\nO, Awurade, y1 y1n nso\nsaa.\n2. Kan tete as4re no,\n‘Y1 Pentekoste as4re\nW4sii no tum’ yikyer1 so\nKristo ne as4re n’apem;\nY1n ne saa as4re yi\nnkyirimma\nY1bekura asomafo no\nkyer1,\nAy4nkofa pa, aboodoobubu,\nNe mpaeb4 m’ kosi ase,\nY1de nokwar’ ‘d4, gyidi,\nKoma koro ne koma kronn\nB1toa so nn1 ne daa\nnyinaa\nO, Awurade, y1 y1n nso\nsaa\n3. Kristo, asafo no ti,\nWode s’ro tum’ nyinaa\naky1 y1n,\nS1 y1mfa nnye nnipa\nnyinaa,\nNsi Wo, Kristo, p1y1 so.\nW’apam b4hy1 no nsakra,\nWo fapem gyina h4 pintinn\n!s1 y1n s1 y1y1 ahw1yie\nW4 fapem ne kyer1 no ho\n!s1 s1 yenyin k4 kan\nW4 gyidi pa nhw1so mu,\nPentekoste yikyer1 no mu\nO, Awurade, y1 y1n nso\nsaa\n4. Krist’ anidaso botae\nNe N’as4r a 4d4 no,\n$de Ne nkwa mogya at4;\nN’asafo ne wiase yi hann\nEkura nyansa, tumi\nakwankyer1\nMa wiase, nnipa, ab4fo\nS1 w4mfa so nhu Nyame\nnyansa\nBebree no ho nimde1 ‘dom\nA 1nam Kristo dom so\nDe nnidi ne daa anuonyam\nMa Nyame Baasa koro no\nO’ Nyame korosa,\nyehyira Wo daa\nM. K. Yeboah - PAN (T) 1064\n1. Nyame a Woy1 4baatan\npa\nWo mma resu fr1 Wo nn1\n$domfo Nyame a Wodom\ny1n,\nWo mma resu fr1 Wo nn1\nHu y1n mm4b4, tie y1n\nsufr1\nTie y1n mpaeb4 adekyee yi\n2. Adom Nyame a\nWoahy1 y1n b4\nWo mma retw1n wo b4hy1\nAdom Honhom\nKronkron b4hy1 n’\nWo mma retw1n Wo nn1\nHwie gu y1n so, b4 y1n\nasu bio\nTena y1n komam adekyee\nyi\n3. $dom Honhom Nyame\naky1de\nNyame Baasa koro tumfo,\nFa Kristo dom mu nnepa\nno\nHyehy1 W’asafo mma\nW4 abrab4 mu, y1n\nas1nka mu\nW4 nyansa tum’ nyikyer1\nmu daa\n4. Adom tumfo, nkonimdi\nhen’\nWoay1 y1n nkonim\nahemman;\nAdom Tumfo, Nyame\n$b4ade1\nW’asafo da W’ase\nYeyi W’ay1, y1kamfo Wo\nHyira Wo din adekyee\nnyinaa\nDeaconess Adutwumwaa\n2-4 Verses by M.K. Yeboah\nPAN(T) 1034\nNyame a Woy1 b4ne aduro;\nOtumfo Agya a wunnyi\nWo mma totwene;\nAgya, may1 b4ne, manu\nme ho; maba W’anim s1:\nFa me b4ne ky1 me (x4)\nFa ky1 me o (x3)\nMerensan m’akyi bio\nGina Asante",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-446",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 446,
+    "title": "Nyame a woy1",
+    "lyrics": "1. Nyame a woy1\nkwankyer1fo pa,\nKyer1 y1n kwan w4 ‘bra sare\nyi so\nDi y1’ anim, di y1’ akyi, b4\ny1n ho ban\nNyame Sunsum ee, kyer1\ny1n kwan daa\nS1 Wokyer1 y1n kwan a\ny1r’ mfom da\nS1 Wokyer1 y1n kwan a\ny1r’ nyera da\nS1 Wokyer1 y1n kwan a\ny1r’ nt4 piti\nNyame Sunsum ee,\nkyer1 y1n kwan daa\n2. Nyame a woy1\nkwankyer1fo pa\nWo ne y1n nan ase kane-a\nGye y1n taataa fa\nkwantemp4n no so\nNyame Sunsum ee kyer1\ny1n kwan daa\n3. Adom Nyame a\nWahy1 y1n b4 yi\nEmu na “Yiw ne Amen” w4\nMa W’anuonyam nhy’r1n\ny1n akwan mu daa\nNyame Sunsum ee,\nkyer1 y1n kwan daa\nMike Etrue",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-447",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 447,
+    "title": "Nyame ahome, twi fa me so",
+    "lyrics": "Nyame ahome, twi fa me so\nNyame sunsum, b4 bra\nme kra so\nSesa me ni-padua nyinaa\nHy1 me na meny1 wo p1\nnyi-naa.\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-448",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 448,
+    "title": "Nyame ahy1 b4 s1",
+    "lyrics": "1. Nyame ahy1 b4 s1\n$de daa nkwa b1ma\nObiara a $gye Yesu, Ne d4\nBa no di\nHallelu Ya Wawie;\nMigye $ba no di\nNea wokum no ne mogya\nno agye me nkwa (x2)\n2. S1 4kwan no mu nny1\nNa amane w4 mu a\nAmpa Yesu betumi s1\n$de y1n twa.\n3. Mihu ad4fo bi nso\nW4 anuonyam mu;\nW4agye w4n nkwa na\nw4n nnwom ara ne s1:\n4. Mihu ahene ne adiyifo\nbi nso s1\nW4nenam sika abor4n so\nna\nW4r’to nnwom yi\n5. Nnwom no bi w4 h4\nma\nMe ne wo nyinaa\nY1n ayeyi nnwom a\ny1b1to daa ne s1:\n‘Tis The Promise of God full\nSalvation\nP.P. Bliss Pent Hymn 163\nPAN (T) 696",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-449",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 449,
+    "title": "Nyame ay1 wo yie",
+    "lyrics": "Nyame ay1 wo yie\nNa Wabu wo bi\nS1 k4ka N’as1m kyer1\nakra a w’ayera\nAma w4n nso anya\nnkwagye\nS1 k4ka N’as1m kyer1\nakra a w’ayera\nAma w4n nso ab1y1 ne\nmma\nGrace Gakpetor",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-450",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 450,
+    "title": "Nyame ayi Ne d4 adi",
+    "lyrics": "1. Nyame ayi Ne d4 adi\nW4awo Agyenkwa ama y1n\n$de N’ aky1 y1n;\n$de N’ aky1 y1n;\n2. Mm4bor4hunufo ne\n$domfo\nNe Yehowa\n$de N’ aky1 y1n;\n$de N’ aky1 y1n;\n3. Wab1popa y1n\nmmarato nyinaa\nNa y1n kra anya nkwagye\n$de N’ aky1 y1n;\n$de N’ aky1 y1n;\n4. Y1ne adwontofo b1to\nAyeyi nnwom\nNa y1n nyinaa aka s1\nHallelu Ya!\nEunice Johnson - PAN (T) 626",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-451",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 451,
+    "title": "Nyame d4 ne mma",
+    "lyrics": "Nyame d4 ne mma\nNa $yi w4n firi w4n haw\nmu (x2)\nMmer1 a wapa aba\nAnidaso nyinaa asa no\nYehowa b1kyer1\nS1 nkwagye tumi bi w4 h4",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-452",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 452,
+    "title": "Nyame ne Honhom, sian",
+    "lyrics": "Nyame ne Honhom, sian\nbra mo do;\nBra b1tsena me mu;\nNa may1 nea Wop1;\nNa masi pi w4 Wo dzin\nmu;\nNyame ne Honhom, sian\nbra mo do;\nBra b1tsena me mu\nJane Quaye",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-453",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 453,
+    "title": "‘Nyame ne y1n w4 h4",
+    "lyrics": "‘Nyame ne y1n w4 h4\n‘Nyame ne y1n w4 h4\n‘Nyame ne y1n w4 h4\n‘Nyame ne y1n w4 h4\n$tene Ne nsa ne ber1 mu\nMa tumi nyinaa br1 ase\nN’adey1 nyinaa kyer1 s1\nNyame ne y1n w4 h4 nn1\nnso\nNyame ne y1n w4 h4\nRosina Aninkorah\nPAN(T) 538",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-454",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 454,
+    "title": "Nyame teasefo Sunsum,",
+    "lyrics": "Nyame teasefo Sunsum,\ngu me so foforo;\nNyame teasefo Sunsum,\ngu me so foforo\nBubu me, nan me,\nnwene me, hy1 me ma\nNyame teasefo Sunsum,\ngu me so foforo\nPAN (T) 993",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-455",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 455,
+    "title": "Nyame y1 ahotewfo",
+    "lyrics": "Nyame y1 ahotewfo\nnyinaa Wura, w4n\nSahene\nWadi ama y1n bebree\nW4 afe yi s4hw1 mu\nNyame ako ama y1n\nNa Wadi nkonim ama\ny1n\nN’ahotewfo a y1ahyiam yi\nY1b1to ayeyi nnwom\nEunice Johnson\nPAN(T) 1067",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-456",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 456,
+    "title": "Nyame ye, Onyame ye",
+    "lyrics": "1. Nyame ye, Onyame ye\ndaa,\nWama ade akye y1n bio\nMomma y1nto dwom\nnkamfo no\nNyame ye, Onyame ye\ndaa.\n2. Nyame ye, Onyame ye\ndaa,\nWanku y1n, wanntwa\ny1n antwene\n$de ne d4 akora y1n so\n‘Ma y1da so y1te nkwa\nm’ bio\nVerse 2 by F.S. Safo\nPAN(T) 82",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-457",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 457,
+    "title": "Nyan me o, me Nyame e!",
+    "lyrics": "Nyan me o, me Nyame e!\nNyan me, m’Agyenkwa e!\nAmma m’annda owu nda\nChristian n’enyi da h4\ndaa\nNyan me o, me Nyame e!\nPAN (F) 131",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-458",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 458,
+    "title": "Nyankop4n w4 y1n mu",
+    "lyrics": "1. Nyankop4n w4 y1n mu\nMomma y1nkotow no\nNa y1mfa suro nsom no\n$w4 y1n ntam ha\nMony1 komm w4 mo mu\nNa munyi mo yam nn4 no\nKristofo, gyidifo\nMonsom no nokwarem\nMonyi N’ay1 yiye\n2. Nyankop4n w4 y1n mu\n$n’ na Kerubim no\nDe suro ne f1re som no\nSerafim to dwom s1\nKronkron ara kronkron\nNe y1n Nyankop4n\nYehowa\nY1n nso kamfo wo\nSr1 s1 hu y1n mm4b4\nDom y1n na hw1 y1n so\n3. Y1de y1n adwene\nY1n honhom ne y1n kra\nNe y1n honam de hy1 wo\nnsa\nY1pa y1n ak4nn4\nY1pa 4bonsam no\nY1n wiase nneb4ne\nY1som wo, wo nkutoo\nAnuonyam ne nidi\nNe nyinaa y1 Wo de\n4. W’anuonyam k1se no\nMa y1nhu no yiye\nNa y1nyi y1n yam nsom\nwo,\nMa y1ns1 w’ab4fo\nS1nea w4hw1 wo\nNa wodi w’anom as1m so\nMa y1ny1 nea Wop1\nNa y1nkae w’as1m no\nW4 ade nyinaa mu.\n5. Wote s1 mframa\nWohy1 mmaa nyinaa ma,\nNa woatwa y1n ho ahyia\nY1n honhom fi wo mu\nWohw1 y1n honhom so\nEnti na 4hwehw1 wo bi\nYi wo yam gye y1n tom’\nY1nhwehw1 4foforo\nWo nko na y1p1 wo\n6. Wote s1 y1n wia,\nb1hyer1n w4 y1n so,\nna ma y1n komam ntew bi!\nTew w’anim kyer1 y1n\nW4 amanehunu\n1ne anigye nyinaa mu.\nY1n koma p1 wo daa\nRetu afi fam ha ak4tena wo\nnky1n h4\n7. Wura b1tena y1n mu!\nY1da so te fam de,\nNanso b1fa y1n y1 wo fi!\nFa wo dom bra y1n mu,\nHy1 y1n anuonyam bi,\nNa mma yemmfi wo\nnky1n da,\nKosi s1 wob1fr1\nY1ne y1n mf1fo\nS1 y1mmra w’anim h4\nGerhard Tersteegen\nPresby As4r Dwom Nhoma 351",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-459",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 459,
+    "title": "Nyankop4n yeyi W’ay1,",
+    "lyrics": "Nyankop4n yeyi W’ay1,\nY1b4 m’ ka s1 wo ne Awurade\nWo na asase nyinaa koto\nWo\n$domankoma Agya\nY1b1som Wo daa daa\nY1b1som Wo daa daa",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-460",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 460,
+    "title": "Nyansabuakwa",
+    "lyrics": "1. Nyansabuakwa\nNyame\n4hunu akyiri ‘ade1 y1 no\nnn1\n4rennya y1n mu da\nNe nsam na y1w4\nAwurade, wo nsam na\ny1w4 daa\nAwurade, wo nsam na\ny1w4 daa\n2. $nokwafo Awurade\nWunim ade nyinaa\nWorennya y1n mu da\nWo nsam na y1w4\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-461",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 461,
+    "title": "Nyew, $see me d1",
+    "lyrics": "Nyew, $see me d1\nmontw14n\nNyew, $see me d1\nmontw14n\nH4n a w4tw14n\nEwuradze nya aho4dzen\nfofor\nWotu d1 ak4r, w4nantsew\na w4mmbr1 da\nNyew, Osee me d1\nmontwe4n N’enyim\nEunice Addison\nPAN(F) 452",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-462",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 462,
+    "title": "O b4gya, b4gya kr4nkr4n",
+    "lyrics": "O b4gya, b4gya kr4nkr4n\nO b4gya, b4gya dehye\nO b4gya, na $agye me\nnkwa\nEnyimnyam nka Nyame\nEguamba (x2)\nEunice Addison\nPAN (F) 260",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-463",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 463,
+    "title": "O 1d1w ne ahomgye",
+    "lyrics": "O 1d1w ne ahomgye\nnwanwa\nO 1d1w ne ahomgye\nnwanwa\nW4 Jesus mu, Jesus mu\nD1w ne ahomgye\nnwanwa\nQuintet Translation of ‘O the\nsweet and wonderful rest’",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-464",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 464,
+    "title": "O Honhom Kronkron a",
+    "lyrics": "O Honhom Kronkron a\nWobaa Pentekoste da n’;\nWode ogya, namy1,\nnkenyan bae\nDe hy11 w’as4re ase\nWo na wohy11 tete\nasuafo no den;\nMa w4tum’ y11 nea anka\nw4nntumi ny1\nMa ba o, y1 me saa\nMa ba o, y1 me saa\nGrace Gakpetor, PAN (T) 1424",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-465",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 465,
+    "title": "O hwie ngo fofor gu me",
+    "lyrics": "O hwie ngo fofor gu me\nkra mu\nMa dza ewu nyinaa nya\nnkwa bio\nWaewae m’ani do abon\nma menhu $hen’ no\nS4 ogya w4 me kra\nmu(x2)\nOgya e! Ogya\nSunsum Kronkron mu\nOgya\nOgya e! Ogya\nSunsum Kronkron mu Ogya\nB1y1 W’adwuma\nB1y1 W’adwuma\nm’akoma mu o!\nOgya e! Onyame Gya\nEunice Addison\nPAN (T) 370",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-466",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 466,
+    "title": "O Israel Yakob Nyame",
+    "lyrics": "1. O Israel Yakob Nyame\n$haw b1n na y1w4 mu\nnn1 yi\nWo ne y1n anidaso\nBra, O bra, na b1gye y1n\n2. O Israel Yakob Nyame,\nDa b1n na ‘reb1gye y1n\nWo ne y1n anidaso\nBra, O bra, na b1gye y1n\nPAN (T) 945",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-467",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 467,
+    "title": "O mo Wura, meda W’ase",
+    "lyrics": "O mo Wura, meda W’ase\n(x2)\nO dza ay1 ama m’ 4d44so’\nMedze ay1yi af4r medze\nbr1 Wo\nEunice Addison\nPAN (F) 44",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-468",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 468,
+    "title": "O tsie Jesus Ne ndze a",
+    "lyrics": "O tsie Jesus Ne ndze a\n4dze ns1mpa br1 wo\nO tsie Jesus Ne ndze a\n4nam ab4fo do;\nMa akoma a 4ahaw\nasomdwee\nMa awer1how kra enyigye\nO tsie ndze a ofi sor\nJesus b1san wo ho\nPAN(F) 432",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-469",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 469,
+    "title": "O’ Tweaduamp4n Nyame",
+    "lyrics": "O’ Tweaduamp4n Nyame\nO’ Tweaduamp4n Nyame\nO’ Tweaduamp4n Nyame\nMa Wo nhyira mmra y1n\nso\nMa Wo nhyira mmra y1n\nso\nPAN(T) 1005",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-470",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 470,
+    "title": "O Yesu d4fo pa",
+    "lyrics": "1. O Yesu d4fo pa\nWo nkor4fo w4 w’anim;\nMa w’ad4e no nso y1n so,\nNa w’anuonyam nna adi\n2. Obi nni h4 s1 Wo\nYesu $d4fo pa;\nMa w’ad4e no nso y1n so\nNa w’anuonyam nna adi\n3. Ampa y1hw1 wo kwan,\nMa adom kwan mmue\nmma y1n;\nMa w’ad4e no nso y1n so,\nNa w’anuonyam nna adi\n4. Woy1 mm4bor4hunufo,\n!nte saa ’nka y1ayera;\nMa w’ad4e no nso y1n so,\nNa w’anuonyam nna adi\nApostolic Twi Hymnal 272",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-471",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 471,
+    "title": "Obesi m’ yie, obesi m’",
+    "lyrics": "1. Obesi m’ yie, obesi m’\nyie\nObesi m’ yie da bi\nMesi no pi w4 m’akoma mu\nObesi m’ yie da bi\n2. M’bodu me fie, m’bodu\nme fie\nM’bodu me fie, da bi\nMesi no pi w4 m’akoma mu\nM’bodu me fie, da bi\n3. M’b4hu N’enyim,\nm’b4hu N’enyim\nM’b4hu N’enyim, da bi\nMesi no pi w4 m’akoma mu\nM’b4hu N’enyim, da bi\n4. M’b4soa ahenky1w,\nM’b4soa ahenky1w,\nM’b4soa ahenky1w, da bi\nMesi no pi w4 m’akoma mu\nM’b4soa ahenky1w, da bi\n5. Morok4 ak4hom,\nMorok4 ak4hom\nMorok4 ak4hom da bi\nMesi no pi w4 m’akoma mu\nMorok4 ak4hom da bi\nPAN (F) 305",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-472",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 472,
+    "title": "Obi din de Yesu, $w4",
+    "lyrics": "Obi din de Yesu, $w4\nnkwa;\nObi din de Yesu,\n$w4 nkwa\nYesu, Yesu, $w4 nkwa\nYesu, Yesu, $w4 nkwa",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-473",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 473,
+    "title": "Obiara nte s1 Wo",
+    "lyrics": "Obiara nte s1 Wo\n$soro ne asase y1fo (x2)\nWo din y1 k1se\nWo di tumi daa\nWo din y1 k1se\nWo di tumi daa\nObiara nte s1 Wo\n$soro ne asase y1fo (x2)\nJ. Odoi Korang",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-474",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 474,
+    "title": "Odi m’anim na 4kyer1",
+    "lyrics": "1. Odi m’anim na 4kyer1\nme kwan\n$ka me ho, na 4b4 me ho\nban\n$di m’akyi na 4b4 me\nkyid4m\nOwura Yesu a me nsa\naka no ‘i\nJesus, 4nwanwani b1n\nna mahu no yi\n4di m’anim, 4di m’anim\nJesus, 4nwanwani b1n\nna mahu no yi\n$ka me ho, 4ka me ho\n$d4 me na 4rennyae me\n$ka me ho , 4ka me ho\n$d4 me na 4rennyae me\nOdi makyi o, Odi makyi\nJesus 4nwanwani b1n na\nmahu no yi\n$ka me ho o, 4ka me ho\n2. $d4 me na 4rennyae me\n$b1n me na Onni akyiri\n$te me mu, na Otim h4\ndaa\nOwura Yesu a me nsa\naka no ’i\nOpoku Onyinah",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-475",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 475,
+    "title": "Odimafo, Odimafo, Odimafo",
+    "lyrics": "Odimafo, Odimafo, Odimafo\nYesu y1 Odimafo,\nMas4 No ahw1 na mahu s1\nYesu y1 Odimafo",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-476",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 476,
+    "title": "Oduy1fo k1se n’ ab1n",
+    "lyrics": "1. Oduy1fo k1se n’ ab1n\n$nye tsimb4b4r Jesus\n$kasa ma akoma at4 yam’\nD4fo, tsie Jesus Ne ndze!\nNdwom bi a 4y1 d1w w4\nsor,\nDzin bi a 4y1 d1w w4 ase,\nEnyigye ndwom a 4w4\nbeebi\nJesus, siarfo Jesus\n2. W4dze wo b4n nyinaa\naky1 w’\nD4fo, tsie Jesus Ne ndze!\nFa asomdwee tu wo\nkwan k4 sor\nK1nye Jesus nsoa\nahenky1w\n3. Enyimnyam nka\nNyame Eguambaa!\nMegye Jesus Ne dzin dzi;\nMod4 Gyefo siarfo ne\ndzin,\nMod4 me Jesus Ne dzin.\n4. Ne dzin pa m’af4dzi\nnyina,\nDzin bi nnyi h4 d1\nJesus!\nMe kra dze enyigye dze\ntsie\nJesus dzin a 4som bo n’\n5. Nuanom, hom ngya m’\nminyi N’ ay1w\nHom nyi Jesus dzin ay1w\nNkyer1baa, hom so mma\nhom ndze do\nHom nhyira me Jesus\nNe dzin.\nWilliam Hunter\nChristian As4r Ndwom Fofor 988",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  },
+  {
+    "id": "pentecostal-book-477",
+    "language": "english",
+    "languageLabel": "English",
+    "number": 477,
+    "title": "Oebubu mo mpokyer1 m’",
+    "lyrics": "Oebubu mo mpokyer1 m’\n$ama mafa mo ho edzi\nFahodzi nye enyigye,\n$ama menya n’ w4 Wo mu\nFahodzi fi nkowasom m’\nFi adzesoa durdur mu\nMenny1 4bonsam akowaa\nbio\nMey1 Nyame ne ba\nMey1 Wodze, me Wura\nJesus\nDaa daa nyina ‘ra mey1\nWodze\nM’akoma rotow ndwom d1,\nEnyimnyam nka\nEguambaa n’\nPAN(F) 389\n478 \nOguammaa a wokum No\nn’ fata nnaase\nOguammaa a wokum No\nn’ fata ayeyi\nMommra mm1hw1 No\nW4ahy1 N’anuonyam\n$de N’anuonyam\nahyehy1 Ne mma\nRosina Aninkora\n1. Oguammaa a wokum\nNo no\nFata se $gye tumi\nAhonya, nyansa, aho4den\nNe nidi, ne anuonyam.\nMonyi N’ay1, monyi N’ay1\nOguammaa No s1 ayeyi\nAlleluia, Alleluia\nNhyira nka Oguammaa No.\n2. Kristo mu na y1anya\nnkwagye\n$no ne nkwagye botan\nWasoa y1n b4ne adesoa\nEnti y1w4 fahodi\n3. Soro ab4fo to dwom yi s1\nNhyira nka Oguammaa No\nEfis1 W’adi owu so\nNkunim ama wiase.\n4. Momma y1nto ay1yi\ndwom\nNkamfo Yesu Kristo daa\nN’as1ndua mu b4 any1 kwa\nNe b4hy1 y1 nokware\n5. Soro asafo to dwom yi s1\nKronkron ne Awurade\nAde nyinaa so Tumfo no\nNkunimdi y1 ne de daa\n6. Nhyira nka y1n\nAgyenkwa no\nW4 af4re a 4b44 nti\n4no na w4b44 No asendua m’\nDe pataa wiase b4ne\nApostolic Twi Hymnal 133\nOguammaa no de Ne\nmogya at4 me;\nMade me ho (x2)\nNe d4 nti; Ne d4 nti,\nNe d4 nti na manya nkwa.\nJane Quaye\nOguammaa s1 nnaase,\nOguammaa s1 ayeyi,\nOguammaa s1 ayeyi\nMomma y1mfa nnaase\nmma no\n$s1 ayeyi,\nOguamaa s1 ayeyi (x2)\nPAN (T) 145\n1. Oguammaa s1 ayeyi\nOguammaa s1 nnaase\nMomfa mo ho nyinaa\nmma no\n$no na $s1 ay1yi\n2. Oguammaa s1 ay1yi\nNe nko na $s1 ay1yi\nN’af4re a $b4e no nti\n$no na $s1 ay1yi\n3. Oguammaa s1 ay1yi\nMonyi no ay1 daa,\nNe wu no apata ama y1n\n$no na $s1 ay1yi\n4. Oguammaa s1 ay1yi\nMonto n’ay1yi dwom\nN’adom nti momma\ny1nka s1:\n$no na $s1 ayeyi\n5. Oguamaa s1 ay1yi\nNe din no s1 nnaase\n$no na wama y1n\nnkwagye\n$no na 4s1 ay1yi\n6. Oguammaa s1 ay1yi\nAmpa $s1 ay1yi\n$no ne y1n nkwagye\nbotan\nNe nko na $s1 ay1yi\nApostolic Twi Hymnal 195\nOguammaa, Nyame\n’Guammaa,\nOguammaa a wokum no\ny11 wiase mpata\nHallelu Ya!\nFaw’hodi bi aba ama\nw4n a w4gye di nyinaa\nAhotefo nyinaa, momm4\nose mma No\nJesus ay1 ade nyinaa yiye.\nPAN(T) 169\nOguanhw1fo, na 4kyer1\nme kwan\nBea fr4mfr4m no na 4y1n\nne nnwan\nBaabi a nkwa nsu ti fi\npem\nOguanhw1fo na 4kyer1\nme kwan (x2)\nWayi me afiri b4ne wu\nkwan so\n$de me asi bea a 1kor4n\nno\nBaabi a nkwa nsu ti fi\npem\nOguanhw1fo na $kyer1\nme kwan\n1. Ogya no b1d1r’ akoma\nbiara mu\nNa atr1 ak4 wiase nyinaa\nAma w4n a w4ayera\nnyinaa aba fie\nAbenya w4n fahodi\nAma w4n a w4ayera\nnyinaa aba fie\nAbenya w4n fahodi\n2. Ogya no b1d1r\n’Pentekoste mu\nAma adom aky1de\nnyinaa ay1 adwuma\nAma adesoa nyinaa afi at4\nNa y1anya y1n fawohodi\nAma adesoa nyinaa afi\nat4\nNa y1anya y1n fawohodi\nP. B. Appiah-Adu\nOgya no red1w\nOgya no red1w\nOgya no red1w me mu\n!y1 Honhom Kronkron\ngya no\n!red1w ay1 me foforo\nGrace Gakpetor\nOgya no rennum da\nOgya no rennum da\nOgya no rennum da\nRennum da\nRennum da\nYesu gya no 1rennum da\nOhunuu me akyiri,\nWanyi n’ani annhinta m’\nNa 4fr11 me, na Way1\nme foforo\nWasiesie me,\nWama mafata No,\nJesus e, meda W’ ase oo daa\nOpoku Onyinah\nPAN(T) 1274\nOkokuroko, yeyi W’ay1,\nOkokuroko, y1ma Wo so\nWo nnwuma nyinaa da\nW’ase\nAwurade Wo fata, Wo\nfata ayeyi\nNnaase s1 W’, ahene mu\nHene\nWo nko ara na y1b1som\nWo\nWoma Wo nsa so a na\nnne1ma ay1 dinn\nWo nnwuma nyinaa da\nW’ase\nMary Ghansah\n1. Okristoni, ma w’ani\nnna Onyame so (x2)\nHw1 No ara, gyae\nnk4mm4di\nEfis1, wim ny1 No nsakra\nna;\nOnyankop4n b1hw1 wo\nso ma asi wo yiye\n2. Okristoni fa wo were\nhy1 Onyame mu (x2)\nGye No di ara, twere No\nnkutoo;\nEfis1 $renni wo hwamm4\nda\n$no nko na 4b1hw1 w’so\nma asi wo yiye\n3. Okristoni, awer1how\nyi ase ne d1n?\nMa w’ani so hw1 Kristo no;\nWo nti na 4s1n dua no so,\n$no nko n’ob1di nkonim\nama wo daa.\n4. Okristoni, ma w’ani\nnk4 wo mpaeb4 so,(x2)\nHy1 wo ho den w4 Kristo\nmu;\nNkonimdi w4 h4 ma\nw’daa nyinaa\nOnyankop4n de wo bedu\nsoro fie s4nn\n2-4 Verses by S.A.K. Karikari\nPAN(T) 445\nOnipa b1n na mframa ne\npo mpo tie No yi’?\n!y1 Jesus, Jesus, Jesus\nOnipa b1n na mframa ne\npo mpo tie No yi’?\n1y1 Jesus, Jesus, Jesus\n!y1 Jesus, 1y1 Jesus\nJesus, 4y1 Hen’ k1se\n!y1 Jesus, 1y1 Jesus\nJesus, 4y1 Hen’ k1se\nPAN (T) 59\nOnni bi adamfo,\nAyarefo hw1fo\nAkodi mu boafo pa\nNa wad4 y1n yi\nGyidi mu boafo pa\nNhyira nka No\nJesus y1 me de\n4y1 m’ adamfo\nNwonwa ampa\nKofi Ani Johnson\nOnua pa, bra fie\nOnua pa, bra fie\nWiadze nd1mba botwa m’\nak4\nSika botwa m’ ak4\nMe Nyame w4 h4 daa (x2)\nPAN (F) 332\nOnua, hu s1 $b44 wo din\nAnsa na w4rewo wo\nAhum betu nanso Onim\nwo din\n$rennyaw wo da w4\nwiase yi mu\nAsor4kye b1b4 nanso\nOnim wo din\n$rennyaw wo da w4\nabrab4 yi mu\nFrancis Agyemang Badu,\nPAN (T) 1257\n1. Onua, kyer1 me\nw’anigye\n!bere a wohuu Yesu\nOnua, kyer1 me w’anigye\nMe nua kyer1 me\nw’anigye\nOnua, kyer1 me w’anigye\n1bere a wohuu Yesu\nOnua kyer1 me o!\nKyer1 me o!\nKyer1 me o!\n2. Mereb1kyer1 wo\nm’anigye\n!ber1 a mihuu Yesu\nMereb1kyer1 wo m’anigye\nMereb1kyer1 wo m’anigye\nMereb1kyer1 wo m’anigye\n!ber1 a mihuu Yesu,\nMe ho at4 me o! at4 me\no! at4 me o!\nMe ho at4 me o! at4 me\no! at4 me o!.\nAgnes Manko\nOnyame ba no, Kristo\n$wui w4 dua no so maa\nme\nAnimguase wu na 4wui\nAsaase antumi annyina\nano\nEsum duruu asaase yi so\nAsamando nso antumi\nNe wus4re no di adanse\nS1 nkonimdifo hene ne No\nY1n hene Kristo wadi\nnkonim\nOpoku Onyinah\nOnyame Ba, yeyi W’ay1\ndaa\nNea woy1 ma y1n daa\nnyinaa nti\nYeyi W’ay1 daa (x2)\nOnyame boafo e, yeyi\nW’ay1 daa\nNea woy1 ma y1n daa\nnyinaa nti\nYeyi W’ay1 daa\nPAN (T) 115\n1. Onyame b1y1 N’adwuma\ns1 $y11 n ’tete mmer1 no\nmu (x2)\n2. Onyame, b1y1 W’adwuma\nS1 Woy11 n’ tete mmer1\nno mu (x2)\nPAN(T) 357\nOnyame gya red1w, 1y1\nHonhom Kronkron\n‘Repem w4 me kra mu\nOnyame gya red1w 1y1\nHonhom Kronkron\nAy1 me 4dehye.\nE. K. Asamoah\nOnyame ho y1 hu, munyi\nN’ay1\nOnyame ho y1 hu,\nmonna N’ase\n$te Kerubim no so, odi\nne hen daa nyinaa\nMomma y1mfa anigye\nnyi Ne din ay1\nPAN(T) 50\nOnyame Honhom\nKronkron,\nKyer1kyer1 me W’akwan\nmu yie; (x2)\nNa mafa so masom Wo;\n(x2)\nOnyame Honhom\nKronkron\nKyer1kyer1 me W’akwan\nmu yie\nJane Quaye\n1. Onyame kae me 1!\nKae me ma 1ny1 yiye!\nDom br1 w’ani ase\nFa w’ahumm4b4 hw1 me!\nMinnim 4gyefo bi\nS1 wo nkutoo kor1\nMisu mefr1 wo s1:\nMe Nyame kae me 1!\n2. Onyame, kae me 1!\nNanso, nkae me b4ne\n!no ho de, wode wo ba\nkoro ama me\nS1 4mfa ne mogya\nmm1pata mma nnipa\nNe nti na mesr1 s1\nMe Nyame, kae me 1!\n3. Onyame, kae me 1!\nYi me m’awer1how mu!\nHw1 me ne me fi so\nFa wo nhyira gu me so!\nMa wo Honhom Kronkron\nMmedi me so yiye\nNa ma 4nhy1 me den;\nMe Nyame, kae me 1!\n4. Onyame, kae me 1!\nKae me m’ amanehunu m’\nS1 nnipa gyaw me mu\nNa merey1 mawu a;\nMesr1 s1: hw1 me kra,\nKyekye me wer1 p1,\nNa gye me bra wo nky1n!\nMe Nyame, kae me 1!\n5. Onyame, kae me p1!\n$kae me y1 me yiye,\n$kyekye me wer1,\nEnti nso m1da N’ase,\nNa merensuro hwee,\nMe ho renhia me,\nOnyame hw1 me daa\n$kae me yiye p1,\nA. Adam\nPresby As4r Dwom Nhoma 329\nOnyame Kanea, di\nm’anim o;\nW4 m’akwantu yi mu;\nMehia W’akwankyer1\nNa madi nim\nPAN (T) 1258\nOnyame Sunsum, hy1 me\nma daa\nOnyame Sunsum, hy1\nme ma daa\nOnyame Sunsum, hy1 me\nma daa\nMa mente wo nka daa\nnyinaa\nGrace Gakpetor\nOnyame, Wo na y1b1som\nWo\nOnyame, Wo na y1b1som\nWo\nWo na Wob44 soro ne\nasaase\nWo na Wo homee nkwa\nhome guu y1n mu\nAnsa na onipa b1y11 4kra\nteasefo\nY1b1som Wo daa daa (x2)\nOnyame w4 h4 oo!\nHwehw1 N’ na ibohu N’\nOnyame w4 h4 oo!\nHwehw1 N’ na ibohu N’\nPAN (F) 319\n1. Onyankop4n asafo mma\nMunyi mo ho adi\n$hene Kristo retu sa\nNa mo ne no nk4 bi!\nWasi ne Hen’ frankaa\nW4ay1 1ho fitaa\nAsennua bea mu k44\nW’ama so de rek4.\n2. Na s1 moy1 n’asuafo\nSua kyer1 no a,\n$de mo fra n’asafo mu\nNa 4ne mo k4 sa.\nWotu ne sa no d1n?\nNa wonya ade b1n?\n$hene tamfo no w4 he?\nNa w4reko w4 he?\n3. $ko no, 1w4 wiase,\n$tamfo ne bonsam\n$de ne nnaadaa\nn’egyigye\nNnipa w4 w4n komam\nNe bo afuw wo s1:\n$ko kosi ase;\nNa enti som Yesu koraa\nNa woatumi no daa\n4. !s1 s1 wo ne b4ne ko,\nWo hene hy1 wo sa;\nNa enti di n’as1m no so\nDi n’akyi ko kopa\nNa so no mu ara,\nna di nokware daa;\nWo ho akyi a wob1pa\nbenya n’akatua\n5. S1 wok4som saa hene\nn’ a,\n$hy1 wo ne trenee,\nNa 4ma wo ne Honhom pa\nDe hy1 wo den yiye\nWo nsu ne w’aduan\nNe ne nkwagye as1m\nNa n’ahenni mu daa nkwa\nB1y1 w’akatua.\n6. Hw1 s1 wo Hene\nankasa adi n’asafo kan\n$faa 4br1 ne wum’ ara\nkogyee n’anuonyam,\n$n’na 4boa wo,\nna 4de ne somfo\nb1k4 ne soro anu’nyam\nne daa ahome kam\nPresby As4re Dwom Nhoma\nOnyankop4n Ba ne Wo\nWo na tumi nyinaa ahy1\nWo ma\nY1aba W’anim p1nkro\nbio\nMa y1n nea 1hia y1n\nnyinaa\nAma y1atumi ay1\nW’adwuma yi akosi awie\nOpoku Onyinah\nOnyankop4n Kronkron,\n$henk1se\nWo tumi so oo!\nWo tumi so oo!\nWoy1 Onyame k1se na\nWo tumi so\nWoy1 Onyame k1se na\nW’ad4e1 d44so\n$sorosoro Nyankop4n,\nWo tumi so\nWo tumi so oo!\nWo tumi so oo!\nPerpetual Owusu\n1. Onyankop4n, ma 1ny1\nyie\nS1 mifi m’adwuma ase,\nS1 misom’, s1 miwie a,\nMehw1 wo Nyankop4n ara!\nMa 1ny1 ‘yie!\n2. S1 mey1 biribiara a,\n1hia me wo nhyira daa;\nEnti mebr1 me ho ase\nMesr1 wo, m’agya Nyame,\ns1:\nMa 1ny1 ‘yie!\n3. !ny1 m’anem ne\nm’adwempa,\nme nsiy1 ne me nyansa\npa,\nNa 1b1ma asi yiye;\nWo, Nyame, na mesr1\nwo s1:\nMa 1ny1 ‘yie!\n4. Wo, Nyame, nnim a\nmintumi\nmemfa me tumi menny1\nhwee;\nWo na woma nk4so\nnyinaa,\nEnti nso m1hw1 wo daa\nnyinaa.\nMa 1ny1 ‘yie!\n5. Wode w’ad4e y1 me\nyiye\nMe nso meda wo so ase.\nW’as1m nti megu\nm’asaw,\nMiso m’adem, mempa\nabaw\nMa 1ny1 ‘yie!\n6. Mede me ho ne\nm’adwuma\nNe m’ade nso mehy1 wo\nnsa;\nWunim nea eye ma me;\nNea woma no, mapene.\nMa 1ny1 ‘yie!\n7. Amane bi b1to me a,\nWomma entu me bo\nkoraa;\nWoboa me, wowaw me\nwom,\nNa wob1ma ne yaw\natwam.\nMa ensi ‘yie!\n8. Mede me ho meto wo so,\nWo agya-d4 b1hw1 me so;\nWugye me fi m’ahohiam\nNa worennyaw me d4m\nnsam\nMa ensi ‘yie!\n9. Hyira me nn1 fa kosi\ns1 menya mawie\nm’adey1!\nBoa me nn1 ne daa\nnyinaa,\nNa s1 m’akwantu yi to\ntwa a:\nMa ensi ‘yie!\nPresby As4re Dwom Nhoma\nOnyankop4n, Wo y1 k1se\nNea Woy1 nyinaa y1\nnwanwa\nObi nni h4 a 4te s1 Wo\nNokwar’ Nyame ne Wo (x2)\nWano m’ as1m ma nea\nenni h4 ba\nAwufo s4re\nAnifuraefo hu ade\nA-nifuraefo s4re nante\nA-wurade, Wo tumi so\nGrace Gakpetor\nOsiand1 Owui maa h1n\n$dze Ne b4gyaa at4 h1n\nJesus N’enyimyam\nb1hyer1n h1n do daa\n’k4 kurow fofor no mu\nQuintet\nPAN (F) 34\nOsoro d4m no atwa\nahyia redi ahurisi\nOsoro d4m no atwa\nahyia rehy1 No\nanounyam\nYuda abusua mu Gyata\nno adi nkonim\nKristo no ahwie ne\nmogya agu ama y1n\nAmen, Wo s1 nnaase,\nAmen, Wo s1 ayeyie\nAmen, Wo s1 nnaase,\nKristo no ahwie ne\nmogya 'gu ama y1n\nOpoku Onyinah\n1. Osuani nokwafo, m1y1\ndaa,\nAma W’as4re ak4 so\nOsuani nokwafo m1y1 daa,\nAma W’as4re ak4 so\nWode wo mogya at4 me\nabo4den\nNa W’ay1 me osuani\nOsuani nokwafo m1y1\ndaa,\nAma W’as4re ak4 so\n2. $somfo nokwafo m1y1\ndaa,\nAma W’as4re ak4 so\n$somfo nokwafo, m1y1\ndaa,\nAma W’as4re ak4 so\nWode mogya at4 me\nabo4den\nNa W’ay1 me $somfo\n$somfo nokwafo m1y1\ndaa,\nAma W’as4re ak4 so\nKofi Ayepah\n1. Otumfo Nyame, Baasa\nKoro no\nAdwuma Wura,\nY1ate Wo fr1 soronko no;\nY1aba W’anim; Ngo\nfoforo,\nFa sra y1n nn1, kyer1\ny1n kwan daa\n2. Mogyadansefo, Nyame\nBa no\nYesu Kristo, Yegyina a-\nkono\nBra y1n nsraban m’,\nKyer1 y1n kwan daa,\nS1nea Woaka n’ ny1 h4\nmma y1n\n3. $kwankyer1fo pa,\nKyer1 y1n kwan daa\n$soro Dansefo, y1’ani\nagyina Wo o\nNyame Honhom, Woka\ny1n ho\nWorennyaw y1n; Kyer1\ny1n kwan daa\n4. Y1’ani agyina\nWo mpofrim mmae n’\nB4 wura y1n mu.\nS4 ’gya w4 y1n kra mu\nbio\nNyame Agya, Nyame\n$ba, Honhom Kronkron\ndi y1n kan daa\nOpoku Onyinah\nOtumfo Nyankop4n\nWofata ayeyi (x2)\nOnyame Agya\nOnyame $ba\nOnyame Sunsum Kronkron\nYeyi W’ay1, y1da W’ase\nMmresanten nyinaa\nOtumfo Nyankop4n, bedi\nhene;\nBedi hene, w4 me mu,\nAwurade\nFa m’akoma nnomum,\nMa W’ahenni mmera;\nSi W’ahengua me mu;\nMa nea Wop1 nny1;\nOtumfo Nyankop4n, bedi\nhene;\nBedi hene, w4 me mu,\nAwurade\nTranslation of Chris\nBowater’s “Reign in me”\nOtwa adwuma no so\nNa adwumay1fo no sua\nampa\nMa w4mmu wo bi,\nMa w4mfr1 wo w4\nNe twa adwuma no mu\nP.B. Appiah-Adu\nPAN(T) 885\nOwu antumi No,\nWadi asaman so\nY1n nkunimdi Hene 1ne\nAwurade\nY1ma W’amoYesu,\nY1ma W’amo, y1n Hene\nY1n nkunimdi hene 1ne\nAwurade\nPaul Boateng\nPAN (T) 135\nOwu maa me, Owu maa me\nM’Agyenkwa Yesu wui\nOwu maa me,Owu maa me,\nM’Agyenkwa Yesu wui\nO, Owu maa me, m’Agyenkwa\nYesu wui\nO, Owu maa me,\nm’Agyenkwa Yesu wui\nPAN (T) 597\nOwui ma meenya nkwa;\nOwui ma meenya nkwa;\nM’ay1yi b4for’ ak4 No h4\nNyia Owui ma meenya\nnkwa n’\nMay1yi b4for’ ak4 No h4\nNyia owui ma meenya\nnkwa n’\nEunice Addison\nPAN (F) 37\n1. Owura bi a, midi\nN’akyi;\nNe din ne Awurade Yesu,\nM1som No me’nsan\nmakyi da,\nOwura bi a, midi N’akyi\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa\nNo da\nM1d4 No, asoa m’asennua\nno daa\nOwura bi a midi\nN’akyi\n2. Kristo no, suani ne me;\nW’ahy1 me b4, s1\n$rennyaw me;\nM1ka N’as1m, ay1 bi asu-afo;\nKristo no, suani ne me.\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No\nda\nM1d4 No, asoa m’asennua\nno daa\nKristo no suani ne me\n3. Megyina N’a-s1m\nnokware so;\n'Kyer1 binom, N’akwan\nnyinaa m’;\nTumi w4 m', ma w4n a\nw4gye di;\nMegyina N’a-s1m nokware\nso\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No\nda\nM1d4 No, asoa\nm’asennua no daa\nMegyina N’a-s1m nokware\nso\n4. Me Wura ne Yesu Kristo:\nW4de tum', nyinaa ahy1\nne nsa;\n$no ne wiase Agyenkwa\nMe Wura ne Yesu Kristo\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No da\nM1d4 No, asoa\nm’asennua no daa\nMe Wura ne Yesu Kristo\n5. W’ahy1 y1n b4, s1 $ka\ny1n ho;\nKosi wia-se awie1;\n$nokwafo, $no na\nW’aka;\nW’ahy1 y1n b4, s1 $ka y1n\nho\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No da\nM1d4 No, asoa\nm’asennua no daa\nWahy1 y1n b4, s1 4ka y1n\nho\n6. Okyigyinafo, $ka y1n\nho;\nOfiri Agya ne $ba no:\n$nokwafo, Honhom\nKronkron No;\nOkyigyinafo, $ka y1n ho\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No\nda\nM1d4 No, asoa\nm’asennua no daa\nOkyigyina fo, $ka y1n ho.\n7. Metu anam4n, ‘ka as1mpa\nno;\nS1 Kristo, nyan’ firii awufo\nm’;\n$no ne, y1n nkwagye Hen’\nno;\nMetu anam4n ‘ka as1mpa\nno\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa\nNo da\nM1d4 No, asoa\nm’asennua no daa\nMetu anam4n, ‘ka as1mpa\nno.\n8. 'Katua w4 h4 ma ‘sotiefo a,\nW’tu N’a-s1m mu anam4n;\nW4b1ma w4n ahenky1w pii;\n'Katua w4 h4 ma ‘sotiefo\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No da\nM1d4 No, asoa m’asennua\nno daa\n‘Katua w4 h4 ma’ sotiefo.\n9. M1ka a-henky1w soafo\nho;\nM1gye no anigye k1se mu;\nMehu $hen n’ w4\n‘nuonyam mu;\nM1ka a-henky1w soafo ho\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No da\nM1d4 No, asoa\nm’asennua no daa\nM1ka a-henky1w soafo ho.\n10. Medi a-hurisi pii da no;\nW4 Kristo N’ahenni no mu;\nM1to dwom ahy1 no\nanuonyam;\nMedi a-hurisi pii da no\nOsuani nokwarefo, m1y1,\nMedi N’akyi, memmpa No da\nM1d4 No, asoa\nm’asennua no daa\nMedi a-hurisi pii da no\nOpoku Onyinah\nOwura Yesu (x2)\n$y1 ahene mu Hene (x3)\n$y1 Owura\n$y1 ahene mu Hene (x3)\n$y1 Owura\nTranslation of :Jesus is Lord”\nEunice Johnson\nOwus4re frankaa rehim\nOwus4re frankaa rehim\nS1 wugye Yesu di a\nWob1s4re na wobenya\nnkwa\nAfi owu amoa mu\nAdu Pare\nPAN (T) 605\n$agye m’ mbordo ara\nNyame, $agye m’\nmbordo ara\n$ahohor mo ho b4n nyinaa\nNye mo ho nkekaa\nnyinaa;\n$agye m’ mbordo ara\nNyame, $gye m’ mbordo\nara\nMb4huhor N’ na maato\nN’ ndwom\n‘Siand1 $agye m’ mbordo\nara\nEunice Addison\nPAN (F) 109\n$ahy1 Jesus 4hen\nW4 sor ahengua no do\n$de N’ahenky1w asoa no\nN’ahotsewfo ka no do\nH1n ne Anuonyam hen n’\nB1tsena N’ahengua no do\nH1n bo b4dwo h1n ho\ndaakye bi\nDaakye bi, daakye bi\nH1n bo b4dwo h1n ho\ndaakye bi\nPAN (F) 593\n$bae begyee m’ nkwa\n$bae besaa m’ yar\n$bae dze no tum ab1hy1\nm’ ma\nHom nyi N’ay1w, $resan\naba bio\nAb1fa h1n ak4 afeb44\nPAN (F) 286\n$b1kasa ama me\n$b1di ama me\nMe Jesus b1kasa\n$b1kasa ama me\n$b1di ama me\nMe Jesus b1kasa\nOpoku Onyinah\n$b1n me ky1n m’adamfo\nSaa na Yesu te\n$y1 m’adamfo pa,\nAde nyinaa mu\n$y1 me botantim\nMe ky1m ne me\nguank4bea\n$b1n me ky1n m’adamfo\nSaa na Yesu te.\n$boafo bi nni baabiara\nWone boafo pa\nBoa ma y1nsom wo yie\n$boafo bi nni baabiara\nWone boafo pa\nBoa ma y1nsom wo yie\nBoa y1n o, Awurade boa\ny1n o, Awurade, boa y1n\no,\nMa y1nsom wo yie.\nOpoku Onyinah\n1. $boafo k1se ne Awurade\n$hw1 y1n so, daa nyinaa\n$renyi N’ani nhinta y1n\n$boafo k1se ne Awurade\nAhokyere mu boafo\nampa\n$hw1 ne mma nyinaa so\n$boafo k1se ne Awurade\n$hw1 y1n so, daa nyinaa\n2. Onni-bi adamfo ne\nAwurade\n$hw1 w4n so, ma w4n\nnea ehia w4n\nN’ani ku w4n nyinaa ho\nOnni-bi adamfo ne Awurade\nAhohiahia mu boafo ne No\nWo to wo nsa a, na $kura\nmu\nOnni-bi adamfo ne Awurade\n$hw1 w4n so, ma w4n\nnea ehia w4n\n3. $nokwafo ne Awurade\n$hy1 b4 a $di so\n$kasa a 4hw1 ma 1ba mu\n$nokwafo ne Awurade\n$se-ade-a-4y4 no na\nW’akasa\n$tumi ade nyinaa y1\n$nokwafo ne Awurade\n$hy1 b4 a 4di so\nOpoku Onyinah\n1. $bra n’ adandan nyinaa\nmu\nAhokyer nye ahot4 m’,\nM’akoma nye me gyirama\nBeyi me Nyame ay1w\n2. M’botuw No nkwagye\nho ‘kodu\nD1 ahokyerfo nyina\nB4hw1 m’ enya\nawer1kyekyer,\nNa h4n yaw ahera.\n3. O nye me nhuhor\nEwuradze\nMa y1ntonton Ne dzin,\nMefr11 No m’ahokyer mu\nno,\n$bae beyii m’ fir mu.\n4. Nyame no d4mtutuw\ntwa hyia\nAtseneneefo tsenabea;\nH4n a w4twer No mboa\nnyina\n$ma h4n No nkwagye.\n5. Ao, bra b4s4 No d4 no\nhw1,\nNa woana bohu d1\nH4n a w4twer No nokwar\nno,\nH4n na w4y1 esiarfo.\n6. Ahotsewfo, hom nsuro No,\nNa hom nnkosuro hwee\nbio;\nHom ny1 No som hom\nenyigye,\nNo so b4hw1 hom hia.\nNahum Tate, Nicholas Brandy\nChristian As4r Ndwom\nFofor 427\n$br1fo, bra, bra na b1home\n$br1fo, bra. bra na b1home\nW4 Kalvary bep4w no so\nBaabi a Yesu kyii Ne\nmogya gui mae\n$br1fo bra, $br1fo bra\nBra na b1home\nE.B.A.Yeboah\nPAN(T) 775\n1. $br1fo, fa wo ho ma\nNyame\nNa ma w’ani nna $no so\ndaa\nNea n’ani da Yehowa so\nno\n$nto n’aban w4 anwea so.\n2. $br1fo, dan w’akyi\nkyer1 wiase,\nNa ma w’ani so hw1\nYesu nko\nMa w’ani so hw1\nasennua no so\nNa wo br1 nyinaa b1br1\nase.\n3. $br1fo, fi esum no m’fi\nNa bra Yesu nky1n, $n’\nne hann no\n$beyi wo haw, wo br1 ne\nw’amane\n$de wo b1k4 4soro fie\n4. $br1fo, su fr1\nw’agyenkwa no\n$b1gye wo so na Wagye\nwo\n$b1ma w’asomdwoe, 1ne\ndaa nkwa\nWo ho b1t4 w’ koraa,\nw’ani b1gye.\n5. S1 ahum tu b4\nw’abrab4 mu,\nNa ‘po as’r4kye b4 fa wo\nso a,\nYesu no ne y1n s1ky1 ne\ntabon\n$b1hw1 na biribiara ‘y1\nkomm\nverse 2-5 by S.A.K. Karikari\nPAN (T) 1082\n$dafo a woada,\n$dafo a woada,\nWo nna yi ase ne s1n?\nS4re na Christ b1hyer1n wo so;\n$de N’anuonyam no reba\nTumi a $de reba!\nTumi a $de reba!\nWiase mmusuakuw nyinaa\nW4de w4n ano b1tom asu\nPAN (T) 420\n$d11fo4 Nyame e, y1’\nhene Ne W’ (x2)\nW’ahenni to renntwa da\nAmansan nyinaa b1koto\nWo\nWone y1n adi no yie\nA.L. Angoh\n1. $d4 b1n ni, 4d4 nwanwa\n$d4 b1n ni, 4d4 nwanwa\nS1 $sorosoro ni No, b1ba\nwiase yi m’\n‘b1si ne ntomadan w4\nnnipa mma mu,\nNe y1n ab1tena, w4 ‘br1\nwiase yi m’,\n1no na Wafa so, de agye\ny1n nkwa\n2. $d4 mmroso, 4d4 soronko\n$d4 mmroso, 4d4 soronko\nS1 $b4ade1 no b1ba,\nN’ab4de1 no ntam\nNa $ne y1n ab1tena,\nw4 aho-br1ase1 mu\nNa W’ahy1 y1n s1,\ny1nhw1 so nsua\nNa y1n nso y1ny1 saa, w4\nwiase yi m’\nOpoku Onyinah\n$d4 na Mad4 wo\nAdom na M’adom wo\nMede mogya kronkron\nna at4 wo\nAy1 wo 4dehye\nRosina Aninkora\n$d4 Nyankop4n,\nYeyi W’ay1 daa\n$d4 Nyankop4n,\nY1kamfo wo daa.\nPAN (T) 83\n$d4fo k1se bi a mahu no yi\n$tumi ade nyinaa’ra y1\n$d4fo k1se yi ne Jesus\n$som me bo oo\n$d4fo k1se ne Awurade\nMema Wo amo oo\nMe wura ne Wo Jesus\nMedan Wo daa (x2)\nOpoku Onyinah\n$de y1n k4 o\n$de y1n ba\nDaa daa daa\nNyame N’ayamye\nDe y1n k4 daa daa daa\nDe y1n ba daa daa daa\nDe y1n k4 daa daa daa\nNyame N’ayamye\n$domankoma Agya\nOnyame,\nMeyi W’ ay1 daa\nS1 minya Wo a, na\nmanya ade nyinaa;\n$domankoma Agya\nOnyame\nF. C. Ampiah\nPAN (T) 179\n$dzeb4ny1nyi nni\nenyimnyam\nW4 ahengua n’enyim;\nEguamba n’ dze b4gya\ndehye b4t4 aky1 m’\nAma mo so maasoa\nnkwa ahenky1w (x2)\nEunice Addison\nPAN(T) 519\n1. $fr1 a w’afr1 y1n no y1\n4soro fr1\nY1ne 4honam ne mogya\nantu agyina\n$fr1 a w’afr1 y1n no y1\n$s’ro fr1\n$fr1 a wafr1 y1n no y1\n$s’ro fr1\n2. $fr1 a Wafr1 y1n no y1\nsoronko\nWafr1 y1n afi wiase bra\nb4ne yi m’\n$fr1 a Wafr1 y1n no y1\nsoronko\n$fr1 a Wafr1 y1n no y1\nsoronko\n3. Nyame nam Ne Ba\nYesu so afr1 y1n;\n$nam ne mogya no so\natew y1n ho\nNyame nam Ne Ba Yesu\nso afr1 y1n\n$fr1 a W4fr1 y1n no y1\n4s’ro fr1\nF.C. Ampiah\nverse 2-3 by S.A.K. Karikari\nPAN(T) 624\n$fr1 yi y1 4fr1 kronkron\n$soro fr1 na Wo de afr1 y1n\nWoabu y1n bi\nDe W’adwuma ahy1 y1n nsa\n‘Katua w4 h4 ma w4n a\nw4som Wo nokware mu\n$fr1 yi y1 $fr1 kronkron\nOpoku Onyinah\n$gyefo bi nni h4 nn1 s1\nKristo no\n$gyefo bi nni h4 nn1 s1\nKristo no\nWagye me afiri me haw\nmu\nWagye me afiri owuo mu\n$gyefo bi nni h4 nn1 s1\nKristo no\nOpoku Onyinah\n$gyefo, $gyefo,\n$gyefo bi nni h4\n$gyefo, 4gyefo ne\nAwurade\nPAN (T) 744\n1. $h4ho ne mamfrani\nNa mey1 w4 fam ha.\nM’asase mm1n ha baabi,\nMinni fi pa w4 ha.\n$haw, 4br1, amane\nna y1de tu ha kwan;\nn’ 4soro h4 na Nyame\nb1ma mahome sann\n2. So mamfi me mmofraase\nManhyia haw ne br1,\nAhoguan ne amane,\n$ko ne 4pere?\nMannya nea me k4n d4,\nm’ani anwie gye;\nenti mema m’anan so\nna mentena ha menky1.\n3. !ha amane kwan no,\nBebree adi so kan:\nOnyame adiyifo,\nne man mu mpanyin\nBoaset4 ne gyidi\nNa w4de tuu w4n kwan;\nNa w4n akyi na medi\nW4 nkwa ne wu\nnyinaam\n4. Kae Abraham akwantu\nNa kae ne nhyira bi!\n$h4ho ne mamfrani\nNa sua no y1 bi.\nAtamfo no, di w4n so,\namane no, fa mu!\n$sraani pa nokwafo\nbedi nkonim daboa\n5. !nde meremia so\nMakodu kwan n’ase.\nNea ses11 maso1 yi,\n$ny1 me fi no nen\nOnyankop4n kuro no,\nSoro Yerusalem,\nHann ne 4d4 kuro no,\nM’ahot4 fi no nen!\n6. !h4 na m’ani gyina,\n‘h4 tena na meregye.\nAwurade, bra begya me\nna minhu kwan yiye!\nBra b1ma\nm’anw’ramanb4\nme na br1 d4m to ntwa!\nb1fa me ha br1-kwan so\nkonya h4 anika!\n7. !h4 na m1tena daapem,\nmeny1 h4ho bio,\nMe ne W’ahotew mma no\nb1tena daa homem h4.\nM’ani b1pa akwantum\n$haw ne br1 no so;\nme yaw b1ka akyiri,\nme ho benya at4\nPresby As4re Dwom Nhoma 791\n$hemp4n Kristo no te\nN’ahennwa no so\nNa wafa nnipa mma\nnnomum rey1 adwuma\nMa minhu 4hene no\nw4 N’animuonyam mu\nNa mate ne nne na\nmahu N’akwan-kyer1\nMa minhu 4hene no\nMa mente ne nne no nte\nase1\nna may1 nea W’ahy1 me no\nOpoku Onyinah\n$hene Jesus de me ay1\nne de\nEnti N’ani ku me ho daa\nW’ama me ne no bom di\nade\nEnti biribiara nhia me\n$y1 me hw1fo, me banb4fo,\n$kannifo m’akwantu yi mu\n4ka me ho ‘i\nMinsuro, medi nkunim (x2)\nGrace Gakpetor\n$honam adwene y1 owu\n$honam adwene y1 owu\nSunsum adwene y1\nnkwa ne asomdwoe\n$honam adwene nyinaa\ny1 owu\nPAN (T) 875\n1. $hw1fo wui dua ho\nN’ 4de ayi y1n b4ne:\nEnti s1 ne nguan wu a,\nNa wobu w4n s1 w4ada.\n2. W4nk4 s1 mum4y1fo\nWonsuro weredifo;\nW4te s1 akofo a\nW4awie ko, na w4ada.\n3. Daa afobu no nhaw w4n,\nW4k4 w4n fam ha piam\nS1 w4k4home, ansa\nNa Yesu abenyan w4n.\n4. W4n honam da wupa\nso\nTe s1 w4n homebea,\nW4t4 nko da s1 mmofra,\nAhometew nni w4n mu.\n5. Onyame ahumm4b4,\nne Yesu d4 k1se no,\nne honhom pa adanse\nma wowu asomdwoe wu.\n6. O, Yesu, w’ahumm4b4\nayi me wu mu nwene;\nwo wu no nti, ma minwu\nmenk4 w’ahot4 pa mu.\n7. Ma memfa gyidi pa so\nminwu w4 w’abasa so,\nna fa me nnompe sie\nkosi s1 wob1fr1 me.\n8. !nna benyan me bio\nw1 w’anim anigye mu,\nna ma minnya wo nky1n\nh4 anyonyam ahot4!\nPhilipp Friedrich Hiller\nPresby Twi Dwom Nhoma 789\n$ka y1n ho, $ka y1n ho;\nNkonimdi Nyame ka y1n\nho;\nWahy1 y1n b4 s1\n4rennyaw y1n da;\n$ka y1n ho abere nyinaa;\nNyame N’as1m, etim h4\ndaa,\n!rensakra da\nJames A. Quaicoe\n1. $ko k1se no ab4 adze\nAfei h1n Sahen edzi nyim;\nW4nhy1 ehurusi ndwom\nn’ase\nAlleluia!\n2. Owu hyehy11 no d4m\npetsee,\nNa Christ ab4 h4n apetse;\nW4mb4 se ntow enyigye\nndwom\nAlleluia!\n3. Awer1how ndaasa no\netwam\n$aso1r konyim mu efi wu\nm’;\nEnyimnyam nka Hen\ntseasefo n’\nAlleluia!\n4. Ewuradze,\nW’amandzehu ntsi\nGye Wo nkowaa fi wu\nno b4r mu,\nMa yeenya nkwa,\nyaatow Wo ndwom\nAlleluia!\nFrancis Pott\nChristian As4r Ndwom Fofor\n$kura y1n mu,\nDe y1n b1k4, de y1n b1ba\nW4 tumi mu\nAman behun’ s1 tumi no\ny1 y1n Nyankop4n dea\n$kura y1n mu,\nde y1n b1k4, de y1n b1ba\nde y1n betwa\n$kura y1n mu,\nde y1n b1k4, de y1n b1ba\nde y1n betwa\nOpoku Onyinah\n$kwan dedaw no mu\n$kwan dedaw no mu\nAwurade rey1 N’adwuma\nW4 ‘kwan dedaw no m’\nPAN (T)362\n$ky1n ade nyinaa\nM’Agyenkwa n’ $ky1n\nade nyinaa\n$ky1n ade nyinaa\n$ky1n ade nyinaa\nW’ak’r4n No w4 soro h4\nYetwa hwe N’anim\nJesus y1n Agyenkwa\nnwanwani n’\n$ky1n ade nyinaa,\nPAN (T) 587\n$ky1n w4n nyinaa\n$ky1n w4n nyinaa\nJesus a wokum no n’\n$ky1n w4n nyinaa\nYetwa hwe Ne nan ase\ns4re no\nNyame ama No so\nNa 4ky1n w4n nyinaa\nPAN(T) 268\n1. $man Ghana ba\nTow ehurusi ndwom\nNyame agye wo nkwa\nAdom wo, ehyira wo\nTr1 wo ntamadan m’,\nBenkum na nyimfa\nAdom Ewuradze,\nEhu wo so mb4rb4r.\nW’ebisadze nyinaa\nWo Nyame b1y1 ama w’\nWo y1fo nye w’kun\nNe dzin nye Ewuradze\n$mandzehunyi a\nDa bi ehum tuu wo\nAdom Ewuradze\nEhu wo so mb4rb4r\n2. $man Ghana ba\nDa wo Nyame ase\nNyame mba rok4 a\nWo nso ka ho rok4\nSo1r huntuma mu\nBisa adze k1se\nAdom Ewuradze\nEhu wo so mb4rb4r\n3. $man Ghana ba fa\nnsamb4 dzi d1w\n$tamfo biara nkotum\nas11 wo bio\nWo ndaamba y1 siar\nW’awiei b1y1 f1w\nAdom Ewuradze\nEhu wo so mb4rb4r\nJ.A.C. Anaman\nPAN(F) 194\n1. $ne wo nam, 4rennyae\nwo\n$ne wo nam, 4ka wo ho\n$ne wo nam, enti nnsuro\n$ne wo nam daa daa\n2. $ne me nam, 4rennyae\nme\n$ne me nam, 4ka me ho\n$ne me nam, enti\nminnsuro\n$ne me nam daa daa\nGrace Gakpetor\n$ne y1n b1k4 o (x2)\n$ne y1n b1k4 akosi\nawiei1;\n1. Bere a y1ahy1 ase yi;\n$ne y1n na 1k4;\nY1’ anamm4ntu nyinaa;\nOdi y1n anim\n2. $kwan a y1r’fa so yi,\nWadi kan afa so\nNea yehu nyinaa, Kristo\nwadi so nkonim\n3. Y1n nkonimdifo, $ne\nKristo\n$ka y1n ho nti, nkonim\ny1 y1n de\n4. Ahy1ase ne awiei1,\n4ne Kristo\n$ne wo ahy1 ase yi 4no\nara na $ne wo bewie\nAnthony Koranteng\nPAN (T) 1256\n$nnso Nyame y1,\n$nnso Nyame y1\n$nnso Nyame y1;\nS1 egyedzi dzia\nPAN (F) 217\n$no n’ ewiase w4 Ne\nnsam,\n$no n’ ewiase w4 Ne\nnsam,\n$no n’ ewiase w4 Ne\nnsam,\n$no n’ ewiase w4 Ne\nnsam,\nPAN(T) 404\n$no na 4reba ‘i,\nW4 tumi ne anounyam m’\nY1n hene Kristo reba (x2)\nWahy1 no anuoynam,\nW4 soro mu s’ro h4\nAb4fo koto no, ahotewfo\ns4re No\n$no na 4reba ‘i\nW4 tumi ne anounyam\nm’\nY1n hene Kristo reba\nOpoku Onyinah\n565 \n$no na W’akasa, $nim ade\nnyinaa\n$no na W’akasa, $dwene\nwo ho\n$no na W’akasa,\n4r’nnsan N’akyi da\nY1n Hene no akasa, de1\nW’aka no b1ba m’\nEnti s4re, b4 w’ab4so4,\nTu anamm4n w4 N’as1m\nmu\n$no na W’akasa\nY1n hene Kristo akasa\nNea W’aka no, 1no na\n1b1ba m’\nOpoku Onyinah\n$nwanwafo bi a magye\nNo adi;\nOwura Yesu, Wafa me\nnnomum;\nWakye me dedua; Ay1\nme N’adamfo;\nMe Wura, m1som no daa;\nMe Wura Yesu, Ne\nk4ndua y1 hare;\nM1soa na masom no;\nMe wura Yesu,\nMe Wura Yesu\nM1som No,\nM1som no daa\nOpoku Onyinah,\nPAN (T) 1438\n1. $rempa me da,\n$rempa me da\nYesu d4 n’ 1remmpa me da\nAde koro na minim s1\nbaabiara a m1k4 n’\nYesu d4 n’ 1remmpa me\nda.\n2. $b1n me daa daa\n$b1n me daa daa\nM’Agyenkwa n’, odi\nm’anim daa\n$haw mu, amane m’,\nawr1how m’, 4yaw mu\nYesu d4 n’ 1remmpa me\nda\n3. M’Awurade Yesu\nmedi w’akyi daa\nMasom wo me nkwa\nnyinaa mu\nMedi Wo nokware w4\nm’akwan nyinaa mu\nMinim s1 Woremmpa me\nda\n2 - 3 verses by S.A.K. Karikari\nPAN (T) 1096\n$sabarima Yehowa,\nWo tumi so, Wo tumi so\n$sabarima Yehowa,\nWo tumi so, Wo tumi so\nY1b1ka wo nwuma nyinaa\n‘ra\nEfis1 Wo nwumma y1\nakese\n$sabarima Yehowa\nWo tumi so, Wo tumi so.\nPAN (T) 65\n1. $s1 ayeyi, Agya\nNyame s1 ayeyi,\nAgya Nyame ade a Way1\n$s1 ayeyi oo,\nAyeyi s1 No, momfa mma N’,\n$s1 ayeyi oo,\nAgya Nyame ade a Way1\n$s1 ayeyi oo, momfa mma N’,\n2. Nnaase s1 No, momfa\nmma N’\n3. Nhyira s1 No, momfa\nmma N’\n4. Ntrontrom s1 No,\nmomfa mma N’\nPAN (T) 348\n$somaa N’as1m saa me\nyare\n$somaa N’as1m saa me\nyare\n$somaa N’as1m, 4somaa\nN’as1m\n$somaa N’as1m saa me\nyare\n1. $sor nsanku rob4 ayeyi\n(x2)\n$sor nsanku aka abom,\nrob4\nAyeyi! Ayeyi!\n2. $sor’ ad4ma rewoso\nayeyi (x2)\n$sor ad4ma aka abom\nrowoso\nAy1yi! Ay1yi!\n3. Ana w’akoma reto ayeyi\n(x2)\nAna w’akoma aka abom\nreto\nAyeyi! Ayeyi!\n4. !me m’akoma roto ayeyi\n(x2)\n!me m’akoma aka abom\nroto\nAyeyi! Ayeyi!\nPAN (F) 35\n1. $soro mma ntaa dinn,\nna ase mma nny1 komm\n!po nnyae huuy1, na\nAsomdwoe Hene reba\nW4mfa d1w nhoahoa N’\nmfa ntam pa nk1ses1w\nJesus n’akwan mu;\nNa w4mfa m1nk1nsono\nny1 no ahugyawee\n$soro mma ntaa din,\nna ase mma nny1 komm\n!po nnyae huuy1, na\nAsomdwoe Hene reba\n2. Y1n Hen reba; $so na\n$kor4n.\nWasoa no ahenky1w;\nN’ahenky1w fata no\nW4mfa d1w nhoahoa N’\nmfa ntam pa nk1ses1w\nJesus n’akwan mu;\nNa w4mfa m1nkensono\nny1 No ahugyawee\nY1n hene reba\n$so na 4kor4n\nWasoa no ahenky1w\nN´ahenky1w fata no\nJanet Koranteng\n$soro y1 Wo de\nAsase nso y1 Wo de\nObi ne Wo nky1\nW’ahenni\nWo nkotoo na Woy1 4hene\nNa W’ahenni b1tena h4\ndaa\nEunice Johnson\n$soro y1 Wo de,\nAsase y1 Wo nan ntiaso\nNa emu nne1ma y1 Wo\nde\nY1’ Agya Onyame, y1da\nW’ase (x2)\nE. K. Asamoah\n$sorofo reto dwom s1\nKronkron, Kronkron,\nKronkron\n$sorofo reto dwom s1\nKronkron ne Awurade\nY1n ahotewfo yi nso\nY1reto dwom s1\nY1n Nyankop4n y1 K1se\nTumi kura no\nEunice Johnson\n$tse ase, Oenyan efi ewufo\nm’\n$aso1r d1 mbr1 $kaa n’\nW4nka N’ekyir ns1mpa\n$ama h1n nkwa a no\ntun runntwa da\nAlleluia! $tse ase.\nQuintet\nPAN (F) 244\n$tw1n na metw1n Wo,\nm’Agyenkwa\n$tw1n na metw1n Wo,\nm’Agyenkwa\nM’ay1 krado b1hy1 me ma\n$tw1n na metw1n Wo,\nm’Agyenkwa\nE. K. Asamoah\n$w4 mu s1 $kamafo4;\n$w4 mu s1 $fotufo4;\nEnti 1b1y1 yiye, me nua,\nna mma w’aba mu mmu\no! (x2)\nWiase yi m’ bagyabagya,\n1to betwa\nJesus b1hw1 ma\nwoaduru fie s4nn\n$w4 mu s1 $kamafo4;\n$w4 mu s1 $fotufo4;\nEnti 1b1y1 yiye, me nua,\nna mma w’aba mu mmu\no!\nP.B. Appiah-Adu\nPAN (T) 484\n$y1 $nwanwani\nYesu y1 $nwanwani\n$y1 $nwanwani\nYesu y1 $nwanwani\nS1 ahum tu na asor4kye\nr’b4 w4 y1n bra mu a,\nYesu y1 $nwanwani\nBeatrice Chidi\nPAN(T) 534\n$y1 ahene mu Hene\n$y1 awura mu Owura\nNe din y1 k1se\n$so sen obiara\nAde nyinaa so tumfo\nNe nnwuma y1 ak1se\nN’ahenni y1 daa ahenni\nN’ahenni y1 daa ahenni\nN’ahenni y1 daa ahenni\nN’ahenni y1 daa ahenni\nN’ahenni y1 daa ahenni\nE. K. Asamoah\n$y1 an4pawi mframa,\n$y1 an4pawi mframa;\n$b4 ma obiara a n’\nakoma agyigya;\n$y1 an4pawi mframa\nEunice Johnson, PAN(T) 181\n$y1 anidaso4 a 4nhy1\naniwuo\n$y1 anidaso4 a 4nhy1\naniwuo\nS1 wode wo ho to no so\nyie\nNa wogye ne b4hye ns1m\nno di a\nWo b1hu N’anuonyam\ns1nea 1te\n$y1 anidaso4 a 4nhy1\naniwuo\nEunice Johnson\nPAN(T) 1131\n$y1 me y4nko pa, mmere\nhorow pii\n$y1 me y4nko pa mmere\nhorow pii, mmere horow\npii\nMeserew, na meto dwom\nte s1 $hene ‘sian s1,\nwayi me afi me b4ne ne\nmmrato m’\n4y1 me y4nko pa mmere\nhorow pii, mmere horow\npii\nHe Has Been a Friend to me\nmany a Time\nPAN(T) 500\n$y1 nkwagye hann w4 me\nkra mu\n$b1hyer1n ama m’adi\nnkunim\nM1ma me kanea ahyer1n\ndaa\nM1ma me kanea ahyer1n\ndaa nyinaa\n$y1 nkwagye hann w4\nme kra mu\n$b1hyer1n ama m’adi\nnkunim\nKofi Ayepah\n1. $y1 nokwafo, ade biara\nnso no y1\n$y1 nokwafo, ade biara\nnso no y1\n$y1 nokwafo, ade biara\nnso no y1\n$betumi ay1\n$betumi ay1, $betumi\nay1\n$betumi ay1 ama me o\n$betumi ay1\nPAN(T) 384\n$y1 Onyame koro no ara\n4teasefo Nyankop4n\nNea tetefo ne No y11\nadwuma\n$y1 Onyame koro no ara\n(x2)\nMomfa suro ne ahopopo\nNy1 mo nkwagye ho\nadwuma\n$y1 4nokwafo s1 $b1gye\nmo\n$y1 Onyame koro no ara\nRosina Aninkora\n$y1 tete botan\nNyame, $nnae o da\n$y1 tete botan,\nNyame, $nnae o, da\nPAN (T) 391\n$y1 y4nko nokwafo\nMa me, ma me\n$te saa de k4 awiei\n$nnsakra da\nNa s1 4bra asor4kye reb4 a\n$y1 me kra\nwer1kyekyefo\n$y1 y4nko nokwafo\nMa me, ma me.\nPAN (T) 430\nPentekost da no\nNyame tumi no farebae n’\nSian fii soro bae\nBekanyan N’as4r’\n$hyewb4, 4hyewb4,\n4hyewb4, 4hyewb4,\n$hyewb4, 4hyewb4,\n4hyewb4 aba nn1 da yi\nTranslation of Peter Adjei’s\n“That Day of Pentecost”by Seth\nOfei Badu\n1. Pentekoste da no dui no\nNyame tumi no sian’ bae\nNa da a w4tw1n no dui no\nW4nyaa Honhom\nKronkron no\nMa y1n Wo tumi no nn1\nMa y1n Wo tumi no nn1\nMa y1n Wo tumi no nn1\nNa 1mm1b4 obiara asu\n2. ‘Gya t1kr1ma sisii w4n\nso\nNa w4de tumi kaa as1m\nNnipa dodow tiee w4n\nas1m\nNa w4dan baa Nyame\nnky1n\n3. Y1n nyinaa de nokoro\nka s1\nY1retw1n Honhom\nkronkron\nAwurade, kae wo b4hy1\nno a\n!w4 W’as1m no mu\n4. Ma W’anim ntew y1n\nnyinaa so;\nWo nhyira ho hia y1n\nW’anuonyam no ngu y1n\nkra so\nW4 y1n gyidi mpaeb4 mu.\nWhen the power of God\ndescended from Faith Gospel\nmessage\nTwi translated by Elder Sefa\nDwamena\nPAN (T) 925\n1. Pentekoste gya n’\nEr’ nnum w4 me mu da\nSunsum Kronkron gya n’\n1red1w w4 me mu\nM1hw1 s1 1r‘nnum\nOgya fadum\nD1w ma menya namy1\nfoforo\n2. Pentekoste gya n’\n!r’ nnum w4 me mu da\n‘Gya a 4de hy11 y1n b4 n'\n!red1w w4 me mu\n3. Pentekoste gya n’\n!r’ nnum w4 me mu da\nOgya a 1hye b4ne\nMa mey1 kronkron\n4. Pentekoste gya n’\n!r’nnum w4 me mu da\nM'aka as4 ano yi\n!r’nnum w4 me mu\nEliezer Arkoh-Larbi\nPentekoste Gya n’,\nPentekoste Gya n’\nPentekoste Gya n’,\n!red1w (x2)\n!red1w w4 akoma mu\n!rehyew nneb4ne nyinaa\n!de tum’ ne\nns1nkyer1nne\nNe aky1de pa ber1 y1n\nPentekoste Gya n’,\nPentekoste Gya n’\nPentekoste Gya n’,\n!red1w\nRosina Aninkora\nPopa me b4ne na fa me\ny1 Wo de\nW4 Yesu Kristo mu (x2)\nMep1 s1 mey1 wo de daa\nNanso nneb4ne ahy1 me\nma\nPopa me b4ne na fa me y1\nwo de\nW4 Yesu Kristo mu.\nPAN (T) 830\nS1nea Onyankop4n d44\nwiase ni\nS1 $de ne ba a $woo no\nkoro no mae;\nObiara a 4gye No di no\nanyera\nNa wanya daa nkwa (x2)\nHallelu Ya! Hallelu Ya!\nNkwagye w4 Yesu Kristo mu\nHallelu Ya! Hallelu Ya!\nGye No di na woanya\nnkwa:\nBeatrice Chidi\nPAN (T) 797\nSerew, me nua, serew;\nKaans1 nna no ware\nmpo a\nSerew, me nua, serew;\nHy1 w’akoma den\nNna a y1w4 mu yi emu y1\nsum\nMinim y4nko a $besie w’yiye\nN’4b1gye wo nkwa abere\nnyinaa\nNa wob1serew, aserew.\nQuintet Gospel choruses\nSmile my brother smile\nPAN (T)424\n1. S1 $fr1 me a m1gye No so\nEfis1 $no na $y1 me\nguanhw1fo pa\n$de me k4 adidibea\nfr4mfr4m\n$gya me k4 nsu a 1ho dwo ho\n2. S1 $fr1 me a m1gye\nNo so\nEfis1 $no na $y1 me\nguahw1fo pa\n‘Nso s1 menam Owu sum\nb4n mu a\nMerennsuro b4-ne bi\n3. S1 $fr1 me a m1gye\nNo so\nEfis1 $no na $y1 me\nguanhw1fo pa\n$to me pon m’atamfo\nanim\n$de ngo f4 me tirim\n4. S1 $fr1 me a m1gye\nNo so\nEfis1 $no na $y1 me\nguanhw1fo pa\nYiye ne ad4e na ebedi\nm’akyi\nM1tena Awurade fie\nEunice Johnson\nS1 4ko no mu y1 den d1n\nara a\nNkonim Hene ne y1n\nfrankaa (x2)\nY1rek4 y1n anim, y1rek4\ny1n anim\nY1rennsan y1n akyi ara da\nY1rek4 y1n anim, y1rek4\ny1n anim\nNkonim Hene ne y1n\nfrankaa\nPAN (T) 442\nS1 4nka me ho a,\nmintumi ny1 hwee\nS1 4nka me ho a, medi\nnkogu\nS1 4nka me ho a, m1b4\nakwankwan\nS1 1hy1n bi a enni abradaa\nNa s1 mew4 Jesus a,\nmitumi ade nyinaa y1\nS1 mew4 Jesus a, midi\nnkonim\nS1 mew4 Jesus a,\nmeky1n nkonimdifo\nN’aho4den m’ na medi nim.\nPAN (T) 986\nS1 4nntse d1m a, nky1\nmennk1ka\nS1 4nntse d1m a, nky1\nmennk1ka\nM’Egya fie w4 tsenabea\npii;\nS1 4nntse d1m a, nky1\nmennk1ka\nPAN (F) 330\nS1 mahu Yesu yi,\nMe ne no b1tena daa\nS1 mahu Yesu yi, me ne\nno b1tena daa\nMinim nea Yesu ay1 ama\nm’;\nS1 nnipa nyinaa pa me\nmpo a,\nMerennyae Yesu din b4\nda,\nMinim nea Yesu ay1 ama\nm’\nAgnes Manko\n1. S1 mehw1 Wo d4 a\nWode d4 me no a\n!ma me daa nkwa mu\nanidaso\nS1 Woyi Wo d4 a Wode\nd4 me no a\nB4ne nti m1b4 asesa\n2. Wode w’ankasa wo\nnne na 1fr11 me\nNa midii Wo d4 n’ akyi\nbaa Wo nky1n\nM’abenya daa nkwa mu\nanidaso a\n1ma me nante trenee mu\n3. Fa Wo d4 nne so ne me\nnkasa daa\nNa mahu nea Worey1 na\nmay1 bi\nNa masow aba pii w4 me\nbere yi so\n‘ma afofor4 anya nkwa\nanidaso\nSeth Asare Ofei Badu\nS1 menya t1kyer1ma\napem a\nAnka meyi me gyefo ay1\nEfis1 nea W’ay1 ama me\nno d44so pii\n$y1 y1n kwankyer1fo,\nade nyinaa so tumfo\nAwurade, minsi d1n\nminyi W’ay1\nAde nyinaa so tumfo,\ny1n tete-boafo-pa\nY1n kwankyer1fo, y1n\ndimafo\nAseda, ne ayeyi ndwom\nna mede b1ma wo\nAwurade minsi d1n\nminyi W’ay1.\nS1 wiase mu b4n’ ne\nmmonsam tum’,\nAk4nn4 b4n’ ne abrab4\nfun’\nAtor4 adiyi, nnaadaa ne\nnsisi\nP1 s1 w4hy1 W’as4re so a\nYesu, ka y1n ho,\nNa kyer1 y1n kwan pa\n!mma W’as1mpa kanea\nno nnum w4 y1n mu da\nPAN (T) 1003\nS1 w4amfi nsu ne\nHonhom mu anwo obi a;\n$rennya ahenni no\nEnti mo a w4awo mo\nfoforo\nMony1 ahw1 yiye\nMe Nyame, mereka\n’kyer1 mo s1:\n”$tamfo ani bere mo\nW4b1to mo din biara;\nW4b1gu mo ho fi;\nW4besum mo ho afiri\nW4p1 s1 mo mu hwete\nW4 Me, Yesu, ho tan nti,\nMonnsuro.”\nPAN (T) 410\nS1 wo b1gye no adi\nNa wo b1som no yie a\n‘s1nkyer1ne bedi w’akyi\nw4 Awurade din mu (x2)\nGrace Gakpetor\nS1 wo gya red1r’ a\nW4nnk4tum wo\nS1 wodi nokwar’ a\nWobetu h4n\nOgya ee! Ogya ee!\nSunsum Kronkron gya\nHy1 me mma\nOgya ee! Ogya ee!\nSunsum Kronkron gya\nHy1 me mma\n1. S1 wob1som Nyame yiye\na,\nKy1 w4 mpaeb4 mu\nS1 wakode b1hyer1n a\nKy1 w4 mpaeb4 mu\nMpaeb4 tumi y1\nbiribiara;\n!de daa ahode b1br1 wo;\nMpren, mmoa ne anigye\npa\nKy1 w4 mpaeb4 mu\n2. S1 wob1y1 N’ap1de a\nKy1 w4 mpaeb4 mu\nS1 wob1y1 N’ahy1de a\nKy1 w4 mpaeb4 mu\n3. S1 wop1 Kristosom tumi a\nKy1 w4 mpaeb4 mu\nBra adom ahengua no ho\ndaa\nKy1 w4 mpaeb4 mu\n4. Nyame nko n’4b1ma w’\nw’ahiade,\nKy1 w4 mpaeb4 mu\nWo nhyira fi soro h4\nt4nn\nKy1 w4 mpaeb4 mu\nFaith Gospel Message\nPAN(T) 968\nS1 yedi ntetewmu a\n1y1 y1n yaw dodo\nNanso y1w4 anidaso\nS1 daakye bi y1behyia m’\nbio\nS1 y1tsew t4 b4gya no\nmu a\n$b4hor h1n ho fi nyinaa\nEnyimnyam nka Eguambaa a\n$ay1 adze nyinaa yie\nEunice Addison\nPAN (F) 261\nS1e n’, s1e n’, s1e n’\nOnyame nipa s1e\nS1e $tamfo n’ n’adwuma\n(x2)\nMama wo tumi s1 k4s1e\nn’adwuma\nMama wo tumi s1 k4ka\nM’as1mpa\nMeka wo ho na mma nsuro\nAo k4, k4di nkonim\nEunice Addison\nPAN (F) 1158\nS1nea daakye bi\nY1behyia No ni;\nWiase aman nyinaa,\nKasa horow nyinaa,\nY1de anigye behyia No,\nNa y1ato Hallelu Ya ama\nNe din\nPAN (T) 36\nS1nea May1 mo ni,\nS1nea May1 mo ni (x2)\nMede M’anuonyam\nakata mo so\nMadi wiase so nkunim\nMede M’anuonyam\nakata mo so\nMadi wiase so nkunim\nRosina Aninkora\nSika mpempempem\nntumi nt4\nSika mpempempem\nntumi nt4\nNkwagye a manya yi\nSika mpempem ntumi nt4\nPAN (T) 603\nSoma me,\nMe Nyame e, soma me o\nMe Nyame e, soma me o,\nNa m1k4 (x2)\nNea wo b1hy1 me no, na\nm1y1\nNea wo b1ka no na m1ka\nSoma me o,\nMe Nyame e, soma me o\nMe Nyame e, soma me o\nNa m1k4\nA.L. Angoh\nSoro aburuburo san bra\nme kra mu bio\nSor’ aburuburo, bra me so\nMa menn1w s1 ogya,\n!fis1 Woy1 ogya\nMa mempem s1 nsu,\n1fis1 Wo y1 nsu\nMa minyi hua\nhuamhuam s1 soro\nngohuam\nSor’ aburuburo, bra me so.\nEunice Johnson\nPAN (T) 1012\nS4 me nsa na gye\nm’taataa\n!firi s1 honam y1 mmer1\nWo ne wiase agyenkwa\nWo na tefefo hwehw11 Wo\nEnti Kristo, kyer1 me\nkwan\nWo na Woy1 kwankyer1fo\npa\nPAN(T) 1004\nS4re, hyer1n, k4 w’anim\nara\nw4 nkonimdi mu (x2)\nNa wo Nyankop4n no ka\nwo ho\nNa worenni nkogu da\nK4 w’anim ara\nEunice Johnson\nPAN(T) 1275\nSra me ngo, ngo kronkron\nno\nSra me ngo, na meny1\nfoforo\nSra me ngo, ahosan ngo\nno\nFa sra me na matumi\nay1 adwuma yi\nOpoku Onyinah\nSra me ngo, sra me ngo\nSra me ngo ma me ny1\nfoforo\nFa W’as1m asuguare no\nGuare me ma me ho\nntew\nSra me ngo ma meny1 foforo\nEunice Johnson\nSra me, sra me, sra me\nSra me ngo foforo\nNa matumi ay1\nW’adwuma\nSra me, sra me, sra me\nSra me ngo foforo\nNa matumi ahy1\nW’anuonyam\nW’adwuma no b1y1\nnkonimdi ara\nNa matumi ama Wo din no\nso\nEnti sra me, sra me, sra\nme.\nSra me ngo foforo\nNa matumi ahy1\nW’anuonyam\nR. Kissiedu\nPAN (T) 928\nSum nni h4 bio, sum nni\nh4 bio\nHallelu Ya! Sum nni h4\nbio\nEfis1 Yesu y1 hann,\n$y1 hann w4 soro h4\nHallelu Ya! Sum nni h4\nbio\nPAN (T) 616\nSum nyina ‘ra k4\nOnyame hann aba\nAdekyee nsoromma anya\napue\n$de adom foforo adom y1n\nRosina Aninkora\nSum yi mu, m’b4hw1\nm’kandzea kan\nSum yi mu, m’b4hw1\nm’kandzea kan\nJesus Christ na $y1\nkandzea ma h1n\nSum yi mu, m’b4hw1\nm’kandzea kan\nEunice Addison\nPAN (F) 455\n1. Sunsum Kronkron san\nbra\nB1ne y1n ntena daa\nWo na wokasae tete\nmmerem\nW4 sare no so\nSan bra, san bra\nSunsum Kronkron, san\nbra\nB1kasa w4 y1n bere so\nNa y1nte wo nne.\n2. Sunsum Kronkron san\nbra\nBenyan y1n honhom bio\nNa y1anna owu nna\nNa y1ate wo nne\n3. Woy1 Ogya t1kr1ma\nWobaa asuafo no so\nW4de nnam ne aho4den\nKaa W’as1mpa no\n4. Sunsum Kronkron san\nbra\nS1 wonka y1n ho a\nY1nni 4hw1fo bi\nNa y1t4 biraw\n5. Sunsum Kronkron, san bra\nWiase nyinaa hwehw1 Wo\nB1y1 tete nnwuma no\nNa wiase nyinaa nhu\n6. Sunsum Kronkron, san bra\nNokware Honhom, san\nbra\nBoa ma yenni nokware\nW4 W’adwuma yi mu\n7. Y1reba, Wo nky1n ara\nNyi W’anim nhintaw y1n\nHwie ngo fofro gu y1n so\nNa y1nn1w s1 ogya\n8. Sunsum Kronkron, san\nbra\nY1n Kra D4fo, san bra\nY1resr1 W’ s1 san bra\nY1n ani agyina Wo\nEunice Johnson\nPAN (T) 1132\n1. Sunsum Kr4nkr4n bra\nSunsum Kr4nkr4n bra\nSunsum Kr4nkr4n bra\nAo, fa d1w bra, Alleluia!\nSunsum Kr4nkr4n bra.\n2. S1 Ammba a, y1aba no\ngyan\nS1 Ammba a, y1aba no gyan\nS1 Ammba a, y1aba no gyan\nAo, fa d1w bra, Alleluia!\nSunsum Kr4nkr4n bra.\n3. Y1rotw14n W’ y1ay1\nas4r Y1rotw14n W’ y1ay1\nas4r\nY1rotw14n W’ y1ay1 as4r\nAo, fa d1w bra, Alleluia!\nSunsum Kr4nkr4n bra.\n4. Y1rotwe4n Wo tum’ no\nY1rotwe4n Wo tum’ no\nY1rotwe4n Wo tum no\nAo, fa d1w bra, Alleluia!\nSunsum Kr4nkr4n bra.\n5. Y1rotwe4n W’enyim-\nnyam Y1rotwe4n\nW’enyim-nyam\nY1rotwe4n W’enyimnyam\nAo, fa d1w bra, Alleluia!\nSunsum Kr4nkr4n bra.\nPAN (F) 486\n1. Sunsum Kr4nkr4n,\nbra h1n akoma m’,\nMa y1ntse Wo tum no,\nWo na tsetse w4dze W’\nhy11 nk4m\nNa kan na d4 fir Wo.\n2. Bra, na $wo na\nnk4mhy1fo n’\nDze W’ kyer1wee, dze Wo\nkae\nBue nokwar n’,\n$wo nye saafee n’\nTsew nwoma kr4nkr4n n’\nano\n3. Sor Ebubur, tr1\nW’atsabann m’\nW4 h1n isum no do\nButuw h1n kra no sum no\ndo,\nNa ma h4 4ny1 kann\n4. S1 ‘hyer1n h1n mu a,\ny1nam Nyame\nNankasa do bohu N’,\nNa y1nye wo mba nyinaa\nesusu\nOnyame d4 no bun.\nAmen\nCharles Wesley\nChristian As4r Ndwom Fofor 305\nCAN 89\nTaforo y1n mmr1wy1\nnyina’ra\nNa y1n sint4 nyinaa\nnnyera\nNa Kristo nhyer1n k1se\ny1n mu\nWo nko na Wo tumi y1 ’yi\nHy1 y1n ma Honhom\nKronkron\nHy1 y1n ma Onyame\nTumi\nHy1 y1n ma mmoro so\nSeth Asare Ofei Badu\nTena me mu, Na\nwobenya Nkwa;\nTena me mu, fa M’as1m\nb4 wo bra;\nNa kae s1 Mey1 Onyame\na,\nWie mu nny1 Me nsakra\nna;\nTena me Mu na ebesi Wo\nyie\nNa ebesi wo yie; Na\nebesi wo yie;\nFa wo ho to me so na\nebesi wo yie (x2)\nJames A. Quaicoe\nTenetene me W’as1m no\nmu\nKyer1kyer1 me na\nmannyera\nHonhom Kronkron,\nmihia wo aber1 nyinaa\nHy1 me ma na mad1w s1\nogya\nE. K. Asamoah\n1. Tete gya no r’y1 adwuma,\nTete gya no rennum da\nOgya a efiri soro n’\nPentekoste ‘gya no\nOgya no d1r’ me mu\nOgya no d1r’ wo mu\nPentekoste gya no b1k4\nso ad1r’\nOgya as4 me mu yi,\nm1ka as4 ano daa\nOgya as4 wo mu yi, wo\nnso s4 ano daa\nOgya as4 y1n mu yi,\n1b1ka nkyirimma\nPentekoste gya no,\n1rennum da\n2. Tete gya no r’y1\nadwuma\nTete gya no rennum da\nNea 4d1r’ sar’ so no\nNea 4hyer1n as4r’ dan\nmu n’\n4no ‘d1r me kra mu\n4no ‘hyer1n me kwan so\nPentekoste gya no b1d1r’\nna ‘hyer1n\n3. Tete gya no r’y1\nadwuma\nTete gya no rennum da\nOgya a 1firi Agya no\nNea 4kyer11 Israel kwan\nno\n4no na 4kyer1 me kwan\n4no na 4kyer1 wo kwan\nPentekoste gya no\nb1kyer1 y1n kwan\n4. Tete gya no r’y1\nadwuma\nTete gya no rennum da\n‘Gya a Yesu hy11 ho b4 n’\nHonhom Kron-kron no\nOgya a 4tumi ma nkwa\n!no na y1n nsa aka yi\nPentekoste gya no b1ma\ny1n nkwa\n5. Tete gya no r’y1 adwuma\nTete gya no rennum da\nAhum betumi atu\nAsor4kye nso b1b4\nOgya yi di m’anim\nOgya yi di m’akyi\nPentekoste gya yi de me\nb1k4\nOpoku Onyinah\nTete mmer1 mu gya no\n1red1w\nTete mmer1 mu gya no\n1red1w\n!red1w, 1red1w\n!repam sum mu nnwuma\nnyinaa’ra\n!red1w, 1red1w\n!repam sum mu nnwuma\nnyinaa’ra\nAgnes Sarfo\nPAN (T) 383\n1. Tete mmer1 mu\nNyankop4n\nWo a Woy1 4domfo\nNn1 da yi y1ne Wo adi\nahyia (x2)\nWoy1 4d4\nNti na y1aba w’anim\nW’asomdwoe nti y1aba\nW’anim\nTete mmer1 mu\nNyankop4n\nWo a woy1 4domfo\nNn1 da yi y1ne Wo adi\nahyia\n2. Tete mmer1 mu\nNyankop4n\nWo a Woy1 Ogya fadum\nNn1 da yi y1ne Wo adi\nahyia\nWo nkyer1kyer1\nNti na y1aba W’anim\nW’asomdwoe\nNti na y1aba W’anim\nTete mmer1 mu\nNyankop4n\nWo a Woy1 Ogya fadum\nNn1 da yi y1ne Wo adi\nahyia\nMary Kesse\nTete ntredee Nya-me\nW’ahenni to rentwa da\nTete ntredee Nya-me\nW’ahenni b1tena h4 daa\nW’ahenni to rentwa da\nW’ahenni b1tena h4 daa\nJ. Odoi Korang\nTete ntredee Nyame ne Wo\nWofi tete y1 Onyame\nY1de akoma koro bom ka\ns1\nTete ntredee Nyame ne Wo\nRosina Aninkora\nTete Pentekoste Tumi no\n!w4 h4 nn1 da yi nso\n(x2)\nNea ehia ne s1 wob1fa\nNyame as1m\nNa woadi mmuada, na\nwoab4 mpae\nS1 wotw1n Nyame anim\nw4 mpaeb4 mu a\nWubehu tete Tumi no\nEunice Johnson\nTetefo no huu Yesu\nW4de ne tumi y11\nadwuma\nW4n abrab4 nyinaa s11\nYesu\nNa Yesu anni w4n hwamm4\nda\nMahu Yesu\nNe wus4re tumi\nSunsum a 1nyanee Yesu\nfii owu m’\nEdi me mu hene\nMahu Yesu\nNe wus4re tumi\nSunsum a 1nyanee Yesu\nfii owu m’\n1r’y1 me mu adwuma\nGrace Gakpetor\nTsena M’as1m mu, fa Wo\nho ma M’\nM’b1y1 wo dehye, M’b1y1\nwo ‘dehye\nAhyemu dadaw n’ k4,\nahyemu forfor aba;\nMenye Me nkor4fo\nb1tsena akoma mu (x2)\nEunice Addison\nPAN (F) 192\nTumi, anuonyam ne\nahenni\nY1 Onyame ne Ba dea\nAsase ne tumi nyinaa y1 No\nde\n’Y1 ne nan ntiaso\nW’ay1 ade nyinaa yie\nW4 y1n nkwagye\nadwuma n’ ho\n$fata, ‘s1 ayeyi, 1ne s1:\n$y1 awura mu Owura.\nE. K. Asamoah\nTumi k1se, adom k1se\nTumi k1se ab1tena me mu\n(x2)\nEfi Nyame Agya, 4ba no\nmu\n!rey1 anwonwa ‘dwuma\nRosina Aninkora\nTwe me b1n Wo,\nnhyirafo Nyame\nTwe me b1n W’as1nnua no\nTwe me b1n Wo,\nnhyirafo Nyame\nTwe me b1n W’as1nnua no\nW’adwuma yi ho asodi\nda me so\nAwurade, ma me ho\naho4den\nWoabu me bi na W’afr1\nme\naba wo twa adwuma yi\nmu.\nNyame Aguammaa,\n$boafo pa\nKa me ho ma minyina.\n1. W’ahengua si\nKerubim Ne Sera-fim so\nW’ahengua si Kerubim\nne Sera-fim so\nW’ahenni no y1 daa ‘henni\nW’ahenni no to renntwa\nda\nW’ahengua y1 Ogyaframa\n!hyer1n ky1n a-de\nnyinaa\nAb4fo mpempem s4re Wo\nS1: Kronkron ne W’\nAwurade!\n2. Otumfo Nyankopon\nWoy1 4henk1se\nWanim obi nni h4\nW’akyi nso obi remma\n3. W’ahengua y1\nOgyaframa\nEsi ab4fo so\nW4koto s4re Wo\nS1: Kronkron ne W’\nAwurade\n4. Wo na Wo nna aky1\nWo tiri nnwi hoa fitaa\n“Obi-aany1-Wo” Nyankop4n\nObi nnim nea Wofiri bae\n5. Wiase aman nyi-naa\nNe kasa horo’ nyinaa\nW4koto s4re Wo\nS1 W’ahenni y1 k1se\n6. Ahemfo ne Abremp4n\nB1koto as4re Wo daa\nWo na Wodi w4n so hen’\nMa w4n ahenni gyina\n7. Tete Bemee Nyankop4n\nOtumfo Nyankopon\nWodii Hene ansa na\nWob44 Wo wiase yi\n8. Alfa ne Omega\nAhy1ase ne awiei Nyame\nDikanfo ne ‘Kyikafo\nWow4 h4 nnera, nn1 ne daa\nEunice Johnson\n1. W’ahenni y1 daa ‘henni\nW’ahenni no fi tete;\nWofi tete dii hene,\nW’ahenni y1 daa ‘henni\n2. W’ahenni y1 daa ‘henni\nBra b1tena W’ahengua\nso;\nNa tumi nyinaa mmr1 ase\nW’ahenni y1 daa ‘henni\n3. W’ahenni y1 daa ‘henni\nW’ahenni no nni awiei;\n$soro hene ne wo ampa,\nW’ahenni y1 daa ‘henni\n4. W’ahenni y1 daa ‘henni\nHena na $ne wo s1?\nMogya ‘dansefo hene\nW’ahenni y1 daa ‘henni\n5. W’ahenni y1 daa ‘henni\nAhene mu hene ne Wo\nampa;\nWo nko na tumi w4 Wo\nW’ahenni y1 daa ‘henni\n6. W’ahenni y1 daa ‘henni\nBra bedi ‘tamfo no so,\nAhotewfo hene Kristo\nW’ahenni y1 daa ‘henni\nApostolic Twi Dwom 243\nWahw1 m’adifi ne me\nfieba\nNa Wab4 me nkwa ho\nban\nMesu fr1 Wo, na Wogye\nme so\nMe wura , mede Wo\nnnaase ka\nMede Wo nnaase ka\nMede rebr1 Wo\nNea W’ay1 d44so ano\nntumi nka\nGrace Gakpetor\nWama me nso mas1 bi nn1\nMogya dehye a $hwie\ngui w4 Kalvary no nti\n(x2)\nWama me koma at4 me\nyam\nMogya dehye no nti (x2)\nMogya dehye, Mmo!\nMogya dehye, Mmo!\nWama m’akoma at4 me\nyam\nMogya dehye, Mmo oo!\nEunice Johnson\nPAN (T) 1134\nWama No so ky1n ade\nnyinaa\nW’akr4n no ky1n ade\nnyinaa\nNa N’anim hyer1n ky1n\nw4n nyinaa\nY1n hene Kristo\n$te ahennwa no so\nNhyira nka Ne din\nY1n hene Kristo no\nNea $te ahennwa no so N’\nNhyira, Nhyira nka No\nOpoku Onyinah\n1. Wannyi n’ani annhintaw\nme;\nWagye me na Wafr1 me;\nNe Sunsum rey1\nanwanwadwuma;\nWama me aho4den foforo\nM’agya Onyame d4 me,\n$de Yesu aky1 me nti,\nMede Me ho mema No\ndaa (x2)\n2. Sra me 4soro ngo\nfoforo;\nNa mafata 4fr1 yi;\nDi mani-m ne, makyi\nW4 m’akwantu yi mu\n3. Ka me k4 ebun no mu;\nNa ma menn4 asuk4;\nSunsum Kronkron\naky1de nyinaa;\n!ny1 me mu a-dwuma\nPeter Adjei\nPAN (T) 1264\n1. W’asafo ti ne Wo, y1n\nYesu\nY1y1 wo mma, na b1gye y1n\nOguanhw1fo, y1n ho hia wo\nY1y1 wo nguan na b1hw1\ny1n\nY1n b4ne nti anka y1ns1\ns1\nY1ba wo nky1n b1gye\nW’ad4e\nNa nso wo mm4bor4hunu\nd44so\nNa woremma obi ns1e\n2. Y1n Nyame pa, b1hu\ny1n mm4b4\nNa fa wo denhy1 hyira\ny1n!\nNa nn1 y1n nso, y1hy1\nwo b4 s1:\nY1b1som wo atena wo\nnky1n;\nMa gyidi pa 4d4 ne\nnyansa;\nMa y1n ani nna wo so\ndaa!\nMa y1mm4 wo som ho\nmm4den pa\nNa y1mfa soro kwan so\ndaa!\n3. Ma y1n nyinaa mmra\nwo daa homem’\nS1 w’ahennim ahotefo\nNa da bi yennyina wo\nnifa\nNa y1ntena w’anuonyam\nnom h4!\nW’asafo ti ne wo, y1n\nYesu\nY1y1 wo mma, na begye\ny1n\nOguanhw1fo, y1n ho hia\nwo\nY1y1 wo nguan, na b1hw1\ny1n.\nJohn P. Schuck\nPresby As4re Dwom Nhoma 420\nW’as1m so na m’ani da\nWo b4hy1 no na meretw1n\nW’animtew n’ ma minya\nnhyira\nAnuonyam nka Nyame\nGuammaa\nPAN (T) 1106\nWas1m y1 me nan ase\nkanea\nWas1m y1 me kwan so\nhann\nWoy1 Onyame a Woy1\nahen’ mu Hene\nWoy1 Onyame a Woy1\nawura mu Owura\nDi hene w4 me mu\nm’akwan nyinaa mu.\nMa W’as1m ne me\nnantew daa nyinaa.\nE. K. Asamoah\nWas1n me ne Christ\nWas1n me ne No\nWab4 m’mmeamudua m’\nW4atew me ho kr4nn\nNanso ‘ny1 me na 1y1\nChrist\n‘Nuonyam nka Ne din\nNam ne d4ba N’gyidi so\nW4as1n me ne No\n(Translation of Crucified with\nChrist)\nW’as4re afi owu m’\n$y1 Owura, $y1 Owura\nNkotodwe nyinaa b1koto\nn’\nTekyer1ma b1ka s1:\nAwurade, $y1 Owura,\n$y1 Owura\n653 \nWas4re, 4nni ha\nWas4re nkunimdi mu\nW4akor4n No sen w4n\nnyinaa\nOwuo antumi ankora No\nso\n4b1ba ber1 a a-ni nna\nAb1fa ‘hotewfo nyinaa ak4\nsor’\nNa 4bedi hene, daa\nnyinaa\nAnigye b1n na 1retw1n\nahotewfo ‘i\nGrace Gakpetor\nW’atwer1 me din w4\nnkwa nwoma no mu\nAwurade W’atwer1 o\nMagye Yesu din no adi yi\nde1\nW’atwer1 me din w4\nnkwa nwoma no mu\nOpoku Onyinah\nW’ayamye d44so ma y1n\nnyinaa’ra\nOnyame tumfo Woky1n\nade nyinaa\nWorento y1n ntwene,\nW’ani ku y1n ho\nW’ayamye d44so ma y1n\nW’ayamye d44so,\nOnyame tumfo\nY1hyira Wo din, y1da W’ase\nW’ayamye d44so,\nOnyame tumfo\nY1hyira Wo din, y1da w’ase\nOpoku Onyinah\nW’ayamye nti,\nO M’agyenkwa\nMeyi W’ay1 mmorodo ara\ndaa\nMa wo Sunsum kronkron\nnkyer1kyer1 me\nMmr1 mensi nn4 Wo\nMmorodo ara!\nmmorodo ara!\nmmorodo ara!\nAo, med4 Wo\nM’agyenkwa\nMmorodo ara! (x2)\nPAN (F) 366\nW’ay1 ade nyinaa yiye\nW’ay1 ade nyinaa yiye\nW’ama asotifo ate as1m,\nW’ama mmum akasa\nW’ama asotifo ate as1m,\nW’ama mmum akasa\nPAN (T) 97\nW’ay1 ama me\nW’ay1 ama me\nW’ay1 ama me\nW’ay1 ama me\nMede m’as1m aba\nN’anim\nW’ay1 ama me\nYesu ye ma me.\nE.K. Asamoah\nW’ayi me afiri d4te p4t44\nno mu\n$de m’anan asi 4botan so\n$de nnwomto ahy1\nmakoma mu\nAyeyi nnwom, Alleluya\nPAN (T) 1225\n1. W’ayi Ne ho adi akyer1\nbio\nW4 y1n n-sraban mu\nAma akoma nyinaa at4\nyam\nYehowa, D4m so Safohene,\nY1koto Wo.\nYehowa, D4m so Safohene,\nYeyi W’ ay1.\nYehowa, D4m so Safohene,\nYeyi W’ay1\nYehowa, D4m so Safohene,\nY1koto Wo\nYehowa, D4m so Safohene,\nYeyi W’ay1\nYehowa, D4m so Safohene,\nY1koto Wo.\n2. Waba ab1tena y1n mu\nW4 y1n ntoma-dan yi m’\nAma nne1ma nyina ‘y1\nkomm\nKristo no, Asafo no ti,\nY1koto Wo\nKristo no, Asafo no ti,\nYeyi W‘ay1\nKristo no, Asafo no ti,\nYeyi W’ay1\nKristo no, Asafo no ti,\nY1koto Wo\nKristo no, Asafo no ti,\nYeyi W’ay1.\nKristo no, Asafo no ti,\nY1koto Wo\nOpoku Onyinah\nW’ayi, W’ayi, W’ayi oo\nAdesoa a 1da m’akoma\nso no W’ayi\nNe nyinaa asa, w4 Yesu\nmogya no mu\nW’ayi, W’ayi, W’ayi oo oo\nAdesoa a 1da m’akoma\nso no Wayi\n1. W1n w’aso na bue\nw’akoma m’\nYehowa ab1sra wo;\n$de N’as1m nam N’apaafo so;\nWo na $hwehw1 wo:\nMpirim w’akoma s1 wote\nNe nne yi\nBra ne h4 na 4b1gye wo nkwa\nNn1 y1 adom bere ma\nnnipa nyinaa a\nW4r’hwehw1 nkwagye\n2. Saa adom bere yi\n1rentena h4 daa\n!renky1 Yesu b1ba\n$r’ba abebu wiase yi\nat1n\nNa Was1e N’atamfo\nSeth Asare Ofei Badu\n1. Wiase ahonya, 1ny1\nahonya biara\nwiase ahonya, 1ny1\nahonya biara\nDaakye a wobewu n’\nWow4 sika, mpem a,\nWob1dan agya;\nWiase ahonya, 1ny1 ahonya\nbiara\n2. Wiase anigye yi, 1ny1\nanigye biara\nWiase anigye yi, 1ny1\nanigye biara\nDaakye a wobewu n’\nWoanya sika mpempem a,\nwob1dan agya;\nWiase anigye, 1ny1 anigye\nbiara\n3. Y1y1 akwantufo,\n4kyena na y1k4 o,\nY1y1 akwantufo, 4kyena\nna y1k4 o,\nY1y1 akwantufo, 4kyena\nna y1k4 o, na y1k4 o\nY1y1 akwantufo, 4kyena\nna y1k4 o.\nPAN(T) 728\nWiase aman nyinaa\nMonyi Yehowa ay1\nAmanaman nyinaa\nmonkamfo No\nNa N’ ad4e1 so y1n so\nNa Yehowa nokware\nW4 h4 daa\nHalleluya!\nE.B.A. Yeboah\n1. Wiase amane d44so,\nAwurade adi so nkonim\nW4n a w4tw1n Awurade\ndaa,\nW4benya Ne mu\nasomdwoe\nW4benya Ne mu asomdwoe\nW4benya Ne mu asomdwoe\nW4n a w4tw1n Awurade\ndaa\nW4benya Ne mu asomdwoe\n2. Zion babea di ahurisi\nYesu mogya adi nkonim,\nAwer1how nyinaa b1sa;\nAnigye b1ba ama wo.\nRose Boadu\nPAN (T) 479\n1. Wiase amane no d44so\n4haw, aperepere ne\nnyarewa\nOwuo twa so ma w4n a\nw4-ahu Yesu Kristo no (x2)\nKristo b1ma y1’aho-me\nNa $b1dwodwo y1n kra daa\nnyinaa\n2. Ak4neaba bebree yi mu\nAhodwan ne ahokyere yi\nmu\nAwie-1, nea 1hia ne s1:\nwobehu Kristo anim (x2)\n3. Apinisie ne dadwene\nnyinaa mu\nMpaeb4, mmuadadi nyinaa\nm’\nAbrab4 pa na y1de be-pue\nKristo no anim (x2)\n4. Y1n “nhw1so-adwuma”\nyi mu\nNea 1hia y1n ara ne s1:\nAkontaa pa na y1bebu\nw4 Kristo no a-nim (x2)\nOpoku Onyinah\nWiase awiei reba\n!renky1 na Yesu aba\nEnti monka nkyer1\nnnipa nyinaa s1\nWiase awiei reba\nEnti monka nkyer1\nnnipa nyinaa s1\nWiase awiei reba\nEunice Johnson\n1. Wo a me koma afe wo,\nM’agyenkwa no, wow4\nhe?\nYesu, Woafa me 4y4nko,\nNa afei de woafa he?\n2. Me kra ay1 haahaahaa\ns1\nRep1 wo, me d4fo pa\nB4ne ama mabr1 s1\nEnti bra begye me\nnkwa!\n3. Mede mm4b’r4 nne\nm1fr1 wo\nYesu, he po na wok4?\nHwee remma minnya\nahot4\nAkosi s1 mehu wo.\n4. S1 minya ‘nomaa ntaban\n1,\nAnka nn1 metu mak4\nMak4hwehw1 wim ne soro\nMahu nea Yesu w4\n5. Yesu na 4ma me bo t4,\nOyi me m’awer1how m’\nNe nko mu na minya\nahot4,\n$pam hu ne b4ne sum\n6. Merenni nk4mm4 b’ribi\nho\nDe b1k4 akosi s1\nYesu de ne ho b1ky1 me\nAma manya ahomeye\n7. Damfo Yesu, ma minhu\nwo!\nMe kra reham hwehw1\nwo,\nS1, nnyaw me nto b4ne\nmu,\nDan b1hw1 me mm4bor4!\n8. Ma minnya wo asomdwoe\nno,\nMekoto wo, Yesu, bra!\nBra b1dom me, b1tena me\nmu\nNa behyira me dabaa!\nPresbyterian As4re\nNnwom 494\n1. Wo din da me so yi,\nMenne me ho bio\nMay1 Wo de, May1 Wo de\ndaa\nWo din da me so yi,\nMenne me ho bio\nMay1 Wo de, may1 Wo de\ndaa\n2. Maba W’ani-m yi,\nWo na Wo kura me\nMay1 Wo de, may1 Wo de\ndaa\nMaba W’ani-m yi,\nWo na Wo kura me\nMay1 Wo de, may1 Wo de\ndaa\nOpoku Onyinah\nWo din y1 k1se boro din\nnyinaa so,\nYeyi Wo din kronkron ay1 \nYeyi wo din kronkron ay1,\nYeyi Wo din kronkron ay1\nWo din y1 k1se boro din\nnyinaa so,\nYeyi Wo din kronkron ay1\nGrace Gakpetor\nWo ho k4m dze me kra\nWo ho nsuk4m dze me\nkra;\nJesus, Onyame Ne ba\nBra b1tsena m’akoma m’\nma memee\nPAN (F) 483\n1. Wo ho y1 hu;\nWotumi ade nyinaa y1;\n$kronkronni, Awurade\nNyankop4n;\nHonam ne mogya, woafr1\ny1n;\nAwurade, Awurade ka y1n ho\nAwurade, Awurade ei,\nWutumi ade nyinaa ‘ra y1;\nMetwere wo, me Nyankop4n;\nMedan wo abere nyinaa\n2. Obi nte s1 Wo,\ntumi ne aho4den mu\n$kasa-pr1ko, Awurade\nNyankop4n\nD4te1 adwinne1,\nWoatena y1n mu\nAwurade, Awurade, sesa\ny1n\n3. $nwanwafo b1n,\nAwurade Nyankop4n;\n$sesa ab4n’y1fo;\n$tena w4n akoma mu\nDe w4n y1 adwuma;\nAwurade, Awurade,\nhyer1n y1n mu\n4. Nkunimdifo-hene\nne y1n Jesus Christ;\nW4anhu b4ne biara Ne\nmu;\n$k44 asamando, dii owu so\nnim;\nAwurade, Awurade ne\nWo, Jesus\nOpoku Onyinah\nPAN (T) 1324\nWo koma te1, s1 me\nkoma te?\nW’adwene y1 p1 s1\nm’adwene y1 p1?\nFa wo nsa ma me na\nforo bra\nB1tena tease1nam no mu\nna y1nk4y1 Nyame\nadwuma\nPAN (T) 427\nWo Kronkrony1 y1 me f1\nWo Kronkrony1 y1 me f1\nAgya Wo Kronkrony1, 1y1 me\nf1\nWo Kronkrony1 y1 me f1\nWo na metwere Wo, ao\nAdom Wura\nWo na metwere Wo, ao\nme Wura\nWo na metwere Wo, ao\nAdom Wura\nWo na metwere wo,\nYehowa\n1. Me kra Botantim ne Wo\nMerensuro as1m b4ne ne\nda b4ne\n‘Nipa nny1 m’ahotoso\nNa $bonsam nntu me\nkoma\nEfis1 wo na metwere\nWo, Ao Adom Wura\nWo na metwere Wo,\nYehowa\n2. Hwee renhia me\nNea mey1 nyinaa bewie\nyie na agyina\nYiye nko na Woahy1\nama me\nna yiye na ebedi m’akyi\nEfis1 Wo na metwere\nWo, Ao Adom Wura\nWo na metwere Wo,\nYehowa\n3. Daa nyinaa mew4 d1w\nwo d1w a 1y1 m’aho4den\nn’ remfi me mu da\nBer’ a mete w’anan ase\nyi, daa nyinaa mew4\naho4den\nEfis1 wo na metwere\nWo, Ao Adom Wura\nWo na metwere Wo,\nYehowa\nSeth Asare Ofei Badu\nWo na W’adom y1n,\nAwurade, W’adom y1n\nW’adom na ‘kura y1n mu.\n$domfo Yehowa,\nmm4bor4hunufo y1n\ngyefo\nWohw1 y1n so, wowa y1n\ndaa nyinaa\nWo na W’adom y1n\nOpoku Onyinah\n1. Wo ne me\nKwankyer1fo4, Awurade\nWokyer1 me kwan daa\nNa Wo-rennyae me oo da.\n2. Woay1 me Boafo k1se,\nAwurade\nWoboa me daa nyinaa\nNa wo-rennyae me oo da.\nOpoku Onyinah\nWo ne nkwa abodoo a\nwofi sor bae,\nB1y1n akra a Honhom\nmu k4m de w4n;\nWoy1 kanea ma\nanifuraefo;\nW’as1m y1 nkwa ma\nab4nefo\n1. Wo nko na Wo s1\nnnaase,\nWo nko na Wos1 ayeyi\n$soro Agya Nyame ei,\nWo na Wos1 ayeyi daa.\n2. Y1aba wo anim nn1,\nY1kotow s4re Wo\nOtumfo Nyame ei\nWo na Wos1 ayeyi daa.\n3. Obi nni W’anim\nObi nni W’akyi\n$ky1so Nyame ei,\nWo na Wos1 ayeyi daa.\nOpoku Onyinah\nWo nko ne Awurade,\nJesus\nY1koto s4re Wo\nY1hy1 Wo din\nanuonyam, Jesus\nAnuonyam fata Wo\nY1ma Wo din no so,\nJesus\nWo din no y1 k1se\nWo nko ne Awurade,\nJesus\nY1s4re Wo (x2)\nOpoku Onyinah\n1. Wo nky1n ara,\nNyame,\nWo nky1n ara!\nKaansa mbeamudua mpo\nNa 4ma mo do a,\nMo ndwom dabaa nye d1\nWo nky1n ara, Nyame,\nWo nky1n ara!\n2. Kaansa mirikyin mpo\nMa wi ak4t4\nMa adze so asa me,\nMa mesun bo a,\nM’adaaso mu m’bepin\nWo nky1n ara Nyame\nWo nky1n ara!\n3. Ma kwan m-b1da h4 a\nW4dze k4 sor;\nDza edze ma m’ nyinaa,\nEhumb4b4r kwa\nAb4fo refr1fr1 m’\nWo nky1n ara, Nyame\nWo nky1n ara!\n4. Ber a m’enyi b1tsetsew\nn’,\nM’beyi W’ ay1w;\nM’bodua m’awer1how mu\nMesi Nyame fie;\nMenam me yaw m’\nm’bepin\nWo nky1n ara, Nyame\nWo nky1n ara!\n5. S1 so medze ahomka\nMutu ba sor,\nMo wer1 fir wi, bosoom,\n$nye nworaba a,\nMo ndwom mber nyinaa\nnye d1\nWo nky1n ara, Nyame\nWo nky1n ara!\nSarah Flower Adams\nChristian As4r Ndwom Fofor\n1. Wo nnwuma nyinaa\nda wo ase\nWo a wote sorosoro\nGyidifo b1bom aka s1\nWo ne Otumfo\nNyankop4n\n2. Obi nni Wakyi ne\nW’anim\nWow4 h4 nnera nn1 ne\ndaa\nMa wiase aman nyinaa\nnhu s1\nWo ne Otumfo\nNyankop4n\n3. D1n nti na atumfo s4re tia\nAwurade Kristo kronkron\nno?\nAwurade ma w4n nyinaa\nnhu s1\nWo ne Otumfo\nNyankop4n\n4. Wo ne Otumfo Nyankop4n\nTumi bi renntumi ntia\nWo\nMogya adansefo nim s1\nWo ne Otumfo\nNyankop4n\n5. Wo ne Otumfo Nyankop4n\nWo na wob44 ade nyinaa\nWo nnwuma nyinaa kyer1\ns1\nWo ne Otumfo\nNyankop4n\nApostlic Twi 31\nWo nsa ano adwuma\ntrontrom Wo\n$soro ab4fo s4re Wo\nW’ahotewfo, y1to dwom s1\nNhyira nka Wo din\nnhyira nka wo din.\nEunice Johnson\nWo nsam na y1w4,\nAwurade\nSiesie y1n, dom y1n, boa\ny1n\nSiesie y1n, b1dom y1n\nBoa y1n w4 akwan nyinaa\nmu\nWo nsam na y1w4\nAwurade\nSiesie y1n, dom y1n, boa\ny1n\nSeth Asare Ofei Badu\nPAN (T) 1285\nWo p1 na 1y1, ma Wo p1\nny1 n’adwuma\nW4 m’akwan nyinaa mu\nWo p1 na 1y1 ma Wo p1\nny1 n’adwuma\nW4 m’abrab4 nyinaa mu\nMede me ho nyinaa’ ra ma\nwo\nMede m’ akwan nyinaa\n’ra ma wo\nWop1 na 1y1 ma Wo p1\nny1 N’adwuma\nw4 m’ akwan nyinaa mu\nE.K. Asamaoh\nWo p1, ny1 me p1, na\n1ny1\nWo p1, ny1 me p1, na\n1ny1\nBoa me ma minhu\nNea Woahyehy1 ama me\nWo p1, ny1 me p1, na\n1ny1\nPAN (T) 1112\nWo y1 kronkron; Wo y1\nkronkron;\nWo y1 kronkron,\nAwurade;\nWo y1 $hemp4n, Wo y1\nKronkron;\nWo y1 Kronkron,\nAwurade\nTranslation of Samuel Otu\nAppiah’s “You are Holy”\nWoadom me\nAfr1 me aba otwa adwuma yi\nmu\nMeda W’ase, Meda W’ase\nS4 me mu\nFa me k4 awie1 pa\nAwie1 pa\nAwie1 pa\nOpoku Onyinah\nWoay1 bi ama y1n,\n$sorosoro Nyankop4n;\nWoad4 y1n mmoroso\nNa Woawu agye y1n nkwa;\nY1kotow Wo, na y1s4re Wo\nWoay1 bi ama y1n\n$sorosoro Nyame\nY1n Nyame, Wo ho y1 hu\noo;\n$katakyie, Wo te ase\n$nwanwani, y1kotow Wo;\nY1s4re Wo, yehyira Wo\nOpoku Onyinah\nPAN (T) 1265\n1. Woay1 bi ama y1n, me\nWura Jesus,\nWoad4 y1n mmoroso, me\nWura Jesus\nWoay1 bi ama y1n,\nWoay1 bi ama y1n,\nWoad4 y1n mmoroso, me\nWura Jesus (x2)\n2. Woay1 bi ama y1n, me\nWura Jesus,\nWoawu agye y1n nkwa,\nme Wura Jesus.\nWoay1 bi ama y1n,\nWoay1 bi ama y1n,\nWoawu agye y1n nkwa, me\nWura Jesus (x2)\n3. Woay1 bi ama y1n, me\nWura Jesus,\nWoagye y1n ’fi owu m’\nme Wura Jesus\nWoay1 bi ama y1n,\nWoay1 bi ama y1n,\nWoagye y1n ’fi owu m’,\nme Wura Jesus (x2)\n4. Woay1 bi ama y1n, me\nWura Jesus,\nWode y1n b4ne aky1 y1n,\nme Wura Jesus\nWoay1 bi ama y1n,\nWoay1 bi ama y1n,\nWode y1n b4ne aky1 y1n,\nme Wura Jesus (x2)\n5. Woay1 bi ama y1n, me\nWura Jesus,\nW’ad4e1 d44so, me Wura\nJesus\nWoay1 bi ama y1n,\nWoay1 bi ama y1n,\nW’ad4e1 d44so, me Wura\nJesus (x2)\nOpoku Onyinah\nWoda so y1 Onyame,\nWonnsakra da\nTete mmer1 mu Woy1\nOnyame\n!nn1 nso Woy1 Onyame\nWoda so y1 Onyame,\nWonnsakra da\nWode tetefo y11 adwuma,\nFa y1n y1 nn1 nso bio\nWode tetefo y11 adwuma,\nFa y1n y1 nn1 nso bio\nWomaa w4n tumi y11\nadwuma\nW4de W’aho4den y11\nanwonwade\nWode tetefo y11 adwuma,\nFa y1n y1 nn1 nso bio\nT. K. Owusu Boreh\nWofr11 me s1 me mm1y1\nadwuma\nAdwuma a Woy1e no bi\nWode nkwagye aba\nwiase\nS1 me mmedi ho adanse\nnkyer1 aman\nS1 midi mu nokware\nNa mey1 no yiye a\nWob1ma me ayekoo\nWob1ma me ayekoo\nEunice Johnson\n1. Wonyi Nyame Hen ay1w\nW4mfa ayeyi ndwom\nmbr1 N’\nN’ehumm4b4r tsim h4 daa\nOsi pi y1 nokwar daa\n2. Wonyi N’ ay1w: 4ay1 ewia\nD1 4k4 apr4w daa daa\nnyina:\n3. Na eso 4ay1 bosoom,\nMa odu anafua a 4hyer1n\n4. Wonhyira N’ d1 4t4\nnyankom\nMa 4ma edziban fifir;\n5. Na 4ma asaase pa so,\nOyi no nd4baa ma h1n:\n6. $ama buber so aba,\n$ahy1 h1n asan amaama:\n7. $ama edziban a 4sen\nd1m,\nDaa daa d1w ho\nahobadze:\n8. Enyimnyam nka, Hen\nd4y1fo\nAb4dze nyinaa ntow\nenyimnyam\nEnyimnyam nka Egya,\nnye Ba\nNye Sunsum, Ebiasa kor\nAmen\nHenry Williams Baker,\nChristian As4r Ndwom Fofor\nWoso na Wo k’r4n\nNa Woy1 k1se\nWoso na Woy1 k1se\nHena mpo na 4ne Wo\nb1s1?\nWoso na Woy1 k1se\nPAN (T) 302\nWoso na Wokor4n\nNa Woky1n w4n nyinaa\nJesus y1b1da W’ase\nWo tumi ade nyinaa y1\nWo kasa ma ade nyinaa\ny1 komm\nWo so na Wokor4n\nNa Woky1n w4n nyinaa\nJesus y1b1da W’ase\nOpoku Onyinah\nWote M’ase a, wobehu\ns1nea Mete\nWote M’ase a,\nM’anuonyam b1hyer1n\nwo so\nTe M’ase, Mey1 Onyame\nMey1 Onyame a Mede Me\nho\nMe din ne M’adey1\nnyinaa\nNe M’as1m y1 p1\nRosina Aninkora\nWotoo W’anwanwad4 nsa\nno fr11 y1n\nDe gyee y1n nkwa\n$d4 nwanwa! $d4 mmoroso!\n$d4 a emu d4! 'nni\nnhw1hw1 mu\nW’annhw1 y1n mfomso\nne y1n anni\nW’ayi W’annwanwad4 no\nadi akyer1 y1n\nEbenezer ee! De1 W’aboa\ny1n abeduru ni\nWohuu y1n akyiri na\nWo d44 y1n\n$d4 nwanwa, 1to rentwa\nda\nY1dan Wo d4 no aber1\nnyinaa\nOpoku Onyinah\nWoy1 $nwenfo\nMey1 d4te1\nWoy1 $nwenfo\nMey1 d4te1\nY1 me s1nea Wop1 s1\nmey1\nWoy1 $nwenfo\nMey1 d4te1\nTranslation of You are the Potter\nSamuel Otu Appiah\nWoy1 ahene mu Hene\nNe awura mu Owura\n(x2)\nHena mpo na 4ne Wo\nb1s1\nHena mpo na 4ne Wo\nb1s1\nJ. Odoi Korang\nWoy1 Ahunabobrim\nNwanwafo Nyame\n$b4ade1 Nyame,\nTwereduampon Nyame\nWo y1 Ahunabobrim\nNwanwafo Nyame\nOtumfo Nyame, obiara\nnte s1 Wo\nY1s4re wo.\nTranslation of “You are\nawesomely wonderful God”\nGrace Gakpetor\nWoy1 M’agya Na Wod4 me\nWode Yesu agye me nkwa\nBer1 a meso aba\nW’adwuma no mu\nMa w4nhu W’aho4f1 me mu\nMede me ho nyinaa ara\nama Wo\nMede me ho nyinaa ara\nama Wo\nW’adom no som me bo\nnti\nMa w4nhu W’aho4f1 me mu.\nE. K. Asamoah\n1. Woy1 Nyame a wo so\nna Wo Kor4n\nYeyi Wo din ay1 (x2)\nNnaase s1 Wo\nAyeyi s1 Wo,\nTumi nyinaa y1 Wo de\nWoy1 Nyame a Wo so\nna Wo kor4n\nYeyi Wo din ay1 (x2)\n2. Wodi Wo hene wiase\nnyinaa mu\nAman nyi-naa b1koto W’ (x2)\nNnaase s1 Wo\nAyeyi s1 Wo\nTumi nyinaa y1 Wo de\nWodi Wo hene wiase\nnyinaa mu\nAman nyi-naa b1koto W'\n(x2)\n3. Y1r’yi W’ay1 as4re Wo\nWo ne y1n adi no yie\n(x2)\nNnaase s1 Wo,\nayeyi s1 Wo\nTumi nyi-naa y1 Wo de\nY1r’yi W’ay1, as4re Wo\nWo ne y1n adi no yie\nA.L. Angoh\nWoy1 Nyame k1se\nWo tumi boro tumi nyinaa so\nMede me ho nyinaa ma\nWo\nNa m’asom Wo akosi awiei\nGrace Gakpetor\nWoy1 Onyame\nAhy1ase ne awiee1\nOtumfo Nyame,\nOnyame k1se paa\nY1agye Wo adi,\nY1anya ade nyinaa\n$nwanwani b1n na\ny1anya Wo yi\nOpoku Onyinah\nWoy1 Onyame (x2)\nDaa nyinaa, baabiara\nWo di Wo hene\nDaa nyinaa, baabiara\nWodi wo hene\nGrace Gakpetor\n1. W4 Kalvary bep4w no\nso\nNa wokum Kristo,\nNyame ba no,\n$y1 Yesu m’agyenkwa\nno\n2. $br1 ne yaw hy11 Yesu\nso\nAsot4re ne mmaa atape\ngyee no,\n!maa m’agyenkwa no\ny11 mmr1w.\n3. Metee nte1te1m nne\nw4 dua no so\nS1, me Nyame d1n nti\nna\nWoagyaw me,\n!y1 Yesu m’agyenkwa\nnne\n4. $de nne k1se te1m s1:\n“Mawie”\nNa $b44 ne ti ase na\nOwui\nO! hw1 s1nea Yesu si d4 me.\n5. Me wer1 remmfi Yesu\namanehunu,\nFi Getsemane kosi Kalvary,\nWered4m af4re a $b4e de\ngyee me\nApostolic Twi Dwom 140\nW4adi nkunim!\nNkunimdi wura\nW4adi nkunim!\n$sabarima!\nW4adi nkunim ama\nN’as4re\nY1b1ma y1n nsa so\nNa y1ahy1 No anuonyam\nJesus b1k4 so ahw1 N’as4re\n(x2)\nOpoku Onyinah\nW4awo m’ 4ba\nMenna so nni nkoasom\nm’\nM’agya awo m’ ato\nabusua foforo m’\nSor’ ab4fo reb4 apor4 redi’\n’danse\nM’agya awo m’ ay1 Ne de\nkoraa\nEunice Addison\n1. W4b1hwim y1n afa\nmununkum yi mu\nAk4 y1n Agya nky1n w4\nsoro h4nom\nY1n koma b1t4 y1n yam\nW4b1ma y1n akwaaba\nY1n koma b1t4 y1n yam\nW4b1ma y1n akwaaba\n2. S1 y1pue Kristo anim w4\nsoro h4 a\nY1benya anuonyam\nahenky1w pii\nAb4fo b1to y1n nnwom\nNa w4ama y1n akwaaba\nEunice Johnson\nVs. 2 by Samuel Obeng Eshun\nW4kum, w4kum,\nW4kum no maa me\nM’abrab4 mu anuonyam\nNe Jesus a w4kum no\nEunice Addison\nW4mb4 dawur’ nkodu\nasaase ano;\nW4nsan nk4hw1 Bible;\nW4mma frankaa no do\nna nokwar’ no reyew;\nW4nsan nk4hw1 Bible;\nWongyina ndam mma\nnokwar’ n’,\nS1 4ko n’ y1 dzen mpo a;\nMma w4mmpem adze mfir’\nnokwar’ no ho;\nAs1m nwonwa;\nenyimnyam as1m;\nW4nsan nk4hw1 Bible\nPAN (F) 345\nW4mm4 m’ dadewa w4mm4 m’\nW4mm4 m’ benkum ne\nnifa\nW4w44 ne mfem pea\nNe nyinaa $y1 maa me\nW4n a w4tw1n Awurade\nno\nNya aho4den foforo\nW4n a w4tw1n Awurade\nno\nnya aho4den foforo\nW4de ntaban foro s1\nak4de1\nWotu mmiri ka w4mmr1\nW4n a w4tw1n Awurade\nno\nnya aho4den foforo\nW4de ntaban foro s1\nak4de1\nW4nante w4mmpa aba\nW4n a w4tw1n Awurade\nno\nnya aho4den foforo\nIsaac Anane Sarfo\nW4n a w4tw1n Yehowa\nnya aho4den foforo\nW4de ntaban foro s1\nak4re\nW4tu mmirika na w4mpa\naba\nW4nantew na w4mmr1\nAwurade, kyer1 me\nmpaeb4\nPAN (T) 997\nW4n a w4w4 gyidi no mu\nn’\nW4nk4 so nsom Awurade\nno\nW4n br1 no r1nny1 kwa da\nW4b1nya akatua mm4ho\nE. K. Asamoah\nW4nka aheman mu as1m\nW4nka aheman mu as1m\nNt1m ara w4nka aheman\nmu as1m\nNt1m ara w4nka aheman\nmu as1m\nW4woo W’ maa me\nWo wu maa me\nDe gyee me nkwa (x2)\nAs1nnua ho amane n’\nWohunu de gyee me nkwa\nJesus, me Wura, ahene\nmu Hene\nWo wu n’ ama made me\nho\nJesus, me Wura\nawura mu Owura\nWo wu n’ ama made me\nho\nJesus, me Wura\nAsomdwoe Hene\nWo wu n’ ama made me\nho\nA.L. Angoh\n1. Yaw Nyimpa! W4nhw1\ndzin bi a\nW4dze fr11 Nyame Ne\nBa a\n$b1gyee adasa nkwa!\nAllelua! $gyefo b1n a!\n2. W4hy11 N’ f1r, woyii N’ ehi,\nW4dze m’af4dzi soaa No;\nNo b4gyaa sii m’ faky1\npi:\nAlleluia! $gyefo b1n a!\n3. Yedzi f4, h1n ho y11\nnk4w,\nNa 4no nye mpata-guan:\nBo adwe koraa! Aso\nampa?\nAlleluia! $gyefo b1n a!\n4. $s1n wimu na owui,\n$kaa m’ d1, Afei mewie!\nN-d1 w4akr4n No w4 sor;\nAlleluia! $gyefo b1n a!\n5. Na h1n ‘nyimnyam\nHen n’ 4ba\nAb1fa No nkor4fo k4 a,\nBer n’ y1b4tow ndwom no bio:\nAlleluia! $gyefo b1n a!\nPhilipp Bliss\nChristian As4r Ndwom Fofor\n1. Yebebu akontaa,\nakontaa da bi\nYebebu y1n nnwuma ho\nakontaa (x2)\n!y1 aba a w4de ahy1 y1n nsa no\n!ho akontaa na yebebu\nYebebu akontaa,\nakontaa da bi\nYebebu y1n nnwuma ho\nakontaa\n2. W4b1ma y1n akatua,\nakatua pa da bi\nW4b1ma y1n y1n\nnnwuma ho akatua\n!y1 aba a w4de ahy1 y1n nsa\nno\n!ho akatua na y1benya\nW4b1ma y1n akatua,\nakatua pa da bi\nY1b1nya y1n nnwuma ho\nakatua\n3. W4b1hy1 y1n\nahenky1w, ahenky1w da\nbi\nW4b1hy1 y1n ahenky1w\nda bi\n!y1 aba y1ay1 ho adwuma\nno\n!ho ahenky1w na\ny1b1hy1\nW4b1hy1 y1n ahenky1w\nAhenky1w da bi\nW4b1hy1 y1n ahenky1w da\nbi\nEunice Johnson\n1. Yebedi d1w bi da bi\nYebedi d1w bi da bi\nNyame n’adwuma 4br1\nw4 mu ampa\nYebedi d1w bi da bi\n2. Y1b1k4 s’ro ahemman\nmu\nAk4tena ne nky1n h4\ndaa\nS1 yedi N’akyi nokware\nmu de a\nY1b1k4 s’ro ahemman mu.\n3. Obehyia y1n soro h4\nNa wama y1n akwaaba\n$b1ma y1n amo, wama\ny1n abotri\nYebedi d1w bi da bi\n2-3 verses by S.K. Karikari\nPAN (T)708\nYebetumi ak4 ak4fa asase no\nFi Jordan agya ak4si mpoano;\nMmom gyata n’ b1b4\nmm4den asi y1n kwan\nde1\nNyame N’ara de nkonim b1ba\nNkonim firi Awurade (x2)\nWadi nkonim ama\nN’as4re\nYebehim nkonimdi frankaa no\nPAN (F) 208\nYehowa b1hw1,\nYehowa b1hw1,\nYehowa b1hw1,\nYehowa b1hw1,\nYehowa b1hw1\nYehowa me botantim,\nM’abank1se, me gyefo,\nMe ky1m, me\nguank4bea,\nMe wura, meda W’ase daa\nP.B. Appiah-Adu\nPAN (T)558\n1. Yehowa ne wo din\nk1se;\nAteasefo Nyame ne wo;\nWone me Nyankop4n\n1nn1 da yi;\nMede me ho nyinaa ma\nWo.\n2. Yesu din ne ahotefo\ntumi;\nAkristofo wura ne wo;\nMe p4nfo ne me Hene ne\nW’ Yesu;\nMede me ho nyinaa ma\nWo\n3. Honhom Kronkron,\nme kra d4fo;\nAgyidifo y4nko pa ne W’;\nWone me wer1-kyekyefo;\nMede me ho nyinaa ma\nWo\nKwasi Annor\nVerse 2 by Opoku Onyinah\nVerse 3 by G.Y. Asiedu\nPAN (T), 1252\nYehowa no ka wo ho, nti\nnsuro biribi\nOkuta wo, Odi w’anim,\n$b4 wo kyid4m\nYehowa ka wo ho, nti\nnsuro\nYehowa no ka wo ho, de\nwo b1k4 ak4si awie1\nOkuta wo, Odi w’anim,\n4b4 wo kyid4m\nYehowa no ka wo ho, nti\nnsuro biribi\nOpoku Onyinah\nYehowa y1 $komafo ma\nabr1fo\n$y1 $banb4fo ma\nmm4bor4fo\n$botantim, ne\nAbandenden\nNea $ma anidaso na Wad4\nwo\nPeter Adjei\nYehowa, nhyira nka Wo din,\nYehowa, nhyira nka Wo din,\nWiase ab4de nyinaa yi\nW’ay1 daa\nYehowa, nhyira nka Wo\ndin.\nYehowa, yeyi W’ay1,\nYehowa y1kamfo W’\nWo din na y1kamfo;\nAmen, Hallelu Ya! (x2)\nWiase ha, y1de nnwonto\nYi wo din kronkron n’\nay1\nKosi s1 y1befi ha,\nAmen, Hallelu Ya! (x2)\nPAN (T) 93\nYehuh4re Wo, Yehowa\nWofata\nWofata naase, Wofata\nayeyi\nYehuh4re Wo, Yehowa\nWofata\nWofata naase, Wofata\nayeyi\nYehuh4re Wo, Yehowa\nWofata\nWofata naase, Wofata\nayeyi\nYehuh4re Wo, Yehowa\nWofata\nWofata naase, Wofata\nayeyi\nOpoku Onyinah\nYesu abewu ama me,\ndeb4nyeni\n$manfrani a minni ky1fa\nw4 aheman no mu\nAsennua no so na 4teaam\nkaa s1:\nMawie mo nkwagye ho\nadwuma no\nTetelestai! Mawie! Mawie!\nTetelestai! Mawie!\nTetelestai! Mawie!\nTetelestai! Mawie!\nMo nkwagye ho adwuma\nno\nEunice Johnson\n1.Yesu, di y1n kan\nna kyer1 y1n kwan!\nMa y1ny1 nt1m nni\nw’akyi daa\ns1 nokware asuafo.\nDom beso y1n nsa,\nna y1amfom wo da\n2. S1 akwantu no y1\nahometew\nna yehu amane pii a,\nmma yenntwiw mmfi wo\nho da\nma y1mm4 y1n bra te s1\nmmarima\n3. Soro kwan no nam ha\nahohiam;\nwiase amane d44so\nma w’asafo mmaako\nmmaako;\nenti ma y1nhw1 ase no\nyiye\n4. Y1n agyenkwa pa,\ntew y1n kwan mu daa!\ns1 ehia y1n 4kwan m’ a,\nhw1 y1n s1nea ehia;\nhi1 ‘soro pon,\nma yennu h4nom!\nNicholas Ludwig Zinzendorf\nPresby As4re Dwom Nhoma\nYesu d4 me, na 4de\nNe mogya at4 me\nOwui w4 dua no so maa\nme\n$de ab1sakra\nm’animguase nipadua yi\nAma mas1 N’anuonyam\nnipadua\nMogya dehye, mogya\nkronkron\nMogya a efi ne nkekae nni\nm’\n$de ab1sakra\nm’animguase nipadua yi\nAma mas1 N’anuonyam\nnipadua\nMargaret Akuffo\nPAN (T) 608\nYesu hw1 m’ wo nan ase\nWo mogya nko na\nebetumi agye m’\nWo na wonim m’ahiade\nWo mogya nko na\nebetumi agye m’\nO! O! minni hwee de r’ba\nGyidi na mede tetare wo\nO, mmeam’dua Nyame\nAguammaa\nWo mogya nko na\nebetumi agye m’\nPAN (F) 557\n1. Yesu ka wo ho\n$di w’anim, $di w’akyi\nYesu ka wo ho\nw’amanehun’ m’,\nw’ab1br1s1 m,\nS1 asaase ani dane butu,\nmmep4 tutu k4gu po bun\nmu a\nNnsuro!, nnsuro! $ka wo\nho daa.\nS1 wod4 w’Awurade w’akoma\nne wadwene nyinaa m\nNa s1 wod4 wo y4nko\nwod4 wo nua s1 wo ho a\nS1 asaase ani dane butu,\nmmep4 tutu k4gu po bun\nmu a\nNnsuro!, nnsuro! $ka wo\nho daa.\n2. Yesu hw1 wo so,\nw’adifi ne wo fiba mu\nYesu hw1 wo so 4ka wo\nho abere nyinaa m’\nS1 asaase ani dane butu,\nmmep4 tutu k4gu po bun\nmu a\nNnsuro!, nnsuro! 4ka wo\nho daa.\nS1 wo tu gyidi anam4n\nna Kristo ne w’anidaso a\nNa s1 wo b1n Awurade,\nw4 abrab4 kronkron mu a\nS1 asaase ani dane butu,\nmmep4 tutu k4gu po bun\nmu a\nNnsuro! Nnsuro! 4ka wo ho\ndaa\n3. Yesu ahy1 wo b4\n‘1mma w’akoma ntutu,\nYesu ahy1 wo b4\n$b1ko na woakosi awie1\nS1 asase ani dane butu,\nmmep4 tutu k4gu po bun\nmu a\nNnsuro!, nnsuro! 4ka wo\nho daa.\nS1 wok4 wo nkotodwe\nanim w4 gyidi mpaeb4\nmu a\nNa s1 woyi ahuhude firi\nw’akoma no mu a.\nS1 asase ani dane butu,\nmmep4 tutu k4gu po bun\nmu a,\nNnsuro! Nnsuro! 4ka wo\nho daa\nOsei Boateng\nYesu Kristo ay1 wo somfo\nDi ne ho adanse kyer1\naman nyinaa ma w4nte\nWo 4h4ho ne manfrani\nB4 ne dawuro s1 Yesu\nb1ba\nYesu b1ba abebu at1n\n4b1ma y1n amo w4\ny1’adwuma pa biar’ ho\n4b1popa y1n nnisu nyinaa\n4b1ma y1n ahom’\nErnestina Etrue\n1.Yesu Kristo, b1hw1 y1n,\nNa fa wo honhom pa ma\ny1n,\nNa 4mfa wo dom nni y1n\nkan\nNa 4nkyer1 y1n daa\nnkwa kwan.\n2. Y1n t1kyer1ma to\ndwom ma wo,\nNa y1n koma nso b4 wo\nmpae;\nHy1 gyidi den, tew y1n\nkomam,\nNa y1ahu wo nyansa mu\nfann.\n3. Y1 y1n saa daa fa kosi\ns1\nY1ne Nyame asafo no\nB1hw1 w’anim w4 soro h4,\nAto wo dwom ama wo so.\n4. Anuonyam nka Agya\nno,\n$ba ne Honhom\nKronkron daa\nO, y1n Nyame, Nkwamafo\npa\nGye ayeyi ne aseda\nPresby Asafo As4re Nhoma\nDwom 311\nYesu Kristo maba wo h4\nObi nte s1 Wo Nyame,\nWo kor4n ky1n obiara\nOnyame k1se\nAhene mu Hene\nAwura mu Owura\nWo ky1n ade nyinaa\nOnyame k1se\nTranslation of “Jesus Christ I\ncome to you”\nOpoku Onyinah\n1. Yesu Kristo W’as4re\nW’as4re, $renwu bio;\nOwu antumi anny1 hwee\nW’as4re, Hallelu Ya!\n2. W’as4re, W’as4re nn1\nMonte1m denden s1\nWas4re\nOwu, wo nwow4e w4 he?\nW’as4re, Hallelu Ya!\n3. $ma anifurafo hu ade\n$ma akwatafo ho fi\nNea 4ma mmubuafo\nnante\nW’as4re, Hallelu Ya!\n4. Anigye w4 soro h4,\nAsomdwoe w4 asase so,\nAnis4 w4 nnipa mu\nWas4re, Hallelu Ya!\n5. $de nnommum k44\nnnommum\n$de aky1de maa nnipa\nOwu tumi no w4 he?\nWas4re, Hallelu Ya!\n6. S1 y1te Kristo din a,\nNkotodwe nyinaa ngu\nfam,\nNa t1kr1ma mpaem’ nka\ns1\nWas4re, Hallelu Ya!\nApostolic Twi Hymnal 147\nYesu Kristo, Woy1 4hene\nYesu Kristo Woy1\nOnyame\nW’ahenni no to rentwa da\nWoy1 Onyame daa nyinaa\nW’ahenni mma, y1koto Wo\nW’ahenni mma, y1s4re Wo\nMa y1n som yi ns4 W’ani\nNa yie ne ad4e1 nni\ny1’akyi daa\nOpoku Onyinah\n1. Yesu Kristo y1 Agyenkwa,\nNhyira nka No;\nW’ama y1ahu ne nkwagye,\nNhyira, nhyira nka No.\n2. Kristo mogya y1 nkwa\nnsu,\nNhyira nka No;\nWama y1anom nsu no bi,\nNhyira, nhyira nka No.\n3. Nea $s1n dua no so,\nNhyira nka No;\nWasoa me b4ne adesoa\nNhyira, nhyira nka No.\n4. Yesu Kristo wu no nti,\nNhyira nka No;\nNe mogya mu wu no nti,\nNhyira, nhyira nka No.\n5. Yesu Kristo adom nti,\nNhyira nka No;\nNe wus4re tumi nti\nNhyira, nhyira nka No.\n6. Yesu Kristo, med4 wo,\nNhyira nka Wo;\nWo na Wodii kan d44 me,\nNhyira, nhyira nka Wo.\nApostolic Twi Hymnal 210\n1. Yesu, Kristo y1\n$nwanwani\nOfotufo, Nyame Tumfo;\nDaa Agya, Asomdwoe\nHene;\nY1b1hy1 ne din anuonyam\nNhyira nka No, nhyira\nnka No\nNhyira nka Onyame;\nNhyira, nhyira, nhyira\nnka Onyame\n2. Onyankop4n ne y1n w4\nh4;\nEmmanuel w4 y1n ntam\nha;\nN’ahenni no mu b1tr1w;\nEmmanuel rennyaw y1n\nda\nOpoku Onyinah\nPAN (T) 1261\nYesu, ma me ne W’\nnnante daa\nNa ma memfam Wo ho;\nS1nea bobe ma ne baa\nnkwa\nMa me nso meny1 saa\nara\nPAN(T) 995\nYesu ma memfa me ho\nNto wo so yiye daa\nnyinaa\nNa mintim w’adwuma yi\nmu\nNa mentena w’apirakuro\nno mu.\n1. Yesu mogya ne\nm’ahyehy1de\n!no ne m’anidaso;\nEtumi tu me yaw nyinaa,\nNa 1ma me asomdwoe;\nMogya dehye, mogya\nkronkron,\n!no ne m’agyapade.\n2. Yesu mogya ne 4kra\nnkwa nsu,\nEtumi dwodwo koma;\nEtumi horo b4ne nyinaa\nNa 1hy1 gyedifo den,\nMogya dehye, mogya\nkronkron\n!no ne m’ahyehy1de\n3. Yesu mogya y1 nkwa\nnsu bura,\nNe mu na adom ahy1 ma;\nS1 ‘deb4ney1ni t4 mu a,\nW4renkae ne b4ne bio;\nMogya kronkron, mogya\nkronkron\n!no ne m’ahyehy1de.\n4. Yesu mogya ne\nm’ahyehy1de,\nNe mu na m’anigye w4;\nM’awer1how ne m’adesoa\nAfi me so, mogya no nti;\nMogya dehye, mogya\nkronkron,\n!no ne m’ahyehy1de\nApostolic Twi Hymnal 142\nYesu N’ayeforo ne me,\n$resiesie me ama 4man\nk1se bi a 1reba (x2)\nAyeforokunu n’ b1ba\nab1fa N’ayeforo\nN’4de no ak4 ne daa\nahom’gye m’\nWo nokwar’di,\nw’ahobr1ase\nW’ahokeka kronkron ne\nw’ahyehy1de.\nEunice Addison\nPAN(T) 894\n1. Yesu ne mogya no na\nama manya nkwa\nN’apirak’ru no mu na\nmanya m’ayaresa\nNe mogya no mu na\nwahoro me b4ne;\nYesu wu n’ na agye me nkwa\nEnti mema No ammo\nMmo, mmo, mmo;\nMmo, mmo, mmo;\nYesu Kristo mmo,\nMe de mema W’ Ammo\n2. Yesu, ne mogya no\napata ama me;\nNe wus4r’ tum’ mu na\nmanya b4n’ fafiri\nNkabom, asomdwee,\nbembu mu abagye,\nMeny1 b4n’ akoa bio,\nmey1 s’ro dehye\n3. Yesu ne mogya no\nabue soro pon;\nMogya no mu tum’ no\nay1 me ‘dedifo\nManya ‘y4nkofa ne\ntrabea w4 soro.\nMe wer1 mfi N’adom\nmogya af4reb4\nS. K. Ampiah\n2nd and 3rd verses by M. K.\nYeboah\nPAN (T) 146\n1. Yesu ne nkwa botan\nno\nNe mu na nkwagye ahy1\nma\nEnti foro saa botan no\nNa wo nkwagye asi pi.\n2. Yesu ne Onyame Ba a,\n$somaa no baa wiase\nS1 Ommewu mma nnipa\nmma\nNa wo nkwagye asi pi.\n3. Bere a wiase aduru\nsum\nNa nnipa nnya baabi\nmfa\n!no mu na Yesu bae\nMa nnipa mma anya\nnkwagye\n4. Yesu mogya y1 asuten\nNe mu na nkwa abu so\nEnti bra b1nom nsu no bi\nNa wo nkwagye asi pi\n2-4 verses by S.A.K. Karikari\nPAN (T) 612\n1. Yesu nko na me ne no\ntu kwan yi\nMe ne no di ahy1mfiri daa\nYesu nko na 4kyer1 m’\nkwan pa so\nNe mu na menya nhyira\npa:\n2. Kwan mu mmep4 so\n1ne abon mu\nSare so ne po so, mmaa\nnyinaa\nOkita me nsa ma\nmenam dwoodwoo\n$de me rek4 soro fi pa:\n3. Ade sa na mek4da a,\n4w1n me\nNa mes4re a, m’adamfo\nni\nS1 anka mefom a, 4gyigye\nme\nNantebrem, 4san b1hy1\nme den:\n4. Yesu nko na mehw1\nno me kwan so;\n$y1 m’aduan, m’anonne\npo;\nNe nkutoo na 4ma me\nho t4 me;\n$hw1 me honam ne me\nkra p1.:/:\n5. Na s1 1reda ma wu so po a,\n$b1fr1 me s1 memmra ne\nnky1n\nMek4 mak1hy1n n’ahot4\nman mu\nMak1fra ne soro didifom\nPresby As4re Dwom Nhoma\nYesu wo ho y1 f1 s1!\nWodwo, Wo ho tew,\nNa Wo yam ye,\nWohyer1n s1 an4pa\nnsoromma\nYesu Wo ho y1 f1 s1!\nTranslation of “Jesus how\nlovely You are\nPAN(T) 276\nYesu ye, Oye ampa\nYesu ye, Oye ma me\nW’ab1popa me mmarato\nnyinaa\nW’aba ab1soa me b4ne\nadesoa\nW’ama manya 4home\nama me kra\nYesu ye, Oye ma me\nRosina Aninkora\nYesu ye, Oye mmoroso\nMomma y1nkoto no\nYesu ye, oye mmroso\nMomma y1nkoto no\nW’ahohoro y1n b4ne nyinaa\nW’asa y1n nyarewa nyinaa\nW’ama y1n kra anya nkwa\nMomma y1nkotow no\n1. Yesu, wo nky1n na\nm1tena daa\ndaa na m1som wo nkutoo!\nAde biara rempam me:\nM1fa wo kwan pa no so\nWone me nkwa mu nkwa\npa no\nMe kra mu anuonyam,\nS1nea bobe ma ne baa\nnkwa\nS1 Woy1 ma me nso nen.\n2. Hena na 4y1 me yiye\nSen wo a wodom me\ndaa?\nDom nnepa bebree w4\nwo mu\nMa me a midi hia\nHena na 4ma me wer1\nKyekye sen wo, me\nwura a\nW4de soro ne asase so\nTumi-nyinaa ahy1 wo\nnsa?\n3. !he na mehu saa\nwura a\nWay1 nea Yesu y1e?\n$de ne mogya at4 me\nW4 owu ne b4ne mu\nMenny1 nea 4de ne nkwa\nAma ‘wu no de ana?\nSo minnsua mennkyer1\nno\nS1 medi n’akyi ara?\n4. Anigye mu ne amanem\nM1tena wo nkutoo nky1n\ndaa:\nMede me honhom, me\nhonam\nNe me kra mehy1 wo nsa\nNea wop1 no na m1y1\nWofr1 me fi ha, a m1k4;\nS1 mebata wo ho daa a,\nWu po reny1 me wu-na\n5. Ka me ho ewi yi ase!\nNa s1 me da y1 adu\nNa s1 ade y1 asa me\nNa owu sum adur’ a:\n!nde te1 wo nsa gu me so\nHyira me na se me s1:\n“Me ba, wo fam tena ahi\nni Enti bra b1tena nkwa\npam’!”\n6. S1 owu reyi me hu a,\nOwura Yesu, ka me ho\nY1 me hann owu bon sum\nmu,\nNa ma daa ade nkye me\nM’ani so rey1 kusuu a,\nB1haran ma me h4nom;\nNa mafi ha mak4 honom\nS1 4h4ho k4 ne k’rom.\nPresby As4re Dwom Nhoma\nYeyi Wo din ay1, Asafo\nYehowa,\nOnyame Tumfo, yeyi Wo\ndin ay1\n1. Y1 edwuma hwer, ma\nwo ho nk4 m’\nFa d1w y1 w’Egya\nN’edwuma:\nKwan a wo Wura duaa\nmu nye n;\nNa 4wo, somfo, na\n1nnk1fa do?\n2. Y1 ara, 4nnk1y1 gyan\nbi,\nDza ‘yew n’ ha fan’,\n’mfaso w4 sor:\nN1ndze nnkamfo w’,\nmmp1 w’, wommbu w’ bi;\nOwura pen wo; nyimpa\nnye b1n?\n3. Y1 ara, ber a kan w4 do\nyi,\nWiadze edwumay1 ber\nresa:\nMma nny1 akwadwer, y1\nw’edwuma nts1m;\nWonnsi n’d1m twe\nsunsum ekyir\n4. Sum ruku n1ndze a\nw4nye w’ tse,\nD1 wonnyi enyidar w4 wu\nm’;\nMa gya no do, na ka n’\nk1se,\nGya a 4ma mbr1 sum w4 y1\nkan n’.\n5. Y1 ara, mma mber1,\nwe4n na s4r,\nW4dze nyansa twe kra\nekyir;\nSi wiadze bra ne\ntsemp4n yi m’,\nPon akob4fo ma w4mbra\n6. Y1 ara, eso dzi mu d1w;\nNa ahomgye pa w4 ekyir:\n4rennky1r bi na atse\nKumfor n’\nNe nd1e esuom d1, Hw1,\nmereba!\nHoratius Bonar\nChristian As4r Ndwom Fofor\nY1 M’ krado, $hen y1\nm’ krado\nY1 m’ krado na soma m’\n(x2)\nWo nkor4fo ruwu, h4n\nadan r’bubu\nH4n afasu redwiriw,\n4tamfo afa h4n\nY1 m’ krado na soma m’\nPAN (F) 368\nY1 m’adwuma, y1\nm’adwuma,\nFa wo ho ma me, na\nmahyira wo\nMehyira wo nwuma\nnyinaa\nNa m1b4 wo ho ban nso\nMede wo mesi\nmmap4mma adwa so\nNa mahyira wo\nSusana Minta\nY1 me ho ns1nkyer1nne\nma ensi me yiye\nNa m’atamfo ahu (x2)\nMa w4n aniwa nwu s1\nWo, Awurade aboa me,\nakyekye me wer1.\nE.B.A. Yeboah\nPAN (T) 1013\nNnwom 86:17\nY1 w’adwuma adesae\nreba\nHy1 den w4 w’adwuma\nmu\nY1 w’adwuma hare hare\nso ara\nFa w’aho4den nyinaa y1\nAka kakra na ade asa\nW4nny1 adwuma w4\nadesae mu\nY1 w’adwuma hare hare\nso ara\nFa w’aho4den nyinaa y1.\nPAN(T) 1161\nY1ahyia mu yi, mframa\nb1b4\nY1b1hy1 ma Honhom\nKronkron mu\nY1b1hy1 ma, y1b1hy1 ma\nW4 y1n akoma mu\nEliezer Yaw Arkoh-Larbi\nY1as1e ne nnwuma,\nOnni hwee ara ka\nW’ama y1n tumi s1\ny1ns1e ne nnwuma\nEunice Johnson\nPAN (T) 580\n1. Y1b1k4 so-ro ak4di d1w\nbi\nW4 y1n agya no ahenfie\nh4\nAhotewfo, momma\ny1nhw1 yiye\nW4 wiase a-setena yi mu\n(x2)\n2. W4b1bisa y1n 4bra a\ny1b44e no\n!ho as1m bi w4 Agya no\nanim\n3. Y1n anigye be-wie p1y1\nW4 y1n Agya no ahenfie\nh4\nEunice Johnson\nY1b1ma Wo din so,\nY1koto Wo.\nY1b1ma Wo din so\nY1s4re Wo.\nWo din no y1 k1se oo\nY1koto Wo\nWo din no y1 k1se oo\nY1s4re Wo\nWo din no y1 k1se oo\nY1koto Wo.\nWo din no y1 k1se oo\nY1s4re Wo.\nOpoku Onyinah\nY1b1s1 no, s1 Yesu\nKristo Nyame Ba no ba\na,\nY1ne No b1s1\nY1b1s1 No, s1 Yesu\nKristo\nNyame Ba no ba a\nY1ne No b1s1\nSaa bere yi 4resiesie y1n\nSaa bere yi, 4de N’as1mpa\nno rey1n y1n kra\nY1b1s1 No s1 Yesu\nKristo\nNyame Ba no ba a\nY1ne No b1s1\nEunice Addison\nPAN (T) 710\n765 \nY1b1to Ebenezer,\nNyame N’adom ara kwa;\nKae nea Nyame ay1 ama\nwo,\nNa fa nnaase ma No.\nEbenezer, Nyame\nN’adom ara kwa;\nY1b1to Ebenezer na\ny1atrontrom Awurade\nPAN(T) 213\nY1b4bom y1aka No do,\nmbr1 $b1fa biara\nNkwa esutsen no ho na\n4ny1n h1n akra\nS1 akodzi n’b1y1 d1n ara\na,\n4b4hw1 h1n hia nyinaa;\nY1b4bom y1aka No do,\nmbr1 $b1fa biara.\nQuintet Choruses\nPAN (F) 174\nY1da W’ase a, 1fata Wo,\nY1yi W’ay1 a, 1fata Wo\nY1yi W’ay1 daa nyinaa;\nAwurade, ne Wo Yesu\nKristo\n$sahene, y1da W’ase a,\n1fata Wo,\nY1da W’ase, yeyi W’ay1\na, 1fata Wo\nOpoku Onyinah\n768 \nY1da W’ase na yeyi\nW’ay1\nAgyenkwa Nyame\nDaadaa nyinaa yeyi\nW’ay1\nY1’agyenkwa Nyame\nY1da wase, y1yi Way1,\nY1trontrom Wo\nDaadaa nyinaa Nyame\nA. L. Angoh\n769 \nY1da W’ase o, y1da\nW’ase o\nYeyi W’ay1 a 1fata\nWo na W’ako adi\nnkonim\nAgye y1n afiri y1n b4ne\nnyinaa m’\nEyi nti na yeyi W’ay1\nNa y1hy1 Wo anuonyam\nRosina Aninkora\n\nY1de akoma koro da\nN’as1\nY1de akoma koro yi\nN’ay1\nMonna N’ase, monyi\nN’ay1\nAkoma koro nyi Nyame\nay1\nPAN(T) 106\nY1de anigye refi adi;\nEfis1 Woka y1n ho\nNs1nkyer1ne bedi\ny1’akyi,\nAnuonyam b1y1 Wo de\nGrace Gakpetor\nY1de gyidi na ’y1 ade\nnyinaa\nY1de gyidi na ’y1 ade\nnyinaa\nY1de gyidi\nY1de gyidi\nY1de gyidi\nY1de gyidi\nY1de gyidi na ’y1 ade\nnyinaa\nMagaret Addobea Appiah\nY1dze ay1yi ndwom ara,\nY1dze ay1yi ndwom ara,\nY1dze ay1yi ndwom b1ka\n4tamfo egu daadze\nPAN (F) 142\nY1dze enyimnyam b1ma\nJesus,\nNa y1aka No d4 no,\nna y1aka No d4 no\nY1dze enyimnyam b1ma\nJesus,\nNa y1aka No d4 n’ho\nanwanwas1m\nPAN (F) 66\nY1kotow Wo, na y1s4re Wo\nNyame Guammaa,\nWofata ayeyi\nY1kotow Wo, y1s4re Wo\nNyame Guammaa, Wofata\nayeyi\nRosina Aninkora\nY1n Hene reba o, $nam\nreba o\nY1n Hene reba o, $nam\nreba o\nD4m Hene reba o, $nam\nreba o,\n$y1 $hene, Nkonim Hene\nno\n$nam reba oo\nMrs. Clay, PAN (T) 77\n1. Y1n nnipa mma nky1\nha koraa;\nY1sen rek4 s1 sunsuma,\nY1n sunsuma reware a;\nYehu mu s1 ade resa\n2. Ampa, y1aba amm1ky1wa\n!d1n nti na ay1 saa?\nEfi onipa asehwem;\nNyame ne nnipa atetem\n3. B4ne ama y1atew y1n\nho\nAfi y1n agya Nyame ho;\nEnti yenni ne nkwa bio\nOwu nko na 1da y1n h4\n4. Na gyidifo de, wonnsuro,\nNa wobenya nkwa foforo\nS1 Yesu hann tew y1n mu\na,\nyehu no s1 y1anya daa\nnkwa.\n5. Na s1 obi mp1 no mpo\na,\nOnii no b1tena sum mu\ndaa\nna da a awufo nyinaa\nBenyan no, 4rennya nkwa\nbi.\n6. Me gyefo pa, mesr1 wo\ns1;\nMa wo dom fr1 mmeyan\nme nn1!\nWo hann b1tew me mu\nampa,\nNa mab1y1 wo hann no\nba!\n7. B1hran me koma\nkusuu nom\nNa pam owu ne b4ne sum\nS1 wiase p1 sum no a\nMe de, m1nante hann mu\ndaa\n8. !nna, miwu a, m1y1\nkomm\nYesu b1ka m’ani agum,\nNa matetew m’ani bio\nMahw1 n’anim ne hann mu\nh4\nPhilip Friedrich Hiller\nPresby As4re Dwom Nhoma\nY1n Nyame so, N’ahenni\ny1 k1se\nY1n Nyame so, N’ahenni\ny1 k1se\nY1n Nyame so, N’ahenni\ny1 k1se\nNhyira nka y1n Nyankop4n\n$y1 k1se, N’ahenni so\nOnyame Tumfo ne Ne din\nNhyira, Nhyira\nNhyira nka y1n\nNyankop4n\nE. K. Asamoah\nY1n Nyankop4n ne k1se\nno\nObi nte s1 No, $te y1n\nmu;\nTwedeamp4n, Otumfo;\nY1n Nyame so; $ky1n\nw4n ny’naa;\nY1n Nyame so,\n$no na $so, $ky1n w4n\nnyinaa;\nY1n Nyame so,\n$no na $so, $ky1n w4n\nny’naa\nTranslation of Greater\nOne is our God”\nOpoku Onyinah\nY1n nyinaa bom de\nanigye b4 ose,\nS1 afe yi ato y1n Awurade m’\nDe aseda ma Ne din k1se\nn’\nW4 saa mfe aduonum yi.\nAs4re Pentekost adi mfe\naduonum\nHosiana\nMfe aduonum, Hosiana,\nMfe aduonum, Hosiana\nMfe aduonum w4\npr4mpr4m nyinim\n!y1 Nyame Ne\nnokwaredi ma N’as4r’\nGolden Jubili afahy1 yim’\nYi Awurade ay1, Hallelu ya\nE.B. Yeboah\nPAN(T) 1249\nY1n tete botan ne Wo,\nYehowa;\nY1n tete botan ne Wo,\nYehowa;\nMa aman nyinaa nhu s1\nW’aho4den mu na yedi\nd1w\nMa aman nyinaa nhu s1\nW’aho4den mu na yedi\nd1w\nPAN (T) 371\n1. Y1n Wura Kristo reba\nbio\nAbebu wiase at1n\n!renky1! $b1ba!\n$bepue w4 anuonyam\nmu, tumi ne aho4den so\n!renky1! $b1ba!\nAgyidifo nyinaa bepue\nN’anim\nY1bebu y1n “nhw1so\nadwu-ma” yi ho akontaa\n!renky1! $b1ba!\n!s1 me s1 mehw1\nm’akwan nyinaa so yie\nna mannyera\nKristo b1ma me “mmo”,\ns1 akoa pa nokwafo\nw4 me som pa ho\nAmanehunu da h4 ma\nobiara a wansom Nyame\nBa Kristo\nM1som no s1 akoa pa\nnokwafo\nMe ber1 so yi, me nna\nnyinaa m1som no\n2. Y1n Wura Kristo reba\nbio\nAbebu wiase at1n\nOnua, wo gyinabea te\ns1n?\n$temmufo mm4bor4hunfo\nb1y1 N’atemmu adwuma\nOnua, wo gyinabea te\ns1n?\nWiasefo nyi-naa bepue\nN’anim\nW4bebu w4n nnwuma\nnyi-naa ho akontaa\nOnua, wo gyinabea te\ns1n?\n!s1 wo s1 wogye Nyame\nBa Kristo no di, na\nwoanyera\nKristo b1ma wo nkwa a\nenni awiei s1 wogye no\ndi nokware m’ a\nOpoku Onyinah\nY1nam kwan no mu,\nnokwar kwan no mu\nY1rennsan h1n ekyir ara\nda\nYesi nkrum mpo ara a\nJesus ka h1n ho\nY1nam nokwar kwan no\nmu\nEunice Addison\nPAN (F) 213\nY1rek4 kuro foforo no mu;\nY1rek4 kuro foforo no mu\nNyame ‘guamma ne y1n\nkwankyer1fo\n$de y1n bedu kuro no\nmu\nR. K. Bamfo - PAN (T) 707\nY1rek4 man papa bi m’\nY1rek4 man papa bi m’\nY1rek4 man papa bi m’\nY1rek4 oo, Y1rek4 oo\nY1rek4 oo, Y1rek4 oo\nY1retu kwan ak4 soro fie\nNa wo b1k4 h4 bi anaa\nAsaase so y1 4br1 ne\namane\nNa wo b1k4 h4 bi anaa\nMpempem adi kan\nAkodu atw1ne\nW4n haw, 4br1 ne amane\nto atwa\nY1retu kwan ak4 soro fie\nNa wo b1k4 h4 bi anaa\nY1retutu y1n anan s1nea\nakwantufo retu o!\nY1retutu y1n anan s1nea\nakwantufo retu o!\nY1asi so rek4 Zion\nZion kuro f1f1 no mu;\n!h4 na y1b1tra daa daa\nYeretutu y1n anan s1nea\nakwantufo retu o!\nPAN (T) 939\nY1rewu ama nkyirimma\nAma w4anya nkwagye;\nY1rewu ama nkyirimma\nNa w4atena Kristo mu bi.\nRose Sakoa\nPAN (T) 485\nY1rob4 kwan bi, rob4\nkwan bi,\nRoboa mber1wy1fo\nnyina,\nYeresiesie kwan a 4dze\nk4 sor ahemman m’\nMa ay1 mber1w ama\nekyirkafo.\nTranslation of “We are building a road”\nPAN (F) 381\nY1r’yi W’ay1 as4re Wo\nWo ne y1n adi no yie (x2)\nNnaase s1 Wo\nAyeyi s1 Wo,\nTumi nyinaa y1 Wo de\nY1r’yi W’ay1 as4re Wo\nWo ne y1n adi no yie (x2)\nA.L. Angoh, 2013\nY1sen nkunimdifo\nW4 Yesu din no mu\nAwurade ne y1n nkunim\nfrankaa Odi y1n anim\ndaa nyinaa\nGrace Gakpetor\nY1y1 mbeamudua n’ ho\nakofo\nY1reper d1 y1b1gye akra\nH4n a b4n dze h4n ato\nmpokyer1 mu nyinaa\nChrist b4gya n’ nye h1n\nakodze\nNyame N’as1m nye h1n\nakoky1m,\nYedzi nyim w4 b4n,\n4b4nsam nye wiadze do\nO konyimdzi, O Alleluia!\nY1b4twe akra ama h1n sor\nHen\nBer a Eguamba nye h1n\nkwankyer1fo\nO! konyimdzi w4 h4 ma\nh1n daa\nPAN(F) 377\nY1yi wo din ay1\nY1ma Wo din so\nAwura mu Awurade\nY1hy1 Wo anuonyam\nHwan na 4te s1 Wo?\nY1n hene Kristo ne Wo\nY1yi Wo din ay1\nY1ma Wo din so\nOpoku Onyinah\nYiw, yiw, yiw ampa s1\nWoy1 $domankoma\nNyame\nYiw, yiw, yiw ampa s1\nWoy1 $domankoma\nNyame\nFiri tete-mmere-santene\nab4de santene-awie-1\nObi nni W’ anim nni w’\nakyi o\nWoy1 $domankoma\nNyame\nPAN (T) 1230\nYiye bebrebe, Yiye\nbebrebe a\nAwurade W'ay1 ama me\nMeyi N'ay1, m1da N'ase\nama mansan ate\nMeyi N'ay1, m1da N'ase\nama mansan ate\nYuda abusua kuo mu gyata\nno\nWadi nkonim\nKalvary $barima\nkoko4durufo no\nW'adi nkonim\nWako adi nkonim\n‘De asade ama ne mma\nGalilea ho4f1fo no\nWadi nkonim\nEunice Johnson\nPAN (T) 589\nZion abandenden\nNe wo Kristo Yesu\nNea 4gye Wo di no\nani renwu nn1 ne daa\nAbandenden ne Wo\nKristo Yesu\nTweaso tibo4 ne Wo\nNea 4gye Wo di no ani\nrenwu\nZion abandenden ne Wo\nOpoku Onyinah\nINDE X OF FIRST LINES (TWI)\nAbabaawa a wo ho yɛ f1 1\nAban dennen ne Yehowa din 2\nAbere biara, abere biara 3\nAbere nyinaa, me wura no hia me 4\nAb4de nyinaa ’ra, monkotow Awurade 5\nAb4ne’ mommra $tease no h4 6\nAbraham Nyame, $baatan pa, n’ 7\nAbraham, Sarah, w4dze ba b44 h4n anohoba 8\nAde baako na mesr1 Awurade: 9\nAdehye mogya bi at4 me 10\nAdekyee f11f1, f11f1, f11f1 bi reba 11\nAdom bi w4 Jesus mu na me nsa aka 12\nAdom na w4de nam gyidi 13\nAdom na Wode afr1 me 14\nAdom nsu na 1rehwie, 15\nAdom Wura, Adom Wura 16\nAd4fo, afei na y1y1 17\nAdwuma wura ne me 18\nAgya me trontrom Wo 19\nAgya no w4 tumi 20\nAgya Onyame Na W’ay1 21\nAgya pa bi refr1 wo s1 bra fie 22\nAgyenkwa a $d44 23\nAgyenkwa bi fi soro ab1gye y1n 24\nAgyenkwa Yesu fii soro t4nn 25\nAgyenkwa Yesu wu maa me 26\nAgyenkwa Yesu, 4ka me ho nti 27\nAhen mu Hen na $reba n’ampa 28\nAhenni nyinaa begu 29\nAho4den bi w4 bep4w 30\nAhotefo mom4 Ose 31\nAhotewfo, Munhyira Awurade 32\nAhy1 ma, m’akoma ahy1 ma 33\nAkwantu bi w4 h4 a yebetu 34\nAlleluia, Nyame, Woy1 4hen’ ampa 35\nAlleluia, y1w4 fawohodi 36\nAmanaman 4baatan pa 37\nAmansan Nyame 38\nAmen, Amen 39\nAmpa ara, Onyame ye 40\nAmpa, me kra y1 komm hw1 Wo 41\nAmpa, Nyankop4n N’adom ara kwa 42\nAn4pa bi reba 43\nAna W’akoma p1 nhyira 44\nAnidaso nni baabiar’, onua 45\nAnigye b1n na y1anya s1 soro anigye 46\nAnigyes1m k1se 47\nAnka manya s1 mase Wo, Jesus 48\nAnka mayera koraa 49\nAnka nea mete no ware paa 50\nAnuonyam, Anuonyam 51\nAnuonyam ‘wura mu Owura 52\nAnuonyam w4 sorosoro 53\nAo, Awurade, mafe W’ dodo 54\nAo bra ma yendzi d1w 55\nAo! M’agyenkwa, m’aho4den 56\nAo, Woy1 me de 57\nApuei ne at4e y4nko, y4nko 58\nAsaase mba m’ nyinaa ho4f1wfo 59\nAsaase ne n’ade dodow 60\nAsafo Yehowa 61\nAsafo Yehowa, s4re 62\nAsafo Yehowa, Wo boro ade nyinaa so 63\nAse a mete w4 wiase yi 64\nAseda fata Wo 65\nAseda nka Onyame 66\nAseda nyinaa y1 Wo de 67\nAs1m a yekura mu yi y1 Yesu Kristo de 68\nAs1m bi ara a meka no 69\nAsodzi da mo do 70\nAs4r Wura, Nyame 71\nAs4re no ti ne Jesus 72\nAs4re yi ne fapem ne Jesus 73\nAteasefo mma nyinaa 74\nAtemmu da h4 ma y1n enti dwene ho me nua 75\nAtumfo pii aba 76\nAwurade, Awurade 77\nAwurade abeyi y1n awer1how 78\nAwurade aman nyinaa b1suro Wo 79\nAwurade as4 P1ntekoste ‘gya 80\nAwurade bue m’aniwa ma minhu W’ 81\nAwurade d4m so Safohene 82\nAwurade ka y1n ho ‘i 83\nAwurade kaee me ber1 a mew4 ns4hw1 mu 84\nAwurade, Kasa, Kasa, Kasa, ma mente Wo nne 85\nAwurade kasa na W’akoa retie 86\nAwurade ma w4nhu Wo s1 Woy1 Onyankop4n 87\nAwurade, Maba 88\nAwurade mema me kra so mekyer1 W’ 89\nAwurade ne me hw1fo 90\nAwurade ne me hw1fo 91\nAwurade, obiara nte s1 Wo 92\nAwurade 4ko yi y1 wo ko 93\nAwurade, siesie wo somfo 94\nAwurade, Woay1 ade k1se 95\nAwurade y1 aban denden 96\nAwurade y1 ade foforo 97\nAwurade y1 tumfo, w4 tum’ ne aho4den m’ 98\nAwurade, y1da W’ase 99\nAwurade Yesu Kristo 100\nAyayade a w4de y11 No no 101\nAyefor kun’ no $reba 102\nAyeyi na mede ma Nyame 103\nAyeyi repem m’akoma m’ 104\nBedidi, bedidi 105\nBer a Apost4lek hy11 ase 106\nBer a wi da do yi, mframa rob4 yi 107\nBere a Yesu kasa kyer1 wo yi 108\nBeso me nsa gyigye me 109\nB1n me na wate me nne 110\nBoa me, Yesu, boa me, Awurade 111\nB4 bra me kra do 112\nB4gya a ofi Ne mfe m’ 113\nB4gya, Jesus b4gya 114\nBra b1hw1 Jesus N’aho4f1 115\nBra Yesu nky1n 116\nBra, Nyame Sunsum, bra 117\nBue m’akoma aniwa, tew m’akoma ho 118\nBue maso ma mente W’as1m 119\nBura bi w4 h4 b4gya ma 120\nCalvary na m’Agyenkwa N’wui 121\nDa no ab1n, da no ab1n 122\nDa no b1y1 nkonim nkonimdi da 123\nDa yiye d4fo 4br1fo 124\nDaa biara, Awurade 125\nDaa daa daa 126\nDaa daa, m1b4 me nsanku daa 127\nDaa, $te saa daa daa daa 128\nDaakye, daakye, daakye 129\nDavid n-sanku a 130\nDe1b1n na may1 131\nDe1b1n na may1 a Awurade 132\nD1m da n’, d1m ara n’ 4b1y1 133\nD1n na mede b1hy1 134\nD1n na memfa minyi W’ay1 135\nD1w a onnyi ewiei 136\nD1w d1w ahy1 m’akoma ma 137\nDi bi na nom bi; Mene abodoo no, 138\nDi dwuma ma Awurade 139\nDi hene m’akoma mu, 140\nDin b1n na w4de ama w4 nnipa mu 141\nDin bi w4 h4 a 1y1 d1 142\nDin koro na mede ayeyi b1ma No 143\n‘Domfo Nyame ne Wo 144\n‘Domfo Nyankop4n 145\nD4n bi reb4 m’akoma mu 146\nDua W’aba pa no w4 me kra mu 147\nDwen papa a $y1 ma wo n’ ho 148\nDzeb4ny1nyi k4besae a mahaw 149\nDzi d1w, 4kofo dzi d1w 150\nDzi kan ma yendzi W’ekyir daa 151\nEguambaa N’ a wokum No n’ 152\nEmmanuel, Nyame ne y1n w4 h4 153\nEso sen adze nyinaa 154\nEwuradze bedzi ne hene w4 N’as4re mu 155\nEwuradze, bue m’enyiwa ma munhu W’ 156\nEwuradze, W’as1m tsim 157\n!bere a merekyinkyin 4bra sare so 158\n!nkaa ade papa bi a 159\n!nso No y1 s1 4b1y1 160\n!ny1 aho4den so 161\n!ny1 m’aho4den, Onyame na W’ay1 162\n!ny1 y1’ aho4den na W’aho4den 163\n!r’b4 gu me so s1 po asor4kye 164\n!renky1 y1befiri wiase asetena yaaya yi mu 165\n!s1 s1 obiara d4 no 166\n!y1 me anigye s1 mahu me Yesu; 167\n!y1 me te s1 nea matua biribi 168\n!y1 Yesu n’adom ara kwa 169\nFa me y1 nea wo p1 170\nFa w’akwan hy1 171\nFa w’ani to me so na woanhwe ase 172\nFa wo nkwa b4 af4r ma Nyame 173\nFa y1n hy1 W’ataban n’ ase 174\nFapem foforo, obiara nntumi nto 175\nFr1 Me w4 hiada mu, na 176\nGetsemane ahoyera mpaeb4 m’ 177\nGetsemane turo mu h4 178\nGu me kanea mu ngo ma menhyer1n daa 179\nGya bi red1w w4 m’akoma mu 180\nGya me k4 bep4 no atifi 181\nGyedzinyi, twer No, twer No 182\nGyidi k1se ho b4hye no 183\nGyina me nky1n, me kra d4fo pa 184\nGyina s1 4sraani nokwafo 185\nGyina wo mudi mu 186\nHeaven y1 anigye kuro 187\nHena na 4te s1 Wo 188\nHena na 4te s1 Wo, Awurade 189\nHena ne me koraa a mafata N’ayeyi 190\nHena ne me, Yehowa a 191\nHo4f1wfo Nazarene 192\nHonhom Krokron repem w4 me mu 193\nHonhom Kronkron, me kra d4fo 194\nHonhom Kronkron, me kyigyinafo 195\nHwan koraa mpo na 196\nHwan na $reba yi 197\nHwehw1 Wo Nyame som no 198\nHw1 Me w4 dua no so 199\nHw1, Nyimpa b1n nye Oyi a ogyina 200\nHw1fo k1se no dwene wo ho 201\nHwie ma 1ny1 ma 202\nHwim me k4 soro daa nyinaa 203\nHy1 dzen na mma nsuro 204\nHyer1n, Nyame Kanea, hyer1n 205\nJerusalem y1 ahotew kurow 206\nJesus a w’ahu no a 207\nJesus b4gya nko na otum hor me kra ho 208\nJesus b4gya repram 209\nJesus bepue bep4 n’atifi 210\nJesus fr1 h1n! S1 h1n bra po 211\nJesus, Jesus 212\nJesus, Jesus, Jesus 213\nJesus m’adamfo pa 214\nJesus, me kra adamfo pa ne Wo 215\nJesus, $ky1n w4n nyinaa 216\nJesus, $no ara y1 Onyame 217\nJesus resiesie tenabea w4 Sor’ 218\nJesus siarfo! Jesus siarfo 219\nJesus, Wo so, Woky1n w4n nyinaa 220\nJesus, wokum N’ maa me 221\nJesus, Woy1 m’adamfo 222\nJesus, Woy1 me Botantim 223\nJesus w4 y1n ntam ha 224\nJesus y1 4hene, Jesus y1 Owura 225\nJesus y1 4hene, $y1 $hen’ k1se 226\nJesus y1 me de 227\nKan no na anka mey1 akoa 228\nKanea a y1dze hw1 h1n kwan mu 229\nKans1 wiase yi nyinaa ‘ra y1 me de 230\nKasa ma y1nte wo nne 231\nKasa, $hene kasa 232\nKenyan W’edwuma yi 233\nKo gyidi ko pa 234\nKo gyidi ko pa no 235\nKonyimdzi w4 h4 ma h4n a w4twer Jesus 236\nKora me nkwa, s4 me mu 237\nKronkron, Kronkron 238\nKr4nkr4n! Kr4nkr4n! Kr4nkr4n! 239\nKwasida, mew4 anigye 240\nKyer1 y1n W’anuonyam, Owura 241\nMa adom kuruwa no ny1 ma 242\nMa Awurade Nyame so 243\nMa Elijah atade no ngu me so 244\nMa Honhom Kronkron mu ogya no mmra 245\nMa menka nea mahu 246\nMa menka W’as1mpa no daa 247\nMa mennantew s1nea Jesus nantewee 248\nMa mens1 Kristo me suban m' 249\nMa mente Wo nne daa 250\nMa mente Wo nne m’Awurade 251\nMa mentena wo p1 mu daa 252\nMa meny1 d1 'Wo, mo Wura 253\nMa meny1 s1nea tetefo no y1e 254\nMa minhu Wo 255\nMa mununkum no nkata me so 256\nMa ogya no mmra 257\nMa Wo gya no nd1w 258\nMa wo ngosra mmra y1n so 259\nMa wo nsa so, ma wo nsa so 260\nMa wod4 no ntena me mu 261\nMa y1n nsu no bi; ma y1n nsu 262\nMa yenhu Wo p1, Awurade 263\nMa Yesu aho4f1 nna adi me mu 264\nM’agyenkwa Yesu ama me gyinabea foforo 265\nM’aho4den ne Awurade ampa 266\nM’aho4den sa a Wo ne m’aho4den 267\nM’akoma ahy1 ma, ahy1 ma abu so 268\nM’akoma mu, m’akoma mu 269\nM’as1m y1 Yiw! 1y1 Yiw 270\nM’asomdwoe apam w4 h4 ma w4n a 271\nMas4r’ b1k4 so ay1 hann 272\nM’as4re yi, asraafo ne mo 273\nMaba Wo nwunu ase 274\nMahu Nyame anya biribi 275\nMahu Yesu, Yosef ba no 276\nMahyia No, Jesus 277\nManya ny1nko, ny1nko a 4mmpa da 278\nManya y4nko Jesus mu 279\nMbeamudua n’ ase, m’b4k4 h4 280\nM’beyi Jesus akyer1 281\nM’b1y1 d1 Jesus; m’b1y1 d1 Jesus 282\nMbr1 Jesus Ne dzin dua y1 d1w 283\nMbr1 metse yi ara minnyi hwee ka 284\nMe br1 reny1 kwa 285\nMe br1 reny1 kwa, w4 otwa adwuma yi mu 286\nMe d4fo ne Wo, me Wura 287\nMe Guank4bea ne Wo 288\nMe gyefo k1se, Awurade 289\nMe gyefo ne Wo, Awurade 290\nMe honhom, kra ne me honam 291\nMe hye hama afa nea eye ama me 292\nMe kra ‘Damfo, Jesus, 293\nMe kra repere hwehw1 Wo 294\nMe kra, di d1w na wo nkwagye aba 295\nMe kra, di d1w na yi Awurade ay1 296\nMe kra, hyira Awurade 297\nMe kra, hyira Ewuradze 298\nMe kuruwa nie, Awurade 299\nMe mpokyer1 nyina ebubu 300\nMe mu ade nyinaa behyira Wo 301\nMe na Nyame afr1 me 302\nMe ne No bedi d1w daa 303\nMe ne Nyame b1k4 awie1 304\nMe nhw1so pa ne Wo 305\nMe nnamfo pa a med4 w4n no 306\nMe Nya-me ye 307\nMe wer1 remfi 308\nMe Wura Jesus, Me Wura Jesus 309\nMe Wura ne Wo 310\nMe Wura Yesu y1 nkwa nsu a 1repem 311\nMe Wura, m’ Agyenkwa 312\nMed4 wo fi m’akoma mu 313\nMeda W’ase; Me da W’ase 314\nMeda wo ase o o 315\nMeda Yesu basa so 316\nMedan Wo, me Nyame 317\nMede m’akoma m1da W’ase 318\nMede m’ano beyi Wo ay1 319\nMede m’ano fafa b1ka 320\nMede m’aseda ‘br1 Wo 321\nMede me honam ne me kra 322\nMede meho b1hy1 Yesu Kristo ase 323\nMede 4hyewb4 gya ne Jesus benantew 324\nMedi W’akyi daa M’Agyenkwa 325\nMedi Wo din ho adanse akyer1 aman 326\nMeenya ngyirama apem matow ndwom 327\nMegye Nyame edzi 328\nMehu N’anuonyam s1nea 1te 329\nMehwehw1 Wo, Yesu nko 330\nMeka wo ho, na mma nsuro 331\nMeky1n 4honyani 332\nMene nkwagye farebae 333\nMene no anante mfe1 kakra ni 334\nMene Onyankop4n W’Awurade no 335\nMene Yehowa, Me din ne no 336\nMenim s1 Awurade bebue kwan bi ama m’ 337\nMenya nhyira, nhyira a 4bor do 338\nMer’hwehw1 W’ na mahu s1-nea Wote 339\nMer’mma m’abam mmu da 340\nMerehwehw1 Wo 341\nMerennyaw Wo da biara da 342\nMerensesa me Nyame da 343\nMerepem so k4 344\nMeresiesie nnipa bi ama w4n tumi 345\nMesi m’as4re asi ogya so, 346\nMesi me dan w4 4botan so 347\nMete ase yi, m1to Yehowa dwom; 348\nMete nne bi firi soro 349\nMete w4 soro s1 w4reb4 sanku 350\nMetse 4d4 ne ns1m 351\nMetse Ne nka m’akoma mu 352\nMew4 agyapade w4 Kristo mu, 353\nMew4 anuonyam bi w4 soro h4 354\nMew4 Jesus a 4te me mu 355\nMew4 Jesus me nkwa nyinaa mu; 356\nMew4 Nyame Otumfo w4 m’anim 357\nMey1 honam ne mogya na 358\nMey1 Ogya a Mered1r’ w4 wo mu 359\nMey1 ogya mframa a Merd1r’ w4 wo mu 360\nMey1 Onyame, mey1 Onyame 361\nMeyi wo din ay1 daa nyinaa 362\nMeyi Yesu ay1 363\nM1br1 m’akoma ase 364\nM1d4 wo O Kristo 365\nM1d4 wo, me Wura m1som Wo 366\nM1da W’ase, meyi W’ay1 367\nM1hyehy1 m’adamude w4 soro 368\nM1k4 bep4w no so 369\nM1to Awurade ho dwom 370\nM1to dwom mama Onyame 371\nM1trontrom Wo, meyi W’ay1 372\nM1y1 d1n na makamfo Wo m’Agya e 373\nM1y1 nea metumi ahy1 W’anuonyam 374\nMifi nkoasom yaw ne sum no mu 375\nMigyina Calvary bep4 no so 376\nMigyina $botantim no so 377\nMihunuu wo akyiri, na mefr11 wo 378\nMihuu w4 bep4 n’atifi 379\nMinim Ne din, 4n’ ne Jesus 380\nMinim No, Awurade 381\nMinim s1 mogya no 382\nMinyim d1 $y1 nwanwanyi 383\nMitwa W’af4remuka ho hyia 384\nMma nnwen’ ntra so 385\nM-ma wo wer1 mmfiri 386\nMmer1 mete yi ara 387\nMmeresanten No 388\nMo ho d4 ntsi na Jesus baa 389\nMo ne me nkamfo Awurade ne k1sey1 390\nMogya n’ atue emuk4 kwan 391\nMogya nti na manya nkwa 392\nMomfa aseda nhy1n 393\nMomfa oseb4 mmra N’anim 394\nMomma yenni Yesu ho nk4mm4 395\nMomma yenni y1n 396\nMomma y1mm4 ‘ose 397\nMomma y1nkamfo Yehowa 398\nMonhw1 nnomaa a wokyin w4 wim 399\nMonhw1 y1n Hene Jesus, 400\nMonhy1 Me din kronkron no anuonyam 401\nMonkeka s1 Yesu ye 402\nMonna Nyame ase 403\nMonna Nyame ase daa 404\nMontintim, mma monhinhim da 405\nMonto dwom d1d1 nyi Awurade ay1 406\nMonto dwom pa mma agyenkwa 407\nMonto dwom, mommo ose 408\nMonto Yehowa akwan ho dwom 409\nMorotw14n ne mbae no 410\nNa w4awo $ba ama y1n; 411\nNa w4too Onyankop4n akoa 412\nN’as1m, N’as1m y1 sunsum 413\nN’ayeyi rensa da 414\nN’enyimnyam b1hyer1n h1n do 415\nNe d4 Ne d4 416\nNe dzin 4nnye Jesus, $y1 me ny1nko 417\nNe mogya no adi bem; 418\nNea as1e nyinaa 419\nNea Owui w4 Kalvary sunsum no 420\nNea 4ma sukooko fifir 421\nNea wafr1 me no, $nim nea 4de me b1y1 422\nNea Way1 ama me, $s1 nnaase 423\nNea w4kyeree no w4 Getsemane 424\nNhyira ne Yehowa 425\nNhyira nka Awurade 426\nNhyira nka nea obuee adom pon 427\nNhyira nka Wo, nhyira nka Wo 428\nNhyira Wura ne Wo 429\nNka emi nko a 430\nNkunimdi! Nkunimdi! 431\nNkunimdifo a mew4 ne nsraban mu 432\nNkwa aboodoo 433\nNkwa nsu repem 434\nNkwa nsu resen 435\nNkwa nsuo no repem 436\nNkwa nsuti ne Wo 437\nNnipa nyinaa besi d1n ate ns1mpa yi 438\nNnommaa de w4n nnwomto yi N’ay1 439\nNnsuro na gye Me di 440\nNnwom bi a y1b1to w4 soro h4 a 441\nNwanwani! Nwanwani! 442\nNyame a tete nna no mu 443\nNyame a Woy1 4baatan pa 444\nNyame a Woy1 b4ne aduro 445\nNyame a woy1 kwankyer1fo pa 446\nNyame ahome, twi fa me so 447\nNyame ahy1 b4 s1 448\nNyame ay1 wo yie 449\nNyame ayi Ne d4 adi 450\nNyame d4 ne mma 451\nNyame ne Honhom, sian bra mo do 452\n‘Nyame ne y1n w4 h4 453\nNyame teasefo Sunsum, gu me so foforo 454\nNyame y1 ahotewfo 455\nNyame ye, Onyame ye daa 456\nNyan me o, me Nyame e 457\nNyankop4n w4 y1n mu 458\nNyankop4n yeyi W’ay1 459\nNyansabuakwa Nyame 460\nNyew, $see me d1 montw14n 461\nO b4gya, b4gya kr4nkr4n 462\nO 1d1w ne ahomgye nwanwa 463\nO Honhom Kronkron a 464\nO hwie ngo fofor gu me 465\nO Israel Yakob Nyame 466\nO mo Wura, meda 467\nO tsie Jesus Ne ndze 468\nO’ Tweaduamp4n Nyame 469\nO Yesu d4fo pa 470\nObesi m’ yie, obesi m’ yie 471\nObi din de Yesu, $w4 nkwa 472\nObiara nte s1 Wo 473\nOdi m’anim na 4kyer1 me kwan 474\nOdimafo, Odimafo, Odimafo 475\nOduy1fo k1se n’ ab1n 476\nOebubu mo mpokyer1 m’ 477\nOguammaa a wokum No 478\nOguammaa a wokum No no 479\nOguammaa no de Ne mogya at4 me 480\nOguammaa s1 nnaas1 481\nOguammaa s1 ayeyi 482\nOguammaa, Nyame ’Guammaa 483\nOguanhw1fo, na 4kyer1 me kwan 484\nOgya no b1d1r’ akoma biara mu 485\nOgya no red1w 486\nOgya no rennum da 487\nOhunu me akyiri 488\nOkokuroko, yeyi W’ay1 489\nOkristoni, ma w’ani nna 490\nOnipa b1n na mframa ne 491\nOnni bi adamfo 492\nOnua pa, bra fie 493\nOnua, hu s1 $b44 wo din 494\nOnua, kyer1 me w’anigye 495\nOnyame ba no, Kristo 496\nOnyame Ba, yeyi W’ay1 daa 497\nOnyame b1y1 N’adwuma s1 498\nOnyame gya red1w 499\nOnyame ho y1 hu, munyi N’ay1 500\nOnyame Honhom Kronkron 501\nOnyame kae me 1 502\nOnyame Kanea, di m’anim o 503\nOnyame Sunsum, hy1 me ma daa 504\nOnyame, Wo na y1b1som Wo 505\nOnyame w4 h4 oo 506\nOnyankop4n asafo mma 507\nOnyankop4n Ba ne Wo 508\nOnyankop4n Kronkron, $henk1se 509\nOnyankop4n, ma 1ny1 ‘yie 510\nOnyankop4n, Wo y1 k1se 511\nOsiand1 Owui maa h1n 512\nOsoro d4m no atwa ahyia redi ahurisi 513\nOsuani nokwafo, m1y1 daa 514\nOtumfo Nyame, Baasa Koro no 515\nOtumfo Nyankop4n 516\nOtumfo Nyankop4n, bedi hene 517\nOtwa adwuma no so 518\nOwu antumi No 519\nOwu maa me, Owu maa me 520\nOwui ma meenya nkwa 521\nOwura bi a, midi N’akyi 522\nOwura Yesu 523\nOwus4re; frankaa rehim 524\n$agye m’ mbordo ara 525\n$ahy1 Jesus 4hen 526\n$bae begyee m’ nkwa 527\n$b1kasa ama me 528\n$b1n me ky1n m’adamfo 529\n$boafo bi nni baabiara 530\n$boafo k1se ne Awurade 531\n$bra n’ adandan nyinaa mu 532\n$br1fo, bra, bra na b1home 533\n$br1fo, fa wo ho ma Nyame 534\n$dafo a woada 535\n$d11fo4 Nyame e, y1’ hene Ne W’ 536\n$d4 b1n ni, 4d4 nwanwa 537\n$d4 na Mad4 wo 538\n$d4 Onyankop4n, yeyi 539\n$d4fo k1se bi a mahu no yi 540\n$de y1n k4 o 541\n$domankoma Agya Onyame 542\n$dzeb4ny1nyi nni enyimnyam 543\n$fr1 a w’afr1 y1n no y1 4soro fr1 544\n$fr1 yi y1 4fr1 kronkron 545\n$gyefo bi nni h4 nn1 s1 Kristo no 546\n$gyefo, $gyefo, $gyefo bi nni h4 547\n$h4ho ne manfrani 548\n$hemp4n Kristo no te 549\n$hene Jesus de me ay1 ne de 550\n$honam adwene y1 owu 551\n$hw1fo wui dua ho 552\n$ka y1n ho, $ka y1n ho 553\n$ko k1se no ab4 adze 554\n$kura y1n mu 555\n$kwan dedaw no mu 556\n$ky1n ade nyinaa 557\n$ky1n w4n nyinaa 558\n$man Ghana ba 559\n$ne wo nam, 4rennyae wo 560\n$ne y1n b1k4 o 561\n$nnso Nyame y1 562\n$no n’ ewiase w4 Ne nsam, 563\n$no na 4reba ‘i 564\n$no na W’akasa, $nim ade nyinaa 565\n$nwanwafo bi a magye No adi 566\n$rempa me da 567\n$sabarima Yehowa 568\n$s1 ayeyi, Agya Nyame s1 ayeyi 569\n$somaa N’as1m saa me yare 570\n$sor nsanku rob4 ay1yi 571\n$soro mma ntaa dinn 572\n$soro y1 Wo de asase nso y1 Wo de 573\n$soro y1 Wo de, asase y1 Wo nan ntiaso 574\n$sorofo reto dwom s1 575\n$tse ase, Oenyan efi ewufo m’ 576\n$tw1n na metw1n Wo 577\n$w4 mu s1 $kamafo4 578\n$y1 $nwanwani 579\n$y1 ahene mu Hene 580\n$y1 an4pawi mframa 581\n$y1 anidaso4 a 4nhy1 oniwuo 582\n$y1 me y4nko pa, mmere horow pii 583\n$y1 nkwagye hann w4 mekra mu 584\n$y1 nokwafo, ade biara nso no y1 585\n$y1 Onyame koro no ara 586\n$y1 tete botan 587\n$y1 y4nko nokwafo 588\nPentekost da no n’ 589\nPentekoste da no dui no 590\nPentekoste gya n’ 591\nPentekoste Gya n’ 592\nPopa me b4ne na fa me y1 Wo de 593\nSenea Onyankop4n d44 wiase ni 594\nSerew, me nua, serew 595\nS1 $fr1 me a m1gye No so 596\nS1 4ko no mu y1 den d1n ara a 597\nS1 4nka me ho a, mintumi ny1 hwee 598\nS1 4nntse d1m a, nky1 mennk1ka 599\nS1 mahu Yesu yi, 600\nS1 mehw1 Wo d4 a Wode d4 me no a 601\nS1 menya t1kyer1ma apem a 602\nS1 wiase mu b4n’ ne mmonsam tum’ 603\nS1 w4amfi nsu ne 604\nS1 wo b1gye no adi 605\nS1 wo gya red1r’ a 606\nS1 wob1som Nyame yiye a 607\nS1 yedi ntetewmu a 608\nS1 y1tsew t4 b4gya no mu a 609\nS1e n’, s1e n’, s1e n’ Onyame nipa s1e 610\nS1nea daakye bi 611\nS1nea May1 mo ni 612\nSika mpempempem ntumi nt4 613\nSoma me 614\nSoro aburuburo san bra me kra mu bio 615\nS4 me nsa na gye m’taataa 616\nS4re, hyer1n, k4 w’anim ara 617\nSra me ngo, ngo kronkron no 618\nSra me ngo, sra me ngo 619\nSra me, sra me, sra me 620\nSum nni h4 bio, sum nni h4 bio 621\nSum nyina‘ra k4 622\nSum yi mu, m’b4hw1 m’kandzea kan 623\nSunsum kronkron san bra 624\nSunsum Kr4nkr4n bra 625\nSunsum Kr4nkr4n bra h1n akoma m’ 626\nTaforo y1n mmr1wy1 nyina’ra 627\nTena me mu, Na wobenya Nkwa 628\nTenetene me W’as1m no mu 629\nTete gya no r’y1 adwuma 630\nTete mmer1 mu gya no 1red1w 631\nTete mmer1 mu Nyankop4n 632\nTete ntredee Nya-me 633\nTete ntredee Nyame ne Wo 634\nTete Pentekoste Tumi no 635\nTetefo no huu Yesu 636\nTsena M’as1m mu 637\nTumi, anuonyam ne ahenni 638\nTumi k1se, adom k1se 639\nTwe me b1n Wo, nhyirafo Nyame 640\nW’adwuma yi ho asodi da me so 641\nW’ahengua si 642\nW’ahenni y1 daa ‘henni 643\nWahw1 m’adifi ne me fieba 644\nWama me nso mas1 bi nn1 645\nWama No so ky1n ade nyinaa 646\nWannyi n’ani annhintaw me 647\nW’asafo ti ne Wo, y1n Yesu 648\nW’as1m so na m’ani da 649\nWas1m y1 me nan ase kanea 650\nWas1n me ne Christ 651\nW’as4re afi owu m’ 652\nWas4re, 4nni ha 653\nW’atwer1 me din w4 nkwa nwoma no mu 654\nW’ayamye d44so ma y1n nyinaa’ra 655\nW’ayamye nti 656\nW’ay1 ade nyinaa yiye 657\nW’ay1 ama me 658\nW’ayi me afiri d4te p4t44 no mu 659\nW’ayi Ne ho adi akyer1 bio 660\nW’ayi, W’ayi, W’ayi oo oo 661\nW1n w’aso na bue 662\nWiase ahonya 663\nWiase aman nyinaa 664\nWiase amane d44so 665\nWiase amane no d44so 666\nWiase awiei reba 667\nWo a me koma afe wo 668\nWo din da me so yi 669\nWo din y1 k1se boro din nyinaa so 670\nWo ho k4m dze me kra 671\nWo ho y1 hu; Wotumi 672\nWo koma te1, s1 me koma te 673\nWo Kronkrony1 y1 me f1 674\nWo na metwere Wo, ao 675\nWo na W’adom y1n 676\nWo ne me Kwankyer1fo4, Awurade 677\nWo ne nkwa abodoo a wofi sor bae 678\nWo nko na Wos1 nnaase 679\nWo nko ne Awurade, Jesus 680\nWo nky1n ara, Nyame 681\nWo nnwuma nyinaa da wo ase 682\nWo nsa ano adwuma trontrom Wo 683\nWo nsam na y1w4, Awurade 684\nWo p1 na 1y1, ma Wo p1 ny1 n’adwuma 685\nWo p1, ny1 me p1, na 1ny1 686\nWo y1 kronkron; Wo y1 kronkron 687\nWoadom me 688\nWoay1 bi ama y1n 689\nWoay1 bi ama y1n, me Wura Jesus 690\nWoda so y1 Onyame 691\nWode tetefo y11 adwuma, 692\nWofr11 me s1 me mm1y1 adwuma 693\nWonyi Nyame Hen ay1w 694\nWoso na Wo k’r4n 695\nWoso na Wokor4n 696\nWote M’ase a, wubehu s1nea Mete 697\nWotoo W’anwanwad4 nsa no fr11 y1n 698\nWoy1 $nwenfo 699\nWoy1 ahene mu Hene 700\nWoy1 Ahunabobrim 701\nWoy1 M’agya Na Wod4 me 702\nWoy1 Nyame a wo so na Wo Kor4n 703\nWoy1 Nyame k1se 704\nWoy1 Onyame, ahy1ase ne awiee1 705\nWoy1 Onyame, daa nyinaa, baabiara 706\nW4 Kalvary bep4w no so 707\nW4adi nkunim! Nkunimdi wura 708\nW4awo m’ 4ba 709\nW4b1hwim y1n afa 710\nW4kum, w4kum 711\nW4mb4 dawur’ nkodu asaase ano 712\nW4mm4 m’ dadewa w4mm4 m’ 713\nW4n a w4tw1n Awurade no 714\nW4n a w4tw1n Yehowa 715\nW4n a w4w4 gyidi no mu n’ 716\nW4nka aheman mu as1m 717\nW4woo W’ maa me 718\nYaw Nyimpa! W4nhw1 dzin bi a 719\nYebebu akontaa, akontaa da bi 720\nYebedi d1w bi da bi 721\nYebetumi ak4 ak4fa asase no 722\nYehowa b1hw1 723\nYehowa me botantim 724\nYehowa ne wo din k1se 725\nYehowa no ka wo ho 726\nYehowa y1 $komafo ma abr1fo 727\nYehowa, nhyira nka Wo din 728\nYehowa, yeyi W’ay1 729\nYehuhoro Wo, Yehowa Wofata 730\nYesu abewu ama me deb4nyeni 731\nYesu, di y1n kan 732\nYesu d4 me, na 4de 733\nYesu hw1 m’ wo nan ase 734\nYesu ka wo ho $di 735\nYesu Kristo ay1 wo somfo 736\nYesu Kristo, b1hw1 y1n 737\nYesu Kristo maba wo h4 738\nYesu Kristo Was4re 739\nYesu Kristo, Woy1 4hene 740\nYesu Kristo y1 agyenkwa 741\nYesu, Kristo y1 $nwanwani 742\nYesu, ma me ne W’ nnante daa 743\nYesu ma memfa me ho 744\nYesu mogya ne m’ahyehy1de 745\nYesu N’ayeforo ne me 746\nYesu ne mogya no 747\nYesu ne nkwa botan no 748\nYesu nko na me ne no tu kwan yi 749\nYesu wo ho y1 f1 s1! 750\nYesu ye, Oye ampa 751\nYesu ye, Oye mmoroso 752\nYesu, wo nky1n na m1tena 753\nYeyi Wo din ay1, Asafo Yehowa 754\nY1 edwuma hwer, ma wo ho nk4m’ 755\nY1 M’ krado, $hen y1 m’ krado 756\nY1 m’adwuma, y1 m’adwuma 757\nY1 me ho ns1nkyer1nne ma ensi me yiye 758\nY1 w’adwuma adesae reba 759\nY1ahyia mu yi, mframa b1b4 760\nY1as1e ne nnwuma, 761\nY1b1k4 so-ro ak4di d1w bi 762\nY1b1ma Wo din so, 763\nY1b1s1 no, s1 Yesu Kristo 764\nY1b1to Ebenezer, Nyame N’adom ara kwa 765\nY1b4bom y1aka No do, 766\nY1da W’ase a, 1fata Wo 767\nY1da W’ase na yeyi W’ay1 768\nY1da W’ase o, y1da W’ase o 769\nY1de akoma koro da N’as1 770\nY1de anigye refi adi 771\nY1de gyidi na ’y1 ade nyinaa 772\nY1dze ay1yi ndwom ara 773\nY1dze enyimnyam b1ma Jesus 774\nY1kotow Wo, na y1s4re Wo 775\nY1n Hene reba o, $nam reba 776\nY1n nnipa mma nky1 ha koraa 777\nY1n Nyame so, N’ahenni y1 k1se 778\nY1n Nyankop4n ne k1se no 779\nY1n nyinaa bom de anigye b4 ose 780\nY1n tete botan ne Wo, Yehowa 781\nY1n Wura Kristo reba bio 782\nY1nam kwan no mu 783\nY1rek4 kuro foforo no mu 784\nY1rek4 man papa bi m’ 785\nY1retu kwan ak4 soro fie 786\nY1retutu y1n anan s1nea 787\nY1rewu ama nkyirimma 788\nY1rob4 kwan bi, rob4 kwan bi 789\nY1r’yi W’ay1 as4re Wo 790\nY1sen nkunimdifo 791\nY1y1 mbeamudua n’ ho akofo 792\nY1yi wo din ay1 793\nYiw, yiw, yiw ampa s1 794\nYiye bebrebe, yiye bebrebe a 795\nYuda abusua kuo mu gyata no 796\nZion Abandenden 797",
+    "source": "pentecostal-book",
+    "sourceLabel": "Pentecostal Songs Book"
+  }
+]

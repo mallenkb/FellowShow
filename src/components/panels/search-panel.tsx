@@ -1,9 +1,23 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import {
+  Fragment,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  useDeferredValue,
+  type PointerEvent,
+} from "react"
 import { createPortal } from "react-dom"
 import { invoke } from "@tauri-apps/api/core"
 // Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
 import { Button } from "@/components/ui/button"
-import { getAutocompleteSuggestion, getTabNavigationResult } from "@/lib/quick-search"
+import { Fader } from "@/components/ui/fader"
+import { Input } from "@/components/ui/input"
+import {
+  getAutocompleteSuggestion,
+  getTabNavigationResult,
+} from "@/lib/quick-search"
 import {
   Select,
   SelectContent,
@@ -19,11 +33,21 @@ import {
   BookOpenIcon,
   SparklesIcon,
   MusicIcon,
-  ScrollTextIcon,
+  ImageIcon,
+  UploadIcon,
+  TrashIcon,
+  PinIcon,
+  PencilIcon,
+  TypeIcon,
+  MoreHorizontalIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CrosshairIcon,
   CheckIcon,
   PlusIcon,
+  RotateCcwIcon,
   ChevronDownIcon,
 } from "lucide-react"
 import {
@@ -32,18 +56,67 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useBible, bibleActions } from "@/hooks/use-bible"
-import { useBibleStore, useQueueStore, useSettingsStore } from "@/stores"
-import type { Book, Hymn, Verse, SemanticSearchResult } from "@/types"
-import { Input } from "@/components/ui/input"
+import {
+  useBibleStore,
+  useQueueStore,
+  useSettingsStore,
+  usePresentationStore,
+} from "@/stores"
+import type { Book, Verse, SemanticSearchResult } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
-import { copSongs, type CopSong } from "@/lib/cop-songs"
+import { createSongSearchIndex, searchSongs } from "@/lib/song-search"
+import { copSongs, type CopSong, type CopSongSource } from "@/lib/cop-songs"
+import { importedSongs } from "@/lib/imported-songs"
 import { splitLyricBlocks } from "@/lib/lyrics"
 
-type SearchTab = "book" | "context" | "songs" | "hymns"
+type SearchTab = "book" | "context" | "songs" | "presentation"
+type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
+type TransformHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w"
+type TransformInteraction =
+  | {
+      type: "move"
+      pointerId: number
+      startX: number
+      startY: number
+      startOffsetX: number
+      startOffsetY: number
+      previewWidth: number
+      previewHeight: number
+    }
+  | {
+      type: "resize"
+      handle: TransformHandle
+      pointerId: number
+      startX: number
+      startY: number
+      startScale: number
+      previewWidth: number
+      previewHeight: number
+    }
 
 const LYRIC_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const SHOW_CONTEXT_SEARCH = false
+const allSongs = [...copSongs, ...importedSongs]
+const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
+  { value: "all", label: "All songs" },
+  { value: "theme-2026", label: "2026 Theme" },
+  { value: "theme-2025", label: "2025 Theme" },
+  { value: "pentecostal-book", label: "Pentecostal Book" },
+]
 
 function compareLyricTitles(a: { title: string }, b: { title: string }) {
   return a.title.localeCompare(b.title, undefined, {
@@ -52,15 +125,65 @@ function compareLyricTitles(a: { title: string }, b: { title: string }) {
   })
 }
 
-function TranslationOptions({ translations }: { translations: ReturnType<typeof useBible>["translations"] }) {
-  const englishTranslations = translations.filter((t) => t.language === "en")
+function compareLyricNumbers(
+  a: { number: number; title: string },
+  b: { number: number; title: string }
+) {
+  if (a.number !== b.number) return a.number - b.number
+  return compareLyricTitles(a, b)
+}
+
+function getSongSourceOrder(song: CopSong) {
+  if (song.source === "theme-2026") return 1
+  if (song.source === "theme-2025") return 2
+  if (song.source === "pentecostal-book") return 3
+  return 0
+}
+
+function compareSongPdfOrder(a: CopSong, b: CopSong) {
+  const sourceOrder = getSongSourceOrder(a) - getSongSourceOrder(b)
+  if (sourceOrder !== 0) return sourceOrder
+
+  const languageOrder = a.language.localeCompare(b.language)
+  if (!a.source && !b.source && languageOrder !== 0) return languageOrder
+
+  return compareLyricNumbers(a, b)
+}
+
+function hashString(value: string) {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) | 0
+  }
+  return hash || 1
+}
+
+function TranslationOptions({
+  translations,
+}: {
+  translations: ReturnType<typeof useBible>["translations"]
+}) {
+  const preferredEnglishOrder = ["NKJV", "NIV", "KJV", "AMP", "NLT"]
+  const englishTranslations = translations
+    .filter((t) => t.language === "en")
+    .sort((a, b) => {
+      const aIndex = preferredEnglishOrder.indexOf(a.abbreviation)
+      const bIndex = preferredEnglishOrder.indexOf(b.abbreviation)
+      if (aIndex !== -1 || bIndex !== -1) {
+        return (
+          (aIndex === -1 ? preferredEnglishOrder.length : aIndex) -
+          (bIndex === -1 ? preferredEnglishOrder.length : bIndex)
+        )
+      }
+      return a.abbreviation.localeCompare(b.abbreviation)
+    })
   const otherTranslations = translations.filter((t) => t.language !== "en")
 
   return (
     <>
       {englishTranslations.length > 0 && (
         <SelectGroup>
-          <SelectLabel className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted-foreground">
+          <SelectLabel className="text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
             English
           </SelectLabel>
           {englishTranslations.map((t) => (
@@ -75,7 +198,7 @@ function TranslationOptions({ translations }: { translations: ReturnType<typeof 
       )}
       {otherTranslations.length > 0 && (
         <SelectGroup>
-          <SelectLabel className="text-[0.625rem] font-semibold uppercase tracking-wider text-muted-foreground">
+          <SelectLabel className="text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
             Other Languages
           </SelectLabel>
           {otherTranslations.map((t) => (
@@ -89,26 +212,45 @@ function TranslationOptions({ translations }: { translations: ReturnType<typeof 
   )
 }
 
-function LetterFilterDropdown({
-  value,
-  onChange,
+function SongFilterDropdown({
+  sourceValue,
+  letterValue,
+  onSourceChange,
+  onLetterChange,
 }: {
-  value: string
-  onChange: (value: string) => void
+  sourceValue: SongSourceFilter
+  letterValue: string
+  onSourceChange: (value: SongSourceFilter) => void
+  onLetterChange: (value: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
-  const [menuPosition, setMenuPosition] = useState({ left: 0, top: 0, width: 96 })
-  const options = ["all", ...LYRIC_LETTERS]
-  const label = value === "all" ? "All" : value
+  const [menuPosition, setMenuPosition] = useState({
+    left: 0,
+    top: 0,
+    width: 260,
+  })
+  const letterOptions = ["all", ...LYRIC_LETTERS]
+  const sourceLabel =
+    songSourceOptions.find((option) => option.value === sourceValue)?.label ??
+    "All songs"
+  const letterLabel = letterValue === "all" ? "All" : letterValue
+  const label =
+    sourceValue === "all" && letterValue === "all"
+      ? "All songs"
+      : sourceValue !== "all" && letterValue !== "all"
+        ? `${sourceLabel} · ${letterLabel}`
+        : sourceValue !== "all"
+          ? sourceLabel
+          : `${letterLabel} songs`
 
   const updateMenuPosition = useCallback(() => {
     const trigger = triggerRef.current
     if (!trigger) return
 
     const rect = trigger.getBoundingClientRect()
-    const width = Math.round(rect.width)
+    const width = Math.max(260, Math.round(rect.width))
     setMenuPosition({
       left: Math.round(rect.right - width),
       top: Math.round(rect.bottom + 6),
@@ -126,9 +268,13 @@ function LetterFilterDropdown({
 
     updateMenuPosition()
 
-    const handlePointerDown = (event: PointerEvent) => {
+    const handlePointerDown = (event: globalThis.PointerEvent) => {
       const target = event.target as Node
-      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      if (
+        triggerRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      )
+        return
       setOpen(false)
     }
 
@@ -160,55 +306,159 @@ function LetterFilterDropdown({
       <button
         ref={triggerRef}
         type="button"
-        aria-haspopup="listbox"
+        aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggleOpen}
-        className="flex h-10 w-24 items-center justify-between rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 dark:hover:bg-input/50"
+        className="flex h-10 w-44 items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:bg-input/30 dark:hover:bg-input/50"
       >
-        <span>{label}</span>
-        <ChevronDownIcon className={cn("size-4 text-muted-foreground transition-transform", open && "rotate-180")} />
+        <span className="min-w-0 truncate">{label}</span>
+        <ChevronDownIcon
+          className={cn(
+            "size-4 text-muted-foreground transition-transform",
+            open && "rotate-180"
+          )}
+        />
       </button>
 
-      {open && createPortal(
-        <div
-          ref={menuRef}
-          role="listbox"
-          style={{
-            left: menuPosition.left,
-            top: menuPosition.top,
-            width: menuPosition.width,
-          }}
-          className="fixed z-50 overflow-hidden rounded-md border border-border bg-popover shadow-lg ring-1 ring-foreground/10"
-        >
-          <div className="max-h-64 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin]">
-            {options.map((option) => {
-              const isSelected = option === value
-              const optionLabel = option === "all" ? "All" : option
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{
+              left: menuPosition.left,
+              top: menuPosition.top,
+              width: menuPosition.width,
+            }}
+            className="fixed z-50 overflow-hidden rounded-md border border-border bg-popover shadow-lg ring-1 ring-foreground/10"
+          >
+            <div className="max-h-80 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin]">
+              <div className="px-2 py-1.5 text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
+                Song type
+              </div>
+              {songSourceOptions.map((option) => {
+                const isSelected = option.value === sourceValue
 
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  role="option"
-                  aria-selected={isSelected}
-                  onClick={() => {
-                    onChange(option)
-                    setOpen(false)
-                  }}
-                  className={cn(
-                    "flex h-9 w-full items-center justify-between rounded-sm px-2 text-left text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
-                    isSelected && "bg-foreground/10 text-foreground",
-                  )}
-                >
-                  <span>{optionLabel}</span>
-                  {isSelected && <CheckIcon className="size-4 text-[#101084] dark:text-[#F1E600]" />}
-                </button>
-              )
-            })}
-          </div>
-        </div>,
-        document.body,
-      )}
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="menuitemradio"
+                    aria-selected={isSelected}
+                    aria-checked={isSelected}
+                    onClick={() => {
+                      onSourceChange(option.value)
+                    }}
+                    className={cn(
+                      "flex h-9 w-full items-center justify-between rounded-sm px-2 text-left text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
+                      isSelected && "bg-foreground/10 text-foreground"
+                    )}
+                  >
+                    <span>{option.label}</span>
+                    {isSelected && (
+                      <CheckIcon className="size-4 text-[#101084] dark:text-[#F1E600]" />
+                    )}
+                  </button>
+                )
+              })}
+              <div className="my-1 h-px bg-border" />
+              <div className="px-2 py-1.5 text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
+                Starts with
+              </div>
+              <div className="grid grid-cols-5 gap-1 p-1">
+                {letterOptions.map((option) => {
+                  const isSelected = option === letterValue
+                  const optionLabel = option === "all" ? "All" : option
+
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      role="menuitemradio"
+                      aria-selected={isSelected}
+                      aria-checked={isSelected}
+                      onClick={() => {
+                        onLetterChange(option)
+                      }}
+                      className={cn(
+                        "flex h-8 items-center justify-center rounded-sm px-2 text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
+                        isSelected && "bg-foreground/10 text-foreground"
+                      )}
+                    >
+                      {optionLabel}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </div>
+  )
+}
+
+function TransformRange({
+  label,
+  value,
+  min,
+  max,
+  step,
+  defaultValue,
+  displayFactor = 100,
+  unit = "%",
+  bipolar = false,
+  onChange,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  defaultValue?: number
+  displayFactor?: number
+  unit?: string
+  bipolar?: boolean
+  onChange: (value: number) => void
+}) {
+  const display = `${Math.round(value * displayFactor)}${unit}`
+  const hasDefaultValue = defaultValue !== undefined
+  const isDefaultValue =
+    hasDefaultValue && Math.abs(value - defaultValue) < 0.0001
+
+  return (
+    <div className="grid gap-1.5">
+      <div className="flex items-center justify-between gap-3 px-1">
+        <span className="text-xs font-medium text-muted-foreground">
+          {label}
+        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {display}
+          </span>
+          {hasDefaultValue ? (
+            <button
+              type="button"
+              disabled={isDefaultValue}
+              onClick={() => onChange(defaultValue)}
+              className="rounded px-1.5 py-0.5 text-[0.6875rem] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            >
+              Reset
+            </button>
+          ) : null}
+        </div>
+      </div>
+      <Fader
+        aria-label={label}
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        defaultValue={defaultValue}
+        bipolar={bipolar}
+        onChange={onChange}
+        formatValue={(v) => `${Math.round(v * displayFactor)}${unit}`}
+      />
     </div>
   )
 }
@@ -218,7 +468,10 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
   if (!query || query.length < 2) return <>{text}</>
 
   const queryWords = new Set(
-    query.toLowerCase().split(/\s+/).filter((w) => w.length >= 2)
+    query
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length >= 2)
   )
   if (queryWords.size === 0) return <>{text}</>
 
@@ -232,7 +485,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
           return (
             <mark
               key={i}
-              className="rounded-[2px] px-0.5 text-black dark:bg-[#F1E600]/90 dark:text-black bg-foreground/20 text-foreground"
+              className="rounded-[2px] bg-foreground/20 px-0.5 text-black text-foreground dark:bg-[#F1E600]/90 dark:text-black"
             >
               {part}
             </mark>
@@ -255,11 +508,26 @@ export function SearchPanel({
   const [selectedVerseId, setSelectedVerseId] = useState<number | null>(null)
   const [contextQuery, setContextQuery] = useState("")
   const [songQuery, setSongQuery] = useState("")
+  const deferredSongQuery = useDeferredValue(songQuery)
   const [songLetterFilter, setSongLetterFilter] = useState("all")
-  const [hymnQuery, setHymnQuery] = useState("")
-  const [hymnLetterFilter, setHymnLetterFilter] = useState("all")
-  const [hymns, setHymns] = useState<Hymn[]>([])
-  const [hymnsLoading, setHymnsLoading] = useState(false)
+  const [songSourceFilter, setSongSourceFilter] =
+    useState<SongSourceFilter>("all")
+  const [editingPresentationSlideId, setEditingPresentationSlideId] = useState<
+    string | null
+  >(null)
+  const [renamingPresentationSlideId, setRenamingPresentationSlideId] =
+    useState<string | null>(null)
+  const [renamingPresentationSlideName, setRenamingPresentationSlideName] =
+    useState("")
+  const [, setIsPresentationDragging] = useState(false)
+  const [draggedPresentationSlideId, setDraggedPresentationSlideId] = useState<
+    string | null
+  >(null)
+  const [presentationDropTargetId, setPresentationDropTargetId] = useState<
+    string | null
+  >(null)
+  const [transformInteraction, setTransformInteraction] =
+    useState<TransformInteraction | null>(null)
 
   // EasyWorship-style autocomplete
   const [quickInput, setQuickInput] = useState("")
@@ -267,7 +535,11 @@ export function SearchPanel({
   const [quickVersesList, setQuickVersesList] = useState<Verse[]>([])
 
   const quickInputRef = useRef<HTMLInputElement>(null)
+  const presentationInputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const transformPreviewRef = useRef<HTMLDivElement>(null)
+  const lastPresentationDragOverIdRef = useRef<string | null>(null)
+  const draggedPresentationIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     onSearchModeChange?.(activeTab)
@@ -284,35 +556,268 @@ export function SearchPanel({
   const pinnedTranslationIds = useSettingsStore((s) => s.pinnedTranslationIds)
 
   const queueItems = useQueueStore((s) => s.items)
-  const activeSongItem = queueItems.find((item) => item.lyricKind === "song") ?? null
-  const activeHymnItem = queueItems.find((item) => item.lyricKind === "hymn") ?? null
+  const presentationSlides = usePresentationStore((s) => s.slides)
+  const selectedPresentationSlideId = usePresentationStore(
+    (s) => s.selectedSlideId
+  )
+  const pinnedPresentationSlides = useMemo(
+    () => presentationSlides.filter((slide) => slide.pinned),
+    [presentationSlides]
+  )
+  const unpinnedPresentationSlides = useMemo(
+    () => presentationSlides.filter((slide) => !slide.pinned),
+    [presentationSlides]
+  )
+  const orderedPresentationSlides = useMemo(
+    () => [...pinnedPresentationSlides, ...unpinnedPresentationSlides],
+    [pinnedPresentationSlides, unpinnedPresentationSlides]
+  )
+  const editingPresentationSlide = useMemo(
+    () =>
+      presentationSlides.find(
+        (slide) => slide.id === editingPresentationSlideId
+      ) ?? null,
+    [editingPresentationSlideId, presentationSlides]
+  )
+  const updateEditingPresentationTransform = useCallback(
+    (transform: { scale?: number; offsetX?: number; offsetY?: number }) => {
+      if (!editingPresentationSlideId) return
+      usePresentationStore
+        .getState()
+        .updateSlideTransform(editingPresentationSlideId, transform)
+    },
+    [editingPresentationSlideId]
+  )
+  const startTransformMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (!editingPresentationSlide) return
+      const preview = transformPreviewRef.current
+      if (!preview) return
+
+      const rect = preview.getBoundingClientRect()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setTransformInteraction({
+        type: "move",
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startOffsetX: editingPresentationSlide.offsetX,
+        startOffsetY: editingPresentationSlide.offsetY,
+        previewWidth: rect.width,
+        previewHeight: rect.height,
+      })
+    },
+    [editingPresentationSlide]
+  )
+  const startTransformResize = useCallback(
+    (handle: TransformHandle, event: PointerEvent<HTMLButtonElement>) => {
+      if (!editingPresentationSlide) return
+      const preview = transformPreviewRef.current
+      if (!preview) return
+
+      const rect = preview.getBoundingClientRect()
+      event.preventDefault()
+      event.stopPropagation()
+      event.currentTarget.setPointerCapture(event.pointerId)
+      setTransformInteraction({
+        type: "resize",
+        handle,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startScale: editingPresentationSlide.scale,
+        previewWidth: rect.width,
+        previewHeight: rect.height,
+      })
+    },
+    [editingPresentationSlide]
+  )
+  const updateTransformInteraction = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      if (
+        !transformInteraction ||
+        event.pointerId !== transformInteraction.pointerId
+      )
+        return
+
+      const deltaX = event.clientX - transformInteraction.startX
+      const deltaY = event.clientY - transformInteraction.startY
+      if (transformInteraction.type === "move") {
+        const SNAP = 0.02
+        let nextOffsetX =
+          transformInteraction.startOffsetX +
+          deltaX / transformInteraction.previewWidth
+        let nextOffsetY =
+          transformInteraction.startOffsetY +
+          deltaY / transformInteraction.previewHeight
+        // Snap to the centre line so manual centring is easy.
+        if (Math.abs(nextOffsetX) < SNAP) nextOffsetX = 0
+        if (Math.abs(nextOffsetY) < SNAP) nextOffsetY = 0
+        updateEditingPresentationTransform({
+          offsetX: nextOffsetX,
+          offsetY: nextOffsetY,
+        })
+        return
+      }
+
+      const horizontalSign = transformInteraction.handle.includes("e")
+        ? 1
+        : transformInteraction.handle.includes("w")
+          ? -1
+          : 0
+      const verticalSign = transformInteraction.handle.includes("s")
+        ? 1
+        : transformInteraction.handle.includes("n")
+          ? -1
+          : 0
+      const horizontalDelta =
+        horizontalSign === 0
+          ? 0
+          : (deltaX * horizontalSign) / transformInteraction.previewWidth
+      const verticalDelta =
+        verticalSign === 0
+          ? 0
+          : (deltaY * verticalSign) / transformInteraction.previewHeight
+      const scaleDelta =
+        Math.abs(horizontalDelta) > Math.abs(verticalDelta)
+          ? horizontalDelta
+          : verticalDelta
+      const nextScale = Math.min(
+        3,
+        Math.max(0.25, transformInteraction.startScale + scaleDelta * 2)
+      )
+      updateEditingPresentationTransform({ scale: nextScale })
+    },
+    [transformInteraction, updateEditingPresentationTransform]
+  )
+  const endTransformInteraction = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      if (
+        !transformInteraction ||
+        event.pointerId !== transformInteraction.pointerId
+      )
+        return
+      setTransformInteraction(null)
+    },
+    [transformInteraction]
+  )
+  const activeSongItem =
+    queueItems.find((item) => item.lyricKind === "song") ?? null
   const queuedVerseKeys = useMemo(() => {
     return new Set(
-      queueItems.map((item) => `${item.verse.book_number}:${item.verse.chapter}:${item.verse.verse}`)
+      queueItems.map(
+        (item) =>
+          `${item.verse.book_number}:${item.verse.chapter}:${item.verse.verse}`
+      )
     )
   }, [queueItems])
 
-  const makeSongVerse = useCallback((song: CopSong, text = song.lyrics): Verse => ({
-    id: song.language === "english" ? -song.number : -(1000 + song.number),
-    translation_id: 0,
-    book_number: song.language === "english" ? -1 : -2,
-    book_name: `${song.languageLabel} Song ${song.number}: ${song.title}`,
-    book_abbreviation: song.language === "english" ? "ENG" : "TWI",
-    chapter: 1,
-    verse: song.number,
-    text,
-  }), [])
+  const makeSongVerse = useCallback(
+    (song: CopSong, text = song.lyrics): Verse => ({
+      id: -Math.abs(hashString(`song:${song.id}`)),
+      translation_id: 0,
+      book_number:
+        song.source && song.source !== "built-in"
+          ? -4
+          : song.language === "english"
+            ? -1
+            : -2,
+      book_name: `${song.sourceLabel ?? song.languageLabel} ${song.number}: ${song.title}`,
+      book_abbreviation:
+        song.source === "theme-2026"
+          ? "T26"
+          : song.source === "theme-2025"
+            ? "T25"
+            : song.source === "pentecostal-book"
+              ? "PSB"
+              : song.language === "english"
+                ? "ENG"
+                : "TWI",
+      chapter: 1,
+      verse: song.number,
+      text,
+    }),
+    []
+  )
 
-  const makeHymnVerse = useCallback((hymn: Hymn, text = hymn.lyrics): Verse => ({
-    id: -100000 - hymn.id,
-    translation_id: 0,
-    book_number: -3,
-    book_name: `Hymn: ${hymn.title}`,
-    book_abbreviation: "HYM",
-    chapter: 1,
-    verse: hymn.id,
-    text,
-  }), [])
+  const formatSongReference = useCallback((song: CopSong) => {
+    return `${song.number}. ${song.title}`
+  }, [])
+
+  const setSearchTab = useCallback((tab: SearchTab) => {
+    setActiveTab(tab)
+    if (tab !== "presentation") {
+      usePresentationStore.getState().selectSlide(null)
+    }
+  }, [])
+
+  const handlePresentationFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return
+
+    const slides = Array.from(files)
+      .filter(
+        (file) =>
+          file.type.startsWith("image/") || file.type.startsWith("video/")
+      )
+      .map((file) => ({
+        id: crypto.randomUUID(),
+        name: file.name.replace(/\.[^.]+$/, ""),
+        url: URL.createObjectURL(file),
+        mediaType: file.type.startsWith("video/")
+          ? ("video" as const)
+          : ("image" as const),
+        createdAt: Date.now(),
+        pinned: false,
+        fit: "contain" as const,
+        scale: 1,
+        offsetX: 0,
+        offsetY: 0,
+      }))
+
+    if (slides.length > 0) {
+      usePresentationStore.getState().addSlides(slides)
+    }
+  }, [])
+
+  const handlePresentationDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (activeTab !== "presentation") return
+      // Internal slide reordering handles its own drop targets — only react to OS file drags.
+      if (
+        draggedPresentationIdRef.current ||
+        !event.dataTransfer.types.includes("Files")
+      )
+        return
+      event.preventDefault()
+      event.stopPropagation()
+      event.dataTransfer.dropEffect = "copy"
+      setIsPresentationDragging(true)
+    },
+    [activeTab]
+  )
+
+  const handlePresentationDragLeave = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (activeTab !== "presentation") return
+      if (event.currentTarget.contains(event.relatedTarget as Node | null))
+        return
+      setIsPresentationDragging(false)
+    },
+    [activeTab]
+  )
+
+  const handlePresentationDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      if (activeTab !== "presentation") return
+      // A slide reorder drop is handled on the slide itself, not the container.
+      if (draggedPresentationIdRef.current) return
+      event.preventDefault()
+      event.stopPropagation()
+      setIsPresentationDragging(false)
+      handlePresentationFiles(event.dataTransfer.files)
+    },
+    [activeTab, handlePresentationFiles]
+  )
 
   const openSongDetail = useCallback(
     (song: CopSong) => {
@@ -322,7 +827,7 @@ export function SearchPanel({
       const item = {
         id: `song:${song.id}`,
         verse,
-        reference: song.title,
+        reference: formatSongReference(song),
         confidence: 1,
         source: "manual" as const,
         added_at: Date.now(),
@@ -335,166 +840,64 @@ export function SearchPanel({
       useQueueStore.getState().replaceLyricItem(item, "song")
       bibleActions.selectVerse(verse)
     },
-    [makeSongVerse],
+    [formatSongReference, makeSongVerse]
   )
 
-  const openHymnDetail = useCallback(
-    (hymn: Hymn) => {
-      const lyricBlocks = splitLyricBlocks(hymn.lyrics)
-      const text = lyricBlocks[0]?.text ?? hymn.lyrics
-      const verse = makeHymnVerse(hymn, text)
-      const item = {
-        id: `hymn:${hymn.id}`,
-        verse,
-        reference: hymn.title,
-        confidence: 1,
-        source: "manual" as const,
-        added_at: Date.now(),
-        lyricKind: "hymn" as const,
-        fullText: hymn.lyrics,
-        lyricBlocks,
-        activeBlockIndex: 0,
-      }
-
-      useQueueStore.getState().replaceLyricItem(item, "hymn")
-      bibleActions.selectVerse(verse)
-    },
-    [makeHymnVerse],
-  )
-
+  const songSearchIndex = useMemo(() => createSongSearchIndex(allSongs), [])
   const filteredSongs = useMemo(() => {
-    const query = songQuery.trim().toLowerCase()
-    const songsByLanguage = {
-      english: [] as CopSong[],
-      twi: [] as CopSong[],
-    }
+    const matches = searchSongs(songSearchIndex, deferredSongQuery, {
+      source: songSourceFilter,
+      letter: songLetterFilter,
+    })
 
-    for (const song of copSongs) {
-      if (
-        query &&
-        !song.title.toLowerCase().includes(query) &&
-        !song.lyrics.toLowerCase().includes(query) &&
-        !String(song.number).includes(query)
-      ) {
-          continue
-      }
+    if (deferredSongQuery.trim()) return matches
 
-      if (
-        songLetterFilter !== "all" &&
-        !song.title.trim().toUpperCase().startsWith(songLetterFilter)
-      ) {
-        continue
-      }
+    return [...matches].sort(compareSongPdfOrder)
+  }, [deferredSongQuery, songLetterFilter, songSearchIndex, songSourceFilter])
 
-      songsByLanguage[song.language].push(song)
-    }
-
-    songsByLanguage.english.sort(compareLyricTitles)
-    songsByLanguage.twi.sort(compareLyricTitles)
-
-    return songsByLanguage
-  }, [songLetterFilter, songQuery])
-
-  const displayHymns = useMemo(() => {
-    if (hymnLetterFilter === "all") return hymns
-
-    return hymns.filter((hymn) =>
-      hymn.title.trim().toUpperCase().startsWith(hymnLetterFilter)
-    )
-  }, [hymnLetterFilter, hymns])
-
-  const songResultCount = filteredSongs.english.length + filteredSongs.twi.length
-
-  useEffect(() => {
-    if (activeTab !== "hymns") return
-
-    let cancelled = false
-    const timeout = window.setTimeout(() => {
-      setHymnsLoading(true)
-      invoke<Hymn[]>("search_hymns", {
-        query: hymnQuery,
-        limit: hymnQuery.trim() ? 80 : 400,
-      })
-        .then((results) => {
-          if (!cancelled) setHymns(results)
-        })
-        .catch((error) => {
-          console.error("Failed to search hymns", error)
-          if (!cancelled) setHymns([])
-        })
-        .finally(() => {
-          if (!cancelled) setHymnsLoading(false)
-        })
-    }, 120)
-
-    return () => {
-      cancelled = true
-      window.clearTimeout(timeout)
-    }
-  }, [activeTab, hymnQuery])
-
-  const renderHymn = (hymn: Hymn) => {
-    const isActive = activeHymnItem?.id === `hymn:${hymn.id}`
-
-    return (
-      <article
-        key={hymn.id}
-        className={cn(
-          "group rounded-lg border p-3 transition-colors",
-          "cursor-pointer",
-          isActive
-            ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-            : "border-transparent hover:border-border hover:bg-muted/40",
-        )}
-        onClick={() => {
-          openHymnDetail(hymn)
-        }}
-      >
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-            <h4 className="line-clamp-1 text-sm font-medium text-foreground">
-              <HighlightedText text={hymn.title} query={hymnQuery} />
-            </h4>
-            <p className="mt-1 line-clamp-4 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
-              <HighlightedText text={hymn.lyrics} query={hymnQuery} />
-            </p>
-            </div>
-          </div>
-      </article>
-    )
-  }
+  const songResultCount = filteredSongs.length
 
   const renderSongs = (songs: CopSong[]) => (
     <div className="flex flex-col gap-1">
       {songs.map((song) => {
-          const isActive = activeSongItem?.id === `song:${song.id}`
+        const isActive = activeSongItem?.id === `song:${song.id}`
 
-          return (
-            <article
-              key={song.id}
-          className={cn(
-            "group rounded-lg border p-3 transition-colors",
-            "cursor-pointer",
-            isActive
-              ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-              : "border-transparent hover:border-border hover:bg-muted/40",
-          )}
-          onClick={() => {
-            openSongDetail(song)
-          }}
-        >
-              <div className="flex items-start gap-3">
-                <div className="min-w-0 flex-1">
-                  <h4 className="line-clamp-1 text-sm font-medium text-foreground">
-                    <HighlightedText text={song.title} query={songQuery} />
+        return (
+          <article
+            key={song.id}
+            className={cn(
+              "group rounded-lg border p-3 transition-colors",
+              "cursor-pointer",
+              isActive
+                ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
+                : "border-transparent hover:border-border hover:bg-muted/40"
+            )}
+            onClick={() => {
+              openSongDetail(song)
+            }}
+          >
+            <div className="flex items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <h4 className="line-clamp-1 min-w-0 text-sm font-medium text-foreground">
+                    <HighlightedText
+                      text={formatSongReference(song)}
+                      query={songQuery}
+                    />
                   </h4>
-                  <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
-                    <HighlightedText text={song.lyrics} query={songQuery} />
-                  </p>
+                  {song.sourceLabel ? (
+                    <span className="shrink-0 rounded border border-border bg-background px-1.5 py-0.5 text-[0.625rem] font-medium text-muted-foreground">
+                      {song.sourceLabel}
+                    </span>
+                  ) : null}
                 </div>
+                <p className="mt-1 line-clamp-3 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">
+                  <HighlightedText text={song.lyrics} query={songQuery} />
+                </p>
               </div>
-            </article>
-          )
+            </div>
+          </article>
+        )
       })}
     </div>
   )
@@ -504,13 +907,16 @@ export function SearchPanel({
   // Load initial data and default to Genesis 1:1
   useEffect(() => {
     bibleActions.loadTranslations().catch(console.error)
-    bibleActions.loadBooks().then(() => {
-      useBibleStore.getState().setPendingNavigation({
-        bookNumber: 1,
-        chapter: 1,
-        verse: 1,
+    bibleActions
+      .loadBooks()
+      .then(() => {
+        useBibleStore.getState().setPendingNavigation({
+          bookNumber: 1,
+          chapter: 1,
+          verse: 1,
+        })
       })
-    }).catch(console.error)
+      .catch(console.error)
   }, [])
 
   // Load chapter when book + chapter are set
@@ -522,14 +928,18 @@ export function SearchPanel({
 
   const effectiveSelectedVerseId = useMemo(() => {
     if (!selectedVerseId || currentChapter.length === 0) return null
-    if (currentChapter.some((v) => v.id === selectedVerseId)) return selectedVerseId
+    if (currentChapter.some((v) => v.id === selectedVerseId))
+      return selectedVerseId
     if (!selectedVerse) return null
-    return currentChapter.find((v) => v.verse === selectedVerse.verse)?.id ?? null
+    return (
+      currentChapter.find((v) => v.verse === selectedVerse.verse)?.id ?? null
+    )
   }, [currentChapter, selectedVerseId, selectedVerse])
 
   // After chapter reloads (e.g., translation change), re-select by verse number
   useEffect(() => {
-    if (!selectedVerseId || !selectedVerse || currentChapter.length === 0) return
+    if (!selectedVerseId || !selectedVerse || currentChapter.length === 0)
+      return
     const stillExists = currentChapter.some((v) => v.id === selectedVerseId)
     if (!stillExists) {
       const match = currentChapter.find((v) => v.verse === selectedVerse.verse)
@@ -541,11 +951,11 @@ export function SearchPanel({
 
   const applyNavigationSelection = useCallback(
     (book: Book, navChapter: number) => {
-      setActiveTab("book")
+      setSearchTab("book")
       setSelectedBook(book)
       setChapter(navChapter)
     },
-    []
+    [setSearchTab]
   )
 
   // Auto-navigate when a detection or "Present" click sets pendingNavigation
@@ -559,7 +969,11 @@ export function SearchPanel({
         return
       }
 
-      const { bookNumber, chapter: navChapter, verse: navVerse } = pendingNavigation
+      const {
+        bookNumber,
+        chapter: navChapter,
+        verse: navVerse,
+      } = pendingNavigation
       const pendingKey = `${bookNumber}:${navChapter}:${navVerse}`
       if (pendingKey === lastHandledKey) return
 
@@ -570,19 +984,23 @@ export function SearchPanel({
       applyNavigationSelection(book, navChapter)
 
       // Load chapter explicitly, then select + scroll to the verse.
-      bibleActions.loadChapter(bookNumber, navChapter).then((verses) => {
-        const target = verses.find((v) => v.verse === navVerse)
-        if (target) {
-          setSelectedVerseId(target.id)
-          bibleActions.selectVerse(target)
-          document
-            .getElementById(`verse-${target.id}`)
-            ?.scrollIntoView({ behavior: "smooth", block: "center" })
-        }
-        panelRef.current?.focus()
-      }).catch(console.error).finally(() => {
-        useBibleStore.getState().setPendingNavigation(null)
-      })
+      bibleActions
+        .loadChapter(bookNumber, navChapter)
+        .then((verses) => {
+          const target = verses.find((v) => v.verse === navVerse)
+          if (target) {
+            setSelectedVerseId(target.id)
+            bibleActions.selectVerse(target)
+            document
+              .getElementById(`verse-${target.id}`)
+              ?.scrollIntoView({ behavior: "smooth", block: "center" })
+          }
+          panelRef.current?.focus()
+        })
+        .catch(console.error)
+        .finally(() => {
+          useBibleStore.getState().setPendingNavigation(null)
+        })
     })
 
     return unsubscribe
@@ -600,7 +1018,7 @@ export function SearchPanel({
         e.preventDefault()
         if (chapter > 1) {
           setChapter((c) => c - 1)
-            setSelectedVerseId(null)
+          setSelectedVerseId(null)
         }
       } else if (e.key === "ArrowRight") {
         e.preventDefault()
@@ -646,41 +1064,52 @@ export function SearchPanel({
   const contextDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contextSearchRequestIdRef = useRef(0)
 
-  const runContextSearch = useCallback(async (query: string, translationId: number) => {
-    const requestId = ++contextSearchRequestIdRef.current
-    const isStale = () => requestId !== contextSearchRequestIdRef.current
+  const runContextSearch = useCallback(
+    async (query: string, translationId: number) => {
+      const requestId = ++contextSearchRequestIdRef.current
+      const isStale = () => requestId !== contextSearchRequestIdRef.current
 
-    // Primary: hybrid search backend (combines vector + FTS5 BM25)
-    const hybridResults = await invoke<SemanticSearchResult[]>(
-      "semantic_search", { query, limit: 15 }
-    ).catch(() => null)
+      // Primary: hybrid search backend (combines vector + FTS5 BM25)
+      const hybridResults = await invoke<SemanticSearchResult[]>(
+        "semantic_search",
+        { query, limit: 15 }
+      ).catch(() => null)
 
-    if (isStale()) return
+      if (isStale()) return
 
-    if (hybridResults && hybridResults.length > 0) {
-      useBibleStore.getState().setSemanticResults(hybridResults)
-      return
-    }
+      if (hybridResults && hybridResults.length > 0) {
+        useBibleStore.getState().setSemanticResults(hybridResults)
+        return
+      }
 
-    // Fallback: client-side Fuse.js when semantic model is not loaded
-    const fuseResults = await searchContextWithFuse(query, translationId, 15).catch(() => [])
-    if (isStale()) return
-    useBibleStore.getState().setSemanticResults(fuseResults)
-  }, [])
+      // Fallback: client-side Fuse.js when semantic model is not loaded
+      const fuseResults = await searchContextWithFuse(
+        query,
+        translationId,
+        15
+      ).catch(() => [])
+      if (isStale()) return
+      useBibleStore.getState().setSemanticResults(fuseResults)
+    },
+    []
+  )
 
-  const handleContextSearch = useCallback((query: string) => {
-    setContextQuery(query)
-    if (contextDebounceRef.current) clearTimeout(contextDebounceRef.current)
-    if (query.length >= 5) {
-      const translationId = useBibleStore.getState().activeTranslationId
-      contextDebounceRef.current = setTimeout(() => {
-        runContextSearch(query, translationId).catch(console.error)
-      }, 280)
-    } else {
-      contextSearchRequestIdRef.current += 1
-      useBibleStore.getState().setSemanticResults([])
-    }
-  }, [runContextSearch])
+  const handleContextSearch = useCallback(
+    (query: string) => {
+      setContextQuery(query)
+      if (contextDebounceRef.current) clearTimeout(contextDebounceRef.current)
+      if (query.length >= 5) {
+        const translationId = useBibleStore.getState().activeTranslationId
+        contextDebounceRef.current = setTimeout(() => {
+          runContextSearch(query, translationId).catch(console.error)
+        }, 280)
+      } else {
+        contextSearchRequestIdRef.current += 1
+        useBibleStore.getState().setSemanticResults([])
+      }
+    },
+    [runContextSearch]
+  )
 
   useEffect(() => {
     if (activeTab !== "context" || contextQuery.length < 5) return
@@ -711,65 +1140,83 @@ export function SearchPanel({
       useBibleStore.getState().setPendingNavigation({
         bookNumber: result.matchedBook.book_number,
         chapter: result.chapter,
-        verse: result.verse
+        verse: result.verse,
       })
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          if (quickInputRef.current && document.activeElement !== quickInputRef.current) {
+          if (
+            quickInputRef.current &&
+            document.activeElement !== quickInputRef.current
+          ) {
             quickInputRef.current.focus()
           }
         })
       })
     }
 
-    if ((result.stage === "chapter" || result.stage === "verse") && result.matchedBook && result.chapter) {
+    if (
+      (result.stage === "chapter" || result.stage === "verse") &&
+      result.matchedBook &&
+      result.chapter
+    ) {
       invoke<Verse[]>("get_chapter", {
         translationId: activeTranslationId,
         bookNumber: result.matchedBook.book_number,
-        chapter: result.chapter
-      }).then(verses => {
-        setQuickVersesList(verses)
-        setShowQuickVerses(true)
-      }).catch(console.error)
+        chapter: result.chapter,
+      })
+        .then((verses) => {
+          setQuickVersesList(verses)
+          setShowQuickVerses(true)
+        })
+        .catch(console.error)
     }
   }, [autocompleteResult, activeTranslationId])
 
   // Derive dropdown visibility: only show when autocomplete stage is chapter/verse
-  const shouldShowVerseDropdown = showQuickVerses
-    && (autocompleteResult.stage === "chapter" || autocompleteResult.stage === "verse")
+  const shouldShowVerseDropdown =
+    showQuickVerses &&
+    (autocompleteResult.stage === "chapter" ||
+      autocompleteResult.stage === "verse")
 
-  const handleQuickKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Tab or → accepts suggestion and advances to NEXT STAGE
-    if ((e.key === "Tab" || e.key === "ArrowRight") && quickSuggestion && quickSuggestion !== quickInput) {
-      e.preventDefault()
-      const nextInput = getTabNavigationResult(quickInput, quickSuggestion)
-      setQuickInput(nextInput)
-      return
-    }
+  const handleQuickKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Tab or → accepts suggestion and advances to NEXT STAGE
+      if (
+        (e.key === "Tab" || e.key === "ArrowRight") &&
+        quickSuggestion &&
+        quickSuggestion !== quickInput
+      ) {
+        e.preventDefault()
+        const nextInput = getTabNavigationResult(quickInput, quickSuggestion)
+        setQuickInput(nextInput)
+        return
+      }
 
-    // Enter clears input (verse is already showing in panel)
-    if (e.key === "Enter") {
-      e.preventDefault()
-      setQuickInput("")
-      setShowQuickVerses(false)
-      return
-    }
+      // Enter clears input (verse is already showing in panel)
+      if (e.key === "Enter") {
+        e.preventDefault()
+        setQuickInput("")
+        setShowQuickVerses(false)
+        return
+      }
 
-    // Escape clears
-    if (e.key === "Escape") {
-      e.preventDefault()
-      setQuickInput("")
-      setShowQuickVerses(false)
-      return
-    }
-  }, [quickInput, quickSuggestion])
+      // Escape clears
+      if (e.key === "Escape") {
+        e.preventDefault()
+        setQuickInput("")
+        setShowQuickVerses(false)
+        return
+      }
+    },
+    [quickInput, quickSuggestion]
+  )
 
   const handleQuickVerseClick = useCallback((verse: Verse) => {
     useBibleStore.getState().setPendingNavigation({
       bookNumber: verse.book_number,
       chapter: verse.chapter,
-      verse: verse.verse
+      verse: verse.verse,
     })
     setQuickInput("")
     setShowQuickVerses(false)
@@ -777,16 +1224,18 @@ export function SearchPanel({
 
   const tabButtonClass = (tab: SearchTab) =>
     cn(
-      "flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-xs font-medium transition-colors",
+      "flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium whitespace-nowrap transition-colors",
       activeTab === tab
         ? "border-[#101084]/50 bg-[#101084]/15 text-[#101084] dark:border-[#F1E600]/50 dark:bg-[#F1E600]/15 dark:text-[#F1E600]"
-        : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40",
+        : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40"
     )
 
   const tabIconClass = (tab: SearchTab) =>
     cn(
       "size-3.5",
-      activeTab === tab ? "text-[#101084] dark:text-[#F1E600]" : "text-muted-foreground",
+      activeTab === tab
+        ? "text-[#101084] dark:text-[#F1E600]"
+        : "text-muted-foreground"
     )
 
   const setActiveTranslation = useCallback(async (id: number) => {
@@ -802,11 +1251,18 @@ export function SearchPanel({
     const translationsById = new Map(
       translations.map((translation) => [translation.id, translation])
     )
+    const nkjv = translations.find(
+      (translation) => translation.abbreviation === "NKJV"
+    )
     const pinned = pinnedTranslationIds
       .map((id) => translationsById.get(id))
-      .filter((translation): translation is (typeof translations)[number] => Boolean(translation))
+      .filter(
+        (translation): translation is (typeof translations)[number] =>
+          translation !== undefined && translation.abbreviation !== "NKJV"
+      )
 
-    if (pinned.length > 0) return pinned
+    const orderedPinned = nkjv ? [nkjv, ...pinned] : pinned
+    if (orderedPinned.length > 0) return orderedPinned
 
     const activeTranslation = translationsById.get(activeTranslationId)
     return activeTranslation ? [activeTranslation] : []
@@ -826,53 +1282,61 @@ export function SearchPanel({
     </Select>
   )
 
-  const pinnedTranslationRow = pinnedTranslations.length > 0 && activeTab !== "songs" && activeTab !== "hymns" ? (
-    <div className="-mt-0.5 flex min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5">
-      {pinnedTranslations.map((translation) => {
-        const isActive = translation.id === activeTranslationId
-        return (
-          <button
-            key={translation.id}
-            type="button"
-            onClick={() => setActiveTranslation(translation.id)}
-            className={cn(
-              "h-6 shrink-0 rounded-md border px-2 text-[0.6875rem] font-medium transition-colors",
-              isActive
-                ? "border-[#101084]/50 bg-[#101084]/15 text-[#101084] dark:border-[#F1E600]/50 dark:bg-[#F1E600]/15 dark:text-[#F1E600]"
-                : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40",
-            )}
-          >
-            {translation.abbreviation}
-          </button>
-        )
-      })}
-    </div>
-  ) : null
+  const pinnedTranslationRow =
+    pinnedTranslations.length > 0 &&
+    activeTab !== "songs" &&
+    activeTab !== "presentation" ? (
+      <div className="-mt-0.5 flex min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5">
+        {pinnedTranslations.map((translation) => {
+          const isActive = translation.id === activeTranslationId
+          return (
+            <button
+              key={translation.id}
+              type="button"
+              onClick={() => setActiveTranslation(translation.id)}
+              className={cn(
+                "h-6 shrink-0 rounded-md border px-2 text-[0.6875rem] font-medium transition-colors",
+                isActive
+                  ? "border-[#101084]/50 bg-[#101084]/15 text-[#101084] dark:border-[#F1E600]/50 dark:bg-[#F1E600]/15 dark:text-[#F1E600]"
+                  : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40"
+              )}
+            >
+              {translation.abbreviation}
+            </button>
+          )
+        })}
+      </div>
+    ) : null
 
   return (
     <div
       ref={panelRef}
       data-slot="search-panel"
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card outline-none"
+      className={cn(
+        "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors outline-none"
+      )}
+      onDragOver={handlePresentationDragOver}
+      onDragLeave={handlePresentationDragLeave}
+      onDrop={handlePresentationDrop}
       onKeyDown={activeTab === "book" ? handleKeyDown : undefined}
       tabIndex={-1}
     >
       {/* STICKY: Tabs */}
-      <div className="flex shrink-0 flex-col gap-2.5 border-b border-border px-3 pb-3 pt-2">
+      <div className="flex shrink-0 flex-col gap-2.5 border-b border-border px-3 pt-2 pb-3">
         <div className="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button
             data-tour="book-search"
-            onClick={() => setActiveTab("book")}
+            onClick={() => setSearchTab("book")}
             className={tabButtonClass("book")}
           >
             <BookOpenIcon className={tabIconClass("book")} />
-            Bible
+            Scriptures
           </button>
           {SHOW_CONTEXT_SEARCH && (
             <button
               data-tour="context-search"
               onClick={() => {
-                setActiveTab("context")
+                setSearchTab("context")
                 setContextQuery("")
               }}
               className={tabButtonClass("context")}
@@ -882,156 +1346,187 @@ export function SearchPanel({
             </button>
           )}
           <button
-            onClick={() => setActiveTab("songs")}
+            onClick={() => setSearchTab("songs")}
             className={tabButtonClass("songs")}
           >
             <MusicIcon className={tabIconClass("songs")} />
             Songs
           </button>
           <button
-            onClick={() => setActiveTab("hymns")}
-            className={tabButtonClass("hymns")}
+            onClick={() => setSearchTab("presentation")}
+            className={tabButtonClass("presentation")}
           >
-            <ScrollTextIcon className={tabIconClass("hymns")} />
-            Hymns
+            <ImageIcon className={tabIconClass("presentation")} />
+            Presentation
           </button>
         </div>
 
         {activeTab === "book" ? (
           <>
-          <div className="flex min-w-0 items-center gap-2">
-            {/* EasyWorship-style autocomplete */}
-            <div className="relative min-w-0 flex-1">
-              {/* Suggestion overlay */}
-              {quickSuggestion && quickSuggestion !== quickInput && (
-                <div className="absolute inset-0 flex items-center px-3 pointer-events-none z-10">
-                  <span className="text-sm font-normal">
-                    <span className="text-foreground">{quickInput}</span>
-                    <span className="text-gray-500 dark:text-gray-400">{quickSuggestion.slice(quickInput.length)}</span>
-                  </span>
-                </div>
-              )}
-
-              {/* Actual input */}
-              <Input
-                ref={quickInputRef}
-                data-tour="quick-nav"
-                value={quickInput}
-                onChange={(e) => setQuickInput(e.target.value)}
-                onKeyDown={handleQuickKeyDown}
-                placeholder="Type: J → John 3:16"
-                className={cn(
-                  "h-10 text-sm relative bg-background",
-                  quickSuggestion && quickSuggestion !== quickInput ? "text-transparent" : ""
-                )}
-                style={quickSuggestion && quickSuggestion !== quickInput ? {
-                  caretColor: 'var(--foreground)'
-                } : undefined}
-              />
-
-              {/* Verse dropdown */}
-              {shouldShowVerseDropdown && quickVersesList.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-                  <div className="p-1">
-                    {quickVersesList.map((verse) => (
-                      <button
-                        key={verse.id}
-                        onClick={() => handleQuickVerseClick(verse)}
-                        className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
-                      >
-                        <span className="w-6 shrink-0 text-right font-semibold text-[#101084] dark:text-[#F1E600]">
-                          {verse.verse}
-                        </span>
-                        <span className="flex-1 text-muted-foreground line-clamp-1">
-                          {verse.text}
-                        </span>
-                      </button>
-                    ))}
+            <div className="flex min-w-0 items-center gap-2">
+              {/* EasyWorship-style autocomplete */}
+              <div className="relative min-w-0 flex-1">
+                {/* Suggestion overlay */}
+                {quickSuggestion && quickSuggestion !== quickInput && (
+                  <div className="pointer-events-none absolute inset-0 z-10 flex items-center px-3">
+                    <span className="text-sm font-normal">
+                      <span className="text-foreground">{quickInput}</span>
+                      <span className="text-gray-500 dark:text-gray-400">
+                        {quickSuggestion.slice(quickInput.length)}
+                      </span>
+                    </span>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
 
-            {translationSelect}
-          </div>
-          {pinnedTranslationRow}
+                {/* Actual input */}
+                <Input
+                  ref={quickInputRef}
+                  data-tour="quick-nav"
+                  value={quickInput}
+                  onChange={(e) => setQuickInput(e.target.value)}
+                  onKeyDown={handleQuickKeyDown}
+                  placeholder="Type: J → John 3:16"
+                  className={cn(
+                    "relative h-10 bg-background text-sm",
+                    quickSuggestion && quickSuggestion !== quickInput
+                      ? "text-transparent"
+                      : ""
+                  )}
+                  style={
+                    quickSuggestion && quickSuggestion !== quickInput
+                      ? {
+                          caretColor: "var(--foreground)",
+                        }
+                      : undefined
+                  }
+                />
+
+                {/* Verse dropdown */}
+                {shouldShowVerseDropdown && quickVersesList.length > 0 && (
+                  <div className="absolute top-full right-0 left-0 z-50 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                    <div className="p-1">
+                      {quickVersesList.map((verse) => (
+                        <button
+                          key={verse.id}
+                          onClick={() => handleQuickVerseClick(verse)}
+                          className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <span className="w-6 shrink-0 text-right font-semibold text-[#101084] dark:text-[#F1E600]">
+                            {verse.verse}
+                          </span>
+                          <span className="line-clamp-1 flex-1 text-muted-foreground">
+                            {verse.text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {translationSelect}
+            </div>
+            {pinnedTranslationRow}
           </>
         ) : activeTab === "context" ? (
           <>
-          <div className="flex min-w-0 items-center gap-2">
-            <Input
-              placeholder="Search verse text..."
-              value={contextQuery}
-              onChange={(e) => handleContextSearch(e.target.value)}
-              className="h-10 min-w-0 flex-1 text-sm"
-            />
-            {translationSelect}
-          </div>
-          {pinnedTranslationRow}
+            <div className="flex min-w-0 items-center gap-2">
+              <Input
+                placeholder="Search verse text..."
+                value={contextQuery}
+                onChange={(e) => handleContextSearch(e.target.value)}
+                className="h-10 min-w-0 flex-1 text-sm"
+              />
+              {translationSelect}
+            </div>
+            {pinnedTranslationRow}
           </>
         ) : activeTab === "songs" ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder={`Search ${songResultCount} songs...`}
               value={songQuery}
               onChange={(e) => setSongQuery(e.target.value)}
               className="h-10 min-w-0 flex-1 text-sm"
             />
-            <LetterFilterDropdown value={songLetterFilter} onChange={setSongLetterFilter} />
+            <SongFilterDropdown
+              sourceValue={songSourceFilter}
+              letterValue={songLetterFilter}
+              onSourceChange={setSongSourceFilter}
+              onLetterChange={setSongLetterFilter}
+            />
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder={`Search ${displayHymns.length} hymns...`}
-              value={hymnQuery}
-              onChange={(e) => setHymnQuery(e.target.value)}
-              className="h-10 min-w-0 flex-1 text-sm"
+          <div
+            className="flex items-center gap-2"
+            onDragEnter={handlePresentationDragOver}
+            onDragOver={handlePresentationDragOver}
+            onDrop={handlePresentationDrop}
+          >
+            <input
+              ref={presentationInputRef}
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                handlePresentationFiles(event.target.files)
+                event.target.value = ""
+              }}
             />
-            <LetterFilterDropdown value={hymnLetterFilter} onChange={setHymnLetterFilter} />
+            <Button
+              type="button"
+              className="h-10 flex-1 justify-center"
+              onClick={() => presentationInputRef.current?.click()}
+            >
+              <UploadIcon className="size-4" />
+              Upload media
+            </Button>
           </div>
         )}
       </div>
 
       {/* Quick nav tab */}
-      
 
       {/* Book search tab */}
       {activeTab === "book" && (
         <>
           {/* STICKY: Chapter header */}
 
-          <div className="flex shrink-0 items-center justify-between px-3 py-2 min-h-9">
-            {selectedBook ?
+          <div className="flex min-h-9 shrink-0 items-center justify-between px-3 py-2">
+            {selectedBook ? (
               <h3 className="text-sm font-semibold text-foreground">
                 {selectedBook.name} {chapter}
-              </h3> : null}
-            {selectedBook ? <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                onClick={() => {
-                  if (chapter > 1) {
-                    setChapter((c) => c - 1)
-                                setSelectedVerseId(null)
-                  }
-                }}
-                disabled={chapter <= 1}
-              >
-                <ArrowLeftIcon className="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                onClick={() => {
-                  setChapter((c) => c + 1)
-                            setSelectedVerseId(null)
-                }}
-              >
-                <ArrowRightIcon className="size-4" />
-              </Button>
-            </div> : null}
+              </h3>
+            ) : null}
+            {selectedBook ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon-lg"
+                  onClick={() => {
+                    if (chapter > 1) {
+                      setChapter((c) => c - 1)
+                      setSelectedVerseId(null)
+                    }
+                  }}
+                  disabled={chapter <= 1}
+                >
+                  <ArrowLeftIcon className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-lg"
+                  onClick={() => {
+                    setChapter((c) => c + 1)
+                    setSelectedVerseId(null)
+                  }}
+                >
+                  <ArrowRightIcon className="size-4" />
+                </Button>
+              </div>
+            ) : null}
           </div>
-
 
           {/* SCROLLABLE: Verse list only */}
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -1054,7 +1549,9 @@ export function SearchPanel({
                   <p className="flex-1 text-sm leading-relaxed text-foreground/80">
                     {verse.text}
                   </p>
-                  {queuedVerseKeys.has(`${verse.book_number}:${verse.chapter}:${verse.verse}`) ? (
+                  {queuedVerseKeys.has(
+                    `${verse.book_number}:${verse.chapter}:${verse.verse}`
+                  ) ? (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -1063,18 +1560,30 @@ export function SearchPanel({
                             onClick={(e) => {
                               e.stopPropagation()
                               const store = useQueueStore.getState()
-                              const idx = store.findDuplicate(verse.book_number, verse.chapter, verse.verse)
+                              const idx = store.findDuplicate(
+                                verse.book_number,
+                                verse.chapter,
+                                verse.verse
+                              )
                               if (idx !== -1) {
                                 store.flashItem(store.items[idx].id)
-                                document.querySelector(`[data-slot="queue-panel"] [data-queue-idx="${idx}"]`)
-                                  ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+                                document
+                                  .querySelector(
+                                    `[data-slot="queue-panel"] [data-queue-idx="${idx}"]`
+                                  )
+                                  ?.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "nearest",
+                                  })
                               }
                             }}
                           >
                             <CheckIcon className="size-4 text-ai-direct" />
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent side="left">Already in queue</TooltipContent>
+                        <TooltipContent side="left">
+                          Already in queue
+                        </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   ) : (
@@ -1085,7 +1594,7 @@ export function SearchPanel({
                             variant="ghost"
                             size="icon-xs"
                             className={cn(
-                              "shrink-0 opacity-0 group-hover:opacity-100 transition-opacity",
+                              "shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
                               verse.id === effectiveSelectedVerseId
                                 ? "text-[#101084] hover:bg-[#101084]/20 hover:text-[#101084] dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
                                 : "!bg-[#101084]/40 text-white hover:!bg-[#101084] dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
@@ -1150,42 +1659,57 @@ export function SearchPanel({
                     text: result.verse_text,
                   })
                 }}
-                className="group flex flex-col cursor-pointer gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50 relative"
+                className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
               >
                 <div className="flex shrink-0 flex-row items-start gap-2">
-                  <span className="text-xs font-semibold ">
-                    {result.book_name}   {result.chapter}:{result.verse}
+                  <span className="text-xs font-semibold">
+                    {result.book_name} {result.chapter}:{result.verse}
                   </span>
-                  <span
-                    className="mt-0.5 text-[0.5rem] text-muted-foreground"
-                  >
+                  <span className="mt-0.5 text-[0.5rem] text-muted-foreground">
                     {Math.round(result.similarity * 100)}%
                   </span>
                 </div>
                 <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
-                  <HighlightedText text={result.verse_text} query={contextQuery} />
+                  <HighlightedText
+                    text={result.verse_text}
+                    query={contextQuery}
+                  />
                 </p>
-                {queuedVerseKeys.has(`${result.book_number}:${result.chapter}:${result.verse}`) ? (
+                {queuedVerseKeys.has(
+                  `${result.book_number}:${result.chapter}:${result.verse}`
+                ) ? (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span
-                          className="flex size-6 absolute right-2 top-1/2 -translate-y-1/2 shrink-0 cursor-pointer items-center justify-center"
+                          className="absolute top-1/2 right-2 flex size-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center"
                           onClick={(e) => {
                             e.stopPropagation()
                             const store = useQueueStore.getState()
-                            const idx = store.findDuplicate(result.book_number, result.chapter, result.verse)
+                            const idx = store.findDuplicate(
+                              result.book_number,
+                              result.chapter,
+                              result.verse
+                            )
                             if (idx !== -1) {
                               store.flashItem(store.items[idx].id)
-                              document.querySelector(`[data-slot="queue-panel"] [data-queue-idx="${idx}"]`)
-                                ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+                              document
+                                .querySelector(
+                                  `[data-slot="queue-panel"] [data-queue-idx="${idx}"]`
+                                )
+                                ?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "nearest",
+                                })
                             }
                           }}
                         >
                           <CheckIcon className="size-4 text-ai-direct" />
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent side="left">Already in queue</TooltipContent>
+                      <TooltipContent side="left">
+                        Already in queue
+                      </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 ) : (
@@ -1195,7 +1719,7 @@ export function SearchPanel({
                         <Button
                           variant="ghost"
                           size="icon-xs"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 shrink-0 !bg-[#101084] text-white opacity-0 transition-opacity hover:!bg-[#101084]/80 group-hover:opacity-100 dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
+                          className="absolute top-1/2 right-2 shrink-0 -translate-y-1/2 !bg-[#101084] text-white opacity-0 transition-opacity group-hover:opacity-100 hover:!bg-[#101084]/80 dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
                           onClick={(e) => {
                             e.stopPropagation()
                             useQueueStore.getState().addItem({
@@ -1238,11 +1762,13 @@ export function SearchPanel({
       {/* Songs tab */}
       {activeTab === "songs" && (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          {filteredSongs.english.length === 0 && filteredSongs.twi.length === 0 ? (
+          {filteredSongs.length === 0 ? (
             <div className="flex h-full items-center justify-center p-6 text-center">
               <div className="max-w-xs">
                 <MusicIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
-                <p className="text-sm font-medium text-foreground">No songs found</p>
+                <p className="text-sm font-medium text-foreground">
+                  No songs found
+                </p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   Try searching by title or lyrics.
                 </p>
@@ -1250,36 +1776,657 @@ export function SearchPanel({
             </div>
           ) : (
             <div className="flex flex-col gap-1 p-2">
-              {renderSongs([...filteredSongs.english, ...filteredSongs.twi])}
+              {renderSongs(filteredSongs)}
             </div>
           )}
         </div>
       )}
 
-      {/* Hymns tab */}
-      {activeTab === "hymns" && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          {hymnsLoading && hymns.length === 0 ? (
-            <div className="flex h-full items-center justify-center p-6 text-center">
-              <p className="text-xs text-muted-foreground">Loading hymns...</p>
-            </div>
-          ) : displayHymns.length === 0 ? (
+      {/* Presentation tab */}
+      {activeTab === "presentation" && (
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto select-none"
+          onDragEnter={handlePresentationDragOver}
+          onDragOver={handlePresentationDragOver}
+          onDragLeave={handlePresentationDragLeave}
+          onDrop={handlePresentationDrop}
+        >
+          {presentationSlides.length === 0 ? (
             <div className="flex h-full items-center justify-center p-6 text-center">
               <div className="max-w-xs">
-                <ScrollTextIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
-                <p className="text-sm font-medium text-foreground">No hymns found</p>
+                <ImageIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
+                <p className="text-sm font-medium text-foreground">
+                  No presentation images
+                </p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Try searching by title or lyrics.
+                  Upload or drag announcement, tithe, offering, or service media
+                  here to preview them.
                 </p>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-1 p-2">
-              {displayHymns.map(renderHymn)}
+            <div className="grid grid-cols-1 gap-2 p-2">
+              {pinnedPresentationSlides.length > 0 ? (
+                <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+                  <span>Pinned</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              ) : null}
+              {orderedPresentationSlides.map((slide, index) => {
+                const isActive = slide.id === selectedPresentationSlideId
+                const isDragging = slide.id === draggedPresentationSlideId
+                const isDropTarget =
+                  slide.id === presentationDropTargetId &&
+                  slide.id !== draggedPresentationSlideId
+                const showUnpinnedDivider =
+                  pinnedPresentationSlides.length > 0 &&
+                  index === pinnedPresentationSlides.length &&
+                  unpinnedPresentationSlides.length > 0
+                return (
+                  <Fragment key={slide.id}>
+                    {showUnpinnedDivider ? (
+                      <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+                        <span>Presentations</span>
+                        <span className="h-px flex-1 bg-border" />
+                      </div>
+                    ) : null}
+                    <article
+                      draggable
+                      onDragEnd={() => {
+                        draggedPresentationIdRef.current = null
+                        setDraggedPresentationSlideId(null)
+                        setPresentationDropTargetId(null)
+                        lastPresentationDragOverIdRef.current = null
+                      }}
+                      onDragStart={(event) => {
+                        draggedPresentationIdRef.current = slide.id
+                        lastPresentationDragOverIdRef.current = slide.id
+                        event.dataTransfer.effectAllowed = "move"
+                        event.dataTransfer.setData("text/plain", slide.id)
+                        // Defer cosmetic state — restyling the drag source synchronously
+                        // inside dragstart can abort the drag in WebKit.
+                        requestAnimationFrame(() => {
+                          setDraggedPresentationSlideId(slide.id)
+                          setPresentationDropTargetId(null)
+                        })
+                      }}
+                      onDragOver={(event) => {
+                        const fromId = draggedPresentationIdRef.current
+                        if (!fromId) return
+                        event.preventDefault()
+                        event.stopPropagation()
+                        event.dataTransfer.dropEffect = "move"
+                        if (
+                          slide.id !== fromId &&
+                          presentationDropTargetId !== slide.id
+                        ) {
+                          setPresentationDropTargetId(slide.id)
+                        }
+                      }}
+                      onDragEnter={(event) => {
+                        const fromId = draggedPresentationIdRef.current
+                        if (!fromId) return
+                        event.preventDefault()
+                        event.stopPropagation()
+                        if (slide.id !== fromId) {
+                          setPresentationDropTargetId(slide.id)
+                        }
+                      }}
+                      onDrop={(event) => {
+                        const fromId =
+                          draggedPresentationIdRef.current ||
+                          event.dataTransfer.getData("text/plain")
+                        if (!fromId) return
+                        event.preventDefault()
+                        event.stopPropagation()
+                        if (fromId !== slide.id) {
+                          usePresentationStore
+                            .getState()
+                            .reorderSlides(fromId, slide.id)
+                        }
+                        draggedPresentationIdRef.current = null
+                        setDraggedPresentationSlideId(null)
+                        setPresentationDropTargetId(null)
+                        lastPresentationDragOverIdRef.current = null
+                      }}
+                      onClick={() =>
+                        usePresentationStore.getState().selectSlide(slide.id)
+                      }
+                      className={cn(
+                        "group relative cursor-grab overflow-hidden rounded-lg border p-2 transition-all select-none active:cursor-grabbing",
+                        isActive
+                          ? "border-[#101084]/60 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
+                          : "border-border bg-background/30 hover:bg-muted/40",
+                        isDropTarget && "border-[#F1E600]",
+                        isDragging && "scale-[0.99] border-dashed opacity-55"
+                      )}
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="h-14 w-24 shrink-0 overflow-hidden rounded-md bg-black">
+                          {slide.mediaType === "video" ? (
+                            <video
+                              src={slide.url}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <img
+                              src={slide.url}
+                              alt=""
+                              draggable={false}
+                              className="h-full w-full object-cover"
+                            />
+                          )}
+                        </div>
+                        <div
+                          className="min-w-0 flex-1 select-none"
+                          draggable={false}
+                          onMouseDown={(event) => event.stopPropagation()}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {slide.name}
+                          </p>
+                          <p className="text-[0.625rem] text-muted-foreground">
+                            {slide.mediaType === "video" ? "Video" : "Image"}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className={cn(
+                            "shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground",
+                            slide.pinned && "text-[#101084] dark:text-[#F1E600]"
+                          )}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            usePresentationStore.getState().togglePin(slide.id)
+                          }}
+                          onPointerDown={(event) => event.stopPropagation()}
+                          onDragStart={(event) => event.preventDefault()}
+                          title={slide.pinned ? "Unpin" : "Pin to Default"}
+                        >
+                          <PinIcon
+                            className={cn(
+                              "size-4",
+                              slide.pinned && "fill-current"
+                            )}
+                          />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              className="shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                              onClick={(event) => event.stopPropagation()}
+                              onPointerDown={(event) => event.stopPropagation()}
+                              onDragStart={(event) => event.preventDefault()}
+                              title="Slide actions"
+                            >
+                              <MoreHorizontalIcon className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-44"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                setRenamingPresentationSlideId(slide.id)
+                                setRenamingPresentationSlideName(slide.name)
+                                usePresentationStore
+                                  .getState()
+                                  .selectSlide(slide.id)
+                              }}
+                            >
+                              <TypeIcon className="size-3.5" />
+                              Rename
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                setEditingPresentationSlideId(slide.id)
+                                usePresentationStore
+                                  .getState()
+                                  .selectSlide(slide.id)
+                              }}
+                            >
+                              <PencilIcon className="size-3.5" />
+                              Edit position
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onPointerDown={(event) => event.stopPropagation()}
+                              onSelect={() => {
+                                usePresentationStore
+                                  .getState()
+                                  .togglePin(slide.id)
+                              }}
+                            >
+                              <PinIcon
+                                className={cn(
+                                  "size-3.5",
+                                  slide.pinned && "fill-current"
+                                )}
+                              />
+                              {slide.pinned ? "Unpin" : "Pin to Default"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onSelect={() => {
+                                usePresentationStore
+                                  .getState()
+                                  .removeSlide(slide.id)
+                              }}
+                            >
+                              <TrashIcon className="size-3.5" />
+                              Remove slide
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </article>
+                  </Fragment>
+                )
+              })}
             </div>
           )}
         </div>
       )}
+      <Dialog
+        open={Boolean(renamingPresentationSlideId)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRenamingPresentationSlideId(null)
+            setRenamingPresentationSlideName("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Rename presentation</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              const nextName = renamingPresentationSlideName.trim()
+              if (!renamingPresentationSlideId || !nextName) return
+
+              usePresentationStore
+                .getState()
+                .renameSlide(renamingPresentationSlideId, nextName)
+              setRenamingPresentationSlideId(null)
+              setRenamingPresentationSlideName("")
+            }}
+          >
+            <Input
+              autoFocus
+              value={renamingPresentationSlideName}
+              onChange={(event) =>
+                setRenamingPresentationSlideName(event.target.value)
+              }
+              onFocus={(event) => event.target.select()}
+              placeholder="Presentation name"
+            />
+            <DialogFooter className="mt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setRenamingPresentationSlideId(null)
+                  setRenamingPresentationSlideName("")
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!renamingPresentationSlideName.trim()}
+              >
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(editingPresentationSlide)}
+        onOpenChange={(open) => {
+          if (!open) setEditingPresentationSlideId(null)
+        }}
+      >
+        <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto p-4 sm:max-w-3xl sm:p-6 lg:max-w-5xl xl:max-w-6xl">
+          <DialogHeader>
+            <DialogTitle>Edit position</DialogTitle>
+          </DialogHeader>
+          {editingPresentationSlide ? (
+            <div className="grid gap-5">
+              <div
+                ref={transformPreviewRef}
+                className="relative aspect-video w-full overflow-hidden rounded-md border border-border bg-black"
+              >
+                <div
+                  className="absolute inset-0 cursor-move touch-none select-none"
+                  style={{
+                    transform: `translate(${editingPresentationSlide.offsetX * 100}%, ${editingPresentationSlide.offsetY * 100}%) scale(${editingPresentationSlide.scale})`,
+                  }}
+                  onPointerDown={startTransformMove}
+                  onPointerMove={updateTransformInteraction}
+                  onPointerUp={endTransformInteraction}
+                  onPointerCancel={endTransformInteraction}
+                >
+                  {editingPresentationSlide.mediaType === "video" ? (
+                    <video
+                      src={editingPresentationSlide.url}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className={cn(
+                        "h-full w-full",
+                        editingPresentationSlide.fit === "contain" &&
+                          "object-contain",
+                        editingPresentationSlide.fit === "cover" &&
+                          "object-cover",
+                        editingPresentationSlide.fit === "stretch" &&
+                          "object-fill"
+                      )}
+                    />
+                  ) : (
+                    <img
+                      src={editingPresentationSlide.url}
+                      alt=""
+                      draggable={false}
+                      className={cn(
+                        "h-full w-full",
+                        editingPresentationSlide.fit === "contain" &&
+                          "object-contain",
+                        editingPresentationSlide.fit === "cover" &&
+                          "object-cover",
+                        editingPresentationSlide.fit === "stretch" &&
+                          "object-fill"
+                      )}
+                    />
+                  )}
+                  <div className="pointer-events-none absolute inset-0 border-2 border-white/70 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45)]" />
+                  {[
+                    [
+                      "nw",
+                      "left-0 top-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
+                    ],
+                    [
+                      "n",
+                      "left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize",
+                    ],
+                    [
+                      "ne",
+                      "right-0 top-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
+                    ],
+                    [
+                      "e",
+                      "right-0 top-1/2 translate-x-1/2 -translate-y-1/2 cursor-ew-resize",
+                    ],
+                    [
+                      "se",
+                      "right-0 bottom-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize",
+                    ],
+                    [
+                      "s",
+                      "left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 cursor-ns-resize",
+                    ],
+                    [
+                      "sw",
+                      "left-0 bottom-0 -translate-x-1/2 translate-y-1/2 cursor-nesw-resize",
+                    ],
+                    [
+                      "w",
+                      "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize",
+                    ],
+                  ].map(([handle, classes]) => (
+                    <button
+                      key={handle}
+                      type="button"
+                      aria-label={`Resize from ${handle.toUpperCase()} handle`}
+                      className={cn(
+                        "absolute size-3 touch-none rounded-[2px] border border-black/50 bg-white shadow-sm",
+                        classes
+                      )}
+                      onPointerDown={(event) =>
+                        startTransformResize(handle as TransformHandle, event)
+                      }
+                      onPointerMove={updateTransformInteraction}
+                      onPointerUp={endTransformInteraction}
+                      onPointerCancel={endTransformInteraction}
+                    />
+                  ))}
+                </div>
+                {transformInteraction?.type === "move" &&
+                editingPresentationSlide.offsetX === 0 ? (
+                  <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[#F1E600]" />
+                ) : null}
+                {transformInteraction?.type === "move" &&
+                editingPresentationSlide.offsetY === 0 ? (
+                  <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[#F1E600]" />
+                ) : null}
+                <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-[0.6875rem] font-medium text-white">
+                  Drag to move · drag handles to resize · snaps to centre
+                </div>
+              </div>
+
+              <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                <div className="grid content-start gap-3">
+                  {/* Zoom */}
+                  <TransformRange
+                    label="Zoom"
+                    value={editingPresentationSlide.scale}
+                    min={0.25}
+                    max={3}
+                    step={0.01}
+                    defaultValue={1}
+                    onChange={(value) =>
+                      updateEditingPresentationTransform({ scale: value })
+                    }
+                  />
+
+                  <TransformRange
+                    label="Move left / right"
+                    value={editingPresentationSlide.offsetX}
+                    min={-1}
+                    max={1}
+                    step={0.01}
+                    defaultValue={0}
+                    bipolar
+                    onChange={(value) =>
+                      updateEditingPresentationTransform({ offsetX: value })
+                    }
+                  />
+                  <TransformRange
+                    label="Move up / down"
+                    value={editingPresentationSlide.offsetY}
+                    min={-1}
+                    max={1}
+                    step={0.01}
+                    defaultValue={0}
+                    bipolar
+                    onChange={(value) =>
+                      updateEditingPresentationTransform({ offsetY: value })
+                    }
+                  />
+                </div>
+
+                {/* Fine nudge + reset */}
+                <div className="grid h-full content-start gap-2 rounded-lg border border-border bg-background/40 p-2">
+                  <div className="mx-auto grid w-24 grid-cols-3 gap-1">
+                    <span />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      className="size-7"
+                      aria-label="Move media up by 1 percent"
+                      onClick={() =>
+                        updateEditingPresentationTransform({
+                          offsetY: Math.max(
+                            -1,
+                            editingPresentationSlide.offsetY - 0.01
+                          ),
+                        })
+                      }
+                    >
+                      <ArrowUpIcon className="size-3.5" aria-hidden="true" />
+                    </Button>
+                    <span />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      className="size-7"
+                      aria-label="Move media left by 1 percent"
+                      onClick={() =>
+                        updateEditingPresentationTransform({
+                          offsetX: Math.max(
+                            -1,
+                            editingPresentationSlide.offsetX - 0.01
+                          ),
+                        })
+                      }
+                    >
+                      <ArrowLeftIcon className="size-3.5" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon-sm"
+                      className="size-7"
+                      aria-label="Center media in frame"
+                      onClick={() =>
+                        updateEditingPresentationTransform({
+                          offsetX: 0,
+                          offsetY: 0,
+                        })
+                      }
+                    >
+                      <CrosshairIcon className="size-3.5" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      className="size-7"
+                      aria-label="Move media right by 1 percent"
+                      onClick={() =>
+                        updateEditingPresentationTransform({
+                          offsetX: Math.min(
+                            1,
+                            editingPresentationSlide.offsetX + 0.01
+                          ),
+                        })
+                      }
+                    >
+                      <ArrowRightIcon className="size-3.5" aria-hidden="true" />
+                    </Button>
+                    <span />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      className="size-7"
+                      aria-label="Move media down by 1 percent"
+                      onClick={() =>
+                        updateEditingPresentationTransform({
+                          offsetY: Math.min(
+                            1,
+                            editingPresentationSlide.offsetY + 0.01
+                          ),
+                        })
+                      }
+                    >
+                      <ArrowDownIcon className="size-3.5" aria-hidden="true" />
+                    </Button>
+                    <span />
+                  </div>
+                  <div className="grid gap-2">
+                    <span id="presentation-fill-mode-label" className="sr-only">
+                      Fill mode
+                    </span>
+                    <div
+                      role="group"
+                      aria-labelledby="presentation-fill-mode-label"
+                      className="grid h-8 grid-cols-3 gap-0.5 rounded-md bg-muted p-0.5"
+                    >
+                      {(
+                        [
+                          ["Fit", "contain"],
+                          ["Fill", "cover"],
+                          ["Stretch", "stretch"],
+                        ] as const
+                      ).map(([label, fit]) => {
+                        const active = editingPresentationSlide.fit === fit
+                        return (
+                          <button
+                            key={fit}
+                            type="button"
+                            aria-pressed={active}
+                            aria-label={`Use ${label.toLowerCase()} fill mode`}
+                            onClick={() =>
+                              usePresentationStore
+                                .getState()
+                                .setSlideFit(editingPresentationSlide.id, fit)
+                            }
+                            className={cn(
+                              "flex h-7 min-w-0 items-center justify-center rounded px-1.5 text-xs font-medium leading-none whitespace-nowrap transition-colors",
+                              active
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      aria-label="Reset all position controls"
+                      onClick={() =>
+                        usePresentationStore
+                          .getState()
+                          .updateSlideTransform(editingPresentationSlide.id, {
+                            scale: 1,
+                            offsetX: 0,
+                            offsetY: 0,
+                          })
+                      }
+                    >
+                      <RotateCcwIcon className="size-3.5" aria-hidden="true" />
+                      Reset all
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 border-t border-border/60 pt-4 sm:gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setEditingPresentationSlideId(null)}
+                >
+                  Done
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

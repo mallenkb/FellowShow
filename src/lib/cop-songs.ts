@@ -1,4 +1,5 @@
 export type CopSongLanguage = "english" | "twi"
+export type CopSongSource = "built-in" | "theme-2026" | "theme-2025" | "pentecostal-book"
 
 export interface CopSong {
   id: string
@@ -7,6 +8,8 @@ export interface CopSong {
   number: number
   title: string
   lyrics: string
+  source?: CopSongSource
+  sourceLabel?: string
 }
 
 export const copSongs: CopSong[] = [

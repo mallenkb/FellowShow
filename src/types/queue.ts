@@ -10,7 +10,7 @@ export interface QueueItem {
   added_at: number
   /** True when queued from a chapter-only detection (verse defaults to 1, may be refined). */
   is_chapter_only?: boolean
-  lyricKind?: "song" | "hymn"
+  lyricKind?: "song"
   fullText?: string
   lyricBlocks?: LyricBlock[]
   activeBlockIndex?: number

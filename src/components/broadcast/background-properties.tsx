@@ -1,6 +1,6 @@
 import { useBroadcastStore } from "@/stores/broadcast-store"
-import { pickThemeBackgroundImage } from "@/lib/theme-designer-files"
-import { Slider } from "@/components/ui/slider"
+import { pickThemeBackgroundMedia } from "@/lib/theme-designer-files"
+import { SliderField } from "@/components/ui/slider-field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -12,6 +12,20 @@ import {
 import { Button } from "@/components/ui/button"
 
 function parseColorOpacity(color: string): { hex: string; opacity: number } {
+  const rgba = color.match(
+    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/i,
+  )
+  if (rgba) {
+    const toHex = (value: string) =>
+      Math.max(0, Math.min(255, Number(value)))
+        .toString(16)
+        .padStart(2, "0")
+    const alpha = rgba[4] === undefined ? 1 : Math.max(0, Math.min(1, Number(rgba[4])))
+    return {
+      hex: `#${toHex(rgba[1])}${toHex(rgba[2])}${toHex(rgba[3])}`,
+      opacity: Math.round(alpha * 100),
+    }
+  }
   if (color.length === 9 && color.startsWith("#")) {
     const alphaHex = color.slice(7, 9)
     const alpha = parseInt(alphaHex, 16) / 255
@@ -93,19 +107,15 @@ function GradientSection() {
 
       {/* Angle (only for linear) */}
       {gradient.type === "linear" && (
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground">Angle</label>
-            <span className="text-xs tabular-nums text-muted-foreground">{gradient.angle}&deg;</span>
-          </div>
-          <Slider
-            min={0}
-            max={360}
-            step={1}
-            value={[gradient.angle]}
-            onValueChange={([v]) => update("background.gradient.angle", v)}
-          />
-        </div>
+        <SliderField
+          label="Angle"
+          value={gradient.angle}
+          min={0}
+          max={360}
+          unit="°"
+          defaultValue={180}
+          onChange={(v) => update("background.gradient.angle", v)}
+        />
       )}
 
       {/* Color Stop 1 */}
@@ -129,16 +139,13 @@ function GradientSection() {
             className="w-20 font-mono"
           />
         </div>
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Position</label>
-          <span className="text-xs tabular-nums text-muted-foreground">{stop0.position}%</span>
-        </div>
-        <Slider
+        <SliderField
+          label="Position"
+          value={stop0.position}
           min={0}
           max={100}
-          step={1}
-          value={[stop0.position]}
-          onValueChange={([v]) => update("background.gradient.stops.0.position", v)}
+          unit="%"
+          onChange={(v) => update("background.gradient.stops.0.position", v)}
         />
       </div>
 
@@ -163,16 +170,13 @@ function GradientSection() {
             className="w-20 font-mono"
           />
         </div>
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Position</label>
-          <span className="text-xs tabular-nums text-muted-foreground">{stop1.position}%</span>
-        </div>
-        <Slider
+        <SliderField
+          label="Position"
+          value={stop1.position}
           min={0}
           max={100}
-          step={1}
-          value={[stop1.position]}
-          onValueChange={([v]) => update("background.gradient.stops.1.position", v)}
+          unit="%"
+          onChange={(v) => update("background.gradient.stops.1.position", v)}
         />
       </div>
     </div>
@@ -190,22 +194,28 @@ function ImageSection() {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Image Source */}
+      {/* Media Source */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Background Image</label>
+        <label className="text-xs font-medium text-muted-foreground">Background Media</label>
         <Button
           variant="outline"
           size="sm"
           className="w-full"
           onClick={() => {
             void (async () => {
-              const dataUrl = await pickThemeBackgroundImage()
-              if (dataUrl) update("background.image.url", dataUrl)
+              const media = await pickThemeBackgroundMedia()
+              if (media) {
+                update("background.image.url", media.url)
+                update("background.image.mediaType", media.mediaType)
+              }
             })()
           }}
         >
-          Change Image
+          Change Media
         </Button>
+        <p className="text-[0.6875rem] leading-relaxed text-muted-foreground">
+          Supports image and video backgrounds. Videos play muted and loop automatically.
+        </p>
       </div>
 
       {/* Fit Mode */}
@@ -230,35 +240,24 @@ function ImageSection() {
       <div className="flex flex-col gap-3 border-t pt-3">
         <h4 className="text-xs font-semibold">Effects</h4>
 
-        {/* Blur */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground">Blur</label>
-            <span className="text-xs tabular-nums text-muted-foreground">{image.blur}px</span>
-          </div>
-          <Slider
-            min={0}
-            max={50}
-            step={1}
-            value={[image.blur]}
-            onValueChange={([v]) => update("background.image.blur", v)}
-          />
-        </div>
-
-        {/* Brightness */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground">Brightness</label>
-            <span className="text-xs tabular-nums text-muted-foreground">{image.brightness}%</span>
-          </div>
-          <Slider
-            min={0}
-            max={200}
-            step={1}
-            value={[image.brightness]}
-            onValueChange={([v]) => update("background.image.brightness", v)}
-          />
-        </div>
+        <SliderField
+          label="Blur"
+          value={image.blur}
+          min={0}
+          max={50}
+          unit="px"
+          defaultValue={0}
+          onChange={(v) => update("background.image.blur", v)}
+        />
+        <SliderField
+          label="Brightness"
+          value={image.brightness}
+          min={0}
+          max={200}
+          unit="%"
+          defaultValue={100}
+          onChange={(v) => update("background.image.brightness", v)}
+        />
       </div>
 
       {/* Color Overlay */}
@@ -301,18 +300,14 @@ function ImageSection() {
                 className="w-20 font-mono"
               />
             </div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Opacity</label>
-              <span className="text-xs tabular-nums text-muted-foreground">{tint.opacity}%</span>
-            </div>
-            <Slider
+            <SliderField
+              label="Opacity"
+              value={tint.opacity}
               min={0}
               max={100}
-              step={1}
-              value={[tint.opacity]}
-              onValueChange={([v]) =>
-                update("background.image.tint", buildColorWithOpacity(tint.hex, v))
-              }
+              unit="%"
+              defaultValue={50}
+              onChange={(v) => update("background.image.tint", buildColorWithOpacity(tint.hex, v))}
             />
           </div>
         )}
@@ -382,50 +377,32 @@ function TextBoxSection() {
             </div>
           </div>
 
-          {/* Opacity */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Opacity</label>
-              <span className="text-xs tabular-nums text-muted-foreground">{Math.round(textBox.opacity * 100)}%</span>
-            </div>
-            <Slider
-              min={0}
-              max={100}
-              step={1}
-              value={[Math.round(textBox.opacity * 100)]}
-              onValueChange={([v]) => update("textBox.opacity", v / 100)}
-            />
-          </div>
-
-          {/* Border Radius */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Border Radius</label>
-              <span className="text-xs tabular-nums text-muted-foreground">{textBox.borderRadius}px</span>
-            </div>
-            <Slider
-              min={0}
-              max={50}
-              step={1}
-              value={[textBox.borderRadius]}
-              onValueChange={([v]) => update("textBox.borderRadius", v)}
-            />
-          </div>
-
-          {/* Padding */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Padding</label>
-              <span className="text-xs tabular-nums text-muted-foreground">{textBox.padding}px</span>
-            </div>
-            <Slider
-              min={0}
-              max={100}
-              step={1}
-              value={[textBox.padding]}
-              onValueChange={([v]) => update("textBox.padding", v)}
-            />
-          </div>
+          <SliderField
+            label="Opacity"
+            value={Math.round(textBox.opacity * 100)}
+            min={0}
+            max={100}
+            unit="%"
+            defaultValue={50}
+            onChange={(v) => update("textBox.opacity", v / 100)}
+          />
+          <SliderField
+            label="Border Radius"
+            value={textBox.borderRadius}
+            min={0}
+            max={50}
+            unit="px"
+            defaultValue={0}
+            onChange={(v) => update("textBox.borderRadius", v)}
+          />
+          <SliderField
+            label="Padding"
+            value={textBox.padding}
+            min={0}
+            max={100}
+            unit="px"
+            onChange={(v) => update("textBox.padding", v)}
+          />
         </div>
       )}
     </div>
@@ -463,6 +440,7 @@ export function BackgroundProperties() {
             if (v === "image" && !draftTheme.background.image) {
               update("background.image", {
                 url: "",
+                mediaType: "image",
                 fit: "cover",
                 blur: 0,
                 brightness: 100,

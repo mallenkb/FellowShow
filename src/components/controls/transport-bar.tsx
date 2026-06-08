@@ -12,7 +12,11 @@ import { useAudioStore, useTranscriptStore, useBroadcastStore } from "@/stores"
 import { useTheme } from "@/components/theme-provider"
 import { transcriptionActions } from "@/hooks/use-transcription"
 
-export function TransportBar() {
+export function TransportBar({
+  showPresenterTimer = false,
+}: {
+  showPresenterTimer?: boolean
+}) {
   const { theme, setTheme } = useTheme()
   const audioLevel = useAudioStore((s) => s.level)
   const isTranscribing = useTranscriptStore((s) => s.isTranscribing)
@@ -52,7 +56,7 @@ export function TransportBar() {
 
       {/* Right: Audio + Status + Settings */}
       <div className="flex items-center gap-3">
-        <PresenterTimer />
+        {showPresenterTimer ? <PresenterTimer /> : null}
         <div className="flex items-center gap-2">
           <MicIcon className="size-3.5 text-muted-foreground" />
           <LevelMeter level={audioLevel.rms} bars={4} />

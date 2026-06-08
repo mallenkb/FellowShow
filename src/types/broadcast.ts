@@ -6,7 +6,17 @@ export interface VerseSegment {
 export interface VerseRenderData {
   reference: string
   segments: VerseSegment[]
+  themeSection?: BroadcastThemeSection
   referenceMode?: "default" | "lyric-footer"
+  presentationImage?: {
+    url: string
+    name: string
+    mediaType?: "image" | "video"
+    fit?: "contain" | "cover" | "stretch"
+    scale?: number
+    offsetX?: number
+    offsetY?: number
+  }
 }
 
 export interface PresenterTimerRenderData {
@@ -14,7 +24,10 @@ export interface PresenterTimerRenderData {
   totalSeconds: number
   isRunning: boolean
   isFinished: boolean
+  fontFamily?: string
 }
+
+export type BroadcastThemeSection = "bible" | "songs" | "presentation"
 
 export interface RenderOptions {
   opacity?: number
@@ -22,6 +35,7 @@ export interface RenderOptions {
   offsetY?: number
   scale?: number               // Scale factor for rendering at display size (e.g., 0.42 for 400px panel)
   imageCache?: Map<string, HTMLImageElement>
+  videoCache?: Map<string, HTMLVideoElement>
   timer?: PresenterTimerRenderData | null
 }
 
@@ -35,6 +49,7 @@ export interface BroadcastTheme {
   name: string
   builtin: boolean
   pinned: boolean
+  sortOrder?: number
   createdAt: number
   updatedAt: number
   resolution: { width: number; height: number }
@@ -48,6 +63,7 @@ export interface BroadcastTheme {
     } | null
     image: {
       url: string
+      mediaType?: "image" | "video"
       fit: "cover" | "contain" | "stretch"
       blur: number
       brightness: number

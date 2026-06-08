@@ -80,8 +80,7 @@ impl BookMatcher {
         // including longer patterns that share a start position with shorter ones.
         let mut state = aho_corasick::automaton::OverlappingState::start();
         loop {
-            self.automaton
-                .find_overlapping(&text_lower, &mut state);
+            self.automaton.find_overlapping(&text_lower, &mut state);
             let Some(mat) = state.get_match() else {
                 break;
             };

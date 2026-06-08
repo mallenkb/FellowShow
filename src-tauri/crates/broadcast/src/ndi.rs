@@ -121,7 +121,9 @@ pub enum NdiError {
     SenderCreateFailed,
     #[error("NDI session is not active")]
     SessionNotActive,
-    #[error("frame dimensions do not match active NDI settings ({expected_width}x{expected_height})")]
+    #[error(
+        "frame dimensions do not match active NDI settings ({expected_width}x{expected_height})"
+    )]
     FrameDimensionsMismatch {
         expected_width: u32,
         expected_height: u32,
@@ -165,12 +167,17 @@ impl NdiRuntime {
             drop(existing);
         }
 
-        log::info!("NDI[{session_id}]: starting session '{}'", request.source_name);
+        log::info!(
+            "NDI[{session_id}]: starting session '{}'",
+            request.source_name
+        );
         let session = ActiveNdiSession::create(request)?;
         let info = session.info.clone();
         log::info!(
             "NDI[{session_id}]: session active — {}x{} @ {}fps",
-            info.width, info.height, info.fps
+            info.width,
+            info.height,
+            info.fps
         );
         self.sessions.insert(session_id, session);
         Ok(info)
@@ -230,7 +237,10 @@ unsafe impl Send for NdiRuntime {}
 unsafe impl Sync for NdiRuntime {}
 
 impl ActiveNdiSession {
-    #[expect(clippy::needless_pass_by_value, reason = "request fields are destructured and moved into the session")]
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "request fields are destructured and moved into the session"
+    )]
     fn create(request: NdiStartRequest) -> Result<Self, NdiError> {
         let source_name = request.source_name.trim().to_string();
         if source_name.is_empty() {
@@ -242,12 +252,25 @@ impl ActiveNdiSession {
         let library = unsafe { Library::new(&library_path) }
             .map_err(|e| NdiError::LibraryLoad(e.to_string()))?;
 
-        let initialize_fn = *load_symbol::<NdiInitializeFn>(&library, b"NDIlib_initialize\0", "NDIlib_initialize")?;
-        let ndi_destroy_fn = *load_symbol::<NdiDestroyFn>(&library, b"NDIlib_destroy\0", "NDIlib_destroy")?;
-        let send_create_fn = *load_symbol::<NdiSendCreateFn>(&library, b"NDIlib_send_create\0", "NDIlib_send_create")?;
-        let send_destroy_fn = *load_symbol::<NdiSendDestroyFn>(&library, b"NDIlib_send_destroy\0", "NDIlib_send_destroy")?;
-        let send_video_fn =
-            *load_symbol::<NdiSendVideoV2Fn>(&library, b"NDIlib_send_send_video_v2\0", "NDIlib_send_send_video_v2")?;
+        let initialize_fn =
+            *load_symbol::<NdiInitializeFn>(&library, b"NDIlib_initialize\0", "NDIlib_initialize")?;
+        let ndi_destroy_fn =
+            *load_symbol::<NdiDestroyFn>(&library, b"NDIlib_destroy\0", "NDIlib_destroy")?;
+        let send_create_fn = *load_symbol::<NdiSendCreateFn>(
+            &library,
+            b"NDIlib_send_create\0",
+            "NDIlib_send_create",
+        )?;
+        let send_destroy_fn = *load_symbol::<NdiSendDestroyFn>(
+            &library,
+            b"NDIlib_send_destroy\0",
+            "NDIlib_send_destroy",
+        )?;
+        let send_video_fn = *load_symbol::<NdiSendVideoV2Fn>(
+            &library,
+            b"NDIlib_send_send_video_v2\0",
+            "NDIlib_send_send_video_v2",
+        )?;
 
         // SAFETY: initialize_fn is a valid function pointer loaded from the NDI library
         if !unsafe { initialize_fn() } {
@@ -347,7 +370,7 @@ impl ActiveNdiSession {
             frame_rate_d: 1001,
             picture_aspect_ratio: (width as f32) / (height as f32),
             frame_format_type: 1, // NDIlib_frame_format_type_progressive
-            timecode: i64::MAX, // NDIlib_send_timecode_synthesize
+            timecode: i64::MAX,   // NDIlib_send_timecode_synthesize
             p_data: self.frame_buffer.as_mut_ptr(),
             line_stride_in_bytes: (width * 4) as i32,
             p_metadata: std::ptr::null(),
@@ -363,7 +386,10 @@ impl ActiveNdiSession {
         }
         self.frame_count += 1;
         if self.frame_count == 1 {
-            log::info!("NDI: first frame sent ({width}x{height}, {} bytes)", self.frame_buffer.len());
+            log::info!(
+                "NDI: first frame sent ({width}x{height}, {} bytes)",
+                self.frame_buffer.len()
+            );
         } else if self.frame_count.is_multiple_of(300) {
             log::info!("NDI: {} frames sent", self.frame_count);
         }

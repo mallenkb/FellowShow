@@ -29,7 +29,7 @@ missing_panics_doc = "allow"
 
 [package]
 name = "fellowshow"
-version = "0.1.4"
+version = "0.1.6"
 description = "FellowShow - Real-Time AI Bible Verse Detection"
 authors = ["Faithful"]
 license = "MIT"
@@ -66,8 +66,10 @@ crossbeam-channel = "0.5"
 dotenvy = "0.15"
 base64 = "0.22"
 reqwest = { version = "0.12", features = ["json"] }
+sha2 = "0.10"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-updater = "2"
 
 [features]
 default = ["whisper"]

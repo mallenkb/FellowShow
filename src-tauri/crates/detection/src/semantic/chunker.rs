@@ -67,7 +67,10 @@ impl Chunker {
     }
 
     /// Split text into trimmed, non-empty sentences.
-    #[expect(clippy::unused_self, reason = "method kept on self for future extensibility")]
+    #[expect(
+        clippy::unused_self,
+        reason = "method kept on self for future extensibility"
+    )]
     fn split_sentences(&self, text: &str) -> Vec<String> {
         // First replace newlines with a sentence-ending marker so they
         // act as boundaries alongside punctuation.
@@ -105,7 +108,8 @@ mod tests {
     #[test]
     fn test_simple_sentences() {
         let chunker = Chunker::new();
-        let text = "God so loved the world. He gave his only son. Whoever believes shall not perish.";
+        let text =
+            "God so loved the world. He gave his only son. Whoever believes shall not perish.";
         let chunks = chunker.chunk(text);
 
         // Should produce single-sentence, two-sentence, and three-sentence windows
