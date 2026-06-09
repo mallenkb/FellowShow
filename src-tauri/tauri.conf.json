@@ -1,8 +1,8 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "FellowShow",
+  "productName": "Fellow Show",
   "mainBinaryName": "fellowshow",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "identifier": "com.openbezal.fellowshow",
   "build": {
     "frontendDist": "../build",
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "FellowShow",
+        "title": "Fellow Show",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,

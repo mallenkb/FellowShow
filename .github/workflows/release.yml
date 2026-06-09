@@ -240,6 +240,6 @@ jobs:
           find release-upload -maxdepth 1 -type f -print | sort
           gh release delete "$tag" --yes 2>/dev/null || true
           gh release create "$tag" \
-            --title "FellowShow $tag" \
+            --title "Fellow Show $tag" \
             --generate-notes \
             release-upload/*

@@ -1,6 +1,6 @@
 {
   "name": "fellowshow",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Real-time AI-powered Bible verse detection for live sermons and broadcasts.",
   "license": "MIT",
   "homepage": "https://github.com/mallenkb/FellowShow#readme",

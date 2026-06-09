@@ -29,8 +29,8 @@ missing_panics_doc = "allow"
 
 [package]
 name = "fellowshow"
-version = "0.1.7"
-description = "FellowShow - Real-Time AI Bible Verse Detection"
+version = "0.1.8"
+description = "Fellow Show - Real-Time AI Bible Verse Detection"
 authors = ["Faithful"]
 license = "MIT"
 repository = "https://github.com/openbezal/fellowshow"
