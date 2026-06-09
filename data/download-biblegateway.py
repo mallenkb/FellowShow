@@ -41,7 +41,18 @@ common.get_page = _get_page_with_timeout
 BOOK_DELAY = float(os.environ.get("BIBLEGATEWAY_BOOK_DELAY", "2"))  # seconds
 MAX_RETRIES = 3  # retries per book
 
-TRANSLATIONS = ["NIV", "ESV", "NASB", "NKJV", "NLT", "AMP", "NRSV", "CSB"]
+DEFAULT_TRANSLATIONS = ["NIV", "ESV", "NASB", "NKJV", "NLT", "AMP", "NRSV", "CSB"]
+
+
+def configured_translations():
+    requested = os.environ.get("BIBLEGATEWAY_TRANSLATIONS", "")
+    translations = [
+        translation.strip().upper()
+        for translation in requested.split(",")
+        if translation.strip()
+    ]
+
+    return translations or DEFAULT_TRANSLATIONS
 
 BOOKS = [
     "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",
@@ -219,11 +230,12 @@ def download_translation(abbrev):
 
 def main():
     SOURCES_DIR.mkdir(parents=True, exist_ok=True)
+    translations = configured_translations()
 
-    print(f"=== Downloading {len(TRANSLATIONS)} translations from BibleGateway ===")
-    print(f"Translations: {', '.join(TRANSLATIONS)}")
+    print(f"=== Downloading {len(translations)} translations from BibleGateway ===")
+    print(f"Translations: {', '.join(translations)}")
 
-    for abbrev in TRANSLATIONS:
+    for abbrev in translations:
         try:
             download_translation(abbrev)
         except Exception as e:

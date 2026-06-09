@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/fellowshow.db
-          key: bible-db-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/download-sources.ts', 'data/download-biblegateway.py') }}
+          key: bible-db-bundled-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/prepare-release-bible.ts', 'data/download-sources.ts', 'data/download-biblegateway.py') }}
 
       - name: Set up Python
         if: steps.bible-db-cache.outputs.cache-hit != 'true'
@@ -52,6 +52,7 @@ jobs:
         if: steps.bible-db-cache.outputs.cache-hit != 'true'
         env:
           BIBLEGATEWAY_BOOK_DELAY: "1"
+          BIBLEGATEWAY_TRANSLATIONS: "NKJV,NIV"
           PYTHONUTF8: "1"
         run: |
           bun run download:bible-data
@@ -59,7 +60,7 @@ jobs:
 
       - name: Build Bible database
         if: steps.bible-db-cache.outputs.cache-hit != 'true'
-        run: bun run build:bible
+        run: bun run prepare:release-bible
 
       - name: Verify Bible database
         run: |
