@@ -31,8 +31,10 @@ fn resolve_working_db_path<R: tauri::Runtime>(
         }
 
         if let Ok(resource_dir) = app.path().resource_dir() {
-            let seed = resource_dir.join("fellowshow.db");
-            if seed.exists() {
+            if let Some(seed) = bundled_bible_db_candidates(&resource_dir)
+                .into_iter()
+                .find(|path| path.exists())
+            {
                 match std::fs::create_dir_all(&app_data_dir)
                     .and_then(|()| std::fs::copy(&seed, &working))
                 {
@@ -53,6 +55,32 @@ fn resolve_working_db_path<R: tauri::Runtime>(
 
     let dev_db = dev_data_dir.join("fellowshow.db");
     dev_db.exists().then_some(dev_db)
+}
+
+fn bundled_bible_db_candidates(resource_dir: &std::path::Path) -> [std::path::PathBuf; 2] {
+    [
+        resource_dir.join("fellowshow.db"),
+        resource_dir.join("_up_/data/fellowshow.db"),
+    ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::bundled_bible_db_candidates;
+
+    #[test]
+    fn includes_tauri_preserved_relative_resource_path() {
+        let candidates = bundled_bible_db_candidates(std::path::Path::new("/Resources"));
+
+        assert_eq!(
+            candidates[0],
+            std::path::Path::new("/Resources/fellowshow.db")
+        );
+        assert_eq!(
+            candidates[1],
+            std::path::Path::new("/Resources/_up_/data/fellowshow.db")
+        );
+    }
 }
 
 #[expect(clippy::too_many_lines, reason = "app setup is inherently complex")]
