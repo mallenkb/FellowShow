@@ -228,7 +228,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${{ github.ref_name }}"
+          mkdir -p release-upload
+          while IFS= read -r file; do
+            name="$(basename "$file")"
+            if [ -e "release-upload/$name" ]; then
+              parent="$(basename "$(dirname "$file")")"
+              name="${parent}-${name}"
+            fi
+            cp "$file" "release-upload/$name"
+          done < <(find release-artifacts -maxdepth 4 -type f)
+          find release-upload -maxdepth 1 -type f -print | sort
+          gh release delete "$tag" --yes 2>/dev/null || true
           gh release create "$tag" \
             --title "FellowShow $tag" \
             --generate-notes \
-            release-artifacts/*
+            release-upload/*
