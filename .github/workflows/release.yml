@@ -27,18 +27,29 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Restore Bible database cache
+        id: bible-db-cache
+        uses: actions/cache@v4
+        with:
+          path: data/fellowshow.db
+          key: bible-db-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/download-sources.ts', 'data/download-biblegateway.py') }}
+
       - name: Set up Python
+        if: steps.bible-db-cache.outputs.cache-hit != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install dependencies
+        if: steps.bible-db-cache.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
       - name: Install BibleGateway downloader dependency
+        if: steps.bible-db-cache.outputs.cache-hit != 'true'
         run: python -m pip install meaningless
 
       - name: Download Bible source data
+        if: steps.bible-db-cache.outputs.cache-hit != 'true'
         env:
           BIBLEGATEWAY_BOOK_DELAY: "1"
           PYTHONUTF8: "1"
@@ -47,6 +58,7 @@ jobs:
           python data/download-biblegateway.py
 
       - name: Build Bible database
+        if: steps.bible-db-cache.outputs.cache-hit != 'true'
         run: bun run build:bible
 
       - name: Verify Bible database
