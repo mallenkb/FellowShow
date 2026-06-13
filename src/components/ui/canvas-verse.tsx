@@ -1,13 +1,20 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
-import type { BroadcastTheme, PresenterTimerRenderData, VerseRenderData } from "@/types"
+import { shouldRenderLowerThirdLayer } from "@/lib/broadcast-output-mode"
+import type {
+  BroadcastTheme,
+  LowerThirdRenderData,
+  PresenterTimerRenderData,
+  VerseRenderData,
+} from "@/types"
 import { cn } from "@/lib/utils"
 
 interface CanvasVerseProps {
   theme: BroadcastTheme
   verse: VerseRenderData | null
   timer?: PresenterTimerRenderData | null
+  lowerThird?: LowerThirdRenderData | null
   className?: string
   fillContainer?: boolean
 }
@@ -16,6 +23,7 @@ export const CanvasVerse = memo(function CanvasVerse({
   theme,
   verse,
   timer,
+  lowerThird,
   className,
   fillContainer = false,
 }: CanvasVerseProps) {
@@ -131,6 +139,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     canvas.style.width = `${displayW}px`
     canvas.style.height = `${displayH}px`
 
+    const includeLowerThird = shouldRenderLowerThirdLayer(theme)
     const contentKey = JSON.stringify({
       themeId: theme.id,
       themeUpdatedAt: theme.updatedAt,
@@ -141,6 +150,14 @@ export const CanvasVerse = memo(function CanvasVerse({
         ? {
             isVisible: true,
             isFinished: timer.isFinished,
+          }
+        : null,
+      lowerThird: includeLowerThird && lowerThird
+        ? {
+            visible: lowerThird.visible,
+            title: lowerThird.title,
+            subtitle: lowerThird.subtitle,
+            label: lowerThird.label,
           }
         : null,
       width: displayW,
@@ -187,6 +204,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       offsetX,
       offsetY,
       timer,
+      lowerThird,
       imageCache: imageCacheRef.current,
       videoCache: videoCacheRef.current,
     })
@@ -214,7 +232,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       }
     }
     transitionFrameRef.current = window.requestAnimationFrame(tick)
-  }, [theme, verse, timer, containerWidth, containerHeight, fillContainer, imageVersion, videoVersion])
+  }, [theme, verse, timer, lowerThird, containerWidth, containerHeight, fillContainer, imageVersion, videoVersion])
 
   useEffect(() => {
     return () => {

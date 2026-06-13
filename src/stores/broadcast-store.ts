@@ -1,7 +1,13 @@
 import { create } from "zustand"
 import { emitTo } from "@tauri-apps/api/event"
 import { load, type Store } from "@tauri-apps/plugin-store"
-import type { BroadcastTheme, BroadcastThemeSection, PresenterTimerRenderData, VerseRenderData } from "@/types"
+import type {
+  BroadcastTheme,
+  BroadcastThemeSection,
+  LowerThirdRenderData,
+  PresenterTimerRenderData,
+  VerseRenderData,
+} from "@/types"
 import { BUILTIN_THEMES, getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 
 type SelectedElement = "verse" | "reference" | null
@@ -17,6 +23,7 @@ interface BroadcastState {
   isLive: boolean
   liveVerse: VerseRenderData | null
   presenterTimer: PresenterTimerRenderData | null
+  lowerThird: LowerThirdRenderData | null
 
   // Designer state
   isDesignerOpen: boolean
@@ -43,6 +50,8 @@ interface BroadcastState {
   setLive: (live: boolean) => void
   setLiveVerse: (verse: VerseRenderData | null) => void
   setPresenterTimer: (timer: PresenterTimerRenderData | null) => void
+  setLowerThird: (lowerThird: LowerThirdRenderData | null) => void
+  clearLowerThird: () => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
 
@@ -131,6 +140,7 @@ function emitDraftToBroadcast(state: BroadcastState): void {
       theme: state.draftTheme,
       verse: state.liveVerse,
       timer: state.presenterTimer,
+      lowerThird: state.lowerThird,
     }).catch(() => {})
   }
   if (id === state.altActiveThemeId) {
@@ -138,6 +148,7 @@ function emitDraftToBroadcast(state: BroadcastState): void {
       theme: state.draftTheme,
       verse: state.liveVerse,
       timer: state.presenterTimer,
+      lowerThird: state.lowerThird,
     }).catch(() => {})
   }
 }
@@ -165,6 +176,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   isLive: false,
   liveVerse: null,
   presenterTimer: null,
+  lowerThird: null,
   isDesignerOpen: false,
   editingThemeId: null,
   draftTheme: null,
@@ -320,6 +332,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       theme,
       verse: s.liveVerse,
       timer: s.presenterTimer,
+      lowerThird: s.lowerThird,
     }).catch(() => {})
   },
   syncBroadcastOutput: () => {
@@ -350,6 +363,14 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   },
   setPresenterTimer: (presenterTimer) => {
     set({ presenterTimer })
+    get().syncBroadcastOutput()
+  },
+  setLowerThird: (lowerThird) => {
+    set({ lowerThird })
+    get().syncBroadcastOutput()
+  },
+  clearLowerThird: () => {
+    set({ lowerThird: null })
     get().syncBroadcastOutput()
   },
 

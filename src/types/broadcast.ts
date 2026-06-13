@@ -27,6 +27,13 @@ export interface PresenterTimerRenderData {
   fontFamily?: string
 }
 
+export interface LowerThirdRenderData {
+  visible: boolean
+  title: string
+  subtitle?: string
+  label?: string
+}
+
 export type BroadcastThemeSection = "bible" | "songs" | "presentation"
 
 export interface RenderOptions {
@@ -37,6 +44,7 @@ export interface RenderOptions {
   imageCache?: Map<string, HTMLImageElement>
   videoCache?: Map<string, HTMLVideoElement>
   timer?: PresenterTimerRenderData | null
+  lowerThird?: LowerThirdRenderData | null
 }
 
 export type TextHorizontalAlign = "left" | "center" | "right" | "justify"
@@ -49,6 +57,7 @@ export interface BroadcastTheme {
   name: string
   builtin: boolean
   pinned: boolean
+  outputMode?: "standard" | "lower-third"
   sortOrder?: number
   createdAt: number
   updatedAt: number

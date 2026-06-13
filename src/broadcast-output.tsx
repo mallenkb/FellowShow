@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createRoot } from "react-dom/client"
 import { useRef, useEffect, useCallback } from "react"
 import { invoke } from "@tauri-apps/api/core"
@@ -5,8 +6,10 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
+import { shouldRenderLowerThirdLayer } from "@/lib/broadcast-output-mode"
 import type {
   BroadcastTheme,
+  LowerThirdRenderData,
   PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types/broadcast"
@@ -34,10 +37,12 @@ interface BroadcastPayload {
   theme: BroadcastTheme
   verse: VerseRenderData | null
   timer?: PresenterTimerRenderData | null
+  lowerThird?: LowerThirdRenderData | null
 }
 
 function transitionKey(data: BroadcastPayload | null): string {
   if (!data) return "empty"
+  const includeLowerThird = shouldRenderLowerThirdLayer(data.theme)
   return JSON.stringify({
     themeId: data.theme.id,
     themeUpdatedAt: data.theme.updatedAt,
@@ -46,6 +51,10 @@ function transitionKey(data: BroadcastPayload | null): string {
     presentationImage: data.verse?.presentationImage?.url ?? null,
     timerVisible: Boolean(data.timer),
     timerFinished: data.timer?.isFinished ?? false,
+    lowerThirdVisible: includeLowerThird ? data.lowerThird?.visible ?? false : null,
+    lowerThirdTitle: includeLowerThird ? data.lowerThird?.title ?? null : null,
+    lowerThirdSubtitle: includeLowerThird ? data.lowerThird?.subtitle ?? null : null,
+    lowerThirdLabel: includeLowerThird ? data.lowerThird?.label ?? null : null,
   })
 }
 
@@ -86,7 +95,7 @@ function BroadcastCanvas() {
       return
     }
 
-    const { theme, verse, timer } = data
+    const { theme, verse, timer, lowerThird } = data
     canvas.width = theme.resolution.width
     canvas.height = theme.resolution.height
     const result = renderVerse(ctx, theme, verse, {
@@ -94,6 +103,7 @@ function BroadcastCanvas() {
       imageCache: imageCacheRef.current,
       videoCache: videoCacheRef.current,
       timer,
+      lowerThird,
     })
     if (!result) {
       ctx.fillStyle = getBuiltinPresentationBackground()

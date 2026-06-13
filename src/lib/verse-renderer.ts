@@ -4,7 +4,12 @@ import type {
   VerseRenderData,
   RenderOptions,
 } from "@/types/broadcast"
+import {
+  shouldRenderLowerThirdLayer,
+  shouldRenderStandardBroadcastContent,
+} from "@/lib/broadcast-output-mode"
 import { DEFAULT_TIMER_FONT_FAMILY, getFontFallback } from "@/lib/font-options"
+import { drawLowerThird } from "@/lib/lower-third-renderer"
 
 export interface VerseLayoutRect {
   x: number
@@ -1198,6 +1203,14 @@ function renderVerseImpl(
 
   // Draw background
   drawBackground(ctx, scaledTheme, options?.imageCache, options?.videoCache)
+
+  if (!shouldRenderStandardBroadcastContent(scaledTheme)) {
+    if (options?.lowerThird && shouldRenderLowerThirdLayer(scaledTheme)) {
+      drawLowerThird(ctx, scaledTheme, options.lowerThird, options.scale ?? 1)
+    }
+    ctx.restore()
+    return metrics
+  }
 
   if (verse?.presentationImage) {
     drawPresentationImage(ctx, scaledTheme, verse, options?.imageCache, options?.videoCache)

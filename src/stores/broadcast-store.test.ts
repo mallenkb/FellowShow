@@ -46,6 +46,58 @@ describe("broadcast store sync", () => {
     )
   })
 
+  it("emits lower thirds with the current broadcast payload", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    const theme = useBroadcastStore.getState().themes[0]
+    useBroadcastStore.setState({
+      activeThemeId: theme.id,
+      liveVerse: null,
+      lowerThird: null,
+    })
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().setLowerThird({
+      visible: true,
+      title: "Pastor Maya Johnson",
+      subtitle: "Lead Pastor",
+      label: "Speaker",
+    })
+
+    expect(emitToMock).toHaveBeenCalledTimes(2)
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        lowerThird: expect.objectContaining({
+          visible: true,
+          title: "Pastor Maya Johnson",
+          subtitle: "Lead Pastor",
+          label: "Speaker",
+        }),
+      }),
+    )
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast-alt",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        lowerThird: expect.objectContaining({
+          title: "Pastor Maya Johnson",
+        }),
+      }),
+    )
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().clearLowerThird()
+
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        lowerThird: null,
+      }),
+    )
+  })
+
   it("uses separate bible, songs, and presentation themes", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
     const [bibleTheme, songTheme, presentationTheme] = useBroadcastStore.getState().themes

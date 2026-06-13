@@ -25,6 +25,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   const isLive = useBroadcastStore((s) => s.isLive)
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
+  const lowerThird = useBroadcastStore((s) => s.lowerThird)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
   const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
@@ -147,7 +148,12 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
         {isEmptyPresentation ? (
           <PresentationEmptyState disabled={!isLive} />
         ) : (
-          <CanvasVerse theme={activeTheme} verse={displayData} timer={timer} />
+          <CanvasVerse
+            theme={activeTheme}
+            verse={displayData}
+            timer={timer}
+            lowerThird={lowerThird}
+          />
         )}
       </div>
     </div>
