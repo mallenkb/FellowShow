@@ -49,6 +49,7 @@ import {
   PlusIcon,
   RotateCcwIcon,
   ChevronDownIcon,
+  TimerIcon,
 } from "lucide-react"
 import {
   Tooltip,
@@ -82,8 +83,9 @@ import { createSongSearchIndex, searchSongs } from "@/lib/song-search"
 import { copSongs, type CopSong, type CopSongSource } from "@/lib/cop-songs"
 import { importedSongs } from "@/lib/imported-songs"
 import { splitLyricBlocks } from "@/lib/lyrics"
+import { PresenterTimer } from "@/components/controls/presenter-timer"
 
-type SearchTab = "book" | "context" | "songs" | "presentation"
+type SearchTab = "book" | "context" | "songs" | "presentation" | "timer"
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
 type TransformHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w"
 type TransformInteraction =
@@ -110,6 +112,7 @@ type TransformInteraction =
 
 const LYRIC_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const SHOW_CONTEXT_SEARCH = false
+const SONG_RENDER_LIMIT = 100
 const allSongs = [...copSongs, ...importedSongs]
 const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
   { value: "all", label: "All songs" },
@@ -746,9 +749,6 @@ export function SearchPanel({
 
   const setSearchTab = useCallback((tab: SearchTab) => {
     setActiveTab(tab)
-    if (tab !== "presentation") {
-      usePresentationStore.getState().selectSlide(null)
-    }
   }, [])
 
   const handlePresentationFiles = useCallback((files: FileList | null) => {
@@ -856,6 +856,11 @@ export function SearchPanel({
   }, [deferredSongQuery, songLetterFilter, songSearchIndex, songSourceFilter])
 
   const songResultCount = filteredSongs.length
+  const visibleSongs = useMemo(
+    () => filteredSongs.slice(0, SONG_RENDER_LIMIT),
+    [filteredSongs]
+  )
+  const hiddenSongCount = Math.max(0, songResultCount - visibleSongs.length)
 
   const renderSongs = (songs: CopSong[]) => (
     <div className="flex flex-col gap-1">
@@ -1285,7 +1290,8 @@ export function SearchPanel({
   const pinnedTranslationRow =
     pinnedTranslations.length > 0 &&
     activeTab !== "songs" &&
-    activeTab !== "presentation" ? (
+    activeTab !== "presentation" &&
+    activeTab !== "timer" ? (
       <div className="-mt-0.5 flex min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5">
         {pinnedTranslations.map((translation) => {
           const isActive = translation.id === activeTranslationId
@@ -1358,6 +1364,13 @@ export function SearchPanel({
           >
             <ImageIcon className={tabIconClass("presentation")} />
             Presentation
+          </button>
+          <button
+            onClick={() => setSearchTab("timer")}
+            className={tabButtonClass("timer")}
+          >
+            <TimerIcon className={tabIconClass("timer")} />
+            Timer
           </button>
         </div>
 
@@ -1456,7 +1469,7 @@ export function SearchPanel({
               onLetterChange={setSongLetterFilter}
             />
           </div>
-        ) : (
+        ) : activeTab === "presentation" ? (
           <div
             className="flex items-center gap-2"
             onDragEnter={handlePresentationDragOver}
@@ -1483,7 +1496,13 @@ export function SearchPanel({
               Upload media
             </Button>
           </div>
-        )}
+        ) : activeTab === "timer" ? (
+          <div className="flex h-10 items-center">
+            <span className="text-xs font-medium text-muted-foreground">
+              Timer controls
+            </span>
+          </div>
+        ) : null}
       </div>
 
       {/* Quick nav tab */}
@@ -1776,7 +1795,13 @@ export function SearchPanel({
             </div>
           ) : (
             <div className="flex flex-col gap-1 p-2">
-              {renderSongs(filteredSongs)}
+              {renderSongs(visibleSongs)}
+              {hiddenSongCount > 0 ? (
+                <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+                  Showing first {visibleSongs.length} of {songResultCount}{" "}
+                  songs. Refine the search to narrow the list.
+                </p>
+              ) : null}
             </div>
           )}
         </div>
@@ -2038,6 +2063,13 @@ export function SearchPanel({
           )}
         </div>
       )}
+
+      {/* Timer tab */}
+      {activeTab === "timer" && (
+        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <PresenterTimer variant="panel" />
+        </div>
+      )}
       <Dialog
         open={Boolean(renamingPresentationSlideId)}
         onOpenChange={(open) => {
@@ -2218,7 +2250,7 @@ export function SearchPanel({
                 </div>
               </div>
 
-              <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+              <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
                 <div className="grid content-start gap-3">
                   {/* Zoom */}
                   <TransformRange
@@ -2260,14 +2292,14 @@ export function SearchPanel({
                 </div>
 
                 {/* Fine nudge + reset */}
-                <div className="grid h-full content-start gap-2 rounded-lg border border-border bg-background/40 p-2">
-                  <div className="mx-auto grid w-24 grid-cols-3 gap-1">
-                    <span />
+                <div className="grid content-start gap-2 rounded-lg border border-border bg-background/40 p-2">
+                  <div className="mx-auto grid w-32 grid-cols-3 gap-1.5">
+                    <span className="size-9" />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="size-7"
+                      className="size-9"
                       aria-label="Move media up by 1 percent"
                       onClick={() =>
                         updateEditingPresentationTransform({
@@ -2280,12 +2312,12 @@ export function SearchPanel({
                     >
                       <ArrowUpIcon className="size-3.5" aria-hidden="true" />
                     </Button>
-                    <span />
+                    <span className="size-9" />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="size-7"
+                      className="size-9"
                       aria-label="Move media left by 1 percent"
                       onClick={() =>
                         updateEditingPresentationTransform({
@@ -2302,7 +2334,7 @@ export function SearchPanel({
                       type="button"
                       variant="secondary"
                       size="icon-sm"
-                      className="size-7"
+                      className="size-9"
                       aria-label="Center media in frame"
                       onClick={() =>
                         updateEditingPresentationTransform({
@@ -2317,7 +2349,7 @@ export function SearchPanel({
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="size-7"
+                      className="size-9"
                       aria-label="Move media right by 1 percent"
                       onClick={() =>
                         updateEditingPresentationTransform({
@@ -2330,12 +2362,12 @@ export function SearchPanel({
                     >
                       <ArrowRightIcon className="size-3.5" aria-hidden="true" />
                     </Button>
-                    <span />
+                    <span className="size-9" />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="size-7"
+                      className="size-9"
                       aria-label="Move media down by 1 percent"
                       onClick={() =>
                         updateEditingPresentationTransform({
@@ -2348,7 +2380,7 @@ export function SearchPanel({
                     >
                       <ArrowDownIcon className="size-3.5" aria-hidden="true" />
                     </Button>
-                    <span />
+                    <span className="size-9" />
                   </div>
                   <div className="grid gap-2">
                     <span id="presentation-fill-mode-label" className="sr-only">
@@ -2357,7 +2389,7 @@ export function SearchPanel({
                     <div
                       role="group"
                       aria-labelledby="presentation-fill-mode-label"
-                      className="grid h-8 grid-cols-3 gap-0.5 rounded-md bg-muted p-0.5"
+                      className="grid h-8 grid-cols-3 gap-0.5 rounded-[calc(var(--radius-md)+2px)] bg-muted p-0.5"
                     >
                       {(
                         [
@@ -2379,7 +2411,7 @@ export function SearchPanel({
                                 .setSlideFit(editingPresentationSlide.id, fit)
                             }
                             className={cn(
-                              "flex h-7 min-w-0 items-center justify-center rounded px-1.5 text-xs font-medium leading-none whitespace-nowrap transition-colors",
+                              "flex h-7 min-w-0 items-center justify-center rounded-[var(--radius-md)] px-1.5 text-xs leading-none font-medium whitespace-nowrap transition-colors",
                               active
                                 ? "bg-background text-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"

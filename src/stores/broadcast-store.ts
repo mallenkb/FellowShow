@@ -1,22 +1,36 @@
 import { create } from "zustand"
 import { emitTo } from "@tauri-apps/api/event"
 import { load, type Store } from "@tauri-apps/plugin-store"
-import type { BroadcastTheme, BroadcastThemeSection, PresenterTimerRenderData, VerseRenderData } from "@/types"
-import { BUILTIN_THEMES, getBuiltinPresentationBackground } from "@/lib/builtin-themes"
+import type {
+  BroadcastTheme,
+  BroadcastThemeSection,
+  LowerThirdRenderData,
+  PresenterTimerRenderData,
+  VerseRenderData,
+} from "@/types"
+import {
+  BUILTIN_THEMES,
+  getBuiltinPresentationBackground,
+} from "@/lib/builtin-themes"
 
 type SelectedElement = "verse" | "reference" | null
 const DEFAULT_BROADCAST_THEME_ID = "builtin-bible-verse-preview"
 
 interface BroadcastState {
+  liveSource: "manual" | "preview" | null
   themes: BroadcastTheme[]
   deletedBuiltinThemeIds: string[]
   activeThemeId: string
   altActiveThemeId: string
   sectionThemeIds: Record<BroadcastThemeSection, string>
   selectedThemeSection: BroadcastThemeSection
+  autoPreviewToLive: boolean
+  previewVerse: VerseRenderData | null
+  previewTimer: PresenterTimerRenderData | null
   isLive: boolean
   liveVerse: VerseRenderData | null
   presenterTimer: PresenterTimerRenderData | null
+  lowerThird: LowerThirdRenderData | null
 
   // Designer state
   isDesignerOpen: boolean
@@ -40,9 +54,17 @@ interface BroadcastState {
   setActiveTheme: (id: string, section?: BroadcastThemeSection) => void
   setSelectedThemeSection: (section: BroadcastThemeSection) => void
   setAltActiveTheme: (id: string) => void
+  setAutoPreviewToLive: (autoPreviewToLive: boolean) => void
+  setPreviewOutput: (
+    verse: VerseRenderData | null,
+    timer: PresenterTimerRenderData | null
+  ) => void
   setLive: (live: boolean) => void
+  takePreviewLive: (source?: "manual" | "preview") => void
   setLiveVerse: (verse: VerseRenderData | null) => void
   setPresenterTimer: (timer: PresenterTimerRenderData | null) => void
+  setLowerThird: (lowerThird: LowerThirdRenderData | null) => void
+  clearLowerThird: () => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
 
@@ -64,12 +86,18 @@ const DEFAULT_SECTION_THEME_IDS: Record<BroadcastThemeSection, string> = {
   presentation: DEFAULT_BROADCAST_THEME_ID,
 }
 
-function sharedThemeSection(section: BroadcastThemeSection): BroadcastThemeSection {
-  return section === "presentation" ? "bible" : section
+function isSelectableTheme(theme: BroadcastTheme): boolean {
+  return theme.outputMode !== "lower-third" && theme.outputMode !== "ticker"
+}
+
+function sharedThemeSection(
+  section: BroadcastThemeSection
+): BroadcastThemeSection {
+  return section
 }
 
 function sanitizeSectionThemeIds(
-  sectionThemeIds: Partial<Record<string, string>> | undefined,
+  sectionThemeIds: Partial<Record<string, string>> | undefined
 ): Partial<Record<BroadcastThemeSection, string>> {
   if (!sectionThemeIds) return {}
   return {
@@ -79,17 +107,25 @@ function sanitizeSectionThemeIds(
   }
 }
 
-function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): Record<string, unknown> {
+function setNestedValue(
+  obj: Record<string, unknown>,
+  path: string,
+  value: unknown
+): Record<string, unknown> {
   const keys = path.split(".")
   const isIndex = (key: string) => /^\d+$/.test(key)
-  const result: Record<string, unknown> = Array.isArray(obj) ? [...obj] as unknown as Record<string, unknown> : { ...obj }
+  const result: Record<string, unknown> = Array.isArray(obj)
+    ? ([...obj] as unknown as Record<string, unknown>)
+    : { ...obj }
 
   let current: Record<string, unknown> | unknown[] = result
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i]
     const nextKey = keys[i + 1]
     const currentIndex = isIndex(key) ? Number(key) : key
-    const existing = (current as Record<string, unknown> | unknown[])[currentIndex as keyof typeof current]
+    const existing = (current as Record<string, unknown> | unknown[])[
+      currentIndex as keyof typeof current
+    ]
     const nextContainer = Array.isArray(existing)
       ? [...existing]
       : existing && typeof existing === "object"
@@ -98,13 +134,17 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: unkno
           ? []
           : {}
 
-    ;(current as Record<string, unknown> | unknown[])[currentIndex as keyof typeof current] = nextContainer as never
+    ;(current as Record<string, unknown> | unknown[])[
+      currentIndex as keyof typeof current
+    ] = nextContainer as never
     current = nextContainer as Record<string, unknown> | unknown[]
   }
 
   const lastKey = keys[keys.length - 1]
   const lastIndex = isIndex(lastKey) ? Number(lastKey) : lastKey
-  ;(current as Record<string, unknown> | unknown[])[lastIndex as keyof typeof current] = value as never
+  ;(current as Record<string, unknown> | unknown[])[
+    lastIndex as keyof typeof current
+  ] = value as never
 
   return result
 }
@@ -117,7 +157,10 @@ const HISTORY_LIMIT = 100
 let lastEditPath: string | null = null
 let lastEditAt = 0
 
-function isThemeDirty(draft: BroadcastTheme | null, baseline: BroadcastTheme | null): boolean {
+function isThemeDirty(
+  draft: BroadcastTheme | null,
+  baseline: BroadcastTheme | null
+): boolean {
   if (!draft || !baseline) return false
   return JSON.stringify(draft) !== JSON.stringify(baseline)
 }
@@ -131,6 +174,7 @@ function emitDraftToBroadcast(state: BroadcastState): void {
       theme: state.draftTheme,
       verse: state.liveVerse,
       timer: state.presenterTimer,
+      lowerThird: state.lowerThird,
     }).catch(() => {})
   }
   if (id === state.altActiveThemeId) {
@@ -138,18 +182,24 @@ function emitDraftToBroadcast(state: BroadcastState): void {
       theme: state.draftTheme,
       verse: state.liveVerse,
       timer: state.presenterTimer,
+      lowerThird: state.lowerThird,
     }).catch(() => {})
   }
 }
 
-function inferThemeSection(verse: VerseRenderData | null): BroadcastThemeSection {
+function inferThemeSection(
+  verse: VerseRenderData | null
+): BroadcastThemeSection {
   if (verse?.themeSection) return verse.themeSection
   if (verse?.presentationImage) return "presentation"
   if (verse?.referenceMode === "lyric-footer") return "songs"
   return "bible"
 }
 
-function getActiveThemeIdForState(state: BroadcastState, section: BroadcastThemeSection): string {
+function getActiveThemeIdForState(
+  state: BroadcastState,
+  section: BroadcastThemeSection
+): string {
   const sharedSection = sharedThemeSection(section)
   if (sharedSection === "bible") return state.activeThemeId
   return state.sectionThemeIds[sharedSection] ?? state.activeThemeId
@@ -162,9 +212,14 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   altActiveThemeId: DEFAULT_BROADCAST_THEME_ID,
   sectionThemeIds: { ...DEFAULT_SECTION_THEME_IDS },
   selectedThemeSection: "bible",
+  autoPreviewToLive: true,
+  previewVerse: null,
+  previewTimer: null,
+  liveSource: null,
   isLive: false,
   liveVerse: null,
   presenterTimer: null,
+  lowerThird: null,
   isDesignerOpen: false,
   editingThemeId: null,
   draftTheme: null,
@@ -176,7 +231,11 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
 
   loadThemes: () => {
     set((s) => ({
-      themes: BUILTIN_THEMES.filter((theme) => !s.deletedBuiltinThemeIds.includes(theme.id)),
+      themes: BUILTIN_THEMES.filter(
+        (theme) =>
+          !s.deletedBuiltinThemeIds.includes(theme.id) &&
+          isSelectableTheme(theme)
+      ),
     }))
   },
   saveTheme: (theme) =>
@@ -205,8 +264,10 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
           deletedTheme?.builtin && !s.deletedBuiltinThemeIds.includes(id)
             ? [...s.deletedBuiltinThemeIds, id]
             : s.deletedBuiltinThemeIds,
-        activeThemeId: s.activeThemeId === id ? fallbackThemeId : s.activeThemeId,
-        altActiveThemeId: s.altActiveThemeId === id ? fallbackThemeId : s.altActiveThemeId,
+        activeThemeId:
+          s.activeThemeId === id ? fallbackThemeId : s.activeThemeId,
+        altActiveThemeId:
+          s.altActiveThemeId === id ? fallbackThemeId : s.altActiveThemeId,
         sectionThemeIds,
         editingThemeId: s.editingThemeId === id ? null : s.editingThemeId,
         draftTheme: s.editingThemeId === id ? null : s.draftTheme,
@@ -262,15 +323,20 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       }
       set((s) => ({
         themes: [...s.themes, renamedTheme],
-        activeThemeId: s.selectedThemeSection === "bible" ? renamedTheme.id : s.activeThemeId,
+        activeThemeId:
+          s.selectedThemeSection === "bible"
+            ? renamedTheme.id
+            : s.activeThemeId,
         sectionThemeIds: Object.fromEntries(
           Object.entries(s.sectionThemeIds).map(([section, themeId]) => [
             section,
-            section === s.selectedThemeSection ||
-            themeId === id ? renamedTheme.id : themeId,
+            section === s.selectedThemeSection || themeId === id
+              ? renamedTheme.id
+              : themeId,
           ])
         ) as Record<BroadcastThemeSection, string>,
-        altActiveThemeId: s.altActiveThemeId === id ? renamedTheme.id : s.altActiveThemeId,
+        altActiveThemeId:
+          s.altActiveThemeId === id ? renamedTheme.id : s.altActiveThemeId,
         editingThemeId: renamedTheme.id,
         draftTheme: renamedTheme,
       }))
@@ -282,7 +348,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         t.id === id ? { ...t, name, updatedAt: Date.now() } : t
       ),
       draftTheme:
-        s.draftTheme?.id === id ? { ...s.draftTheme, name, updatedAt: Date.now() } : s.draftTheme,
+        s.draftTheme?.id === id
+          ? { ...s.draftTheme, name, updatedAt: Date.now() }
+          : s.draftTheme,
     }))
   },
   togglePinTheme: (id) =>
@@ -298,20 +366,28 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         themes: s.themes.map((theme) =>
           orderById.has(theme.id)
             ? { ...theme, sortOrder: orderById.get(theme.id) }
-            : theme,
+            : theme
         ),
-        draftTheme: s.draftTheme && orderById.has(s.draftTheme.id)
-          ? { ...s.draftTheme, sortOrder: orderById.get(s.draftTheme.id) }
-          : s.draftTheme,
-        baselineTheme: s.baselineTheme && orderById.has(s.baselineTheme.id)
-          ? { ...s.baselineTheme, sortOrder: orderById.get(s.baselineTheme.id) }
-          : s.baselineTheme,
+        draftTheme:
+          s.draftTheme && orderById.has(s.draftTheme.id)
+            ? { ...s.draftTheme, sortOrder: orderById.get(s.draftTheme.id) }
+            : s.draftTheme,
+        baselineTheme:
+          s.baselineTheme && orderById.has(s.baselineTheme.id)
+            ? {
+                ...s.baselineTheme,
+                sortOrder: orderById.get(s.baselineTheme.id),
+              }
+            : s.baselineTheme,
       }
     }),
   syncBroadcastOutputFor: (outputId: string) => {
     const s = get()
     const section = inferThemeSection(s.liveVerse)
-    const themeId = outputId === "alt" ? s.altActiveThemeId : getActiveThemeIdForState(s, section)
+    const themeId =
+      outputId === "alt"
+        ? s.altActiveThemeId
+        : getActiveThemeIdForState(s, section)
     const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
     const theme = s.themes.find((t) => t.id === themeId) ?? s.themes[0]
     if (!theme) return
@@ -320,6 +396,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       theme,
       verse: s.liveVerse,
       timer: s.presenterTimer,
+      lowerThird: s.lowerThird,
     }).catch(() => {})
   },
   syncBroadcastOutput: () => {
@@ -327,7 +404,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutputFor("alt")
   },
   setActiveTheme: (themeId, section) => {
-    const targetSection = sharedThemeSection(section ?? get().selectedThemeSection)
+    const targetSection = sharedThemeSection(
+      section ?? get().selectedThemeSection
+    )
     set((s) => ({
       activeThemeId: targetSection === "bible" ? themeId : s.activeThemeId,
       sectionThemeIds: {
@@ -338,18 +417,43 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutputFor("main")
   },
   setSelectedThemeSection: (selectedThemeSection) =>
-    set({ selectedThemeSection: sharedThemeSection(selectedThemeSection) }),
+    set({ selectedThemeSection }),
   setAltActiveTheme: (altActiveThemeId) => {
     set({ altActiveThemeId })
     get().syncBroadcastOutputFor("alt")
   },
-  setLive: (isLive) => set({ isLive }),
+  setAutoPreviewToLive: (autoPreviewToLive) =>
+    set({ autoPreviewToLive }),
+  setPreviewOutput: (previewVerse, previewTimer) =>
+    set({ previewVerse, previewTimer }),
+  setLive: (isLive) =>
+    set({
+      isLive,
+      liveSource: isLive ? "manual" : null,
+    }),
+  takePreviewLive: (source = "manual") => {
+    set((s) => ({
+      isLive: true,
+      liveVerse: s.previewVerse,
+      presenterTimer: s.previewTimer,
+      liveSource: source,
+    }))
+    get().syncBroadcastOutput()
+  },
   setLiveVerse: (liveVerse) => {
     set({ liveVerse })
     get().syncBroadcastOutput()
   },
   setPresenterTimer: (presenterTimer) => {
     set({ presenterTimer })
+    get().syncBroadcastOutput()
+  },
+  setLowerThird: (lowerThird) => {
+    set({ lowerThird })
+    get().syncBroadcastOutput()
+  },
+  clearLowerThird: () => {
+    set({ lowerThird: null })
     get().syncBroadcastOutput()
   },
 
@@ -388,7 +492,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   },
   updateDraft: (updates) => {
     set((s) => ({
-      draftTheme: s.draftTheme ? { ...s.draftTheme, ...updates, updatedAt: Date.now() } : null,
+      draftTheme: s.draftTheme
+        ? { ...s.draftTheme, ...updates, updatedAt: Date.now() }
+        : null,
     }))
     emitDraftToBroadcast(get())
   },
@@ -397,7 +503,8 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       if (!s.draftTheme) return {}
       const now = Date.now()
       // Collapse a rapid run of edits to the same control into one history step.
-      const sameGroup = lastEditPath === path && now - lastEditAt < HISTORY_COALESCE_MS
+      const sameGroup =
+        lastEditPath === path && now - lastEditAt < HISTORY_COALESCE_MS
       lastEditPath = path
       lastEditAt = now
 
@@ -435,7 +542,8 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       }
       set((s) => ({
         themes: [...s.themes, customTheme],
-        activeThemeId: s.selectedThemeSection === "bible" ? customTheme.id : s.activeThemeId,
+        activeThemeId:
+          s.selectedThemeSection === "bible" ? customTheme.id : s.activeThemeId,
         sectionThemeIds: {
           ...s.sectionThemeIds,
           [s.selectedThemeSection]: customTheme.id,
@@ -496,7 +604,10 @@ let hydrationPromise: Promise<void> | null = null
 
 async function getThemeStore(): Promise<Store> {
   if (!tauriStore) {
-    tauriStore = await load("broadcast-themes.json", { autoSave: false, defaults: {} })
+    tauriStore = await load("broadcast-themes.json", {
+      autoSave: false,
+      defaults: {},
+    })
   }
   return tauriStore
 }
@@ -506,38 +617,63 @@ export function hydrateBroadcastThemes(): Promise<void> {
   hydrationPromise = (async () => {
     try {
       const store = await getThemeStore()
-      const customThemes = (await store.get("customThemes")) as BroadcastTheme[] | undefined
-      const deletedBuiltinThemeIds = (await store.get("deletedBuiltinThemeIds")) as string[] | undefined
+      const customThemes = (await store.get("customThemes")) as
+        | BroadcastTheme[]
+        | undefined
+      const deletedBuiltinThemeIds = (await store.get(
+        "deletedBuiltinThemeIds"
+      )) as string[] | undefined
       const activeId = (await store.get("activeThemeId")) as string | undefined
-      const altActiveId = (await store.get("altActiveThemeId")) as string | undefined
-      const themeSortOrder = (await store.get("themeSortOrder")) as Record<string, number> | undefined
+      const altActiveId = (await store.get("altActiveThemeId")) as
+        | string
+        | undefined
+      const themeSortOrder = (await store.get("themeSortOrder")) as
+        | Record<string, number>
+        | undefined
       const sectionThemeIds = sanitizeSectionThemeIds(
-        (await store.get("sectionThemeIds")) as Partial<Record<string, string>> | undefined,
+        (await store.get("sectionThemeIds")) as
+          | Partial<Record<string, string>>
+          | undefined
       )
 
       const patch: Partial<BroadcastState> = {}
-      const deletedBuiltinIds = Array.isArray(deletedBuiltinThemeIds) ? deletedBuiltinThemeIds : []
-      const builtinThemes = BUILTIN_THEMES.filter((theme) => !deletedBuiltinIds.includes(theme.id))
-      const loadedThemes = customThemes && Array.isArray(customThemes) && customThemes.length > 0
-        ? [...builtinThemes, ...customThemes]
-        : builtinThemes
-      const nextThemes = themeSortOrder && typeof themeSortOrder === "object"
-        ? loadedThemes.map((theme) => ({
-            ...theme,
-            sortOrder: typeof themeSortOrder[theme.id] === "number" ? themeSortOrder[theme.id] : theme.sortOrder,
-          }))
-        : loadedThemes
+      const deletedBuiltinIds = Array.isArray(deletedBuiltinThemeIds)
+        ? deletedBuiltinThemeIds
+        : []
+      const builtinThemes = BUILTIN_THEMES.filter(
+        (theme) => !deletedBuiltinIds.includes(theme.id)
+      )
+      const loadedThemes =
+        customThemes && Array.isArray(customThemes) && customThemes.length > 0
+          ? [...builtinThemes, ...customThemes]
+          : builtinThemes
+      const selectableThemes = loadedThemes.filter(isSelectableTheme)
+      const nextThemes =
+        themeSortOrder && typeof themeSortOrder === "object"
+          ? selectableThemes.map((theme) => ({
+              ...theme,
+              sortOrder:
+                typeof themeSortOrder[theme.id] === "number"
+                  ? themeSortOrder[theme.id]
+                  : theme.sortOrder,
+            }))
+          : selectableThemes
       const availableThemeIds = new Set(nextThemes.map((theme) => theme.id))
       const fallbackThemeId = nextThemes[0]?.id ?? DEFAULT_BROADCAST_THEME_ID
       const resolveThemeId = (themeId: string | undefined): string =>
         themeId && availableThemeIds.has(themeId) ? themeId : fallbackThemeId
 
-      if (customThemes && Array.isArray(customThemes) && customThemes.length > 0) {
+      if (
+        customThemes &&
+        Array.isArray(customThemes) &&
+        customThemes.length > 0
+      ) {
         patch.themes = nextThemes
       } else if (deletedBuiltinIds.length > 0) {
         patch.themes = nextThemes
       }
-      if (deletedBuiltinIds.length > 0) patch.deletedBuiltinThemeIds = deletedBuiltinIds
+      if (deletedBuiltinIds.length > 0)
+        patch.deletedBuiltinThemeIds = deletedBuiltinIds
       if (activeId) patch.activeThemeId = resolveThemeId(activeId)
       if (altActiveId) patch.altActiveThemeId = resolveThemeId(altActiveId)
       patch.sectionThemeIds = {
@@ -573,7 +709,9 @@ export function hydrateBroadcastThemes(): Promise<void> {
         }, SAVE_DEBOUNCE_MS)
       })
     } catch {
-      console.warn("[broadcast] Failed to load persisted themes, using defaults")
+      console.warn(
+        "[broadcast] Failed to load persisted themes, using defaults"
+      )
     }
   })()
   return hydrationPromise
@@ -586,11 +724,13 @@ const SAVE_DEBOUNCE_MS = 500
 async function persistBroadcastThemes(state: BroadcastState): Promise<void> {
   try {
     const store = await getThemeStore()
-    const customThemes = state.themes.filter((t) => !t.builtin)
+    const customThemes = state.themes.filter(
+      (theme) => !theme.builtin && isSelectableTheme(theme)
+    )
     const themeSortOrder = Object.fromEntries(
       state.themes
         .filter((theme) => theme.sortOrder !== undefined)
-        .map((theme) => [theme.id, theme.sortOrder]),
+        .map((theme) => [theme.id, theme.sortOrder])
     )
     await store.set("customThemes", customThemes)
     await store.set("themeSortOrder", themeSortOrder)

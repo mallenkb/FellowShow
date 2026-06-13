@@ -9,6 +9,10 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx"
 import { hydrateSettings } from "@/stores/settings-store"
 import { hydrateBibleStore, initBiblePersistence } from "@/stores/bible-store"
 import { hydrateBroadcastThemes } from "@/stores/broadcast-store"
+import {
+  initTranscriptPersistence,
+  resetTranscriptSession,
+} from "@/stores/transcript-store"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -24,12 +28,21 @@ createRoot(document.getElementById("root")!).render(
 // left running from the previous webview session still has
 // `stt_active = true`. That makes the next `start_transcription` call
 // fail silently with "Transcription is already running". Reset the
-// backend to a clean state on boot, then hydrate persisted settings and
-// bible store without blocking the first paint.
+// backend and transcript UI to a clean state on boot, then hydrate
+// persisted settings and bible store without blocking the first paint.
 void invoke("stop_transcription")
   .catch(() => {})
-  .then(() => Promise.all([hydrateSettings(), hydrateBibleStore(), hydrateBroadcastThemes()]))
-  .then(() => initBiblePersistence())
+  .then(() =>
+    Promise.all([
+      hydrateSettings(),
+      hydrateBibleStore(),
+      hydrateBroadcastThemes(),
+      resetTranscriptSession(),
+    ])
+  )
+  .then(() =>
+    Promise.all([initBiblePersistence(), initTranscriptPersistence()])
+  )
   .catch((error) => {
     console.error("Failed to hydrate app state", error)
   })

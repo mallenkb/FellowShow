@@ -64,4 +64,24 @@ describe("song search", () => {
 
     expect(results.map((song) => song.id)).toEqual(["amazing-grace"])
   })
+
+  it("limits unfiltered browse results", () => {
+    const index = createSongSearchIndex(songs)
+
+    const results = searchSongs(index, "", { limit: 2 })
+
+    expect(results).toHaveLength(2)
+    expect(results.map((song) => song.id)).toEqual([
+      "amazing-grace",
+      "higher-ground",
+    ])
+  })
+
+  it("limits search results after matching", () => {
+    const index = createSongSearchIndex(songs)
+
+    const results = searchSongs(index, "lord", { limit: 1 })
+
+    expect(results).toHaveLength(1)
+  })
 })

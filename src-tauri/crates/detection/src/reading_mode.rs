@@ -296,7 +296,7 @@ impl ReadingMode {
         }
 
         // "next chapter"
-        if trimmed == "next chapter" || trimmed == "next chapter." {
+        if is_next_chapter_command(trimmed) {
             let new_chapter = self.chapter + 1;
             log::info!("[READING] 'Next chapter' command detected → chapter {new_chapter}");
             return Some(ChapterChange {
@@ -476,11 +476,7 @@ impl ReadingMode {
         }
 
         // Check for "next" / "next verse" command
-        if trimmed == "next"
-            || trimmed == "next."
-            || trimmed == "next verse"
-            || trimmed == "next verse."
-        {
+        if is_next_verse_command(trimmed) {
             let next_idx = self.current_index + 1;
             if next_idx < self.verses.len() {
                 log::info!("[READING] 'Next' command detected");
@@ -551,6 +547,46 @@ impl Default for ReadingMode {
     fn default() -> Self {
         Self::new()
     }
+}
+
+fn is_next_chapter_command(text: &str) -> bool {
+    matches!(
+        text,
+        "next chapter"
+            | "next chapter."
+            | "go on to next chapter"
+            | "go on to next chapter."
+            | "go on to the next chapter"
+            | "go on to the next chapter."
+            | "continue to next chapter"
+            | "continue to next chapter."
+            | "continue to the next chapter"
+            | "continue to the next chapter."
+            | "move on to next chapter"
+            | "move on to next chapter."
+            | "move on to the next chapter"
+            | "move on to the next chapter."
+    )
+}
+
+fn is_next_verse_command(text: &str) -> bool {
+    matches!(
+        text,
+        "next"
+            | "next."
+            | "next verse"
+            | "next verse."
+            | "go on"
+            | "go on."
+            | "continue"
+            | "continue."
+            | "move on"
+            | "move on."
+            | "go to next verse"
+            | "go to next verse."
+            | "go to the next verse"
+            | "go to the next verse."
+    )
 }
 
 /// Extract a verse number from text containing "verse N" anywhere.
@@ -820,6 +856,21 @@ mod tests {
     }
 
     #[test]
+    fn test_go_on_commands_advance_one_verse() {
+        let mut rm = ReadingMode::new();
+
+        rm.start(44, "Acts", 15, 28, sample_verses());
+
+        let r = rm.check_transcript("go on");
+        assert!(r.is_some());
+        assert_eq!(r.unwrap().verse, 29);
+
+        let r = rm.check_transcript("continue");
+        assert!(r.is_some());
+        assert_eq!(r.unwrap().verse, 30);
+    }
+
+    #[test]
     fn test_deactivate() {
         let mut rm = ReadingMode::new();
 
@@ -963,6 +1014,16 @@ mod tests {
         rm.start(1, "Genesis", 5, 1, vec![(1, "Text.".to_string())]);
 
         let result = rm.check_chapter_command("next chapter");
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().new_chapter, 6);
+    }
+
+    #[test]
+    fn test_go_on_to_next_chapter_command() {
+        let mut rm = ReadingMode::new();
+        rm.start(1, "Genesis", 5, 1, vec![(1, "Text.".to_string())]);
+
+        let result = rm.check_chapter_command("go on to the next chapter");
         assert!(result.is_some());
         assert_eq!(result.unwrap().new_chapter, 6);
     }

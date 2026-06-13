@@ -1,114 +1,70 @@
 import { useEffect, useMemo } from "react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
-import { PresentationEmptyState } from "@/components/ui/presentation-empty-state"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
-import {
-  useBroadcastStore,
-  useBibleStore,
-  usePresenterTimerStore,
-  usePresentationStore,
-} from "@/stores"
-import { deriveLiveVerse } from "@/hooks/use-broadcast"
-import type { BroadcastThemeSection, VerseRenderData } from "@/types"
+import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
 
-type LiveOutputMode = "book" | "context" | "songs" | "presentation"
-
-function sectionFromMode(mode: LiveOutputMode): BroadcastThemeSection {
-  if (mode === "presentation") return "presentation"
-  if (mode === "songs") return "songs"
-  return "bible"
-}
+type LiveOutputMode = "book" | "context" | "songs" | "presentation" | "timer"
 
 export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
+  void mode
   const isLive = useBroadcastStore((s) => s.isLive)
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
+  const lowerThird = useBroadcastStore((s) => s.lowerThird)
+  const liveVerse = useBroadcastStore((s) => s.liveVerse)
+  const liveTimer = useBroadcastStore((s) => s.presenterTimer)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
   const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
   const timerFontFamily = usePresenterTimerStore((s) => s.fontFamily)
-
-  // Read the same data source as the preview panel
-  const selectedVerse = useBibleStore((s) => s.selectedVerse)
-  const translations = useBibleStore((s) => s.translations)
-  const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
-  const slides = usePresentationStore((s) => s.slides)
-  const selectedSlideId = usePresentationStore((s) => s.selectedSlideId)
-
-  const translation =
-    translations.find((t) => t.id === activeTranslationId)?.abbreviation ??
-    "KJV"
-  const selectedSection = sectionFromMode(mode)
-  const selectedSlide =
-    mode === "presentation"
-      ? (slides.find((slide) => slide.id === selectedSlideId) ?? null)
-      : null
-  const isEmptyPresentation = mode === "presentation" && !selectedSlide
-  const themeSection = selectedSlide ? "presentation" : selectedSection
-  const activeTheme = selectedSlide
-    ? themes[0]
-    : (themes.find((t) => t.id === sectionThemeIds[themeSection]) ?? themes[0])
-
-  const displayData: VerseRenderData | null = useMemo(
-    () =>
-      isEmptyPresentation
-        ? null
-        : selectedSlide
-          ? {
-              reference: selectedSlide.name,
-              themeSection: "presentation",
-              segments: [],
-              presentationImage: {
-                url: selectedSlide.url,
-                name: selectedSlide.name,
-                mediaType: selectedSlide.mediaType,
-                fit: selectedSlide.fit,
-                scale: selectedSlide.scale,
-                offsetX: selectedSlide.offsetX,
-                offsetY: selectedSlide.offsetY,
-              },
-            }
-          : (() => {
-              const verse = deriveLiveVerse({
-                isLive: true,
-                selectedVerse,
-                translation,
-              })
-              return verse ? { ...verse, themeSection: selectedSection } : null
-            })(),
-    [
-      isEmptyPresentation,
-      selectedSection,
-      selectedSlide,
-      selectedVerse,
-      translation,
-    ]
+  const timerBackgroundUrl = usePresenterTimerStore((s) => s.backgroundUrl)
+  const timerBackgroundOptions = usePresenterTimerStore(
+    (s) => s.backgroundOptions
   )
-  const broadcastData = isLive ? displayData : null
-  const timer = useMemo(() => {
+
+  const liveThemeSection = liveVerse?.themeSection ?? "bible"
+  const activeTheme = liveVerse?.presentationImage
+    ? themes[0]
+    : (themes.find((t) => t.id === sectionThemeIds[liveThemeSection]) ??
+      themes[0])
+  const takePreviewLive = (checked: boolean) => {
+    const store = useBroadcastStore.getState()
+    if (checked) {
+      store.takePreviewLive("manual")
+      return
+    }
+    store.setLive(checked)
+    store.syncBroadcastOutputFor("main")
+  }
+  const currentTimer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null
+    const timerBackgroundMediaType =
+      timerBackgroundOptions.find((option) => option.url === timerBackgroundUrl)
+        ?.mediaType ?? "image"
     return {
       remainingSeconds: timerRemaining,
       totalSeconds: timerTotal,
       isRunning: timerIsRunning,
       isFinished: timerRemaining === 0,
       fontFamily: timerFontFamily,
+      backgroundUrl: timerBackgroundUrl,
+      backgroundMediaType: timerBackgroundMediaType,
     }
-  }, [timerFontFamily, timerIsRunning, timerRemaining, timerTotal])
+  }, [
+    timerBackgroundOptions,
+    timerBackgroundUrl,
+    timerFontFamily,
+    timerIsRunning,
+    timerRemaining,
+    timerTotal,
+  ])
 
   useEffect(() => {
-    const store = useBroadcastStore.getState()
-    store.setLiveVerse(broadcastData)
-    if (isLive) {
-      store.syncBroadcastOutputFor("main")
-    }
-  }, [activeTheme.id, activeTheme.updatedAt, broadcastData, isLive])
-
-  useEffect(() => {
-    useBroadcastStore.getState().setPresenterTimer(timer)
-  }, [timer])
+    if (!isLive || !liveTimer) return
+    useBroadcastStore.getState().setPresenterTimer(currentTimer)
+  }, [currentTimer, isLive, liveTimer])
 
   return (
     <div
@@ -130,9 +86,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           </span>
           <Switch
             checked={isLive}
-            onCheckedChange={(checked) =>
-              useBroadcastStore.getState().setLive(checked)
-            }
+            onCheckedChange={takePreviewLive}
             className="data-[state=checked]:bg-red-500"
           />
         </label>
@@ -144,11 +98,12 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           !isLive && "opacity-40"
         )}
       >
-        {isEmptyPresentation ? (
-          <PresentationEmptyState disabled={!isLive} />
-        ) : (
-          <CanvasVerse theme={activeTheme} verse={displayData} timer={timer} />
-        )}
+        <CanvasVerse
+          theme={activeTheme}
+          verse={liveVerse}
+          timer={liveTimer}
+          lowerThird={lowerThird}
+        />
       </div>
     </div>
   )

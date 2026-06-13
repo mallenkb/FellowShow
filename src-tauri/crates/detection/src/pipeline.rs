@@ -8,9 +8,9 @@ use crate::semantic::detector::SemanticDetector;
 use crate::types::{Detection, DetectionSource, VerseRef};
 
 /// Confidence assigned to the best FTS5 BM25 match (rank 0).
-const FTS5_RANK0_CONFIDENCE: f64 = 0.75;
+const FTS5_RANK0_CONFIDENCE: f64 = 0.86;
 
-/// Confidence decrease per FTS5 rank position (rank 1 = 0.71, rank 2 = 0.67, etc.).
+/// Confidence decrease per FTS5 rank position (rank 1 = 0.82, rank 2 = 0.78, etc.).
 const FTS5_CONFIDENCE_DECAY: f64 = 0.04;
 
 /// FTS5 results below this confidence are not included.
@@ -224,6 +224,29 @@ mod tests {
         assert!(!results.is_empty());
         // Direct references have confidence >= 0.90 which is above the
         // default auto_queue_threshold (0.80), so should be auto-queued.
+        assert!(results[0].auto_queued);
+    }
+
+    #[test]
+    fn test_pipeline_auto_queue_for_rank0_fts_quote_match() {
+        let mut pipeline = DetectionPipeline::new();
+        let fts_results = vec![Bm25Result {
+            rank: -12.0,
+            book_number: 43,
+            book_name: "John".to_string(),
+            chapter: 1,
+            verse: 1,
+        }];
+
+        let results = pipeline.process_hybrid_with_fts(
+            "In the beginning was the Word, and the Word was with God, and the Word was God",
+            &fts_results,
+        );
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].detection.verse_ref.book_name, "John");
+        assert_eq!(results[0].detection.verse_ref.chapter, 1);
+        assert_eq!(results[0].detection.verse_ref.verse_start, 1);
         assert!(results[0].auto_queued);
     }
 }

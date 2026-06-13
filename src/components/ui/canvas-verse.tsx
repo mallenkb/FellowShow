@@ -1,13 +1,23 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
-import type { BroadcastTheme, PresenterTimerRenderData, VerseRenderData } from "@/types"
+import {
+  shouldRenderLowerThirdLayer,
+  shouldRenderTickerLayer,
+} from "@/lib/broadcast-output-mode"
+import type {
+  BroadcastTheme,
+  LowerThirdRenderData,
+  PresenterTimerRenderData,
+  VerseRenderData,
+} from "@/types"
 import { cn } from "@/lib/utils"
 
 interface CanvasVerseProps {
   theme: BroadcastTheme
   verse: VerseRenderData | null
   timer?: PresenterTimerRenderData | null
+  lowerThird?: LowerThirdRenderData | null
   className?: string
   fillContainer?: boolean
 }
@@ -16,6 +26,7 @@ export const CanvasVerse = memo(function CanvasVerse({
   theme,
   verse,
   timer,
+  lowerThird,
   className,
   fillContainer = false,
 }: CanvasVerseProps) {
@@ -30,6 +41,7 @@ export const CanvasVerse = memo(function CanvasVerse({
   const [containerHeight, setContainerHeight] = useState(0)
   const [imageVersion, setImageVersion] = useState(0)
   const [videoVersion, setVideoVersion] = useState(0)
+  const [tickerVersion, setTickerVersion] = useState(0)
 
   // Measure container size with ResizeObserver
   useEffect(() => {
@@ -49,12 +61,28 @@ export const CanvasVerse = memo(function CanvasVerse({
 
   useEffect(() => {
     const imageUrls = [
-      theme.background.type === "image" && theme.background.image?.mediaType !== "video" ? theme.background.image?.url : null,
-      verse?.presentationImage?.mediaType !== "video" ? verse?.presentationImage?.url ?? null : null,
+      theme.background.type === "image" &&
+      theme.background.image?.mediaType !== "video"
+        ? theme.background.image?.url
+        : null,
+      verse?.presentationImage?.mediaType !== "video"
+        ? (verse?.presentationImage?.url ?? null)
+        : null,
+      timer?.backgroundMediaType !== "video"
+        ? (timer?.backgroundUrl ?? null)
+        : null,
     ].filter((url): url is string => Boolean(url))
     const videoUrls = [
-      theme.background.type === "image" && theme.background.image?.mediaType === "video" ? theme.background.image.url : null,
-      verse?.presentationImage?.mediaType === "video" ? verse.presentationImage.url : null,
+      theme.background.type === "image" &&
+      theme.background.image?.mediaType === "video"
+        ? theme.background.image.url
+        : null,
+      verse?.presentationImage?.mediaType === "video"
+        ? verse.presentationImage.url
+        : null,
+      timer?.backgroundMediaType === "video"
+        ? (timer.backgroundUrl ?? null)
+        : null,
     ].filter((url): url is string => Boolean(url))
     for (const url of videoUrls) {
       if (videoCacheRef.current.has(url)) continue
@@ -73,7 +101,9 @@ export const CanvasVerse = memo(function CanvasVerse({
       }
       video.src = url
     }
-    const uncachedUrls = imageUrls.filter((url) => !imageCacheRef.current.has(url))
+    const uncachedUrls = imageUrls.filter(
+      (url) => !imageCacheRef.current.has(url)
+    )
     if (uncachedUrls.length === 0) return
 
     let cancelled = false
@@ -93,12 +123,19 @@ export const CanvasVerse = memo(function CanvasVerse({
     return () => {
       cancelled = true
     }
-  }, [theme.background, verse?.presentationImage])
+  }, [
+    theme.background,
+    verse?.presentationImage,
+    timer?.backgroundMediaType,
+    timer?.backgroundUrl,
+  ])
 
   useEffect(() => {
     const hasVideo =
-      (theme.background.type === "image" && theme.background.image?.mediaType === "video") ||
-      verse?.presentationImage?.mediaType === "video"
+      (theme.background.type === "image" &&
+        theme.background.image?.mediaType === "video") ||
+      verse?.presentationImage?.mediaType === "video" ||
+      timer?.backgroundMediaType === "video"
     if (!hasVideo) return
 
     let frame = 0
@@ -108,7 +145,26 @@ export const CanvasVerse = memo(function CanvasVerse({
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [theme.background, verse?.presentationImage?.mediaType])
+  }, [
+    theme.background,
+    verse?.presentationImage?.mediaType,
+    timer?.backgroundMediaType,
+  ])
+
+  const hasTicker =
+    shouldRenderTickerLayer(theme) && !!verse?.tickerText && !verse.presentationImage
+
+  useEffect(() => {
+    if (!hasTicker) return
+
+    let frame = 0
+    const tick = () => {
+      setTickerVersion((version) => version + 1)
+      frame = window.requestAnimationFrame(tick)
+    }
+    frame = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frame)
+  }, [hasTicker, theme.id, verse?.tickerText])
 
   // Render to canvas at display size
   useEffect(() => {
@@ -131,11 +187,13 @@ export const CanvasVerse = memo(function CanvasVerse({
     canvas.style.width = `${displayW}px`
     canvas.style.height = `${displayH}px`
 
+    const includeLowerThird = shouldRenderLowerThirdLayer(theme)
     const contentKey = JSON.stringify({
       themeId: theme.id,
       themeUpdatedAt: theme.updatedAt,
       verseReference: verse?.reference ?? null,
-      verseText: verse?.segments.map((segment) => segment.text).join("\n") ?? null,
+      verseText:
+        verse?.segments.map((segment) => segment.text).join("\n") ?? null,
       presentationImage: verse?.presentationImage?.url ?? null,
       timer: timer
         ? {
@@ -143,6 +201,15 @@ export const CanvasVerse = memo(function CanvasVerse({
             isFinished: timer.isFinished,
           }
         : null,
+      lowerThird:
+        includeLowerThird && lowerThird
+          ? {
+              visible: lowerThird.visible,
+              title: lowerThird.title,
+              subtitle: lowerThird.subtitle,
+              label: lowerThird.label,
+            }
+          : null,
       width: displayW,
       height: displayH,
     })
@@ -172,10 +239,17 @@ export const CanvasVerse = memo(function CanvasVerse({
     }
 
     const scale = fillContainer
-      ? Math.max(displayW / theme.resolution.width, displayH / theme.resolution.height)
+      ? Math.max(
+          displayW / theme.resolution.width,
+          displayH / theme.resolution.height
+        )
       : displayW / theme.resolution.width
-    const offsetX = fillContainer ? (displayW - theme.resolution.width * scale) / 2 : 0
-    const offsetY = fillContainer ? (displayH - theme.resolution.height * scale) / 2 : 0
+    const offsetX = fillContainer
+      ? (displayW - theme.resolution.width * scale) / 2
+      : 0
+    const offsetY = fillContainer
+      ? (displayH - theme.resolution.height * scale) / 2
+      : 0
     const next = document.createElement("canvas")
     next.width = canvas.width
     next.height = canvas.height
@@ -187,8 +261,10 @@ export const CanvasVerse = memo(function CanvasVerse({
       offsetX,
       offsetY,
       timer,
+      lowerThird,
       imageCache: imageCacheRef.current,
       videoCache: videoCacheRef.current,
+      now: hasTicker ? performance.now() : undefined,
     })
 
     const previous = previousFrameRef.current
@@ -214,7 +290,19 @@ export const CanvasVerse = memo(function CanvasVerse({
       }
     }
     transitionFrameRef.current = window.requestAnimationFrame(tick)
-  }, [theme, verse, timer, containerWidth, containerHeight, fillContainer, imageVersion, videoVersion])
+  }, [
+    theme,
+    verse,
+    timer,
+    lowerThird,
+    containerWidth,
+    containerHeight,
+    fillContainer,
+    imageVersion,
+    videoVersion,
+    tickerVersion,
+    hasTicker,
+  ])
 
   useEffect(() => {
     return () => {
@@ -225,8 +313,14 @@ export const CanvasVerse = memo(function CanvasVerse({
   }, [])
 
   return (
-    <div ref={containerRef} className={cn("w-full", fillContainer && "h-full", className)}>
-      <canvas ref={canvasRef} className={cn("w-full rounded-md", fillContainer && "h-full")} />
+    <div
+      ref={containerRef}
+      className={cn("w-full", fillContainer && "h-full", className)}
+    >
+      <canvas
+        ref={canvasRef}
+        className={cn("w-full rounded-md", fillContainer && "h-full")}
+      />
     </div>
   )
 })

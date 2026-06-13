@@ -312,6 +312,7 @@ pub async fn start_transcription(
     //   d) forwards samples to STT provider via crossbeam
     let gain_val = gain.unwrap_or(1.0).clamp(0.0, 2.0);
     let fan_active = stt_active.clone();
+    let fan_audio_active = audio_active.clone();
     let fan_app = app.clone();
 
     std::thread::Builder::new()
@@ -329,8 +330,11 @@ pub async fn start_transcription(
             let capture = match fellowshow_audio::capture::start(config, audio_tx) {
                 Ok(c) => c,
                 Err(e) => {
-                    log::error!("Failed to start audio capture: {e}");
+                    let message = format!("Failed to start audio capture: {e}");
+                    log::error!("{message}");
+                    let _ = fan_app.emit("stt_error", message);
                     fan_active.store(false, Ordering::SeqCst);
+                    fan_audio_active.store(false, Ordering::SeqCst);
                     return;
                 }
             };
@@ -383,6 +387,7 @@ pub async fn start_transcription(
     let (event_tx, mut event_rx) = tokio::sync::mpsc::channel::<TranscriptEvent>(64);
 
     let conn_active = stt_active.clone();
+    let conn_audio_active = audio_active.clone();
     let provider_log_name = stt_provider.name().to_string();
 
     // Task A: run the STT provider (Deepgram WS+REST or Whisper local).
@@ -392,6 +397,7 @@ pub async fn start_transcription(
             log::error!("[STT-{provider_log_name}] Provider failed: {e}");
         }
         conn_active.store(false, Ordering::SeqCst);
+        conn_audio_active.store(false, Ordering::SeqCst);
         log::info!("[STT-{provider_log_name}] Provider task exited");
     });
 
@@ -704,7 +710,7 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
                 verse: hit.verse,
                 confidence,
                 source: "semantic".to_string(),
-                auto_queued: false,
+                auto_queued: rank == 0 && confidence >= 0.80,
                 transcript_snippet: truncate_safe(transcript, 100).to_string(),
                 is_chapter_only: false,
             })

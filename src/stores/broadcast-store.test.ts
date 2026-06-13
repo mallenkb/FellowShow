@@ -19,7 +19,7 @@ describe("broadcast store sync", () => {
     useBroadcastStore.setState({
       activeThemeId: theme.id,
       liveVerse: {
-      reference: "John 3:16",
+        reference: "John 3:16",
         segments: [{ text: "For God so loved the world", verseNumber: 16 }],
       },
     })
@@ -34,33 +34,135 @@ describe("broadcast store sync", () => {
       expect.objectContaining({
         theme: expect.objectContaining({ id: theme.id }),
         verse: expect.objectContaining({ reference: "John 3:16" }),
-      }),
+      })
     )
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast-alt",
       "broadcast:verse-update",
       expect.objectContaining({
-        theme: expect.objectContaining({ id: useBroadcastStore.getState().altActiveThemeId }),
+        theme: expect.objectContaining({
+          id: useBroadcastStore.getState().altActiveThemeId,
+        }),
         verse: expect.objectContaining({ reference: "John 3:16" }),
-      }),
+      })
+    )
+  })
+
+  it("emits lower thirds with the current broadcast payload", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    const theme = useBroadcastStore.getState().themes[0]
+    useBroadcastStore.setState({
+      activeThemeId: theme.id,
+      liveVerse: null,
+      lowerThird: null,
+    })
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().setLowerThird({
+      visible: true,
+      title: "Pastor Maya Johnson",
+      subtitle: "Lead Pastor",
+      label: "Speaker",
+    })
+
+    expect(emitToMock).toHaveBeenCalledTimes(2)
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        lowerThird: expect.objectContaining({
+          visible: true,
+          title: "Pastor Maya Johnson",
+          subtitle: "Lead Pastor",
+          label: "Speaker",
+        }),
+      })
+    )
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast-alt",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        lowerThird: expect.objectContaining({
+          title: "Pastor Maya Johnson",
+        }),
+      })
+    )
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().clearLowerThird()
+
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        lowerThird: null,
+      })
+    )
+  })
+
+  it("copies preview output to live output and turns live on", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+
+    useBroadcastStore.setState({
+      previewVerse: {
+        reference: "Genesis 1:3",
+        segments: [{ text: "Let there be light", verseNumber: 3 }],
+      },
+      previewTimer: {
+        remainingSeconds: 9,
+        totalSeconds: 30,
+        isRunning: true,
+        isFinished: false,
+        fontFamily: "Geist Variable",
+        backgroundUrl: "/timer-background.jpg",
+        backgroundMediaType: "image",
+      },
+      isLive: false,
+      liveVerse: null,
+      presenterTimer: null,
+    })
+
+    useBroadcastStore.getState().takePreviewLive()
+
+    expect(useBroadcastStore.getState().isLive).toBe(true)
+    expect(useBroadcastStore.getState().liveVerse?.reference).toBe(
+      "Genesis 1:3"
+    )
+    expect(useBroadcastStore.getState().presenterTimer?.remainingSeconds).toBe(
+      9
+    )
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        verse: expect.objectContaining({ reference: "Genesis 1:3" }),
+        timer: expect.objectContaining({ remainingSeconds: 9 }),
+      })
     )
   })
 
   it("uses separate bible, songs, and presentation themes", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
-    const [bibleTheme, songTheme, presentationTheme] = useBroadcastStore.getState().themes
+    const [bibleTheme, songTheme, presentationTheme] =
+      useBroadcastStore.getState().themes
 
     useBroadcastStore.getState().setActiveTheme(bibleTheme.id, "bible")
     useBroadcastStore.getState().setActiveTheme(songTheme.id, "songs")
-    useBroadcastStore.getState().setActiveTheme(presentationTheme.id, "presentation")
+    useBroadcastStore
+      .getState()
+      .setActiveTheme(presentationTheme.id, "presentation")
 
     expect(Object.keys(useBroadcastStore.getState().sectionThemeIds)).toEqual([
       "bible",
       "songs",
       "presentation",
     ])
-    expect(useBroadcastStore.getState().sectionThemeIds.songs).toBe(songTheme.id)
-    expect(useBroadcastStore.getState().sectionThemeIds.presentation).toBe(presentationTheme.id)
+    expect(useBroadcastStore.getState().sectionThemeIds.songs).toBe(
+      songTheme.id
+    )
+    expect(useBroadcastStore.getState().sectionThemeIds.presentation).toBe(
+      presentationTheme.id
+    )
 
     emitToMock.mockClear()
     useBroadcastStore.getState().setLiveVerse({
@@ -71,11 +173,11 @@ describe("broadcast store sync", () => {
     })
 
     expect(emitToMock).toHaveBeenCalledWith(
-        "broadcast",
-        "broadcast:verse-update",
-        expect.objectContaining({
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
         theme: expect.objectContaining({ id: songTheme.id }),
-      }),
+      })
     )
 
     emitToMock.mockClear()
@@ -91,7 +193,7 @@ describe("broadcast store sync", () => {
       "broadcast:verse-update",
       expect.objectContaining({
         theme: expect.objectContaining({ id: presentationTheme.id }),
-      }),
+      })
     )
   })
 
@@ -102,7 +204,9 @@ describe("broadcast store sync", () => {
     useBroadcastStore.getState().renameTheme(builtin.id, "Sunday Service")
 
     const state = useBroadcastStore.getState()
-    const renamed = state.themes.find((theme) => theme.name === "Sunday Service")
+    const renamed = state.themes.find(
+      (theme) => theme.name === "Sunday Service"
+    )
 
     expect(renamed).toBeTruthy()
     expect(renamed?.builtin).toBe(false)
@@ -114,8 +218,12 @@ describe("broadcast store sync", () => {
   it("deletes built-in themes and moves every category using it to a remaining theme", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
     const state = useBroadcastStore.getState()
-    const themeToDelete = state.themes.find((theme) => theme.id === "builtin-bible-verse-preview")
-    const fallbackTheme = state.themes.find((theme) => theme.id !== themeToDelete?.id)
+    const themeToDelete = state.themes.find(
+      (theme) => theme.id === "builtin-bible-verse-preview"
+    )
+    const fallbackTheme = state.themes.find(
+      (theme) => theme.id !== themeToDelete?.id
+    )
 
     expect(themeToDelete).toBeTruthy()
     expect(fallbackTheme).toBeTruthy()
@@ -135,7 +243,9 @@ describe("broadcast store sync", () => {
     useBroadcastStore.getState().deleteTheme(themeToDelete!.id)
 
     const next = useBroadcastStore.getState()
-    expect(next.themes.some((theme) => theme.id === themeToDelete!.id)).toBe(false)
+    expect(next.themes.some((theme) => theme.id === themeToDelete!.id)).toBe(
+      false
+    )
     expect(next.deletedBuiltinThemeIds).toEqual([themeToDelete!.id])
     expect(next.activeThemeId).toBe(fallbackTheme!.id)
     expect(next.altActiveThemeId).toBe(fallbackTheme!.id)

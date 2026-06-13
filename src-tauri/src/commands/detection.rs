@@ -14,7 +14,7 @@ use fellowshow_detection::{DetectionPipeline, MergedDetection, ReadingMode};
 use crate::state::AppState;
 
 /// Confidence assigned to the best FTS5 BM25 match (rank 0) in context search.
-pub(crate) const FTS5_RANK0_CONFIDENCE: f64 = 0.75;
+pub(crate) const FTS5_RANK0_CONFIDENCE: f64 = 0.86;
 
 /// Confidence decrease per FTS5 rank position.
 pub(crate) const FTS5_CONFIDENCE_DECAY: f64 = 0.04;

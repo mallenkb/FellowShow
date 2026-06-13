@@ -14,6 +14,7 @@ export interface PresentationSlide {
 }
 
 interface PresentationState {
+  tickerText: string
   slides: PresentationSlide[]
   selectedSlideId: string | null
   addSlides: (slides: PresentationSlide[]) => void
@@ -24,6 +25,7 @@ interface PresentationState {
     id: string,
     transform: Partial<Pick<PresentationSlide, "scale" | "offsetX" | "offsetY">>,
   ) => void
+  setTickerText: (text: string) => void
   togglePin: (id: string) => void
   reorderSlides: (fromId: string, toId: string) => void
   removeSlide: (id: string) => void
@@ -43,6 +45,7 @@ function findLastPinnedIndex(slides: PresentationSlide[]) {
 }
 
 export const usePresentationStore = create<PresentationState>((set) => ({
+  tickerText: "",
   slides: [],
   selectedSlideId: null,
 
@@ -121,6 +124,10 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   clearSlides: () =>
     set((state) => {
       state.slides.forEach((slide) => revokeObjectUrl(slide.url))
-      return { slides: [], selectedSlideId: null }
+      return { slides: [], selectedSlideId: null, tickerText: "" }
+    }),
+  setTickerText: (tickerText) =>
+    set({
+      tickerText,
     }),
 }))
