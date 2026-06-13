@@ -7,6 +7,7 @@ export interface VerseRenderData {
   reference: string
   segments: VerseSegment[]
   themeSection?: BroadcastThemeSection
+  tickerText?: string
   referenceMode?: "default" | "lyric-footer"
   presentationImage?: {
     url: string
@@ -25,6 +26,8 @@ export interface PresenterTimerRenderData {
   isRunning: boolean
   isFinished: boolean
   fontFamily?: string
+  backgroundUrl?: string
+  backgroundMediaType?: "image" | "video"
 }
 
 export interface LowerThirdRenderData {
@@ -40,7 +43,8 @@ export interface RenderOptions {
   opacity?: number
   offsetX?: number
   offsetY?: number
-  scale?: number               // Scale factor for rendering at display size (e.g., 0.42 for 400px panel)
+  scale?: number // Scale factor for rendering at display size (e.g., 0.42 for 400px panel)
+  now?: number
   imageCache?: Map<string, HTMLImageElement>
   videoCache?: Map<string, HTMLVideoElement>
   timer?: PresenterTimerRenderData | null
@@ -57,7 +61,7 @@ export interface BroadcastTheme {
   name: string
   builtin: boolean
   pinned: boolean
-  outputMode?: "standard" | "lower-third"
+  outputMode?: "standard" | "lower-third" | "ticker"
   sortOrder?: number
   createdAt: number
   updatedAt: number

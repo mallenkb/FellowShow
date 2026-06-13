@@ -1,22 +1,24 @@
 import { useCallback, useState } from "react"
 import { LevelMeter } from "@/components/ui/level-meter"
 import { LiveIndicator } from "@/components/ui/live-indicator"
-import { MicIcon, MicOffIcon, PaletteIcon, CastIcon, SunIcon, MoonIcon } from "lucide-react"
+import {
+  MicIcon,
+  MicOffIcon,
+  PaletteIcon,
+  CastIcon,
+  SunIcon,
+  MoonIcon,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ApiKeyPrompt } from "@/components/ui/api-key-prompt"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { ThemeDesigner } from "@/components/broadcast/theme-designer"
 import { BroadcastSettings } from "@/components/broadcast/broadcast-settings"
-import { PresenterTimer } from "@/components/controls/presenter-timer"
 import { useAudioStore, useTranscriptStore, useBroadcastStore } from "@/stores"
 import { useTheme } from "@/components/theme-provider"
 import { transcriptionActions } from "@/hooks/use-transcription"
 
-export function TransportBar({
-  showPresenterTimer = false,
-}: {
-  showPresenterTimer?: boolean
-}) {
+export function TransportBar() {
   const { theme, setTheme } = useTheme()
   const audioLevel = useAudioStore((s) => s.level)
   const isTranscribing = useTranscriptStore((s) => s.isTranscribing)
@@ -30,7 +32,7 @@ export function TransportBar({
   return (
     <div
       data-slot="transport-bar"
-      className="col-span-4 flex h-14 items-center justify-between border-b border-border  bg-card px-3"
+      className="col-span-4 flex h-14 items-center justify-between border-b border-border bg-card px-3"
     >
       <div className="flex items-center gap-3">
         <span className="text-sm font-semibold tracking-tight text-foreground">
@@ -56,7 +58,6 @@ export function TransportBar({
 
       {/* Right: Audio + Status + Settings */}
       <div className="flex items-center gap-3">
-        {showPresenterTimer ? <PresenterTimer /> : null}
         <div className="flex items-center gap-2">
           <MicIcon className="size-3.5 text-muted-foreground" />
           <LevelMeter level={audioLevel.rms} bars={4} />
@@ -83,7 +84,10 @@ export function TransportBar({
         >
           <CastIcon className="size-3.5" />
         </Button>
-        <BroadcastSettings open={broadcastOpen} onOpenChange={setBroadcastOpen} />
+        <BroadcastSettings
+          open={broadcastOpen}
+          onOpenChange={setBroadcastOpen}
+        />
         <Button
           variant="ghost"
           size="icon-sm"

@@ -26,13 +26,29 @@ function QueueItemRow({
   isActive: boolean
   isHighlighted: boolean
 }) {
-  const handlePresent = () => {
+  const selectQueueItem = () => {
     const currentItem = useQueueStore.getState().items[index] ?? item
     useQueueStore.getState().setActive(index)
     bibleActions.selectVerse(currentItem.verse)
-    const translation = useBibleStore.getState().translations
-      .find(t => t.id === useBibleStore.getState().activeTranslationId)?.abbreviation ?? "KJV"
-    useBroadcastStore.getState().setLiveVerse(toVerseRenderData(currentItem.verse, translation))
+    bibleActions.navigateToVerse(
+      currentItem.verse.book_number,
+      currentItem.verse.chapter,
+      currentItem.verse.verse
+    )
+    return currentItem
+  }
+
+  const handlePresent = () => {
+    const currentItem = selectQueueItem()
+    const translation =
+      useBibleStore
+        .getState()
+        .translations.find(
+          (t) => t.id === useBibleStore.getState().activeTranslationId
+        )?.abbreviation ?? "KJV"
+    useBroadcastStore
+      .getState()
+      .setLiveVerse(toVerseRenderData(currentItem.verse, translation))
   }
 
   const handleRemove = () => {
@@ -56,8 +72,16 @@ function QueueItemRow({
   return (
     <div
       data-queue-idx={index}
+      role="button"
+      tabIndex={0}
+      onClick={selectQueueItem}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return
+        event.preventDefault()
+        selectQueueItem()
+      }}
       className={cn(
-        "group flex min-h-10 items-center gap-2 rounded-md px-2.5 py-1 transition-colors",
+        "group flex min-h-10 cursor-pointer items-center gap-2 rounded-md px-2.5 py-1 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         isHighlighted
           ? "animate-pulse border border-amber-500/40 bg-amber-500/15"
           : isActive
@@ -65,9 +89,7 @@ function QueueItemRow({
             : "hover:bg-muted/50"
       )}
     >
-      <GripVerticalIcon
-        className="size-3 shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100"
-      />
+      <GripVerticalIcon className="size-3 shrink-0 text-muted-foreground/30 opacity-0 transition-opacity group-hover:opacity-100" />
 
       <span className="flex-1 truncate text-sm font-medium text-foreground">
         {item.reference}
@@ -76,10 +98,24 @@ function QueueItemRow({
       {sourceBadge}
 
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button variant="ghost" size="icon-xs" onClick={handlePresent}>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={(event) => {
+            event.stopPropagation()
+            handlePresent()
+          }}
+        >
           <PlayIcon className="size-2.5" />
         </Button>
-        <Button variant="ghost" size="icon-xs" onClick={handleRemove}>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={(event) => {
+            event.stopPropagation()
+            handleRemove()
+          }}
+        >
           <XIcon className="size-2.5" />
         </Button>
       </div>
@@ -87,7 +123,7 @@ function QueueItemRow({
   )
 }
 
-type QueuePanelMode = "book" | "context" | "songs" | "presentation"
+type QueuePanelMode = "book" | "context" | "songs" | "presentation" | "timer"
 
 export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
   const panelRef = useRef<HTMLDivElement>(null)
@@ -99,17 +135,21 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => {
       if (mode === "presentation") return false
+      if (mode === "timer") return false
       if (mode === "songs") return false
       return item.verse.book_number > 0
     })
   const lyricKind = mode === "songs" ? "song" : null
   const lyricItem = lyricKind
-    ? items.find((item) => item.lyricKind === lyricKind) ?? null
+    ? (items.find((item) => item.lyricKind === lyricKind) ?? null)
     : null
   const lyricBlocks = lyricItem?.lyricBlocks ?? []
   const activeBlockIndex = Math.max(
     0,
-    Math.min(lyricItem?.activeBlockIndex ?? 0, Math.max(lyricBlocks.length - 1, 0)),
+    Math.min(
+      lyricItem?.activeBlockIndex ?? 0,
+      Math.max(lyricBlocks.length - 1, 0)
+    )
   )
   const panelTitle = mode === "songs" ? "Song" : "Queue"
 
@@ -129,7 +169,9 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
     if (!lyricItem || lyricBlocks.length === 0) return
     panelRef.current?.focus({ preventScroll: true })
     useQueueStore.getState().setLyricBlock(lyricItem.id, blockIndex)
-    const updatedItem = useQueueStore.getState().items.find((item) => item.id === lyricItem.id)
+    const updatedItem = useQueueStore
+      .getState()
+      .items.find((item) => item.id === lyricItem.id)
     bibleActions.selectVerse(updatedItem?.verse ?? lyricItem.verse)
   }
 
@@ -150,7 +192,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
       <div
         ref={panelRef}
         data-slot="queue-panel"
-        className="flex flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+        className="flex flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
         tabIndex={0}
         onKeyDown={handleLyricKeyDown}
       >
@@ -199,7 +241,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
                       "group flex w-full cursor-pointer items-start gap-4 rounded-lg border p-3 text-left transition-colors",
                       isActive
                         ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                        : "border-border hover:bg-muted/40",
+                        : "border-border hover:bg-muted/40"
                     )}
                   >
                     <span
@@ -207,7 +249,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
                         "mt-0.5 w-6 shrink-0 text-center text-sm font-semibold",
                         isActive
                           ? "text-[#101084] dark:text-[#F1E600]"
-                          : "text-muted-foreground",
+                          : "text-muted-foreground"
                       )}
                     >
                       {blockMarker}
@@ -216,7 +258,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
                       <p className="mb-1 text-xs font-semibold text-muted-foreground">
                         {block.label}
                       </p>
-                      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">
+                      <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">
                         {block.text}
                       </p>
                     </div>
@@ -233,7 +275,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
   return (
     <div
       data-slot="queue-panel"
-      className="flex flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+      className="flex flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
     >
       <PanelHeader title="Queue">
         <div className="flex items-center gap-2">

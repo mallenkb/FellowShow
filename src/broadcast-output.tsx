@@ -23,15 +23,16 @@ function uint8ToBase64(bytes: Uint8Array | Uint8ClampedArray): string {
     parts.push(
       String.fromCharCode.apply(
         null,
-        bytes.subarray(i, i + CHUNK) as unknown as number[],
-      ),
+        bytes.subarray(i, i + CHUNK) as unknown as number[]
+      )
     )
   }
   return btoa(parts.join(""))
 }
 
 /** Read output ID from URL query param (?output=main or ?output=alt). Defaults to "main". */
-const OUTPUT_ID = new URLSearchParams(window.location.search).get("output") ?? "main"
+const OUTPUT_ID =
+  new URLSearchParams(window.location.search).get("output") ?? "main"
 
 interface BroadcastPayload {
   theme: BroadcastTheme
@@ -47,14 +48,23 @@ function transitionKey(data: BroadcastPayload | null): string {
     themeId: data.theme.id,
     themeUpdatedAt: data.theme.updatedAt,
     verseReference: data.verse?.reference ?? null,
-    verseText: data.verse?.segments.map((segment) => segment.text).join("\n") ?? null,
+    verseText:
+      data.verse?.segments.map((segment) => segment.text).join("\n") ?? null,
     presentationImage: data.verse?.presentationImage?.url ?? null,
     timerVisible: Boolean(data.timer),
     timerFinished: data.timer?.isFinished ?? false,
-    lowerThirdVisible: includeLowerThird ? data.lowerThird?.visible ?? false : null,
-    lowerThirdTitle: includeLowerThird ? data.lowerThird?.title ?? null : null,
-    lowerThirdSubtitle: includeLowerThird ? data.lowerThird?.subtitle ?? null : null,
-    lowerThirdLabel: includeLowerThird ? data.lowerThird?.label ?? null : null,
+    lowerThirdVisible: includeLowerThird
+      ? (data.lowerThird?.visible ?? false)
+      : null,
+    lowerThirdTitle: includeLowerThird
+      ? (data.lowerThird?.title ?? null)
+      : null,
+    lowerThirdSubtitle: includeLowerThird
+      ? (data.lowerThird?.subtitle ?? null)
+      : null,
+    lowerThirdLabel: includeLowerThird
+      ? (data.lowerThird?.label ?? null)
+      : null,
   })
 }
 
@@ -84,33 +94,36 @@ function BroadcastCanvas() {
     console.debug(`[broadcast-output] ${message}`, meta)
   }, [])
 
-  const renderPayloadToCanvas = useCallback((canvas: HTMLCanvasElement, data: BroadcastPayload | null) => {
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+  const renderPayloadToCanvas = useCallback(
+    (canvas: HTMLCanvasElement, data: BroadcastPayload | null) => {
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
 
-    if (!data) {
-      // Presentation default background when no verse data is available
-      ctx.fillStyle = getBuiltinPresentationBackground()
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      return
-    }
+      if (!data) {
+        // Presentation default background when no verse data is available
+        ctx.fillStyle = getBuiltinPresentationBackground()
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        return
+      }
 
-    const { theme, verse, timer, lowerThird } = data
-    canvas.width = theme.resolution.width
-    canvas.height = theme.resolution.height
-    const result = renderVerse(ctx, theme, verse, {
-      scale: 1,
-      imageCache: imageCacheRef.current,
-      videoCache: videoCacheRef.current,
-      timer,
-      lowerThird,
-    })
-    if (!result) {
-      ctx.fillStyle = getBuiltinPresentationBackground()
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      logDebug("renderVerse returned null; drew fallback frame")
-    }
-  }, [logDebug])
+      const { theme, verse, timer, lowerThird } = data
+      canvas.width = theme.resolution.width
+      canvas.height = theme.resolution.height
+      const result = renderVerse(ctx, theme, verse, {
+        scale: 1,
+        imageCache: imageCacheRef.current,
+        videoCache: videoCacheRef.current,
+        timer,
+        lowerThird,
+      })
+      if (!result) {
+        ctx.fillStyle = getBuiltinPresentationBackground()
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        logDebug("renderVerse returned null; drew fallback frame")
+      }
+    },
+    [logDebug]
+  )
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -118,57 +131,60 @@ function BroadcastCanvas() {
     renderPayloadToCanvas(canvas, latestData.current)
   }, [renderPayloadToCanvas])
 
-  const drawPayloadTransition = useCallback((previousData: BroadcastPayload | null, nextData: BroadcastPayload) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
+  const drawPayloadTransition = useCallback(
+    (previousData: BroadcastPayload | null, nextData: BroadcastPayload) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
 
-    if (transitionFrameRef.current !== null) {
-      window.cancelAnimationFrame(transitionFrameRef.current)
-      transitionFrameRef.current = null
-    }
-
-    const transition = nextData.theme.transition
-    const shouldTransition =
-      previousData &&
-      transitionKey(previousData) !== transitionKey(nextData) &&
-      transition.type !== "none" &&
-      transition.duration > 0
-
-    if (!shouldTransition) {
-      renderPayloadToCanvas(canvas, nextData)
-      return
-    }
-
-    const previous = document.createElement("canvas")
-    previous.width = canvas.width || nextData.theme.resolution.width
-    previous.height = canvas.height || nextData.theme.resolution.height
-    const previousCtx = previous.getContext("2d")
-    if (!previousCtx) {
-      renderPayloadToCanvas(canvas, nextData)
-      return
-    }
-    previousCtx.drawImage(canvas, 0, 0, previous.width, previous.height)
-
-    const next = document.createElement("canvas")
-    renderPayloadToCanvas(next, nextData)
-    canvas.width = next.width
-    canvas.height = next.height
-
-    const startedAt = performance.now()
-    const duration = Math.max(1, transition.duration)
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / duration)
-      drawTransitionFrame(ctx, previous, next, nextData.theme, progress)
-      if (progress < 1) {
-        transitionFrameRef.current = window.requestAnimationFrame(tick)
-      } else {
+      if (transitionFrameRef.current !== null) {
+        window.cancelAnimationFrame(transitionFrameRef.current)
         transitionFrameRef.current = null
       }
-    }
-    transitionFrameRef.current = window.requestAnimationFrame(tick)
-  }, [renderPayloadToCanvas])
+
+      const transition = nextData.theme.transition
+      const shouldTransition =
+        previousData &&
+        transitionKey(previousData) !== transitionKey(nextData) &&
+        transition.type !== "none" &&
+        transition.duration > 0
+
+      if (!shouldTransition) {
+        renderPayloadToCanvas(canvas, nextData)
+        return
+      }
+
+      const previous = document.createElement("canvas")
+      previous.width = canvas.width || nextData.theme.resolution.width
+      previous.height = canvas.height || nextData.theme.resolution.height
+      const previousCtx = previous.getContext("2d")
+      if (!previousCtx) {
+        renderPayloadToCanvas(canvas, nextData)
+        return
+      }
+      previousCtx.drawImage(canvas, 0, 0, previous.width, previous.height)
+
+      const next = document.createElement("canvas")
+      renderPayloadToCanvas(next, nextData)
+      canvas.width = next.width
+      canvas.height = next.height
+
+      const startedAt = performance.now()
+      const duration = Math.max(1, transition.duration)
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / duration)
+        drawTransitionFrame(ctx, previous, next, nextData.theme, progress)
+        if (progress < 1) {
+          transitionFrameRef.current = window.requestAnimationFrame(tick)
+        } else {
+          transitionFrameRef.current = null
+        }
+      }
+      transitionFrameRef.current = window.requestAnimationFrame(tick)
+    },
+    [renderPayloadToCanvas]
+  )
 
   const startAnimationLoop = useCallback(() => {
     if (animationFrameRef.current !== null) return
@@ -185,60 +201,76 @@ function BroadcastCanvas() {
     animationFrameRef.current = null
   }, [])
 
-  const preloadMedia = useCallback((payload: BroadcastPayload) => {
-    const bg = payload.theme.background
-    const media = [
-      bg.type === "image" && bg.image?.url
-        ? { url: bg.image.url, mediaType: bg.image.mediaType ?? "image" }
-        : null,
-      payload.verse?.presentationImage?.url
-        ? {
-            url: payload.verse.presentationImage.url,
-            mediaType: payload.verse.presentationImage.mediaType ?? "image",
+  const preloadMedia = useCallback(
+    (payload: BroadcastPayload) => {
+      const bg = payload.theme.background
+      const media = [
+        bg.type === "image" && bg.image?.url
+          ? { url: bg.image.url, mediaType: bg.image.mediaType ?? "image" }
+          : null,
+        payload.timer?.backgroundUrl
+          ? {
+              url: payload.timer.backgroundUrl,
+              mediaType:
+                payload.timer.backgroundMediaType ?? ("image" as const),
+            }
+          : null,
+        payload.verse?.presentationImage?.url
+          ? {
+              url: payload.verse.presentationImage.url,
+              mediaType: payload.verse.presentationImage.mediaType ?? "image",
+            }
+          : null,
+      ].filter((item): item is { url: string; mediaType: "image" | "video" } =>
+        Boolean(item)
+      )
+
+      const hasVideo = media.some((item) => item.mediaType === "video")
+      if (hasVideo) startAnimationLoop()
+      else stopAnimationLoop()
+
+      for (const item of media) {
+        if (item.mediaType === "video") {
+          if (videoCacheRef.current.has(item.url)) continue
+          const video = document.createElement("video")
+          video.muted = true
+          video.loop = true
+          video.playsInline = true
+          video.preload = "auto"
+          video.onloadeddata = () => {
+            videoCacheRef.current.set(item.url, video)
+            void video.play().catch(() => {})
+            logDebug("Background video loaded", { url: item.url })
+            draw()
           }
-        : null,
-    ].filter((item): item is { url: string; mediaType: "image" | "video" } => Boolean(item))
+          video.onerror = () => {
+            console.warn("[broadcast-output] failed to load background video", {
+              url: item.url,
+            })
+          }
+          video.src = item.url
+          continue
+        }
 
-    const hasVideo = media.some((item) => item.mediaType === "video")
-    if (hasVideo) startAnimationLoop()
-    else stopAnimationLoop()
+        const cache = imageCacheRef.current
+        if (cache.has(item.url)) continue
 
-    for (const item of media) {
-      if (item.mediaType === "video") {
-        if (videoCacheRef.current.has(item.url)) continue
-        const video = document.createElement("video")
-        video.muted = true
-        video.loop = true
-        video.playsInline = true
-        video.preload = "auto"
-        video.onloadeddata = () => {
-          videoCacheRef.current.set(item.url, video)
-          void video.play().catch(() => {})
-          logDebug("Background video loaded", { url: item.url })
+        const img = new Image()
+        img.onload = () => {
+          cache.set(item.url, img)
+          logDebug("Background image loaded", { url: item.url })
           draw()
         }
-        video.onerror = () => {
-          console.warn("[broadcast-output] failed to load background video", { url: item.url })
+        img.onerror = () => {
+          console.warn("[broadcast-output] failed to load background image", {
+            url: item.url,
+          })
         }
-        video.src = item.url
-        continue
+        img.src = item.url
       }
-
-      const cache = imageCacheRef.current
-      if (cache.has(item.url)) continue
-
-      const img = new Image()
-      img.onload = () => {
-        cache.set(item.url, img)
-        logDebug("Background image loaded", { url: item.url })
-        draw()
-      }
-      img.onerror = () => {
-        console.warn("[broadcast-output] failed to load background image", { url: item.url })
-      }
-      img.src = item.url
-    }
-  }, [draw, logDebug, startAnimationLoop, stopAnimationLoop])
+    },
+    [draw, logDebug, startAnimationLoop, stopAnimationLoop]
+  )
 
   const pushNdiFrame = useCallback(async () => {
     if (!ndiConfigRef.current.active) return
@@ -259,7 +291,8 @@ function BroadcastCanvas() {
       let sourceHeight = canvas.height
 
       if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-        const ndiCanvas = ndiCanvasRef.current ?? document.createElement("canvas")
+        const ndiCanvas =
+          ndiCanvasRef.current ?? document.createElement("canvas")
         ndiCanvas.width = targetWidth
         ndiCanvas.height = targetHeight
         const ndiCtx = ndiCanvas.getContext("2d")
@@ -312,28 +345,39 @@ function BroadcastCanvas() {
 
     const currentWindow = getCurrentWebviewWindow()
     logDebug("Listener registration started", { label: currentWindow.label })
-    const unlisten = currentWindow.listen<BroadcastPayload>("broadcast:verse-update", (event) => {
-      const previousData = latestData.current
-      latestData.current = event.payload
-      preloadMedia(event.payload)
-      logDebug("Received broadcast:verse-update", {
-        hasVerse: Boolean(event.payload.verse),
-        themeId: event.payload.theme.id,
-      })
-      drawPayloadTransition(previousData, event.payload)
-      pushNdiBurst()
-    })
+    const unlisten = currentWindow.listen<BroadcastPayload>(
+      "broadcast:verse-update",
+      (event) => {
+        const previousData = latestData.current
+        latestData.current = event.payload
+        preloadMedia(event.payload)
+        logDebug("Received broadcast:verse-update", {
+          hasVerse: Boolean(event.payload.verse),
+          themeId: event.payload.theme.id,
+        })
+        drawPayloadTransition(previousData, event.payload)
+        pushNdiBurst()
+      }
+    )
 
-    const unlistenNdiConfig = currentWindow.listen<NdiConfigEventPayload>("broadcast:ndi-config", (event) => {
-      ndiConfigRef.current = event.payload
-      logDebug("Received broadcast:ndi-config", event.payload)
-      // Push burst when NDI becomes active
-      if (event.payload.active) pushNdiBurst()
-    })
+    const unlistenNdiConfig = currentWindow.listen<NdiConfigEventPayload>(
+      "broadcast:ndi-config",
+      (event) => {
+        ndiConfigRef.current = event.payload
+        logDebug("Received broadcast:ndi-config", event.payload)
+        // Push burst when NDI becomes active
+        if (event.payload.active) pushNdiBurst()
+      }
+    )
 
     // Request current NDI status on mount (fixes race condition
     // where NDI is started before this window opens)
-    void invoke<{ active: boolean; width: number; height: number; fps: number } | null>("get_ndi_status", { outputId: OUTPUT_ID })
+    void invoke<{
+      active: boolean
+      width: number
+      height: number
+      fps: number
+    } | null>("get_ndi_status", { outputId: OUTPUT_ID })
       .then((status) => {
         if (status && status.active) {
           ndiConfigRef.current = {
@@ -349,11 +393,14 @@ function BroadcastCanvas() {
         // Command may not exist yet
       })
 
-    void currentWindow.emitTo("main", "broadcast:output-ready").then(() => {
-      logDebug("Sent broadcast:output-ready")
-    }).catch(() => {
-      console.warn("[broadcast-output] failed to send output-ready event")
-    })
+    void currentWindow
+      .emitTo("main", "broadcast:output-ready")
+      .then(() => {
+        logDebug("Sent broadcast:output-ready")
+      })
+      .catch(() => {
+        console.warn("[broadcast-output] failed to send output-ready event")
+      })
 
     return () => {
       stopAnimationLoop()
@@ -363,7 +410,14 @@ function BroadcastCanvas() {
       unlisten.then((fn) => fn())
       unlistenNdiConfig.then((fn) => fn())
     }
-  }, [drawPayloadTransition, logDebug, preloadMedia, pushNdiFrame, pushNdiBurst, stopAnimationLoop])
+  }, [
+    drawPayloadTransition,
+    logDebug,
+    preloadMedia,
+    pushNdiFrame,
+    pushNdiBurst,
+    stopAnimationLoop,
+  ])
 
   // Slow keepalive: push one frame every 2s if idle (prevents NDI receivers from dropping the source)
   useEffect(() => {

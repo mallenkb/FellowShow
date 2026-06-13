@@ -15,6 +15,112 @@ import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { useTranscription } from "@/hooks/use-transcription"
 import { bibleActions } from "@/hooks/use-bible"
 import type { DetectionResult, ReadingAdvance } from "@/types"
+import {
+  buildTranscriptHighlightParts,
+  type TranscriptVerseAnnotation,
+} from "@/lib/transcript-verse-highlights"
+import type { TranscriptSegment } from "@/types"
+
+const MAX_TRANSCRIPT_ANNOTATIONS = 120
+const SEGMENT_ANNOTATION_GRACE_MS = 2_000
+
+function annotationFromDetection(
+  detection: DetectionResult
+): TranscriptVerseAnnotation {
+  return {
+    id: `${detection.verse_ref}-${Date.now()}-${Math.random()}`,
+    reference: detection.verse_ref,
+    bookName: detection.book_name,
+    bookNumber: detection.book_number,
+    chapter: detection.chapter,
+    verse: detection.verse,
+    verseText: detection.verse_text,
+    transcriptSnippet: detection.transcript_snippet,
+    timestamp: Date.now(),
+  }
+}
+
+function annotationFromAdvance(
+  advance: ReadingAdvance
+): TranscriptVerseAnnotation {
+  return {
+    id: `${advance.reference}-${Date.now()}-${Math.random()}`,
+    reference: advance.reference,
+    bookName: advance.book_name,
+    bookNumber: advance.book_number,
+    chapter: advance.chapter,
+    verse: advance.verse,
+    verseText: advance.verse_text,
+    timestamp: Date.now(),
+  }
+}
+
+function annotationsForSegment(
+  segment: TranscriptSegment,
+  annotations: TranscriptVerseAnnotation[]
+) {
+  return annotations.filter(
+    (annotation) =>
+      !annotation.timestamp ||
+      annotation.timestamp <= segment.timestamp + SEGMENT_ANNOTATION_GRACE_MS
+  )
+}
+
+function selectAnnotation(annotation: TranscriptVerseAnnotation) {
+  bibleActions.selectVerse({
+    id: 0,
+    translation_id: useBibleStore.getState().activeTranslationId,
+    book_number: annotation.bookNumber,
+    book_name: annotation.bookName,
+    book_abbreviation: "",
+    chapter: annotation.chapter,
+    verse: annotation.verse,
+    text: annotation.verseText,
+  })
+  bibleActions.navigateToVerse(
+    annotation.bookNumber,
+    annotation.chapter,
+    annotation.verse
+  )
+}
+
+function HighlightedTranscriptText({
+  text,
+  annotations,
+  className,
+  pulse,
+}: {
+  text: string
+  annotations: TranscriptVerseAnnotation[]
+  className: string
+  pulse?: boolean
+}) {
+  const parts = buildTranscriptHighlightParts(text, annotations)
+
+  return (
+    <p className={className}>
+      {parts.map((part, index) => {
+        if (part.type === "text") {
+          return <span key={`${index}-text`}>{part.text}</span>
+        }
+        return (
+          <button
+            key={`${index}-${part.annotation.id}`}
+            type="button"
+            onClick={() => selectAnnotation(part.annotation)}
+            className="mx-0.5 inline rounded-[6px] border border-yellow-500/35 bg-yellow-300/20 px-1.5 py-0.5 align-baseline text-[0.8125rem] leading-none font-semibold text-yellow-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-colors hover:bg-yellow-300/30 focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:outline-none dark:text-yellow-100"
+            title={`Load ${part.text}`}
+          >
+            {part.text}
+          </button>
+        )
+      })}
+      {pulse && (
+        <span className="ml-1 inline-block size-1.5 animate-pulse rounded-full bg-primary align-middle" />
+      )}
+    </p>
+  )
+}
 
 /**
  * Leaf component that subscribes to the audio level only. Isolated so the
@@ -29,7 +135,13 @@ function AudioLevelMeter() {
 /**
  * Leaf component that subscribes to `currentPartial`. Partials update per audio tick.
  */
-function LivePartialLine({ scrollRef }: { scrollRef: RefObject<HTMLDivElement | null> }) {
+function LivePartialLine({
+  scrollRef,
+  annotations,
+}: {
+  scrollRef: RefObject<HTMLDivElement | null>
+  annotations: TranscriptVerseAnnotation[]
+}) {
   const currentPartial = useTranscriptStore((s) => s.currentPartial)
 
   useEffect(() => {
@@ -41,10 +153,12 @@ function LivePartialLine({ scrollRef }: { scrollRef: RefObject<HTMLDivElement | 
   if (!currentPartial) return null
 
   return (
-    <p className="border-l-2 border-primary pl-2 text-base leading-relaxed text-foreground">
-      {currentPartial}
-      <span className="ml-1 inline-block size-1.5 animate-pulse rounded-full bg-primary align-middle" />
-    </p>
+    <HighlightedTranscriptText
+      text={currentPartial}
+      annotations={annotations}
+      className="border-l-2 border-primary pl-2 text-base leading-relaxed text-foreground"
+      pulse
+    />
   )
 }
 
@@ -60,6 +174,19 @@ export function TranscriptPanel() {
   } = useTranscription({ onMissingApiKey })
   const hasPartial = useTranscriptStore((s) => s.currentPartial.length > 0)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [transcriptAnnotations, setTranscriptAnnotations] = useState<
+    TranscriptVerseAnnotation[]
+  >([])
+
+  const addTranscriptAnnotations = useCallback(
+    (annotations: TranscriptVerseAnnotation[]) => {
+      if (annotations.length === 0) return
+      setTranscriptAnnotations((current) =>
+        [...annotations, ...current].slice(0, MAX_TRANSCRIPT_ANNOTATIONS)
+      )
+    },
+    []
+  )
 
   useTauriEvent<{ rms: number; peak: number }>("audio_level", (payload) => {
     useAudioStore.getState().setLevel(payload)
@@ -77,6 +204,14 @@ export function TranscriptPanel() {
   // Listen for detection results from the backend (batch replaces previous detections)
   useTauriEvent<DetectionResult[]>("verse_detections", (detections) => {
     useDetectionStore.getState().addDetections(detections)
+    addTranscriptAnnotations(
+      detections
+        .filter(
+          (d) =>
+            d.source === "direct" && d.book_number > 0 && !d.is_chapter_only
+        )
+        .map(annotationFromDetection)
+    )
 
     // Auto-navigate book search + select verse for preview/live
     const directHit = detections.find(
@@ -95,13 +230,11 @@ export function TranscriptPanel() {
         text: directHit.verse_text,
       })
       // Navigate book search panel to this verse
-      useBibleStore
-        .getState()
-        .setPendingNavigation({
-          bookNumber: directHit.book_number,
-          chapter: directHit.chapter,
-          verse: directHit.verse,
-        })
+      useBibleStore.getState().setPendingNavigation({
+        bookNumber: directHit.book_number,
+        chapter: directHit.chapter,
+        verse: directHit.verse,
+      })
     }
 
     // Auto-queue high-confidence detections
@@ -117,7 +250,7 @@ export function TranscriptPanel() {
             d.chapter,
             d.verse,
             d.verse_ref,
-            d.verse_text,
+            d.verse_text
           )
       ) {
         continue
@@ -132,7 +265,7 @@ export function TranscriptPanel() {
           ? queue.items.findIndex(
               (i) =>
                 i.verse.book_number === d.book_number &&
-                i.verse.chapter === d.chapter,
+                i.verse.chapter === d.chapter
             )
           : queue.findDuplicate(d.book_number, d.chapter, d.verse)
         if (dupIdx !== -1) {
@@ -168,6 +301,7 @@ export function TranscriptPanel() {
   // Does NOT add to queue — only direct/semantic feed the queue.
   useTauriEvent<ReadingAdvance>("reading_mode_verse", (advance) => {
     if (advance.book_number > 0) {
+      addTranscriptAnnotations([annotationFromAdvance(advance)])
       bibleActions.selectVerse({
         id: 0,
         translation_id: useBibleStore.getState().activeTranslationId,
@@ -245,17 +379,20 @@ export function TranscriptPanel() {
                     ? "text-foreground/40"
                     : "text-foreground/25"
             return (
-              <p
+              <HighlightedTranscriptText
                 key={seg.id}
+                text={seg.text}
+                annotations={annotationsForSegment(seg, transcriptAnnotations)}
                 className={`text-sm leading-relaxed transition-colors duration-300 ${opacity}`}
-              >
-                {seg.text}
-              </p>
+              />
             )
           })}
 
           {/* Partial (in-progress) text rendered by leaf subscriber */}
-          <LivePartialLine scrollRef={scrollRef} />
+          <LivePartialLine
+            scrollRef={scrollRef}
+            annotations={transcriptAnnotations}
+          />
         </div>
       </div>
 

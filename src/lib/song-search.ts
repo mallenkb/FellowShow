@@ -14,6 +14,7 @@ export interface SearchableSong {
 export interface SongSearchFilters {
   source?: string
   letter?: string
+  limit?: number
 }
 
 export interface SongSearchIndex<TSong extends SearchableSong> {
@@ -105,13 +106,19 @@ export function searchSongs<TSong extends SearchableSong>(
   filters: SongSearchFilters = {}
 ) {
   const normalizedQuery = normalizeSongSearchQuery(query)
+  const applyLimit = (songs: TSong[]) =>
+    filters.limit == null ? songs : songs.slice(0, filters.limit)
 
   if (!normalizedQuery) {
-    return index.songs.filter((song) => matchesSongFilters(song, filters))
+    return applyLimit(
+      index.songs.filter((song) => matchesSongFilters(song, filters))
+    )
   }
 
-  return index.fuse
+  const results = index.fuse
     .search(normalizedQuery)
     .map(({ item }) => item)
     .filter((song) => matchesSongFilters(song, filters))
+
+  return applyLimit(results)
 }

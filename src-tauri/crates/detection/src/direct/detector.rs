@@ -17,6 +17,7 @@ const TRANSLATION_COMMANDS: &[(&str, &str)] = &[
     ("can i have it in niv", "NIV"),
     ("can i have that in niv", "NIV"),
     ("show me niv", "NIV"),
+    ("n i v", "NIV"),
     ("new international version", "NIV"),
     ("in new international", "NIV"),
     // ESV
@@ -47,6 +48,7 @@ const TRANSLATION_COMMANDS: &[(&str, &str)] = &[
     ("can i have it in nkjv", "NKJV"),
     ("can i have that in nkjv", "NKJV"),
     ("show me nkjv", "NKJV"),
+    ("n k j v", "NKJV"),
     ("new king james", "NKJV"),
     ("in new king james", "NKJV"),
     // NLT
@@ -1109,6 +1111,10 @@ mod tests {
             detector.detect_translation_command("new living translation"),
             Some("NLT".to_string())
         );
+        assert_eq!(
+            detector.detect_translation_command("new king james version"),
+            Some("NKJV".to_string())
+        );
     }
 
     #[test]
@@ -1141,6 +1147,19 @@ mod tests {
         assert_eq!(
             detector.detect_translation_command("nlt"),
             Some("NLT".to_string())
+        );
+    }
+
+    #[test]
+    fn test_translation_command_spoken_letter_abbreviations() {
+        let detector = DirectDetector::new();
+        assert_eq!(
+            detector.detect_translation_command("read it in n i v"),
+            Some("NIV".to_string())
+        );
+        assert_eq!(
+            detector.detect_translation_command("show me n k j v"),
+            Some("NKJV".to_string())
         );
     }
 

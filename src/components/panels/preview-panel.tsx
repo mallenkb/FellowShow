@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
-import { PresentationEmptyState } from "@/components/ui/presentation-empty-state"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import {
   useBibleStore,
   useBroadcastStore,
@@ -10,7 +11,7 @@ import {
 } from "@/stores"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
-import type { VerseRenderData } from "@/types"
+import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon } from "lucide-react"
 import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
@@ -23,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { RadioIcon } from "lucide-react"
 
 const THEME_THUMBNAIL_VERSE: VerseRenderData = {
   reference: "John 3:16",
@@ -30,7 +32,7 @@ const THEME_THUMBNAIL_VERSE: VerseRenderData = {
   segments: [{ text: "Sample Verse" }],
 }
 
-type ThemeAwareMode = "book" | "context" | "songs" | "presentation"
+type ThemeAwareMode = "book" | "context" | "songs" | "presentation" | "timer"
 
 const THEME_SECTION_LABELS: Record<BroadcastThemeSection, string> = {
   bible: "Scriptures",
@@ -68,6 +70,7 @@ const THEME_THUMBNAIL_BY_SECTION: Record<
 }
 
 export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
+  const isPresentationMode = mode === "presentation"
   const selectedVerse = useBibleStore((s) => s.selectedVerse)
   const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
@@ -93,50 +96,117 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   }, [activeTranslationId])
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
+  const autoPreviewToLive = useBroadcastStore((s) => s.autoPreviewToLive)
+  const setAutoPreviewToLive = useBroadcastStore(
+    (s) => s.setAutoPreviewToLive
+  )
+  const previewVerse = useBroadcastStore((s) => s.previewVerse)
+  const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
   const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
   const timerFontFamily = usePresenterTimerStore((s) => s.fontFamily)
+  const timerBackgroundUrl = usePresenterTimerStore((s) => s.backgroundUrl)
+  const timerBackgroundOptions = usePresenterTimerStore(
+    (s) => s.backgroundOptions
+  )
 
-  const themeSection = sectionFromMode(mode)
   const selectedSlide =
     slides.find((slide) => slide.id === selectedSlideId) ?? null
-  const isEmptyPresentation = mode === "presentation" && !selectedSlide
-  const activeTheme = selectedSlide
-    ? themes[0]
-    : (themes.find((t) => t.id === sectionThemeIds[themeSection]) ?? themes[0])
   const translation =
     translations.find((t) => t.id === activeTranslationId)?.abbreviation ??
     "KJV"
 
-  const verseData: VerseRenderData | null = selectedSlide
-    ? {
-        reference: selectedSlide.name,
-        themeSection: "presentation",
-        segments: [],
-        presentationImage: {
-          url: selectedSlide.url,
-          name: selectedSlide.name,
-          mediaType: selectedSlide.mediaType,
-          fit: selectedSlide.fit,
-          scale: selectedSlide.scale,
-          offsetX: selectedSlide.offsetX,
-          offsetY: selectedSlide.offsetY,
-        },
-      }
-    : selectedVerse
-      ? toVerseRenderData(selectedVerse, translation)
-      : null
   const timer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null
+    const timerBackgroundMediaType =
+      timerBackgroundOptions.find((option) => option.url === timerBackgroundUrl)
+        ?.mediaType ?? "image"
     return {
       remainingSeconds: timerRemaining,
       totalSeconds: timerTotal,
       isRunning: timerIsRunning,
       isFinished: timerRemaining === 0,
       fontFamily: timerFontFamily,
+      backgroundUrl: timerBackgroundUrl,
+      backgroundMediaType: timerBackgroundMediaType,
     }
-  }, [timerFontFamily, timerIsRunning, timerRemaining, timerTotal])
+  }, [
+    timerBackgroundOptions,
+    timerBackgroundUrl,
+    timerFontFamily,
+    timerIsRunning,
+    timerRemaining,
+    timerTotal,
+  ])
+  const previewThemeSection =
+    previewVerse?.themeSection ?? (isPresentationMode ? "presentation" : "bible")
+  const activeTheme = previewVerse?.presentationImage
+    ? themes[0]
+    : (themes.find((t) => t.id === sectionThemeIds[previewThemeSection]) ??
+      themes[0])
+
+  const setPreviewAndAutoLive = useCallback(
+    (verse: VerseRenderData | null, timer: PresenterTimerRenderData | null) => {
+      const store = useBroadcastStore.getState()
+      store.setPreviewOutput(verse, timer)
+      if (store.autoPreviewToLive) {
+        store.takePreviewLive("preview")
+      }
+    },
+    []
+  )
+
+
+  useEffect(() => {
+    if (!isPresentationMode) {
+      if (!selectedVerse) return
+      setPreviewAndAutoLive(toVerseRenderData(selectedVerse, translation), null)
+      return
+    }
+
+    if (selectedSlide) {
+      setPreviewAndAutoLive(
+        {
+          reference: selectedSlide.name,
+          themeSection: "presentation",
+          segments: [],
+          presentationImage: {
+            url: selectedSlide.url,
+            name: selectedSlide.name,
+            mediaType: selectedSlide.mediaType,
+            fit: selectedSlide.fit,
+            scale: selectedSlide.scale,
+            offsetX: selectedSlide.offsetX,
+            offsetY: selectedSlide.offsetY,
+          },
+        },
+        null
+      )
+      return
+    }
+
+    setPreviewAndAutoLive(null, null)
+  }, [
+    isPresentationMode,
+    selectedSlide,
+    selectedVerse,
+    translation,
+    setPreviewAndAutoLive,
+  ])
+
+  useEffect(() => {
+    if (!previewTimer) return
+    setPreviewAndAutoLive(previewVerse, timer)
+  }, [previewTimer, timer, previewVerse, setPreviewAndAutoLive])
+
+  const sendPreviewLive = () => {
+    const store = useBroadcastStore.getState()
+    if (previewTimer) {
+      store.setPreviewOutput(previewVerse, timer)
+    }
+    store.takePreviewLive("preview")
+  }
 
   return (
     <div
@@ -145,11 +215,33 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     >
       <PanelHeader title="Program preview" />
       <div className="flex min-h-0 items-center justify-center p-3">
-        {isEmptyPresentation ? (
-          <PresentationEmptyState />
-        ) : (
-          <CanvasVerse theme={activeTheme} verse={verseData} timer={timer} />
-        )}
+        <CanvasVerse
+          theme={activeTheme}
+          verse={previewVerse}
+          timer={previewTimer}
+        />
+      </div>
+      <div className="border-t border-border px-3 py-2">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
+            Auto
+          </span>
+          <Switch
+            checked={autoPreviewToLive}
+            onCheckedChange={setAutoPreviewToLive}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="w-full justify-center gap-2"
+          onClick={sendPreviewLive}
+          disabled={!previewVerse && !previewTimer}
+        >
+          <RadioIcon className="size-3.5" />
+          Go live on preview
+        </Button>
       </div>
     </div>
   )
@@ -168,8 +260,6 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
     activeThemeId
   )
   const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
-
-  if (mode === "presentation") return null
 
   return (
     <div
@@ -276,8 +366,6 @@ export function MotionPanel({ mode }: { mode: ThemeAwareMode }) {
       store.syncBroadcastOutputFor("main")
     }
   }
-
-  if (mode === "presentation") return null
 
   return (
     <div

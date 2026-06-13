@@ -16,12 +16,18 @@ const COLUMN_MIN_WIDTHS = [300, 340, 280]
 const HANDLE_WIDTH = 12
 const ROW_MIN_HEIGHTS = [160, 220]
 const HANDLE_HEIGHT = 12
-type SearchMode = "book" | "context" | "songs" | "presentation"
+type SearchMode = "book" | "context" | "songs" | "presentation" | "timer"
 
 const DASHBOARD_LAYOUT_STORAGE_KEY = "fellowshow:dashboard-layout:v1"
 const DEFAULT_COLUMN_RATIOS = [1.15, 1.45, 1]
 const DEFAULT_MIDDLE_ROW_RATIOS = [0.7, 1.3]
-const SEARCH_MODES: SearchMode[] = ["book", "context", "songs", "presentation"]
+const SEARCH_MODES: SearchMode[] = [
+  "book",
+  "context",
+  "songs",
+  "presentation",
+  "timer",
+]
 
 interface DashboardLayoutSnapshot {
   columnRatios?: number[]
@@ -43,6 +49,7 @@ function getDefaultMiddleRowRatiosByMode(): MiddleRowRatiosByMode {
     context: [...DEFAULT_MIDDLE_ROW_RATIOS],
     songs: [...DEFAULT_MIDDLE_ROW_RATIOS],
     presentation: [...DEFAULT_MIDDLE_ROW_RATIOS],
+    timer: [...DEFAULT_MIDDLE_ROW_RATIOS],
   }
 }
 
@@ -330,7 +337,7 @@ export function Dashboard() {
 
   const handleSearchModeChange = useCallback((mode: SearchMode) => {
     setSearchMode(mode)
-    const section = mode === "songs" ? "songs" : "bible"
+    const section = mode === "songs" ? "songs" : mode === "presentation" ? "presentation" : "bible"
     useBroadcastStore.getState().setSelectedThemeSection(section)
   }, [])
 
@@ -346,7 +353,7 @@ export function Dashboard() {
       className="bg-background"
     >
       <div>
-        <TransportBar showPresenterTimer={searchMode === "presentation"} />
+        <TransportBar />
       </div>
 
       <div
@@ -390,8 +397,12 @@ export function Dashboard() {
         <div className="grid min-h-0 content-start items-start gap-3 overflow-y-auto pr-1 [scrollbar-width:thin] *:min-h-0">
           <LiveOutputPanel mode={searchMode} />
           <PreviewPanel mode={searchMode} />
-          {searchMode !== "presentation" && <ThemesPanel mode={searchMode} />}
-          {searchMode !== "presentation" && <MotionPanel mode={searchMode} />}
+          {searchMode !== "timer" && (
+            <ThemesPanel mode={searchMode} />
+          )}
+          {searchMode !== "timer" && (
+            <MotionPanel mode={searchMode} />
+          )}
         </div>
       </div>
     </div>

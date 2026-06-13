@@ -2,17 +2,40 @@ import { open, save } from "@tauri-apps/plugin-dialog"
 import { readFile, writeTextFile } from "@tauri-apps/plugin-fs"
 import type { BroadcastTheme } from "@/types"
 
+function bytesToDataUrl(bytes: Uint8Array, mime: string): string {
+  let binary = ""
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte)
+  }
+  return `data:${mime};base64,${btoa(binary)}`
+}
+
 /**
  * Opens a native file dialog to pick a background image or video, reads it,
  * and returns a base64 data URL that persists across restarts.
  */
-export async function pickThemeBackgroundMedia(): Promise<{ url: string; mediaType: "image" | "video" } | null> {
+export async function pickThemeBackgroundMedia(): Promise<{
+  url: string
+  mediaType: "image" | "video"
+} | null> {
   const selected = await open({
     multiple: false,
     filters: [
       {
         name: "Images and Videos",
-        extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "mp4", "webm", "mov", "m4v"],
+        extensions: [
+          "png",
+          "jpg",
+          "jpeg",
+          "webp",
+          "gif",
+          "bmp",
+          "svg",
+          "mp4",
+          "webm",
+          "mov",
+          "m4v",
+        ],
       },
       {
         name: "Videos",
@@ -41,12 +64,70 @@ export async function pickThemeBackgroundMedia(): Promise<{ url: string; mediaTy
   const mime = mimeMap[extension] ?? "image/png"
   const mediaType = mime.startsWith("video/") ? "video" : "image"
 
-  let binary = ""
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte)
+  return { url: bytesToDataUrl(bytes, mime), mediaType }
+}
+
+/**
+ * Opens a native file dialog to pick a timer background image or video and
+ * returns a base64 data URL that persists in app state.
+ */
+export async function pickTimerBackgroundMedia(): Promise<{
+  url: string
+  name: string
+  mediaType: "image" | "video"
+} | null> {
+  const selected = await open({
+    multiple: false,
+    filters: [
+      {
+        name: "Images and Videos",
+        extensions: [
+          "png",
+          "jpg",
+          "jpeg",
+          "webp",
+          "gif",
+          "bmp",
+          "svg",
+          "mp4",
+          "webm",
+          "mov",
+          "m4v",
+        ],
+      },
+      {
+        name: "Videos",
+        extensions: ["mp4", "webm", "mov", "m4v"],
+      },
+    ],
+  })
+  if (!selected) return null
+
+  const path = typeof selected === "string" ? selected : selected
+  const bytes = await readFile(path)
+  const extension = path.split(".").pop()?.toLowerCase() ?? "png"
+  const name =
+    path
+      .split(/[\\/]/)
+      .pop()
+      ?.replace(/\.[^.]+$/, "") ?? "Uploaded background"
+  const mimeMap: Record<string, string> = {
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    webp: "image/webp",
+    gif: "image/gif",
+    bmp: "image/bmp",
+    svg: "image/svg+xml",
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mov: "video/quicktime",
+    m4v: "video/mp4",
   }
-  const base64 = btoa(binary)
-  return { url: `data:${mime};base64,${base64}`, mediaType }
+  const mime = mimeMap[extension] ?? "image/png"
+  const mediaType = mime.startsWith("video/") ? "video" : "image"
+
+  return { url: bytesToDataUrl(bytes, mime), name, mediaType }
 }
 
 /**
