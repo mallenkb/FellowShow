@@ -6,7 +6,10 @@ export function useTauriEvent<T>(
   handler: (payload: T) => void
 ) {
   const handlerRef = useRef(handler)
-  handlerRef.current = handler
+
+  useEffect(() => {
+    handlerRef.current = handler
+  }, [handler])
 
   useEffect(() => {
     // Track whether this effect has been cleaned up.

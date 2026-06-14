@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Button } from "@/components/ui/button"
@@ -151,7 +152,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       const store = useBroadcastStore.getState()
       store.setPreviewOutput(verse, timer)
       if (store.autoPreviewToLive) {
-        store.takePreviewLive("preview")
+        store.showPreviewOnLive("preview")
       }
     },
     []
@@ -205,24 +206,26 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     if (previewTimer) {
       store.setPreviewOutput(previewVerse, timer)
     }
-    store.takePreviewLive("preview")
+    store.showPreviewOnLive("preview")
   }
 
   return (
     <div
       data-slot="preview-panel"
-      className="flex h-fit min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className="flex h-[318px] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <PanelHeader title="Program preview" />
-      <div className="flex min-h-0 items-center justify-center p-3">
+      <div className="relative z-0 flex min-h-0 flex-1 items-stretch justify-stretch">
         <CanvasVerse
           theme={activeTheme}
           verse={previewVerse}
           timer={previewTimer}
+          className="h-full"
+          fillContainer
         />
       </div>
-      <div className="border-t border-border px-3 py-2">
-        <div className="mb-2 flex items-center justify-between">
+      <div className="relative z-10 border-t border-border bg-card px-3 py-2">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
             Auto
           </span>
@@ -235,12 +238,12 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
           type="button"
           variant="secondary"
           size="sm"
-          className="w-full justify-center gap-2"
+          className="h-auto min-h-8 w-full justify-center gap-2 whitespace-normal py-2 text-center"
           onClick={sendPreviewLive}
-          disabled={!previewVerse && !previewTimer}
+          disabled={autoPreviewToLive || (!previewVerse && !previewTimer)}
         >
-          <RadioIcon className="size-3.5" />
-          Go live on preview
+          <RadioIcon className="size-3.5 shrink-0" />
+          Show on Live display
         </Button>
       </div>
     </div>
@@ -262,17 +265,20 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
   const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
 
   return (
-    <div
+    <motion.div
       data-slot="themes-panel"
-      className="flex h-fit min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      initial={false}
+      animate={{ height: isOpen ? "auto" : 44 }}
+      transition={{ duration: 0.18, ease: "easeInOut" }}
+      className="flex min-h-0 shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex h-10 items-center justify-between px-3 text-left transition hover:bg-muted/35"
+        className="flex h-11 shrink-0 flex-wrap items-center justify-between gap-2 px-3 py-2 text-left transition hover:bg-muted/35"
         aria-expanded={isOpen}
       >
-        <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <span className="min-w-0 text-xs font-medium tracking-wider break-words text-muted-foreground uppercase">
           Themes
         </span>
         <ChevronDownIcon
@@ -282,52 +288,61 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
           )}
         />
       </button>
-      {isOpen && (
-        <div className="px-3 pt-1 pb-4">
-          {visibleThemes.length > 0 ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
-              {visibleThemes.map((theme) => {
-                const isActive = theme.id === activeThemeId
-                return (
-                  <button
-                    key={theme.id}
-                    type="button"
-                    onClick={() => {
-                      useBroadcastStore
-                        .getState()
-                        .setActiveTheme(theme.id, selectedSection)
-                    }}
-                    className={cn(
-                      "group min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
-                      isActive &&
-                        "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70"
-                    )}
-                    title={`Use ${theme.name}`}
-                  >
-                    <div className="aspect-video overflow-hidden rounded-sm">
-                      <CanvasVerse theme={theme} verse={thumbnailVerse} />
-                    </div>
-                    <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-                      <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
-                        {theme.name}
-                      </span>
-                      {isActive && (
-                        <span className="size-2 shrink-0 rounded-full bg-[#101084] dark:bg-[#F1E600]" />
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            key="themes-content"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+            className="px-3 pt-1 pb-4"
+          >
+            {visibleThemes.length > 0 ? (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
+                {visibleThemes.map((theme) => {
+                  const isActive = theme.id === activeThemeId
+                  return (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => {
+                        useBroadcastStore
+                          .getState()
+                          .setActiveTheme(theme.id, selectedSection)
+                      }}
+                      className={cn(
+                        "group min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
+                        isActive &&
+                          "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70"
                       )}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="py-3 text-center text-xs text-muted-foreground">
-              No themes available for{" "}
-              {THEME_SECTION_LABELS[selectedSection].toLowerCase()}.
-            </p>
-          )}
-        </div>
-      )}
-    </div>
+                      title={`Use ${theme.name}`}
+                    >
+                      <div className="aspect-video overflow-hidden rounded-sm">
+                        <CanvasVerse theme={theme} verse={thumbnailVerse} />
+                      </div>
+                      <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+                        <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
+                          {theme.name}
+                        </span>
+                        {isActive && (
+                          <span className="size-2 shrink-0 rounded-full bg-[#101084] dark:bg-[#F1E600]" />
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="py-3 text-center text-xs text-muted-foreground">
+                No themes available for{" "}
+                {THEME_SECTION_LABELS[selectedSection].toLowerCase()}.
+              </p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }
 
@@ -368,14 +383,17 @@ export function MotionPanel({ mode }: { mode: ThemeAwareMode }) {
   }
 
   return (
-    <div
+    <motion.div
       data-slot="motion-panel"
-      className="flex h-fit min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      initial={false}
+      animate={{ height: isOpen ? "auto" : 44 }}
+      transition={{ duration: 0.18, ease: "easeInOut" }}
+      className="flex min-h-0 shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex h-10 items-center justify-between px-3 text-left transition hover:bg-muted/35"
+        className="flex h-11 shrink-0 items-center justify-between px-3 text-left transition hover:bg-muted/35"
         aria-expanded={isOpen}
       >
         <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -388,8 +406,16 @@ export function MotionPanel({ mode }: { mode: ThemeAwareMode }) {
           )}
         />
       </button>
-      {isOpen && activeTheme && (
-        <div className="grid gap-3 px-4 pt-1 pb-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <AnimatePresence initial={false}>
+        {isOpen && activeTheme && (
+          <motion.div
+            key="motion-content"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+            className="grid gap-3 px-4 pt-1 pb-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+          >
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-muted-foreground">
               Animation
@@ -456,8 +482,9 @@ export function MotionPanel({ mode }: { mode: ThemeAwareMode }) {
               </div>
             </>
           )}
-        </div>
-      )}
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }

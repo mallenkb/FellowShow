@@ -5,7 +5,7 @@
  */
 
 import { Database } from "bun:sqlite"
-import { readFileSync } from "node:fs"
+import { readFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
 
 const DATA_DIR = import.meta.dir
@@ -98,7 +98,11 @@ function main() {
   console.log("\n🔨 Building fellowshow.db...\n")
 
   // Remove existing DB
-  try { require("node:fs").unlinkSync(DB_PATH) } catch {}
+  try {
+    unlinkSync(DB_PATH)
+  } catch {
+    // No existing database to remove.
+  }
 
   const db = new Database(DB_PATH, { create: true })
 

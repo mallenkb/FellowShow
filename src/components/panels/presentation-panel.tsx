@@ -17,7 +17,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { GripVerticalIcon, ImageIcon, MoreHorizontalIcon, PinOffIcon, TrashIcon, TypeIcon } from "lucide-react"
+import {
+  GripVerticalIcon,
+  ImageIcon,
+  LockIcon,
+  MoreHorizontalIcon,
+  PinOffIcon,
+  TrashIcon,
+  TypeIcon,
+  UnlockIcon,
+} from "lucide-react"
 import { usePresentationStore } from "@/stores"
 
 function VideoSlideThumbnail({
@@ -95,8 +104,12 @@ export function PresentationPanel() {
 	              return (
 	                <article
 	                  key={slide.id}
-	                  draggable
+	                  draggable={!slide.locked}
 	                  onDragStart={(event) => {
+                      if (slide.locked) {
+                        event.preventDefault()
+                        return
+                      }
 	                    setDraggedId(slide.id)
 	                    setDropTargetId(null)
 	                    lastDragOverIdRef.current = slide.id
@@ -143,6 +156,7 @@ export function PresentationPanel() {
 	                      : "border-border hover:bg-muted/30",
 	                    isDropTarget && "border-[#F1E600] bg-[#F1E600]/10",
 	                    isDragging && "opacity-45",
+                      slide.locked && "cursor-default",
 	                  )}
                 >
                   <div className="aspect-video overflow-hidden bg-black">
@@ -183,9 +197,32 @@ export function PresentationPanel() {
                         event.stopPropagation()
                         usePresentationStore.getState().togglePin(slide.id)
                       }}
+                      disabled={slide.locked}
                       title="Unpin"
                     >
                       <PinOffIcon className="size-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      className={cn(
+                        "shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
+                        slide.locked && "opacity-100 text-[#101084] dark:text-[#F1E600]"
+                      )}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        usePresentationStore.getState().toggleLock(slide.id)
+                      }}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onDragStart={(event) => event.preventDefault()}
+                      title={slide.locked ? "Unlock slide" : "Lock slide"}
+                    >
+                      {slide.locked ? (
+                        <LockIcon className="size-3 fill-current" />
+                      ) : (
+                        <UnlockIcon className="size-3" />
+                      )}
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -213,6 +250,7 @@ export function PresentationPanel() {
                             setRenamingSlideName(slide.name)
                             usePresentationStore.getState().selectSlide(slide.id)
                           }}
+                          disabled={slide.locked}
                         >
                           <TypeIcon className="size-3.5" />
                           Rename
@@ -221,15 +259,29 @@ export function PresentationPanel() {
                           onSelect={() => {
                             usePresentationStore.getState().togglePin(slide.id)
                           }}
+                          disabled={slide.locked}
                         >
                           <PinOffIcon className="size-3.5" />
                           Unpin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            usePresentationStore.getState().toggleLock(slide.id)
+                          }}
+                        >
+                          {slide.locked ? (
+                            <UnlockIcon className="size-3.5" />
+                          ) : (
+                            <LockIcon className="size-3.5" />
+                          )}
+                          {slide.locked ? "Unlock slide" : "Lock slide"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           variant="destructive"
                           onSelect={() => {
                             usePresentationStore.getState().removeSlide(slide.id)
                           }}
+                          disabled={slide.locked}
                         >
                           <TrashIcon className="size-3.5" />
                           Remove slide

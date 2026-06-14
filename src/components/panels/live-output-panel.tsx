@@ -70,15 +70,15 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
     <div
       data-slot="live-output-panel"
       className={cn(
-        "flex h-fit min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
+        "flex h-[236px] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
         isLive && "shadow-[inset_0_2px_0_0_rgba(239,68,68,0.3)]"
       )}
     >
       <PanelHeader title="Live display">
-        <label className="flex items-center gap-2">
+        <label className="flex min-w-0 flex-wrap items-center justify-end gap-2">
           <span
             className={cn(
-              "text-[0.625rem] font-medium tracking-wider uppercase transition-colors",
+              "min-w-0 text-[0.625rem] font-medium tracking-wider break-words uppercase transition-colors",
               isLive ? "text-red-400" : "text-muted-foreground"
             )}
           >
@@ -94,7 +94,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
 
       <div
         className={cn(
-          "flex min-h-0 items-center justify-center p-3 transition-opacity",
+          "relative z-0 flex min-h-0 flex-1 items-stretch justify-stretch transition-opacity",
           !isLive && "opacity-40"
         )}
       >
@@ -103,6 +103,8 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           verse={liveVerse}
           timer={liveTimer}
           lowerThird={lowerThird}
+          className="h-full"
+          fillContainer
         />
       </div>
     </div>

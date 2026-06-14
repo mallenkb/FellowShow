@@ -319,7 +319,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     >
       <canvas
         ref={canvasRef}
-        className={cn("w-full rounded-md", fillContainer && "h-full")}
+        className={cn("block w-full", fillContainer ? "h-full" : "rounded-md")}
       />
     </div>
   )

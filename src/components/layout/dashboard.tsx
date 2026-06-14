@@ -394,7 +394,7 @@ export function Dashboard() {
           onPointerDown={(event) => startColumnResize(1, event)}
         />
 
-        <div className="grid min-h-0 content-start items-start gap-3 overflow-y-auto pr-1 [scrollbar-width:thin] *:min-h-0">
+        <div className="flex h-full min-h-0 flex-col items-stretch gap-3 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] *:min-h-0">
           <LiveOutputPanel mode={searchMode} />
           <PreviewPanel mode={searchMode} />
           {searchMode !== "timer" && (

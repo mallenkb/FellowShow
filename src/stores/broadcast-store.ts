@@ -60,6 +60,7 @@ interface BroadcastState {
     timer: PresenterTimerRenderData | null
   ) => void
   setLive: (live: boolean) => void
+  showPreviewOnLive: (source?: "manual" | "preview") => void
   takePreviewLive: (source?: "manual" | "preview") => void
   setLiveVerse: (verse: VerseRenderData | null) => void
   setPresenterTimer: (timer: PresenterTimerRenderData | null) => void
@@ -212,7 +213,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   altActiveThemeId: DEFAULT_BROADCAST_THEME_ID,
   sectionThemeIds: { ...DEFAULT_SECTION_THEME_IDS },
   selectedThemeSection: "bible",
-  autoPreviewToLive: true,
+  autoPreviewToLive: false,
   previewVerse: null,
   previewTimer: null,
   liveSource: null,
@@ -431,6 +432,14 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       isLive,
       liveSource: isLive ? "manual" : null,
     }),
+  showPreviewOnLive: (source = "preview") => {
+    set((s) => ({
+      liveVerse: s.previewVerse,
+      presenterTimer: s.previewTimer,
+      liveSource: source,
+    }))
+    get().syncBroadcastOutput()
+  },
   takePreviewLive: (source = "manual") => {
     set((s) => ({
       isLive: true,

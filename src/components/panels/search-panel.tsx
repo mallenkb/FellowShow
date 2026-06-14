@@ -9,6 +9,7 @@ import {
   type PointerEvent,
 } from "react"
 import { createPortal } from "react-dom"
+import { motion } from "motion/react"
 import { invoke } from "@tauri-apps/api/core"
 // Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,8 @@ import {
   MusicIcon,
   ImageIcon,
   UploadIcon,
+  LockIcon,
+  UnlockIcon,
   TrashIcon,
   PinIcon,
   PencilIcon,
@@ -529,6 +532,9 @@ export function SearchPanel({
   const [presentationDropTargetId, setPresentationDropTargetId] = useState<
     string | null
   >(null)
+  const [presentationDropPosition, setPresentationDropPosition] = useState<
+    "before" | "after"
+  >("before")
   const [transformInteraction, setTransformInteraction] =
     useState<TransformInteraction | null>(null)
 
@@ -543,6 +549,25 @@ export function SearchPanel({
   const transformPreviewRef = useRef<HTMLDivElement>(null)
   const lastPresentationDragOverIdRef = useRef<string | null>(null)
   const draggedPresentationIdRef = useRef<string | null>(null)
+
+  const updatePresentationDropTarget = useCallback(
+    (event: React.DragEvent<HTMLElement>, slideId: string) => {
+      const fromId = draggedPresentationIdRef.current
+      if (!fromId || fromId === slideId) return
+
+      const rect = event.currentTarget.getBoundingClientRect()
+      const position =
+        event.clientY > rect.top + rect.height / 2 ? "after" : "before"
+      const targetKey = `${slideId}:${position}`
+      setPresentationDropTargetId(slideId)
+      setPresentationDropPosition(position)
+      if (lastPresentationDragOverIdRef.current === targetKey) return
+
+      lastPresentationDragOverIdRef.current = targetKey
+      usePresentationStore.getState().reorderSlides(fromId, slideId, position)
+    },
+    []
+  )
 
   useEffect(() => {
     onSearchModeChange?.(activeTab)
@@ -768,6 +793,7 @@ export function SearchPanel({
           : ("image" as const),
         createdAt: Date.now(),
         pinned: false,
+        locked: false,
         fit: "contain" as const,
         scale: 1,
         offsetX: 0,
@@ -802,6 +828,8 @@ export function SearchPanel({
       if (event.currentTarget.contains(event.relatedTarget as Node | null))
         return
       setIsPresentationDragging(false)
+      setPresentationDropTargetId(null)
+      setPresentationDropPosition("before")
     },
     [activeTab]
   )
@@ -814,6 +842,8 @@ export function SearchPanel({
       event.preventDefault()
       event.stopPropagation()
       setIsPresentationDragging(false)
+      setPresentationDropTargetId(null)
+      setPresentationDropPosition("before")
       handlePresentationFiles(event.dataTransfer.files)
     },
     [activeTab, handlePresentationFiles]
@@ -1832,10 +1862,14 @@ export function SearchPanel({
           ) : (
             <div className="grid grid-cols-1 gap-2 p-2">
               {pinnedPresentationSlides.length > 0 ? (
-                <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+                <motion.div
+                  layout="position"
+                  transition={{ duration: 0.14, ease: "easeOut" }}
+                  className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase"
+                >
                   <span>Pinned</span>
                   <span className="h-px flex-1 bg-border" />
-                </div>
+                </motion.div>
               ) : null}
               {orderedPresentationSlides.map((slide, index) => {
                 const isActive = slide.id === selectedPresentationSlideId
@@ -1843,6 +1877,10 @@ export function SearchPanel({
                 const isDropTarget =
                   slide.id === presentationDropTargetId &&
                   slide.id !== draggedPresentationSlideId
+                const showDropBefore =
+                  isDropTarget && presentationDropPosition === "before"
+                const showDropAfter =
+                  isDropTarget && presentationDropPosition === "after"
                 const showUnpinnedDivider =
                   pinnedPresentationSlides.length > 0 &&
                   index === pinnedPresentationSlides.length &&
@@ -1850,20 +1888,36 @@ export function SearchPanel({
                 return (
                   <Fragment key={slide.id}>
                     {showUnpinnedDivider ? (
-                      <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+                      <motion.div
+                        layout="position"
+                        transition={{ duration: 0.14, ease: "easeOut" }}
+                        className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase"
+                      >
                         <span>Presentations</span>
                         <span className="h-px flex-1 bg-border" />
-                      </div>
+                      </motion.div>
                     ) : null}
-                    <article
+                    <motion.article
+                      layout={isDragging ? false : "position"}
+                      transition={{
+                        layout: {
+                          duration: 0.14,
+                          ease: "easeOut",
+                        },
+                      }}
                       draggable
-                      onDragEnd={() => {
+                      onDragEndCapture={() => {
                         draggedPresentationIdRef.current = null
                         setDraggedPresentationSlideId(null)
                         setPresentationDropTargetId(null)
+                        setPresentationDropPosition("before")
                         lastPresentationDragOverIdRef.current = null
                       }}
-                      onDragStart={(event) => {
+                      onDragStartCapture={(event) => {
+                        if (slide.locked) {
+                          event.preventDefault()
+                          return
+                        }
                         draggedPresentationIdRef.current = slide.id
                         lastPresentationDragOverIdRef.current = slide.id
                         event.dataTransfer.effectAllowed = "move"
@@ -1873,6 +1927,7 @@ export function SearchPanel({
                         requestAnimationFrame(() => {
                           setDraggedPresentationSlideId(slide.id)
                           setPresentationDropTargetId(null)
+                          setPresentationDropPosition("before")
                         })
                       }}
                       onDragOver={(event) => {
@@ -1881,21 +1936,14 @@ export function SearchPanel({
                         event.preventDefault()
                         event.stopPropagation()
                         event.dataTransfer.dropEffect = "move"
-                        if (
-                          slide.id !== fromId &&
-                          presentationDropTargetId !== slide.id
-                        ) {
-                          setPresentationDropTargetId(slide.id)
-                        }
+                        updatePresentationDropTarget(event, slide.id)
                       }}
                       onDragEnter={(event) => {
                         const fromId = draggedPresentationIdRef.current
                         if (!fromId) return
                         event.preventDefault()
                         event.stopPropagation()
-                        if (slide.id !== fromId) {
-                          setPresentationDropTargetId(slide.id)
-                        }
+                        updatePresentationDropTarget(event, slide.id)
                       }}
                       onDrop={(event) => {
                         const fromId =
@@ -1904,28 +1952,27 @@ export function SearchPanel({
                         if (!fromId) return
                         event.preventDefault()
                         event.stopPropagation()
-                        if (fromId !== slide.id) {
-                          usePresentationStore
-                            .getState()
-                            .reorderSlides(fromId, slide.id)
-                        }
                         draggedPresentationIdRef.current = null
                         setDraggedPresentationSlideId(null)
                         setPresentationDropTargetId(null)
+                        setPresentationDropPosition("before")
                         lastPresentationDragOverIdRef.current = null
                       }}
                       onClick={() =>
                         usePresentationStore.getState().selectSlide(slide.id)
                       }
                       className={cn(
-                        "group relative cursor-grab overflow-hidden rounded-lg border p-2 transition-all select-none active:cursor-grabbing",
+                        "group relative cursor-pointer overflow-hidden rounded-lg border p-2 transition-colors select-none active:cursor-grabbing",
                         isActive
                           ? "border-[#101084]/60 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
                           : "border-border bg-background/30 hover:bg-muted/40",
-                        isDropTarget && "border-[#F1E600]",
-                        isDragging && "scale-[0.99] border-dashed opacity-55"
+                        isDragging && "scale-[0.99] border-dashed opacity-55",
+                        slide.locked && "cursor-default"
                       )}
                     >
+                      {showDropBefore ? (
+                        <div className="pointer-events-none absolute inset-x-2 top-0 z-20 h-0.5 -translate-y-1 rounded-full bg-[#F1E600] shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+                      ) : null}
                       <div className="flex min-w-0 items-center gap-2">
                         <div className="h-14 w-24 shrink-0 overflow-hidden rounded-md bg-black">
                           {slide.mediaType === "video" ? (
@@ -1949,8 +1996,6 @@ export function SearchPanel({
                         <div
                           className="min-w-0 flex-1 select-none"
                           draggable={false}
-                          onMouseDown={(event) => event.stopPropagation()}
-                          onClick={(event) => event.stopPropagation()}
                         >
                           <p className="truncate text-sm font-medium text-foreground">
                             {slide.name}
@@ -1971,6 +2016,7 @@ export function SearchPanel({
                             event.stopPropagation()
                             usePresentationStore.getState().togglePin(slide.id)
                           }}
+                          disabled={slide.locked}
                           onPointerDown={(event) => event.stopPropagation()}
                           onDragStart={(event) => event.preventDefault()}
                           title={slide.pinned ? "Unpin" : "Pin to Default"}
@@ -2010,6 +2056,7 @@ export function SearchPanel({
                                   .getState()
                                   .selectSlide(slide.id)
                               }}
+                              disabled={slide.locked}
                             >
                               <TypeIcon className="size-3.5" />
                               Rename
@@ -2021,9 +2068,24 @@ export function SearchPanel({
                                   .getState()
                                   .selectSlide(slide.id)
                               }}
+                              disabled={slide.locked}
                             >
                               <PencilIcon className="size-3.5" />
                               Edit position
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                usePresentationStore
+                                  .getState()
+                                  .toggleLock(slide.id)
+                              }}
+                            >
+                              {slide.locked ? (
+                                <UnlockIcon className="size-3.5" />
+                              ) : (
+                                <LockIcon className="size-3.5" />
+                              )}
+                              {slide.locked ? "Unlock slide" : "Lock slide"}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onPointerDown={(event) => event.stopPropagation()}
@@ -2032,6 +2094,7 @@ export function SearchPanel({
                                   .getState()
                                   .togglePin(slide.id)
                               }}
+                              disabled={slide.locked}
                             >
                               <PinIcon
                                 className={cn(
@@ -2048,6 +2111,7 @@ export function SearchPanel({
                                   .getState()
                                   .removeSlide(slide.id)
                               }}
+                              disabled={slide.locked}
                             >
                               <TrashIcon className="size-3.5" />
                               Remove slide
@@ -2055,7 +2119,10 @@ export function SearchPanel({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                    </article>
+                      {showDropAfter ? (
+                        <div className="pointer-events-none absolute inset-x-2 bottom-0 z-20 h-0.5 translate-y-1 rounded-full bg-[#F1E600] shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+                      ) : null}
+                    </motion.article>
                   </Fragment>
                 )
               })}

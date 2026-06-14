@@ -16,17 +16,19 @@ function PanelHeader({
     <div
       data-slot="panel-header"
       className={cn(
-        "flex min-h-11 items-center justify-between bg-card px-3",
+        "relative z-20 flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-card px-3 py-2",
         className
       )}
       {...props}
     >
-      <span className="flex items-center gap-2 text-[0.6875rem] font-medium uppercase tracking-wider text-muted-foreground">
+      <span className="flex min-w-0 items-center gap-2 text-[0.6875rem] font-medium tracking-wider text-wrap break-words text-muted-foreground uppercase">
         {icon}
         {title}
       </span>
       {children && (
-        <div className="flex items-center gap-1">{children}</div>
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">
+          {children}
+        </div>
       )}
     </div>
   )

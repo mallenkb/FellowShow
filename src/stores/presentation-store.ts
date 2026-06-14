@@ -7,6 +7,7 @@ export interface PresentationSlide {
   mediaType?: "image" | "video"
   createdAt: number
   pinned: boolean
+  locked: boolean
   fit: "contain" | "cover" | "stretch"
   scale: number
   offsetX: number
@@ -27,7 +28,8 @@ interface PresentationState {
   ) => void
   setTickerText: (text: string) => void
   togglePin: (id: string) => void
-  reorderSlides: (fromId: string, toId: string) => void
+  toggleLock: (id: string) => void
+  reorderSlides: (fromId: string, toId: string, position?: "before" | "after") => void
   removeSlide: (id: string) => void
   clearSlides: () => void
 }
@@ -60,21 +62,23 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   renameSlide: (id, name) =>
     set((state) => ({
       slides: state.slides.map((slide) =>
-        slide.id === id ? { ...slide, name } : slide,
+        slide.id === id && !slide.locked ? { ...slide, name } : slide,
       ),
     })),
 
   setSlideFit: (id, fit) =>
     set((state) => ({
       slides: state.slides.map((slide) =>
-        slide.id === id ? { ...slide, fit } : slide,
+        slide.id === id && !slide.locked ? { ...slide, fit } : slide,
       ),
     })),
 
   updateSlideTransform: (id, transform) =>
     set((state) => ({
       slides: state.slides.map((slide) =>
-        slide.id === id ? { ...slide, ...transform } : slide,
+        slide.id === id && !slide.locked
+          ? { ...slide, ...transform }
+          : slide,
       ),
     })),
 
@@ -84,6 +88,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
       if (slideIndex === -1) return state
 
       const slide = state.slides[slideIndex]
+      if (slide.locked) return state
       const slides = [...state.slides]
       slides.splice(slideIndex, 1)
 
@@ -98,21 +103,32 @@ export const usePresentationStore = create<PresentationState>((set) => ({
       return { slides }
     }),
 
-  reorderSlides: (fromId, toId) =>
+  toggleLock: (id) =>
+    set((state) => ({
+      slides: state.slides.map((slide) =>
+        slide.id === id ? { ...slide, locked: !slide.locked } : slide,
+      ),
+    })),
+
+  reorderSlides: (fromId, toId, position = "before") =>
     set((state) => {
       const fromIndex = state.slides.findIndex((slide) => slide.id === fromId)
       const toIndex = state.slides.findIndex((slide) => slide.id === toId)
       if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return state
+      if (state.slides[fromIndex]?.locked || state.slides[toIndex]?.locked) return state
 
       const slides = [...state.slides]
       const [moved] = slides.splice(fromIndex, 1)
-      slides.splice(toIndex, 0, moved)
+      const targetIndex = slides.findIndex((slide) => slide.id === toId)
+      if (targetIndex === -1) return state
+      slides.splice(position === "after" ? targetIndex + 1 : targetIndex, 0, moved)
       return { slides }
     }),
 
   removeSlide: (id) =>
     set((state) => {
       const removedSlide = state.slides.find((slide) => slide.id === id)
+      if (removedSlide?.locked) return state
       if (removedSlide) revokeObjectUrl(removedSlide.url)
 
       const slides = state.slides.filter((slide) => slide.id !== id)

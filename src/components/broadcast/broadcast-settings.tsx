@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores"
-import type { LowerThirdRenderData } from "@/types"
 import type { NdiAlphaMode, NdiFrameRate, NdiResolution, NdiSessionInfo, NdiStartRequest } from "@/types"
 import {
   MonitorIcon,
@@ -31,8 +30,6 @@ import {
   EyeOffIcon,
   RefreshCwIcon,
   RadioIcon,
-  TextIcon,
-  Trash2Icon,
 } from "lucide-react"
 
 type OutputType = "display" | "ndi"
@@ -66,13 +63,6 @@ function ndiFrameRateToNumber(frameRate: NdiFrameRate): number {
   }
 }
 
-const EMPTY_LOWER_THIRD: LowerThirdRenderData = {
-  visible: false,
-  title: "",
-  subtitle: "",
-  label: "Speaker",
-}
-
 export function BroadcastSettings({
   open,
   onOpenChange,
@@ -82,7 +72,6 @@ export function BroadcastSettings({
 }) {
   const themes = useBroadcastStore((s) => s.themes)
   const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
-  const lowerThird = useBroadcastStore((s) => s.lowerThird)
 
   // Main output state
   const [mainEnabled, setMainEnabled] = useState(false)
@@ -114,31 +103,6 @@ export function BroadcastSettings({
   const syncBroadcastOutput = useCallback(() => {
     useBroadcastStore.getState().syncBroadcastOutput()
   }, [])
-
-  const lowerThirdDraft = lowerThird ?? EMPTY_LOWER_THIRD
-  const lowerThirdTitle = lowerThirdDraft.title.trim()
-  const lowerThirdSubtitle = lowerThirdDraft.subtitle?.trim() ?? ""
-  const lowerThirdLabel = lowerThirdDraft.label?.trim() ?? ""
-  const lowerThirdVisible = Boolean(lowerThirdDraft.visible && lowerThirdTitle)
-
-  const updateLowerThird = useCallback(
-    (updates: Partial<LowerThirdRenderData>) => {
-      const current = useBroadcastStore.getState().lowerThird ?? EMPTY_LOWER_THIRD
-      useBroadcastStore.getState().setLowerThird({
-        ...current,
-        ...updates,
-      })
-    },
-    [],
-  )
-
-  const handleToggleLowerThird = useCallback(
-    (visible: boolean) => {
-      if (visible && !lowerThirdTitle) return
-      updateLowerThird({ visible })
-    },
-    [lowerThirdTitle, updateLowerThird],
-  )
 
   const syncNdiConfigToOutput = useCallback(
     (
@@ -796,119 +760,6 @@ export function BroadcastSettings({
           </div>
         </div>
 
-        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <TextIcon className="size-4 shrink-0 text-muted-foreground" />
-              <span className="truncate text-sm font-medium">Lower Thirds</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "text-xs",
-                  lowerThirdVisible ? "text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {lowerThirdVisible ? "On" : "Off"}
-              </span>
-              <Switch
-                checked={lowerThirdVisible}
-                disabled={!lowerThirdTitle}
-                onCheckedChange={handleToggleLowerThird}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-[1fr_260px]">
-            <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-[140px_1fr]">
-                <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Label</label>
-                  <Input
-                    value={lowerThirdDraft.label ?? ""}
-                    maxLength={28}
-                    onChange={(event) => updateLowerThird({ label: event.target.value })}
-                    placeholder="Speaker"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Title</label>
-                  <Input
-                    value={lowerThirdDraft.title}
-                    maxLength={64}
-                    onChange={(event) => updateLowerThird({ title: event.target.value })}
-                    placeholder="Pastor Maya Johnson"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Subtitle</label>
-                <Input
-                  value={lowerThirdDraft.subtitle ?? ""}
-                  maxLength={80}
-                  onChange={(event) => updateLowerThird({ subtitle: event.target.value })}
-                  placeholder="Lead Pastor"
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={lowerThirdVisible ? "outline" : "default"}
-                  disabled={!lowerThirdTitle}
-                  onClick={() => handleToggleLowerThird(!lowerThirdVisible)}
-                  className="gap-1.5"
-                >
-                  {lowerThirdVisible ? (
-                    <>
-                      <EyeOffIcon className="size-3.5" />
-                      Hide
-                    </>
-                  ) : (
-                    <>
-                      <EyeIcon className="size-3.5" />
-                      Show
-                    </>
-                  )}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!lowerThird}
-                  onClick={() => useBroadcastStore.getState().clearLowerThird()}
-                  className="gap-1.5"
-                >
-                  <Trash2Icon className="size-3.5" />
-                  Clear
-                </Button>
-              </div>
-            </div>
-
-            <div className="relative min-h-32 overflow-hidden rounded-md border border-border bg-[#111827]">
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0)_46%)]" />
-              <div
-                className={cn(
-                  "absolute bottom-4 left-4 w-[82%] overflow-hidden rounded-md bg-slate-950/90 py-3 pr-4 pl-5 shadow-lg transition-opacity",
-                  !lowerThirdTitle && "opacity-45",
-                )}
-              >
-                <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-sky-400" />
-                {lowerThirdLabel && (
-                  <div className="truncate text-[0.625rem] font-bold tracking-wider text-sky-300 uppercase">
-                    {lowerThirdLabel}
-                  </div>
-                )}
-                <div className="mt-0.5 truncate text-sm font-bold text-white">
-                  {lowerThirdTitle || "Lower third title"}
-                </div>
-                <div className="mt-0.5 truncate text-xs font-medium text-blue-100/90">
-                  {lowerThirdSubtitle || "Subtitle"}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </DialogContent>
     </Dialog>
   )

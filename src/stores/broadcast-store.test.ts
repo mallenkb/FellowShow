@@ -13,6 +13,13 @@ describe("broadcast store sync", () => {
     vi.resetModules()
   })
 
+  it("starts with live output and auto preview disabled", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+
+    expect(useBroadcastStore.getState().isLive).toBe(false)
+    expect(useBroadcastStore.getState().autoPreviewToLive).toBe(false)
+  })
+
   it("syncBroadcastOutput emits current theme and verse to broadcast window", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
     const theme = useBroadcastStore.getState().themes[0]
@@ -137,6 +144,33 @@ describe("broadcast store sync", () => {
       expect.objectContaining({
         verse: expect.objectContaining({ reference: "Genesis 1:3" }),
         timer: expect.objectContaining({ remainingSeconds: 9 }),
+      })
+    )
+  })
+
+  it("can show preview output on live display without turning live on", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+
+    useBroadcastStore.setState({
+      previewVerse: {
+        reference: "Psalm 23:1",
+        segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
+      },
+      previewTimer: null,
+      isLive: false,
+      liveVerse: null,
+      presenterTimer: null,
+    })
+
+    useBroadcastStore.getState().showPreviewOnLive()
+
+    expect(useBroadcastStore.getState().isLive).toBe(false)
+    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:1")
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        verse: expect.objectContaining({ reference: "Psalm 23:1" }),
       })
     )
   })
