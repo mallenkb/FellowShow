@@ -13,7 +13,7 @@ impl BibleDb {
         chapter: i32,
         verse: i32,
     ) -> Result<Vec<CrossReference>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let from_ref = format!("{book_number}:{chapter}:{verse}");
         let mut stmt = conn.prepare(
             "SELECT from_ref, to_ref, votes \

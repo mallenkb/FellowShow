@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# Cancel superseded runs on the same ref to save runner minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend (typecheck, lint, test)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Unit tests
+        run: bun run test --run
+
+  rust:
+    name: Rust (fmt, clippy, test)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      # System libraries needed to compile the library crates:
+      # libasound2-dev for cpal (audio), libssl-dev + pkg-config for native-tls (stt).
+      # The root `fellowshow` Tauri binary (webkit2gtk + whisper.cpp) is excluded
+      # here for speed; it is built and validated by the Release workflow.
+      - name: Install build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libssl-dev pkg-config
+
+      - name: Format check
+        working-directory: src-tauri
+        run: cargo fmt --all --check
+
+      # Deny clippy's correctness group (real-bug lints) while leaving the
+      # project's pedantic/style lints at their configured `warn` level.
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --workspace --exclude fellowshow --all-targets -- -D clippy::correctness
+
+      - name: Test
+        working-directory: src-tauri
+        run: cargo test --workspace --exclude fellowshow

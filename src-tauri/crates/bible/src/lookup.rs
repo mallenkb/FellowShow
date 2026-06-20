@@ -5,12 +5,11 @@ use crate::models::{Book, SearchVerse, Translation, Verse};
 impl BibleDb {
     /// Look up a verse by its database primary key (verses.id).
     ///
-    /// # Panics
-    ///
-    /// Panics if the internal mutex is poisoned (i.e., a thread panicked
-    /// while holding the database lock). This applies to all `BibleDb` methods.
+    /// Like all `BibleDb` methods, this acquires the connection via
+    /// [`BibleDb::conn`], which recovers from a poisoned mutex rather than
+    /// panicking.
     pub fn get_verse_by_id(&self, id: i64) -> Result<Option<Verse>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT id, translation_id, book_number, book_name, book_abbreviation, chapter, verse, text \
              FROM verses WHERE id = ?1",
@@ -40,7 +39,7 @@ impl BibleDb {
         chapter: i32,
         verse: i32,
     ) -> Result<Option<Verse>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT id, translation_id, book_number, book_name, book_abbreviation, chapter, verse, text \
              FROM verses \
@@ -73,7 +72,7 @@ impl BibleDb {
         book_number: i32,
         chapter: i32,
     ) -> Result<Vec<Verse>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT id, translation_id, book_number, book_name, book_abbreviation, chapter, verse, text \
              FROM verses \
@@ -106,7 +105,7 @@ impl BibleDb {
         verse_start: i32,
         verse_end: i32,
     ) -> Result<Vec<Verse>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT id, translation_id, book_number, book_name, book_abbreviation, chapter, verse, text \
              FROM verses \
@@ -137,7 +136,7 @@ impl BibleDb {
         &self,
         translation_id: i64,
     ) -> Result<Vec<SearchVerse>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT book_number, book_name, chapter, verse, text \
              FROM verses \
@@ -157,7 +156,7 @@ impl BibleDb {
     }
 
     pub fn list_translations(&self) -> Result<Vec<Translation>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT id, abbreviation, title, language, is_copyrighted, is_downloaded \
              FROM translations",
@@ -179,7 +178,7 @@ impl BibleDb {
         &self,
         abbreviation: &str,
     ) -> Result<Option<i64>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn
             .prepare("SELECT id FROM translations WHERE abbreviation = ?1 AND is_downloaded = 1")?;
         let mut rows = stmt.query([abbreviation])?;
@@ -190,7 +189,7 @@ impl BibleDb {
     }
 
     pub fn list_books(&self, translation_id: i64) -> Result<Vec<Book>, BibleError> {
-        let conn = self.conn.lock().unwrap();
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT id, translation_id, book_number, name, abbreviation, testament \
              FROM books \
@@ -215,7 +214,7 @@ impl BibleDb {
         source_db_path: &std::path::Path,
         abbreviation: &str,
     ) -> Result<Translation, BibleError> {
-        let mut conn = self.conn.lock().unwrap();
+        let mut conn = self.conn();
 
         // ATTACH/DETACH are handled at the connection level, outside the
         // transaction. If they live inside the transaction, a failed install

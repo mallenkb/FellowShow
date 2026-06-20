@@ -83,8 +83,9 @@ import {
 import type { Book, Verse, SemanticSearchResult } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
 import { createSongSearchIndex, searchSongs } from "@/lib/song-search"
-import { copSongs, type CopSong, type CopSongSource } from "@/lib/cop-songs"
-import { importedSongs } from "@/lib/imported-songs"
+import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
+import { loadAllSongs } from "@/lib/songs-data"
+import { compareSongPdfOrder } from "@/lib/song-ordering"
 import { splitLyricBlocks } from "@/lib/lyrics"
 import { PresenterTimer } from "@/components/controls/presenter-timer"
 
@@ -116,45 +117,12 @@ type TransformInteraction =
 const LYRIC_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const SHOW_CONTEXT_SEARCH = false
 const SONG_RENDER_LIMIT = 100
-const allSongs = [...copSongs, ...importedSongs]
 const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
   { value: "all", label: "All songs" },
   { value: "theme-2026", label: "2026 Theme" },
   { value: "theme-2025", label: "2025 Theme" },
   { value: "pentecostal-book", label: "Pentecostal Book" },
 ]
-
-function compareLyricTitles(a: { title: string }, b: { title: string }) {
-  return a.title.localeCompare(b.title, undefined, {
-    sensitivity: "base",
-    numeric: true,
-  })
-}
-
-function compareLyricNumbers(
-  a: { number: number; title: string },
-  b: { number: number; title: string }
-) {
-  if (a.number !== b.number) return a.number - b.number
-  return compareLyricTitles(a, b)
-}
-
-function getSongSourceOrder(song: CopSong) {
-  if (song.source === "theme-2026") return 1
-  if (song.source === "theme-2025") return 2
-  if (song.source === "pentecostal-book") return 3
-  return 0
-}
-
-function compareSongPdfOrder(a: CopSong, b: CopSong) {
-  const sourceOrder = getSongSourceOrder(a) - getSongSourceOrder(b)
-  if (sourceOrder !== 0) return sourceOrder
-
-  const languageOrder = a.language.localeCompare(b.language)
-  if (!a.source && !b.source && languageOrder !== 0) return languageOrder
-
-  return compareLyricNumbers(a, b)
-}
 
 function hashString(value: string) {
   let hash = 0
@@ -873,7 +841,23 @@ export function SearchPanel({
     [formatSongReference, makeSongVerse]
   )
 
-  const songSearchIndex = useMemo(() => createSongSearchIndex(allSongs), [])
+  // Song catalog is code-split and fetched the first time the Songs tab opens.
+  const [allSongs, setAllSongs] = useState<CopSong[]>([])
+  useEffect(() => {
+    if (activeTab !== "songs" || allSongs.length > 0) return
+    let active = true
+    loadAllSongs().then((songs) => {
+      if (active) setAllSongs(songs)
+    })
+    return () => {
+      active = false
+    }
+  }, [activeTab, allSongs.length])
+
+  const songSearchIndex = useMemo(
+    () => createSongSearchIndex(allSongs),
+    [allSongs]
+  )
   const filteredSongs = useMemo(() => {
     const matches = searchSongs(songSearchIndex, deferredSongQuery, {
       source: songSourceFilter,

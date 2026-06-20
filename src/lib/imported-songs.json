@@ -1,6 +1,4 @@
-import type { CopSong } from "./cop-songs"
-
-export const importedSongs: CopSong[] = [
+[
   {
     "id": "theme-2026-1",
     "language": "english",

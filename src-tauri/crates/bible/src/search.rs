@@ -166,10 +166,7 @@ impl BibleDb {
         translation_id: i64,
         limit: usize,
     ) -> Result<Vec<Verse>, BibleError> {
-        let conn = self
-            .conn
-            .lock()
-            .map_err(|e| BibleError::Internal(e.to_string()))?;
+        let conn = self.conn();
         let mut stmt = conn.prepare(
             "SELECT v.id, v.translation_id, v.book_number, v.book_name, v.book_abbreviation, v.chapter, v.verse, v.text \
              FROM verses_fts fts \
@@ -213,10 +210,7 @@ impl BibleDb {
         query: &str,
         limit: usize,
     ) -> Result<Vec<Bm25Result>, BibleError> {
-        let conn = self
-            .conn
-            .lock()
-            .map_err(|e| BibleError::Internal(e.to_string()))?;
+        let conn = self.conn();
         let fetch_limit = limit * 4;
 
         // Tier 1: Exact phrase match
@@ -248,10 +242,7 @@ impl BibleDb {
     }
 
     pub fn search_books(&self, query: &str) -> Result<Vec<Book>, BibleError> {
-        let conn = self
-            .conn
-            .lock()
-            .map_err(|e| BibleError::Internal(e.to_string()))?;
+        let conn = self.conn();
         let pattern = format!("{query}%");
         let mut stmt = conn.prepare(
             "SELECT id, translation_id, book_number, name, abbreviation, testament \
