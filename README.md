@@ -63,7 +63,8 @@ Generated and third-party runtime assets are not part of the MIT-licensed source
 | `fellowshow-detection` | Verse detection pipeline: direct, semantic, quotation, ensemble merger, sentence buffer, sermon context, reading mode |
 | `fellowshow-broadcast` | NDI video frame output via FFI |
 | `fellowshow-api` | Tauri command API layer |
-| `fellowshow-notes` | (placeholder) |
+
+> **Roadmap:** sermon-notes generation and PDF/Markdown export (with optional Claude API assistance) are planned but not yet implemented.
 
 ## Prerequisites
 
@@ -281,8 +282,7 @@ fellowshow/
 │   │   │   ├── direct/           # Aho-Corasick + fuzzy reference parsing
 │   │   │   └── semantic/         # ONNX embeddings, HNSW index, cloud booster, ensemble
 │   │   ├── broadcast/            # NDI output (FFI)
-│   │   ├── api/                  # Tauri command layer
-│   │   └── notes/                # (placeholder)
+│   │   └── api/                  # Tauri command layer
 │   └── tauri.conf.json
 ├── data/                         # Bible data pipeline
 │   ├── prepare-embeddings.ts     # Unified setup orchestrator (bun run setup:all)
