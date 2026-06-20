@@ -1,6 +1,7 @@
 import { Fragment, useState, useEffect, useCallback, useRef } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import { getVersion } from "@tauri-apps/api/app"
+import { openUrl } from "@tauri-apps/plugin-opener"
 import { check, type DownloadEvent } from "@tauri-apps/plugin-updater"
 
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,9 @@ import { saveSettingsNow } from "@/stores/settings-store"
 import { useTutorialStore } from "@/stores/tutorial-store"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import type { DeviceInfo } from "@/types/audio"
+
+const FELLOW_SHOW_RELEASES_URL =
+  "https://github.com/mallenkb/FellowShow/releases/latest"
 
 /* -------------------------------------------------------------------------- */
 /*  Nav definition                                                            */
@@ -962,7 +966,8 @@ function BibleSection() {
     return nextTranslations
   }
 
-  const previewEnglishTranslations = previewTranslationGroup(englishTranslations)
+  const previewEnglishTranslations =
+    previewTranslationGroup(englishTranslations)
   const previewOtherTranslations = previewTranslationGroup(otherTranslations)
 
   const pinTranslation = (id: number, index = pinnedTranslations.length) => {
@@ -1650,6 +1655,10 @@ function UpdatesSection() {
     }
   }
 
+  const handleOpenLatestRelease = () => {
+    void openUrl(FELLOW_SHOW_RELEASES_URL)
+  }
+
   const isBusy =
     status === "checking" || status === "downloading" || status === "installing"
 
@@ -1700,19 +1709,30 @@ function UpdatesSection() {
                 </p>
               ) : null}
             </div>
-            <Button
-              type="button"
-              size="sm"
-              disabled={isBusy}
-              onClick={handleCheckForUpdates}
-              className="shrink-0 text-xs"
-            >
-              <RefreshCwIcon
-                className={`size-3.5 ${isBusy ? "animate-spin" : ""}`}
-                aria-hidden="true"
-              />
-              Check & update
-            </Button>
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleOpenLatestRelease}
+                className="text-xs"
+              >
+                Open release
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={isBusy}
+                onClick={handleCheckForUpdates}
+                className="text-xs"
+              >
+                <RefreshCwIcon
+                  className={`size-3.5 ${isBusy ? "animate-spin" : ""}`}
+                  aria-hidden="true"
+                />
+                Check & update
+              </Button>
+            </div>
           </div>
 
           {downloadProgress !== null ? (
@@ -1728,7 +1748,6 @@ function UpdatesSection() {
               </p>
             </div>
           ) : null}
-
         </div>
       </div>
     </div>

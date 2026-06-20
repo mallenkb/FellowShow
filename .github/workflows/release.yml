@@ -217,6 +217,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Download bundle artifacts
         uses: actions/download-artifact@v4
         with:
@@ -231,12 +236,20 @@ jobs:
           mkdir -p release-upload
           while IFS= read -r file; do
             name="$(basename "$file")"
+            if [ "$name" = "latest.json" ]; then
+              continue
+            fi
             if [ -e "release-upload/$name" ]; then
               parent="$(basename "$(dirname "$file")")"
               name="${parent}-${name}"
             fi
             cp "$file" "release-upload/$name"
           done < <(find release-artifacts -maxdepth 4 -type f)
+          bun run data/merge-tauri-updater-manifests.ts \
+            release-artifacts \
+            release-upload/latest.json \
+            "$tag" \
+            "${{ github.repository }}"
           find release-upload -maxdepth 1 -type f -print | sort
           gh release delete "$tag" --yes 2>/dev/null || true
           gh release create "$tag" \
