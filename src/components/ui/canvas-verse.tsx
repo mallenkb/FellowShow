@@ -20,6 +20,7 @@ interface CanvasVerseProps {
   lowerThird?: LowerThirdRenderData | null
   className?: string
   fillContainer?: boolean
+  fit?: "width" | "contain" | "cover"
 }
 
 export const CanvasVerse = memo(function CanvasVerse({
@@ -29,6 +30,7 @@ export const CanvasVerse = memo(function CanvasVerse({
   lowerThird,
   className,
   fillContainer = false,
+  fit = fillContainer ? "cover" : "width",
 }: CanvasVerseProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -176,10 +178,16 @@ export const CanvasVerse = memo(function CanvasVerse({
 
     const dpr = window.devicePixelRatio || 1
     const aspectRatio = theme.resolution.width / theme.resolution.height
-    const displayW = containerWidth
-    const displayH = fillContainer
-      ? containerHeight || container?.getBoundingClientRect().height || 0
-      : displayW / aspectRatio
+    const availableHeight =
+      containerHeight || container?.getBoundingClientRect().height || 0
+    const displayW =
+      fit === "contain" && availableHeight > 0
+        ? Math.min(containerWidth, availableHeight * aspectRatio)
+        : containerWidth
+    const displayH =
+      fit === "cover"
+        ? availableHeight
+        : displayW / aspectRatio
     if (displayH <= 0) return
 
     canvas.width = displayW * dpr
@@ -238,16 +246,16 @@ export const CanvasVerse = memo(function CanvasVerse({
       transitionFrameRef.current = null
     }
 
-    const scale = fillContainer
+    const scale = fit === "cover"
       ? Math.max(
           displayW / theme.resolution.width,
           displayH / theme.resolution.height
         )
       : displayW / theme.resolution.width
-    const offsetX = fillContainer
+    const offsetX = fit === "cover"
       ? (displayW - theme.resolution.width * scale) / 2
       : 0
-    const offsetY = fillContainer
+    const offsetY = fit === "cover"
       ? (displayH - theme.resolution.height * scale) / 2
       : 0
     const next = document.createElement("canvas")
@@ -297,7 +305,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     lowerThird,
     containerWidth,
     containerHeight,
-    fillContainer,
+    fit,
     imageVersion,
     videoVersion,
     tickerVersion,
@@ -315,11 +323,18 @@ export const CanvasVerse = memo(function CanvasVerse({
   return (
     <div
       ref={containerRef}
-      className={cn("w-full", fillContainer && "h-full", className)}
+      className={cn(
+        "flex w-full items-center justify-center",
+        (fillContainer || fit === "contain" || fit === "cover") && "h-full",
+        className
+      )}
     >
       <canvas
         ref={canvasRef}
-        className={cn("block w-full", fillContainer ? "h-full" : "rounded-md")}
+        className={cn(
+          "block",
+          fit === "cover" ? "h-full w-full" : "rounded-md"
+        )}
       />
     </div>
   )

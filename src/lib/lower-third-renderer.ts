@@ -28,7 +28,9 @@ interface NormalizedLowerThird {
   label: string
 }
 
-function normalizeLowerThird(lowerThird: LowerThirdRenderData | null | undefined): NormalizedLowerThird | null {
+function normalizeLowerThird(
+  lowerThird: LowerThirdRenderData | null | undefined
+): NormalizedLowerThird | null {
   if (!lowerThird?.visible) return null
 
   const title = lowerThird.title.trim()
@@ -49,7 +51,7 @@ function roundRect(
   y: number,
   width: number,
   height: number,
-  radius: number,
+  radius: number
 ): void {
   const r = Math.min(radius, width / 2, height / 2)
   ctx.beginPath()
@@ -70,7 +72,7 @@ function drawClippedText(
   text: string,
   x: number,
   y: number,
-  maxWidth: number,
+  maxWidth: number
 ): void {
   if (ctx.measureText(text).width <= maxWidth) {
     ctx.fillText(text, x, y)
@@ -79,7 +81,10 @@ function drawClippedText(
 
   const ellipsis = "..."
   let clipped = text
-  while (clipped.length > 0 && ctx.measureText(`${clipped}${ellipsis}`).width > maxWidth) {
+  while (
+    clipped.length > 0 &&
+    ctx.measureText(`${clipped}${ellipsis}`).width > maxWidth
+  ) {
     clipped = clipped.slice(0, -1)
   }
   ctx.fillText(clipped ? `${clipped}${ellipsis}` : ellipsis, x, y)
@@ -88,7 +93,7 @@ function drawClippedText(
 export function getLowerThirdLayout(
   theme: BroadcastTheme,
   lowerThird: LowerThirdRenderData | null | undefined,
-  scale = 1,
+  scale = 1
 ): LowerThirdLayout | null {
   const content = normalizeLowerThird(lowerThird)
   if (!content) return null
@@ -98,7 +103,7 @@ export function getLowerThirdLayout(
   const bottomMargin = scaled(96, scale)
   const containerWidth = Math.max(
     scaled(320, scale),
-    Math.min(scaled(960, scale), width - marginX * 2),
+    Math.min(scaled(960, scale), width - marginX * 2)
   )
   const padX = scaled(34, scale)
   const padY = scaled(24, scale)
@@ -171,7 +176,7 @@ export function drawLowerThird(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
   lowerThird: LowerThirdRenderData | null | undefined,
-  scale = 1,
+  scale = 1
 ): LowerThirdLayout | null {
   const content = normalizeLowerThird(lowerThird)
   const layout = getLowerThirdLayout(theme, lowerThird, scale)
@@ -190,7 +195,7 @@ export function drawLowerThird(
     layout.container.y,
     layout.container.width,
     layout.container.height,
-    radius,
+    radius
   )
   ctx.fill()
   ctx.restore()
@@ -202,33 +207,64 @@ export function drawLowerThird(
     layout.container.y,
     layout.container.width,
     layout.container.height,
-    radius,
+    radius
   )
   ctx.clip()
 
   ctx.fillStyle = "#38bdf8"
-  ctx.fillRect(layout.accent.x, layout.accent.y, layout.accent.width, layout.accent.height)
+  ctx.fillRect(
+    layout.accent.x,
+    layout.accent.y,
+    layout.accent.width,
+    layout.accent.height
+  )
 
   if (layout.label) {
-    ctx.font = `700 ${layout.label.fontSize}px "Geist Variable", sans-serif`
+    ctx.font = `700 ${layout.label.fontSize}px "Inter Variable", sans-serif`
     ctx.fillStyle = "#93c5fd"
     ctx.textBaseline = "top"
     ctx.textAlign = "left"
-    try { ctx.letterSpacing = `${scaled(1.2, scale)}px` } catch { /* unsupported in some WebViews */ }
-    drawClippedText(ctx, content.label.toUpperCase(), layout.label.x, layout.label.y, layout.label.maxWidth)
+    try {
+      ctx.letterSpacing = `${scaled(1.2, scale)}px`
+    } catch {
+      /* unsupported in some WebViews */
+    }
+    drawClippedText(
+      ctx,
+      content.label.toUpperCase(),
+      layout.label.x,
+      layout.label.y,
+      layout.label.maxWidth
+    )
   }
 
-  try { ctx.letterSpacing = "0px" } catch { /* unsupported in some WebViews */ }
-  ctx.font = `700 ${layout.title.fontSize}px "Geist Variable", sans-serif`
+  try {
+    ctx.letterSpacing = "0px"
+  } catch {
+    /* unsupported in some WebViews */
+  }
+  ctx.font = `700 ${layout.title.fontSize}px "Inter Variable", sans-serif`
   ctx.fillStyle = "#ffffff"
   ctx.textBaseline = "top"
   ctx.textAlign = "left"
-  drawClippedText(ctx, content.title, layout.title.x, layout.title.y, layout.title.maxWidth)
+  drawClippedText(
+    ctx,
+    content.title,
+    layout.title.x,
+    layout.title.y,
+    layout.title.maxWidth
+  )
 
   if (layout.subtitle) {
-    ctx.font = `500 ${layout.subtitle.fontSize}px "Geist Variable", sans-serif`
+    ctx.font = `500 ${layout.subtitle.fontSize}px "Inter Variable", sans-serif`
     ctx.fillStyle = "#dbeafe"
-    drawClippedText(ctx, content.subtitle, layout.subtitle.x, layout.subtitle.y, layout.subtitle.maxWidth)
+    drawClippedText(
+      ctx,
+      content.subtitle,
+      layout.subtitle.x,
+      layout.subtitle.y,
+      layout.subtitle.maxWidth
+    )
   }
 
   ctx.restore()

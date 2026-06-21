@@ -94,6 +94,9 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
     let gain = config.gain;
 
     let stream_config: StreamConfig = supported_config.into();
+    log::info!(
+        "[AUDIO] Input config: sample_rate={source_sample_rate}, channels={source_channels}, format={sample_format:?}, target_sample_rate={target_sample_rate}, gain={gain}"
+    );
 
     let err_fn = |err: cpal::StreamError| {
         log::error!("Audio stream error: {err}");
@@ -208,14 +211,10 @@ fn process_and_send(
         return;
     }
 
-    // Step 1: Downmix to mono by averaging channels
-    let mono: Vec<i16> = samples
-        .chunks(source_channels)
-        .map(|frame| {
-            let sum: i32 = frame.iter().map(|&s| i32::from(s)).sum();
-            (sum / source_channels as i32) as i16
-        })
-        .collect();
+    // Step 1: Downmix to mono. USB mixers/interfaces often expose many channels
+    // with only one live program feed; averaging all channels can make that feed
+    // very quiet or cancel it if paired channels are phase-inverted.
+    let mono = downmix_strongest_channel(samples, source_channels);
 
     // Step 2: Apply gain
     let gained: Vec<i16> = mono
@@ -245,6 +244,41 @@ fn process_and_send(
 
     // Best-effort send; if the receiver is gone, just drop the frame.
     let _ = sender.try_send(frame);
+}
+
+fn downmix_strongest_channel(samples: &[i16], source_channels: usize) -> Vec<i16> {
+    if samples.is_empty() {
+        return Vec::new();
+    }
+
+    if source_channels <= 1 {
+        return samples.to_vec();
+    }
+
+    let mut sums = vec![0_i64; source_channels];
+    let mut counts = vec![0_i64; source_channels];
+    for frame in samples.chunks(source_channels) {
+        for (channel, &sample) in frame.iter().enumerate() {
+            let sample = i64::from(sample);
+            sums[channel] += sample * sample;
+            counts[channel] += 1;
+        }
+    }
+
+    let mut strongest_channel = 0;
+    let mut strongest_energy = 0;
+    for (channel, (&sum, &count)) in sums.iter().zip(counts.iter()).enumerate() {
+        let energy = if count > 0 { sum / count } else { 0 };
+        if energy > strongest_energy {
+            strongest_energy = energy;
+            strongest_channel = channel;
+        }
+    }
+
+    samples
+        .chunks(source_channels)
+        .filter_map(|frame| frame.get(strongest_channel).copied())
+        .collect()
 }
 
 /// Simple linear-interpolation resampler.
@@ -283,4 +317,29 @@ fn resample(input: &[i16], from_rate: u32, to_rate: u32) -> Vec<i16> {
     }
 
     output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::downmix_strongest_channel;
+
+    #[test]
+    fn downmix_uses_only_channel_for_multichannel_interfaces() {
+        let samples = [1000, 0, 0, 0, -1000, 0, 0, 0, 500, 0, 0, 0];
+
+        assert_eq!(
+            downmix_strongest_channel(&samples, 4),
+            vec![1000, -1000, 500]
+        );
+    }
+
+    #[test]
+    fn downmix_avoids_phase_cancellation_between_channels() {
+        let samples = [1200, -1200, -900, 900, 600, -600];
+
+        assert_eq!(
+            downmix_strongest_channel(&samples, 2),
+            vec![1200, -900, 600]
+        );
+    }
 }

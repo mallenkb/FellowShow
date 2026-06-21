@@ -1,9 +1,12 @@
+import { DEFAULT_PRESENTATION_FONT_FAMILY } from "@/lib/font-options"
 import type { BroadcastTheme } from "@/types/broadcast"
 
 const BUILTIN_PRESENTATION_BACKGROUND_LIGHT = "#101084"
 const BUILTIN_PRESENTATION_BACKGROUND_DARK = "#323294"
-export const BROADCAST_OVERLAY_PREVIEW_IMAGE = "/broadcast-previews/preacher-stage-unsplash-phil-hearing.jpg"
-export const BIBLE_VERSE_PREVIEW_IMAGE = "/broadcast-previews/full-background.jpg"
+export const BROADCAST_OVERLAY_PREVIEW_IMAGE =
+  "/broadcast-previews/preacher-stage-unsplash-phil-hearing.jpg"
+export const BIBLE_VERSE_PREVIEW_IMAGE =
+  "/broadcast-previews/full-background.jpg"
 const THEME_STORAGE_KEY = "theme"
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
 
@@ -22,14 +25,27 @@ export function getBuiltinPresentationBackground(): string {
   if (preferredTheme === "dark") return BUILTIN_PRESENTATION_BACKGROUND_DARK
   if (preferredTheme === "light") return BUILTIN_PRESENTATION_BACKGROUND_LIGHT
 
-  if (typeof window.matchMedia === "function" && window.matchMedia(COLOR_SCHEME_QUERY).matches) {
+  if (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(COLOR_SCHEME_QUERY).matches
+  ) {
     return BUILTIN_PRESENTATION_BACKGROUND_DARK
   }
 
   return BUILTIN_PRESENTATION_BACKGROUND_LIGHT
 }
 
-const baseTheme: Omit<BroadcastTheme, "id" | "name" | "background" | "verseText" | "reference" | "layout" | "transition" | "textBox"> = {
+const baseTheme: Omit<
+  BroadcastTheme,
+  | "id"
+  | "name"
+  | "background"
+  | "verseText"
+  | "reference"
+  | "layout"
+  | "transition"
+  | "textBox"
+> = {
   builtin: true,
   pinned: false,
   createdAt: 0,
@@ -62,7 +78,7 @@ const CLASSIC_DARK: BroadcastTheme = {
     padding: 0,
   },
   verseText: {
-    fontFamily: "Source Serif 4 Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 72,
     fontWeight: 400,
     color: "#ffffff",
@@ -82,7 +98,7 @@ const CLASSIC_DARK: BroadcastTheme = {
     superscript: true,
   },
   reference: {
-    fontFamily: "Geist Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 48,
     fontWeight: 500,
     color: "#F1E600",
@@ -133,7 +149,7 @@ const MODERN_LIGHT: BroadcastTheme = {
     padding: 0,
   },
   verseText: {
-    fontFamily: "Geist Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 68,
     fontWeight: 400,
     color: "#1a1a1a",
@@ -153,7 +169,7 @@ const MODERN_LIGHT: BroadcastTheme = {
     superscript: true,
   },
   reference: {
-    fontFamily: "Geist Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 45,
     fontWeight: 500,
     color: "#666666",
@@ -210,12 +226,12 @@ const BROADCAST_OVERLAY: BroadcastTheme = {
     padding: 24,
   },
   verseText: {
-    fontFamily: "Geist Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 64,
     fontWeight: 500,
     color: "#ffffff",
     horizontalAlign: "center",
-    verticalAlign: "top",
+    verticalAlign: "middle",
     textTransform: "none",
     textDecoration: "none",
     lineHeight: 1.5,
@@ -230,7 +246,7 @@ const BROADCAST_OVERLAY: BroadcastTheme = {
     superscript: true,
   },
   reference: {
-    fontFamily: "Geist Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 43,
     fontWeight: 600,
     color: "#fbbf24",
@@ -287,8 +303,8 @@ const BIBLE_VERSE_PREVIEW: BroadcastTheme = {
     padding: 0,
   },
   verseText: {
-    fontFamily: "Source Serif 4 Variable",
-    fontSize: 70,
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
+    fontSize: 82,
     fontWeight: 500,
     color: "#ffffff",
     horizontalAlign: "center",
@@ -302,13 +318,13 @@ const BIBLE_VERSE_PREVIEW: BroadcastTheme = {
   },
   verseNumbers: {
     visible: true,
-    fontSize: 18,
+    fontSize: 21,
     color: "#f4c95d",
     superscript: true,
   },
   reference: {
-    fontFamily: "Geist Variable",
-    fontSize: 42,
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
+    fontSize: 46,
     fontWeight: 600,
     color: "#f4c95d",
     horizontalAlign: "center",
@@ -320,15 +336,15 @@ const BIBLE_VERSE_PREVIEW: BroadcastTheme = {
     position: "below",
   },
   layout: {
-    anchor: "center",
+    anchor: "bottom-center",
     offsetX: 0,
     offsetY: 0,
-    padding: { top: 48, right: 72, bottom: 48, left: 72 },
+    padding: { top: 48, right: 72, bottom: 92, left: 72 },
     textAlign: "center",
     backgroundWidth: 100,
     backgroundHeight: 100,
-    textAreaWidth: 78,
-    textAreaHeight: 44,
+    textAreaWidth: 92.5,
+    textAreaHeight: 64,
     referenceGap: 22,
   },
   transition: {
@@ -365,7 +381,7 @@ const PRESENTATION_TICKER: BroadcastTheme = {
     padding: 0,
   },
   verseText: {
-    fontFamily: "Geist Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 46,
     fontWeight: 800,
     color: "#062b57",
@@ -385,7 +401,7 @@ const PRESENTATION_TICKER: BroadcastTheme = {
     superscript: true,
   },
   reference: {
-    fontFamily: "Geist Variable",
+    fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
     fontSize: 46,
     fontWeight: 800,
     color: "#ffffff",

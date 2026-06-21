@@ -24,6 +24,28 @@ fn window_url(output_id: &str) -> String {
     format!("broadcast-output.html?output={output_id}")
 }
 
+fn place_projector_window(
+    window: &tauri::WebviewWindow,
+    monitor: &tauri::Monitor,
+) -> Result<(), String> {
+    let pos = monitor.position();
+    let size = monitor.size();
+
+    window
+        .set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+            x: pos.x,
+            y: pos.y,
+        }))
+        .map_err(|e| e.to_string())?;
+    window
+        .set_size(tauri::Size::Physical(tauri::PhysicalSize {
+            width: size.width,
+            height: size.height,
+        }))
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[derive(Serialize)]
 pub struct MonitorInfo {
     pub name: String,
@@ -70,6 +92,7 @@ pub fn ensure_broadcast_window(app: tauri::AppHandle, output_id: String) -> Resu
             "FellowShow NDI"
         })
         .inner_size(1920.0, 1080.0)
+        .decorations(false)
         .visible(false)
         .skip_taskbar(true)
         .focused(false)
@@ -90,23 +113,9 @@ pub fn open_broadcast_window(
         .get(monitor_index)
         .ok_or_else(|| format!("Monitor index {monitor_index} out of range"))?;
 
-    let pos = monitor.position();
-    let size = monitor.size();
-
     // If window already exists (e.g. hidden for NDI), reuse it
     if let Some(window) = app.get_webview_window(label) {
-        window
-            .set_position(tauri::Position::Physical(tauri::PhysicalPosition {
-                x: pos.x,
-                y: pos.y,
-            }))
-            .map_err(|e| e.to_string())?;
-        window
-            .set_size(tauri::Size::Physical(tauri::PhysicalSize {
-                width: size.width,
-                height: size.height,
-            }))
-            .map_err(|e| e.to_string())?;
+        place_projector_window(&window, monitor)?;
         window.show().map_err(|e| e.to_string())?;
         return Ok(());
     }
@@ -117,16 +126,21 @@ pub fn open_broadcast_window(
         "Projector - Program"
     };
 
-    WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
+    let window = WebviewWindowBuilder::new(
+        &app,
+        label,
+        WebviewUrl::App(window_url(&output_id).into()),
+    )
         .title(title)
-        .position(f64::from(pos.x), f64::from(pos.y))
-        .inner_size(f64::from(size.width), f64::from(size.height))
-        .decorations(true)
+        .inner_size(1920.0, 1080.0)
+        .decorations(false)
         .always_on_top(false)
-        .skip_taskbar(false)
-        .focused(true)
+        .skip_taskbar(true)
+        .focused(false)
         .build()
         .map_err(|e| e.to_string())?;
+
+    place_projector_window(&window, monitor)?;
 
     Ok(())
 }

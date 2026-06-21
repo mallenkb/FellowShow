@@ -762,11 +762,11 @@ function drawTickerLayer(
   const laneW = Math.max(1, textRect.width)
   const laneH = Math.max(1, textRect.height)
   const radius = Math.max(0, theme.textBox.borderRadius)
-  const fontSize = Math.max(12, Math.min(theme.verseText.fontSize, laneH * 0.48))
-  const labelW = Math.min(
-    laneW * 0.22,
-    Math.max(fontSize * 5.8, 220)
+  const fontSize = Math.max(
+    12,
+    Math.min(theme.verseText.fontSize, laneH * 0.48)
   )
+  const labelW = Math.min(laneW * 0.22, Math.max(fontSize * 5.8, 220))
   const timeW = Math.min(laneW * 0.16, Math.max(fontSize * 3.25, 150))
   const textLaneX = laneX + labelW
   const textLaneW = Math.max(1, laneW - labelW - timeW)
@@ -797,8 +797,18 @@ function drawTickerLayer(
   ctx.textBaseline = "middle"
   ctx.textAlign = "center"
   ctx.fillStyle = "#ffffff"
-  ctx.fillText("BREAKING", laneX + labelW / 2, laneY + laneH / 2, labelW - textPadding)
-  ctx.fillText(timeText, laneX + laneW - timeW / 2, laneY + laneH / 2, timeW - textPadding)
+  ctx.fillText(
+    "BREAKING",
+    laneX + labelW / 2,
+    laneY + laneH / 2,
+    labelW - textPadding
+  )
+  ctx.fillText(
+    timeText,
+    laneX + laneW - timeW / 2,
+    laneY + laneH / 2,
+    timeW - textPadding
+  )
 
   ctx.beginPath()
   ctx.rect(textContentX, laneY, textContentW, laneH)
@@ -1178,6 +1188,129 @@ function measureVerseHeight(
   }
 }
 
+function measureReferenceWidth(
+  ctx: CanvasRenderingContext2D,
+  theme: BroadcastTheme,
+  text: string,
+  textRectWidth: number
+): number {
+  const ref = theme.reference
+  const transformed = applyTextTransform(
+    ref.uppercase ? text.toUpperCase() : text,
+    resolveTextTransform(ref.textTransform)
+  )
+
+  ctx.save()
+  ctx.font = `${ref.fontWeight} ${ref.fontSize}px "${ref.fontFamily}", sans-serif`
+  if (ref.letterSpacing > 0) {
+    try {
+      ctx.letterSpacing = `${ref.letterSpacing}px`
+    } catch {
+      /* unsupported in some WebViews */
+    }
+  }
+  const width = Math.max(
+    1,
+    Math.min(textRectWidth, ctx.measureText(transformed).width)
+  )
+  ctx.restore()
+
+  return width
+}
+
+function measureStandardBlockHeight(
+  ctx: CanvasRenderingContext2D,
+  theme: BroadcastTheme,
+  verse: VerseRenderData,
+  textRectWidth: number
+): number {
+  const hasReference = verse.reference.trim().length > 0
+  const verseHeight = measureVerseHeight(
+    ctx,
+    theme,
+    verse,
+    textRectWidth
+  ).height
+  if (!hasReference) return verseHeight
+
+  const referenceHeight = theme.reference.fontSize * 1.5
+  const referenceGap = Math.max(
+    0,
+    theme.layout.referenceGap ?? theme.reference.fontSize * 0.5
+  )
+
+  if (theme.reference.position === "above") {
+    return referenceHeight + verseHeight
+  }
+
+  if (theme.reference.position === "below") {
+    return verseHeight + referenceGap + referenceHeight
+  }
+
+  return verseHeight + referenceHeight
+}
+
+function fitStandardVerseTheme(
+  ctx: CanvasRenderingContext2D,
+  theme: BroadcastTheme,
+  verse: VerseRenderData,
+  textRectWidth: number,
+  textRectHeight: number
+): BroadcastTheme {
+  const baseVerseSize = theme.verseText.fontSize
+  const baseNumberSize = theme.verseNumbers.fontSize
+  const baseReferenceSize = theme.reference.fontSize
+  const baseReferenceGap =
+    theme.layout.referenceGap ?? theme.reference.fontSize * 0.5
+  const minScale = 0.36
+  const maxScale = 1
+  const minVerseSize = 14
+  const minNumberSize = 8
+  const minReferenceSize = 10
+
+  const buildCandidate = (scale: number): BroadcastTheme => ({
+    ...theme,
+    verseText: {
+      ...theme.verseText,
+      fontSize: Math.max(minVerseSize, baseVerseSize * scale),
+    },
+    verseNumbers: {
+      ...theme.verseNumbers,
+      fontSize: Math.max(minNumberSize, baseNumberSize * scale),
+    },
+    reference: {
+      ...theme.reference,
+      fontSize: Math.max(minReferenceSize, baseReferenceSize * scale),
+    },
+    layout: {
+      ...theme.layout,
+      referenceGap: baseReferenceGap * scale,
+    },
+  })
+
+  const fits = (candidate: BroadcastTheme): boolean =>
+    measureStandardBlockHeight(ctx, candidate, verse, textRectWidth) <=
+    textRectHeight
+
+  let low = minScale
+  let high = maxScale
+  let fittedTheme = buildCandidate(minScale)
+
+  for (let i = 0; i < 18; i += 1) {
+    const scale = (low + high) / 2
+    const candidate = buildCandidate(scale)
+
+    if (fits(candidate)) {
+      fittedTheme = candidate
+      low = scale
+    } else {
+      high = scale
+    }
+  }
+
+  return fittedTheme
+}
+
 function lyricPresentationTheme(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
@@ -1294,7 +1427,6 @@ export function computeVerseLayoutMetrics(
     }
   }
 
-  const referenceHeight = scaledTheme.reference.fontSize * 1.5
   const isLyricFooter = verse.referenceMode === "lyric-footer"
   const hasReference = verse.reference.trim().length > 0
 
@@ -1306,11 +1438,20 @@ export function computeVerseLayoutMetrics(
       textRectW,
       textRectH
     )
+  } else {
+    scaledTheme = fitStandardVerseTheme(
+      ctx,
+      scaledTheme,
+      verse,
+      textRectW,
+      textRectH
+    )
   }
 
   const footerTheme = isLyricFooter
     ? lyricFooterTheme(scaledTheme)
     : scaledTheme
+  const referenceHeight = scaledTheme.reference.fontSize * 1.5
   const footerReferenceHeight = footerTheme.reference.fontSize * 1.5
   const verseAlign = resolveHorizontalAlign(
     scaledTheme.verseText.horizontalAlign,
@@ -1348,19 +1489,12 @@ export function computeVerseLayoutMetrics(
     textRectW
   )
 
-  const refText = applyTextTransform(
-    footerTheme.reference.uppercase
-      ? verse.reference.toUpperCase()
-      : verse.reference,
-    resolveTextTransform(footerTheme.reference.textTransform)
+  const referenceWidth = measureReferenceWidth(
+    ctx,
+    footerTheme,
+    verse.reference,
+    textRectW
   )
-  ctx.save()
-  ctx.font = `${footerTheme.reference.fontWeight} ${footerTheme.reference.fontSize}px "${footerTheme.reference.fontFamily}", sans-serif`
-  const referenceWidth = Math.max(
-    1,
-    Math.min(textRectW, ctx.measureText(refText).width)
-  )
-  ctx.restore()
 
   const blockHeight = isLyricFooter
     ? verseHeight
@@ -1532,7 +1666,13 @@ function renderVerseImpl(
     verse?.tickerText &&
     !verse.presentationImage
   ) {
-    drawTickerLayer(ctx, scaledTheme, verse, metrics.textRect, options?.now ?? 0)
+    drawTickerLayer(
+      ctx,
+      scaledTheme,
+      verse,
+      metrics.textRect,
+      options?.now ?? 0
+    )
     ctx.restore()
     return metrics
   }

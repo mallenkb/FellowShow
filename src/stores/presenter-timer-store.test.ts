@@ -5,7 +5,7 @@ describe("presenter timer store", () => {
     vi.resetModules()
   })
 
-  it("keeps Geist Variable as the default rendered timer font", async () => {
+  it("keeps Inter Variable as the default rendered timer font", async () => {
     const { DEFAULT_TIMER_FONT_FAMILY } = await import("@/lib/font-options")
     const { usePresenterTimerStore } = await import("./presenter-timer-store")
 

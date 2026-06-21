@@ -70,7 +70,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
     <div
       data-slot="live-output-panel"
       className={cn(
-        "flex h-[236px] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
+        "flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
         isLive && "shadow-[inset_0_2px_0_0_rgba(239,68,68,0.3)]"
       )}
     >
@@ -94,7 +94,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
 
       <div
         className={cn(
-          "relative z-0 flex min-h-0 flex-1 items-stretch justify-stretch transition-opacity",
+          "relative z-0 flex items-stretch justify-stretch transition-opacity",
           !isLive && "opacity-40"
         )}
       >
@@ -103,8 +103,6 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           verse={liveVerse}
           timer={liveTimer}
           lowerThird={lowerThird}
-          className="h-full"
-          fillContainer
         />
       </div>
     </div>
