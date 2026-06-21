@@ -239,6 +239,7 @@ jobs:
             if [ "$name" = "latest.json" ]; then
               continue
             fi
+            name="${name// /.}"
             if [ -e "release-upload/$name" ]; then
               parent="$(basename "$(dirname "$file")")"
               name="${parent}-${name}"
