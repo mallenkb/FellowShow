@@ -2,7 +2,7 @@ import { Fragment, useState, useEffect, useCallback, useRef } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import { getVersion } from "@tauri-apps/api/app"
 import { openUrl } from "@tauri-apps/plugin-opener"
-import { check, type DownloadEvent } from "@tauri-apps/plugin-updater"
+import type { DownloadEvent } from "@tauri-apps/plugin-updater"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -51,6 +51,7 @@ import { saveSettingsNow } from "@/stores/settings-store"
 import { useTutorialStore } from "@/stores/tutorial-store"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import type { DeviceInfo } from "@/types/audio"
+import { downloadAndInstallAvailableUpdate } from "@/components/app-updater"
 
 const FELLOW_SHOW_RELEASES_URL =
   "https://github.com/mallenkb/FellowShow/releases/latest"
@@ -1583,43 +1584,21 @@ function UpdatesSection() {
       })
   }, [])
 
-  const getUpdateErrorMessage = (error: unknown) =>
-    error instanceof Error ? error.message : String(error)
-
-  const isMissingUpdateFeedError = (error: unknown) => {
-    const errorMessage = getUpdateErrorMessage(error).toLowerCase()
-
-    return (
-      errorMessage.includes("could not fetch a valid release json") ||
-      errorMessage.includes("404") ||
-      errorMessage.includes("not found")
-    )
-  }
-
   const handleCheckForUpdates = async () => {
     setStatus("checking")
     setMessage("Checking for updates...")
     setLatestVersion(null)
     setDownloadProgress(null)
 
-    try {
-      const update = await check()
-      if (!update) {
-        setStatus("idle")
-        setMessage("No updates found.")
-        return
-      }
-
-      setLatestVersion(update.version)
-      setStatus("downloading")
-      setMessage(`Found version ${update.version}. Downloading update...`)
-
-      let downloadedBytes = 0
-      let contentLength = 0
-      await update.downloadAndInstall((event: DownloadEvent) => {
+    let downloadedBytes = 0
+    let contentLength = 0
+    const installedVersion = await downloadAndInstallAvailableUpdate(
+      (event: DownloadEvent) => {
         if (event.event === "Started") {
           downloadedBytes = 0
           contentLength = event.data.contentLength ?? 0
+          setStatus("downloading")
+          setMessage("Update found. Downloading in the background...")
           setDownloadProgress(contentLength > 0 ? 0 : null)
           return
         }
@@ -1636,23 +1615,20 @@ function UpdatesSection() {
 
         setStatus("installing")
         setMessage("Installing update...")
-      })
-
-      setStatus("installed")
-      setDownloadProgress(100)
-      setMessage("Update installed. Restart FellowShow to finish updating.")
-    } catch (error) {
-      if (isMissingUpdateFeedError(error)) {
-        setStatus("idle")
-        setDownloadProgress(null)
-        setMessage("No updates found.")
-        return
       }
+    )
 
-      setStatus("error")
+    if (!installedVersion) {
+      setStatus("idle")
+      setMessage("No updates found.")
       setDownloadProgress(null)
-      setMessage(getUpdateErrorMessage(error))
+      return
     }
+
+    setLatestVersion(installedVersion)
+    setStatus("installed")
+    setDownloadProgress(100)
+    setMessage("Update installed. Restart FellowShow to finish updating.")
   }
 
   const handleOpenLatestRelease = () => {

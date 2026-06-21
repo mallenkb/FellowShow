@@ -8,6 +8,7 @@
     "store:default",
     "dialog:default",
     "opener:default",
+    "process:default",
     "updater:default",
     "fs:default",
     "fs:allow-write-text-file"

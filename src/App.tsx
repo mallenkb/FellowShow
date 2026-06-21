@@ -4,6 +4,7 @@ import { useRemoteControl } from "@/hooks/use-remote-control"
 import { TutorialOverlay } from "@/components/tutorial/tutorial-overlay"
 import { Toaster } from "sonner"
 import { usePresenterTimerStore } from "@/stores"
+import { AppUpdater } from "@/components/app-updater"
 
 function PresenterTimerTicker() {
   const isRunning = usePresenterTimerStore((s) => s.isRunning)
@@ -24,6 +25,7 @@ export function App() {
   return (
     <>
       <PresenterTimerTicker />
+      <AppUpdater />
       <Dashboard />
       <TutorialOverlay />
       <Toaster position="bottom-right" />
