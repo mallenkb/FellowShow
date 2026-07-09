@@ -15,7 +15,7 @@ function LiveIndicator({
     <div
       data-slot="live-indicator"
       className={cn(
-        "flex items-center gap-1.5 text-[0.625rem] font-medium uppercase tracking-wider",
+        "flex items-center gap-1.5 text-[0.625rem] font-medium tracking-wider uppercase",
         className
       )}
       {...props}

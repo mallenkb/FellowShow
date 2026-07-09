@@ -6,7 +6,7 @@
   "identifier": "com.openbezal.fellowshow",
   "build": {
     "frontendDist": "../build",
-    "devUrl": "http://localhost:3000",
+    "devUrl": "http://127.0.0.1:3000",
     "beforeDevCommand": "bun dev",
     "beforeBuildCommand": "bun run build"
   },
@@ -25,7 +25,8 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'"
+      "devCsp": "default-src 'self' http://127.0.0.1:3000 http://localhost:3000; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://127.0.0.1:3000 http://localhost:3000; style-src 'self' 'unsafe-inline' http://127.0.0.1:3000 http://localhost:3000; img-src 'self' data: blob: http://127.0.0.1:3000 http://localhost:3000; font-src 'self' data: http://127.0.0.1:3000 http://localhost:3000; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:3000 http://localhost:3000 ws://127.0.0.1:3000 ws://localhost:3000; media-src 'self' blob: http://127.0.0.1:3000 http://localhost:3000; worker-src 'self' blob: http://127.0.0.1:3000 http://localhost:3000; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'",
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; media-src 'self' blob:; worker-src 'self'; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'"
     }
   },
   "bundle": {

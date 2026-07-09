@@ -131,7 +131,7 @@ function levenshteinDistance(a: string, b: string): number {
       current[j] = Math.min(
         previous[j] + 1,
         current[j - 1] + 1,
-        previous[j - 1] + substitutionCost,
+        previous[j - 1] + substitutionCost
       )
     }
     previous.splice(0, previous.length, ...current)
@@ -149,16 +149,22 @@ function getBookSearchTerms(book: Book): string[] {
     .replace(/^ii\s+/, "2 ")
     .replace(/^iii\s+/, "3 ")
 
-  return Array.from(new Set([
-    name,
-    abbreviation,
-    withoutOrdinal,
-    numericName,
-    compactSearchText(name),
-    compactSearchText(abbreviation),
-    ...(BOOK_ALIASES[book.name] ?? []),
-    ...(BOOK_ALIASES[withoutOrdinal.replace(/\b\w/g, (char) => char.toUpperCase())] ?? []),
-  ].filter(Boolean)))
+  return Array.from(
+    new Set(
+      [
+        name,
+        abbreviation,
+        withoutOrdinal,
+        numericName,
+        compactSearchText(name),
+        compactSearchText(abbreviation),
+        ...(BOOK_ALIASES[book.name] ?? []),
+        ...(BOOK_ALIASES[
+          withoutOrdinal.replace(/\b\w/g, (char) => char.toUpperCase())
+        ] ?? []),
+      ].filter(Boolean)
+    )
+  )
 }
 
 function getFuzzyThreshold(inputLength: number): number {
@@ -178,17 +184,31 @@ function scoreBookMatch(bookInput: string, book: Book): number {
     const normalizedTerm = normalizeSearchText(term)
     const compactTerm = compactSearchText(term)
 
-    if (normalizedTerm === normalizedInput || compactTerm === compactInput) return 0
-    if (normalizedTerm.startsWith(normalizedInput) || compactTerm.startsWith(compactInput)) {
-      best = Math.min(best, 1 + normalizedInput.length / Math.max(normalizedTerm.length, 1))
+    if (normalizedTerm === normalizedInput || compactTerm === compactInput)
+      return 0
+    if (
+      normalizedTerm.startsWith(normalizedInput) ||
+      compactTerm.startsWith(compactInput)
+    ) {
+      best = Math.min(
+        best,
+        1 + normalizedInput.length / Math.max(normalizedTerm.length, 1)
+      )
       continue
     }
 
     for (const token of normalizedInput.split(" ")) {
       if (token.length < 3) continue
       const compactToken = compactSearchText(token)
-      if (normalizedTerm === token || compactTerm === compactToken || normalizedTerm.startsWith(token)) {
-        best = Math.min(best, 2 + token.length / Math.max(normalizedTerm.length, 1))
+      if (
+        normalizedTerm === token ||
+        compactTerm === compactToken ||
+        normalizedTerm.startsWith(token)
+      ) {
+        best = Math.min(
+          best,
+          2 + token.length / Math.max(normalizedTerm.length, 1)
+        )
       }
     }
 
@@ -204,12 +224,17 @@ function scoreBookMatch(bookInput: string, book: Book): number {
 /**
  * Find matching book by name or abbreviation (case insensitive)
  */
-export function findMatchingBook(bookInput: string, books: Book[]): Book | undefined {
+export function findMatchingBook(
+  bookInput: string,
+  books: Book[]
+): Book | undefined {
   const normalized = normalizeSearchText(normalizeInput(bookInput))
   const candidates = books
     .map((book) => ({ book, score: scoreBookMatch(normalized, book) }))
     .filter(({ score }) => Number.isFinite(score))
-    .sort((a, b) => a.score - b.score || a.book.book_number - b.book.book_number)
+    .sort(
+      (a, b) => a.score - b.score || a.book.book_number - b.book.book_number
+    )
 
   return candidates[0]?.book
 }
@@ -249,9 +274,7 @@ function parseNaturalReference(input: string): {
     .filter((index) => index !== -1)
   const numberIndexes = rawNumberIndexes.filter((index) => {
     const isLeadingBookOrdinal =
-      index === 0 &&
-      Boolean(usableTokens[1]) &&
-      !/^\d+$/.test(usableTokens[1])
+      index === 0 && Boolean(usableTokens[1]) && !/^\d+$/.test(usableTokens[1])
     return !isLeadingBookOrdinal
   })
 
@@ -262,8 +285,12 @@ function parseNaturalReference(input: string): {
     }
   }
 
-  const chapterIndex = numberIndexes.length >= 2 ? numberIndexes[numberIndexes.length - 2] : numberIndexes[numberIndexes.length - 1]
-  const verseIndex = numberIndexes.length >= 2 ? numberIndexes[numberIndexes.length - 1] : -1
+  const chapterIndex =
+    numberIndexes.length >= 2
+      ? numberIndexes[numberIndexes.length - 2]
+      : numberIndexes[numberIndexes.length - 1]
+  const verseIndex =
+    numberIndexes.length >= 2 ? numberIndexes[numberIndexes.length - 1] : -1
   const bookTokens = usableTokens.slice(0, chapterIndex)
   const chapter = Number(usableTokens[chapterIndex])
   const verse = verseIndex >= 0 ? Number(usableTokens[verseIndex]) : undefined
@@ -295,7 +322,9 @@ export function getAutocompleteSuggestion(
 
   // Check if it's just a number (for numbered books like "1", "2", "3")
   if (/^\d+$/.test(trimmed)) {
-    const matchingBook = books.find(b => b.name.startsWith(normalizedInput + " "))
+    const matchingBook = books.find((b) =>
+      b.name.startsWith(normalizedInput + " ")
+    )
 
     if (matchingBook) {
       const remainder = matchingBook.name.slice(normalizedInput.length)
@@ -304,7 +333,7 @@ export function getAutocompleteSuggestion(
         matchedBook: matchingBook,
         chapter: 1,
         verse: 1,
-        stage: "book"
+        stage: "book",
       }
     }
   }
@@ -332,7 +361,7 @@ export function getAutocompleteSuggestion(
       matchedBook: matchingBook,
       chapter: 1,
       verse: 1,
-      stage: "book"
+      stage: "book",
     }
   }
 
@@ -343,7 +372,7 @@ export function getAutocompleteSuggestion(
       matchedBook: matchingBook,
       chapter,
       verse: 1,
-      stage: "chapter"
+      stage: "chapter",
     }
   }
 
@@ -353,7 +382,7 @@ export function getAutocompleteSuggestion(
       suggestion: "",
       matchedBook: matchingBook,
       chapter,
-      stage: "verse"
+      stage: "verse",
     }
   }
 
@@ -364,7 +393,7 @@ export function getAutocompleteSuggestion(
       matchedBook: matchingBook,
       chapter,
       verse,
-      stage: "complete"
+      stage: "complete",
     }
   }
 
@@ -386,7 +415,9 @@ export function getTabNavigationResult(
   const suggestionTrimmed = currentSuggestion.trim()
 
   // Extract the full book name from the suggestion
-  const bookNameMatch = suggestionTrimmed.match(/^(([IVX]+\s+)?[a-zA-Z\s]+)\s+\d+:\d+$/)
+  const bookNameMatch = suggestionTrimmed.match(
+    /^(([IVX]+\s+)?[a-zA-Z\s]+)\s+\d+:\d+$/
+  )
 
   if (bookNameMatch) {
     const fullBookName = bookNameMatch[1]
@@ -397,8 +428,10 @@ export function getTabNavigationResult(
 
     // Check if current input has a chapter number
     const hasChapter =
-      new RegExp(`^${fullBookName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+\\d+`, 'i').test(trimmed) &&
-      !trimmed.includes(':')
+      new RegExp(
+        `^${fullBookName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+\\d+`,
+        "i"
+      ).test(trimmed) && !trimmed.includes(":")
 
     // Stage 1: Still typing book name -> advance to complete book name
     if (!currentIsCompleteBookName && !hasChapter) {
@@ -407,7 +440,9 @@ export function getTabNavigationResult(
 
     // Stage 2: Has chapter -> advance to chapter with colon
     if (hasChapter) {
-      const chapterMatch = suggestionTrimmed.match(/^(([IVX]+\s+)?[a-zA-Z\s]+\s+\d+):\d+$/)
+      const chapterMatch = suggestionTrimmed.match(
+        /^(([IVX]+\s+)?[a-zA-Z\s]+\s+\d+):\d+$/
+      )
       if (chapterMatch) {
         return chapterMatch[1] + ":"
       }

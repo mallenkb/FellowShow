@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react"
 import { invoke } from "@tauri-apps/api/core"
-import { emitTo, listen } from "@tauri-apps/api/event"
-import { availableMonitors, getAllWindows, type Monitor } from '@tauri-apps/api/window'
+import { emitTo } from "@tauri-apps/api/event"
+import {
+  availableMonitors,
+  getAllWindows,
+  type Monitor,
+} from "@tauri-apps/api/window"
 import {
   Dialog,
   DialogContent,
@@ -22,7 +26,13 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores"
-import type { NdiAlphaMode, NdiFrameRate, NdiResolution, NdiSessionInfo, NdiStartRequest } from "@/types"
+import type {
+  NdiAlphaMode,
+  NdiFrameRate,
+  NdiResolution,
+  NdiSessionInfo,
+  NdiStartRequest,
+} from "@/types"
 import {
   MonitorIcon,
   CastIcon,
@@ -83,7 +93,8 @@ export function BroadcastSettings({
   const [ndiSourceName, setNdiSourceName] = useState("FellowShow Output")
   const [ndiResolution, setNdiResolution] = useState<NdiResolution>("r1080p")
   const [ndiFrameRate, setNdiFrameRate] = useState<NdiFrameRate>("fps24")
-  const [ndiAlphaMode, setNdiAlphaMode] = useState<NdiAlphaMode>("straightAlpha")
+  const [ndiAlphaMode, setNdiAlphaMode] =
+    useState<NdiAlphaMode>("straightAlpha")
   const [ndiActive, setNdiActive] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -95,21 +106,19 @@ export function BroadcastSettings({
   const [altSelectedMonitor, setAltSelectedMonitor] = useState("0")
   const [altIsPreviewOpen, setAltIsPreviewOpen] = useState(false)
   const [altNdiSourceName, setAltNdiSourceName] = useState("FellowShow Alt")
-  const [altNdiResolution, setAltNdiResolution] = useState<NdiResolution>("r1080p")
+  const [altNdiResolution, setAltNdiResolution] =
+    useState<NdiResolution>("r1080p")
   const [altNdiFrameRate, setAltNdiFrameRate] = useState<NdiFrameRate>("fps24")
-  const [altNdiAlphaMode, setAltNdiAlphaMode] = useState<NdiAlphaMode>("straightAlpha")
+  const [altNdiAlphaMode, setAltNdiAlphaMode] =
+    useState<NdiAlphaMode>("straightAlpha")
   const [altNdiActive, setAltNdiActive] = useState(false)
-
-  const syncBroadcastOutput = useCallback(() => {
-    useBroadcastStore.getState().syncBroadcastOutput()
-  }, [])
 
   const syncNdiConfigToOutput = useCallback(
     (
       outputId: string,
       active: boolean,
       frameRate: NdiFrameRate,
-      resolution: NdiResolution,
+      resolution: NdiResolution
     ) => {
       const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
       const dims =
@@ -125,14 +134,17 @@ export function BroadcastSettings({
         height: dims.height,
       }).catch(() => {})
     },
-    [],
+    []
   )
 
-  const reconcilePreviewState = useCallback(async (outputId: string = "main") => {
-    const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
-    const windows = await getAllWindows()
-    return windows.some((w) => w.label === label)
-  }, [])
+  const reconcilePreviewState = useCallback(
+    async (outputId: string = "main") => {
+      const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
+      const windows = await getAllWindows()
+      return windows.some((w) => w.label === label)
+    },
+    []
+  )
 
   const fetchMonitors = useCallback(async () => {
     setRefreshing(true)
@@ -158,36 +170,6 @@ export function BroadcastSettings({
   useEffect(() => {
     setMainThemeId(activeThemeId)
   }, [activeThemeId])
-
-  useEffect(() => {
-    if (!open) return
-
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
-    const unlistenPromise = listen("broadcast:output-ready", () => {
-      useBroadcastStore.getState().syncBroadcastOutput()
-      syncNdiConfigToOutput("main", ndiActive, ndiFrameRate, ndiResolution)
-      syncNdiConfigToOutput("alt", altNdiActive, altNdiFrameRate, altNdiResolution)
-      timeoutId = setTimeout(() => {
-        useBroadcastStore.getState().syncBroadcastOutput()
-      }, 150)
-    })
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId)
-      void unlistenPromise.then((unlisten) => unlisten())
-    }
-  }, [
-    open,
-    isPreviewOpen,
-    ndiActive,
-    ndiFrameRate,
-    ndiResolution,
-    altNdiActive,
-    altNdiFrameRate,
-    altNdiResolution,
-    syncBroadcastOutput,
-    syncNdiConfigToOutput,
-  ])
 
   useEffect(() => {
     if (!open || !isPreviewOpen) return
@@ -237,7 +219,9 @@ export function BroadcastSettings({
         syncNdiConfigToOutput("main", false, ndiFrameRate, ndiResolution)
         setNdiActive(false)
         if (!isPreviewOpen) {
-          await invoke("close_broadcast_window", { outputId: "main" }).catch(() => {})
+          await invoke("close_broadcast_window", { outputId: "main" }).catch(
+            () => {}
+          )
         }
       } else {
         await invoke("ensure_broadcast_window", { outputId: "main" })
@@ -247,7 +231,10 @@ export function BroadcastSettings({
           frameRate: ndiFrameRate,
           alphaMode: ndiAlphaMode,
         }
-        const session = await invoke<NdiSessionInfo>("start_ndi", { outputId: "main", request })
+        const session = await invoke<NdiSessionInfo>("start_ndi", {
+          outputId: "main",
+          request,
+        })
         setNdiActive(true)
         useBroadcastStore.getState().syncBroadcastOutputFor("main")
         void emitTo("broadcast", "broadcast:ndi-config", {
@@ -310,7 +297,12 @@ export function BroadcastSettings({
         setAltIsPreviewOpen(opened)
         if (!opened) return
         useBroadcastStore.getState().syncBroadcastOutputFor("alt")
-        syncNdiConfigToOutput("alt", altNdiActive, altNdiFrameRate, altNdiResolution)
+        syncNdiConfigToOutput(
+          "alt",
+          altNdiActive,
+          altNdiFrameRate,
+          altNdiResolution
+        )
         setTimeout(() => {
           useBroadcastStore.getState().syncBroadcastOutputFor("alt")
         }, 150)
@@ -327,7 +319,9 @@ export function BroadcastSettings({
         syncNdiConfigToOutput("alt", false, altNdiFrameRate, altNdiResolution)
         setAltNdiActive(false)
         if (!altIsPreviewOpen) {
-          await invoke("close_broadcast_window", { outputId: "alt" }).catch(() => {})
+          await invoke("close_broadcast_window", { outputId: "alt" }).catch(
+            () => {}
+          )
         }
       } else {
         await invoke("ensure_broadcast_window", { outputId: "alt" })
@@ -337,7 +331,10 @@ export function BroadcastSettings({
           frameRate: altNdiFrameRate,
           alphaMode: altNdiAlphaMode,
         }
-        const session = await invoke<NdiSessionInfo>("start_ndi", { outputId: "alt", request })
+        const session = await invoke<NdiSessionInfo>("start_ndi", {
+          outputId: "alt",
+          request,
+        })
         setAltNdiActive(true)
         useBroadcastStore.getState().syncBroadcastOutputFor("alt")
         void emitTo("broadcast-alt", "broadcast:ndi-config", {
@@ -360,7 +357,9 @@ export function BroadcastSettings({
     setAltEnabled(enabled)
     if (!enabled) {
       if (altIsPreviewOpen) {
-        await invoke("close_broadcast_window", { outputId: "alt" }).catch(() => {})
+        await invoke("close_broadcast_window", { outputId: "alt" }).catch(
+          () => {}
+        )
         setAltIsPreviewOpen(false)
       }
       if (altNdiActive) {
@@ -386,7 +385,7 @@ export function BroadcastSettings({
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* ── Main Output Card ── */}
-          <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+          <div className="space-y-4 rounded-lg border border-border bg-card p-4">
             {/* Card header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -412,10 +411,7 @@ export function BroadcastSettings({
             {/* Theme selector */}
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Theme</label>
-              <Select
-                value={mainThemeId}
-                onValueChange={handleMainThemeChange}
-              >
+              <Select value={mainThemeId} onValueChange={handleMainThemeChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -478,10 +474,7 @@ export function BroadcastSettings({
                       className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
                     >
                       <RefreshCwIcon
-                        className={cn(
-                          "size-3",
-                          refreshing && "animate-spin"
-                        )}
+                        className={cn("size-3", refreshing && "animate-spin")}
                       />
                       Refresh
                     </Button>
@@ -537,10 +530,14 @@ export function BroadcastSettings({
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs text-muted-foreground">Resolution</label>
+                    <label className="text-xs text-muted-foreground">
+                      Resolution
+                    </label>
                     <Select
                       value={ndiResolution}
-                      onValueChange={(value) => setNdiResolution(value as NdiResolution)}
+                      onValueChange={(value) =>
+                        setNdiResolution(value as NdiResolution)
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue />
@@ -556,10 +553,14 @@ export function BroadcastSettings({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs text-muted-foreground">Frame Rate</label>
+                    <label className="text-xs text-muted-foreground">
+                      Frame Rate
+                    </label>
                     <Select
                       value={ndiFrameRate}
-                      onValueChange={(value) => setNdiFrameRate(value as NdiFrameRate)}
+                      onValueChange={(value) =>
+                        setNdiFrameRate(value as NdiFrameRate)
+                      }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue />
@@ -576,10 +577,14 @@ export function BroadcastSettings({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Alpha Channel</label>
+                  <label className="text-xs text-muted-foreground">
+                    Alpha Channel
+                  </label>
                   <Select
                     value={ndiAlphaMode}
-                    onValueChange={(value) => setNdiAlphaMode(value as NdiAlphaMode)}
+                    onValueChange={(value) =>
+                      setNdiAlphaMode(value as NdiAlphaMode)
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
@@ -595,7 +600,9 @@ export function BroadcastSettings({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Source Name</label>
+                  <label className="text-xs text-muted-foreground">
+                    Source Name
+                  </label>
                   <Input
                     value={ndiSourceName}
                     onChange={(e) => setNdiSourceName(e.target.value)}
@@ -608,7 +615,7 @@ export function BroadcastSettings({
                   className={cn(
                     "w-full gap-1.5",
                     ndiActive &&
-                    "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400"
+                      "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400"
                   )}
                   onClick={handleToggleNdi}
                 >
@@ -629,34 +636,48 @@ export function BroadcastSettings({
           </div>
 
           {/* ── Alternate Output Card ── */}
-          <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+          <div className="space-y-4 rounded-lg border border-border bg-card p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CastIcon className="size-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Alternate Output</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className={cn("text-xs", altEnabled ? "text-foreground" : "text-muted-foreground")}>
+                <span
+                  className={cn(
+                    "text-xs",
+                    altEnabled ? "text-foreground" : "text-muted-foreground"
+                  )}
+                >
                   {altEnabled ? "On" : "Off"}
                 </span>
-                <Switch checked={altEnabled} onCheckedChange={handleAltToggle} />
+                <Switch
+                  checked={altEnabled}
+                  onCheckedChange={handleAltToggle}
+                />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Theme</label>
               <Select value={altThemeId} onValueChange={handleAltThemeChange}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {themes.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Output Type</label>
+              <label className="text-xs text-muted-foreground">
+                Output Type
+              </label>
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => setAltOutputType("display")}
@@ -689,15 +710,38 @@ export function BroadcastSettings({
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs text-muted-foreground">Target Monitor</label>
-                    <Button variant="ghost" size="xs" disabled={refreshing} onClick={fetchMonitors} className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground">
-                      <RefreshCwIcon className={cn("size-3", refreshing && "animate-spin")} />
+                    <label className="text-xs text-muted-foreground">
+                      Target Monitor
+                    </label>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      disabled={refreshing}
+                      onClick={fetchMonitors}
+                      className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
+                    >
+                      <RefreshCwIcon
+                        className={cn("size-3", refreshing && "animate-spin")}
+                      />
                       Refresh
                     </Button>
                   </div>
-                  <Select value={altSelectedMonitor} onValueChange={setAltSelectedMonitor} disabled={monitors.length === 0}>
-                    <SelectTrigger className="w-full" disabled={monitors.length === 0}>
-                      <SelectValue placeholder={monitors.length === 0 ? "No monitors detected" : "Select monitor"} />
+                  <Select
+                    value={altSelectedMonitor}
+                    onValueChange={setAltSelectedMonitor}
+                    disabled={monitors.length === 0}
+                  >
+                    <SelectTrigger
+                      className="w-full"
+                      disabled={monitors.length === 0}
+                    >
+                      <SelectValue
+                        placeholder={
+                          monitors.length === 0
+                            ? "No monitors detected"
+                            : "Select monitor"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {monitors.map((m, i) => (
@@ -708,58 +752,130 @@ export function BroadcastSettings({
                     </SelectContent>
                   </Select>
                 </div>
-                <Button variant="outline" size="sm" className="w-full gap-1.5" disabled={monitors.length === 0} onClick={handleAltTogglePreview}>
-                  {altIsPreviewOpen ? (<><EyeOffIcon className="size-3.5" />Close Preview</>) : (<><EyeIcon className="size-3.5" />Open Preview</>)}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5"
+                  disabled={monitors.length === 0}
+                  onClick={handleAltTogglePreview}
+                >
+                  {altIsPreviewOpen ? (
+                    <>
+                      <EyeOffIcon className="size-3.5" />
+                      Close Preview
+                    </>
+                  ) : (
+                    <>
+                      <EyeIcon className="size-3.5" />
+                      Open Preview
+                    </>
+                  )}
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-xs text-muted-foreground">Resolution</label>
-                    <Select value={altNdiResolution} onValueChange={(v) => setAltNdiResolution(v as NdiResolution)}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <label className="text-xs text-muted-foreground">
+                      Resolution
+                    </label>
+                    <Select
+                      value={altNdiResolution}
+                      onValueChange={(v) =>
+                        setAltNdiResolution(v as NdiResolution)
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {NDI_RESOLUTION_OPTIONS.map((o) => (<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>))}
+                        {NDI_RESOLUTION_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs text-muted-foreground">Frame Rate</label>
-                    <Select value={altNdiFrameRate} onValueChange={(v) => setAltNdiFrameRate(v as NdiFrameRate)}>
-                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <label className="text-xs text-muted-foreground">
+                      Frame Rate
+                    </label>
+                    <Select
+                      value={altNdiFrameRate}
+                      onValueChange={(v) =>
+                        setAltNdiFrameRate(v as NdiFrameRate)
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {NDI_FRAME_RATE_OPTIONS.map((o) => (<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>))}
+                        {NDI_FRAME_RATE_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Alpha Channel</label>
-                  <Select value={altNdiAlphaMode} onValueChange={(v) => setAltNdiAlphaMode(v as NdiAlphaMode)}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <label className="text-xs text-muted-foreground">
+                    Alpha Channel
+                  </label>
+                  <Select
+                    value={altNdiAlphaMode}
+                    onValueChange={(v) => setAltNdiAlphaMode(v as NdiAlphaMode)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      {NDI_ALPHA_OPTIONS.map((o) => (<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>))}
+                      {NDI_ALPHA_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">Source Name</label>
-                  <Input value={altNdiSourceName} onChange={(e) => setAltNdiSourceName(e.target.value)} placeholder="FellowShow Alt" />
+                  <label className="text-xs text-muted-foreground">
+                    Source Name
+                  </label>
+                  <Input
+                    value={altNdiSourceName}
+                    onChange={(e) => setAltNdiSourceName(e.target.value)}
+                    placeholder="FellowShow Alt"
+                  />
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn("w-full gap-1.5", altNdiActive && "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400")}
+                  className={cn(
+                    "w-full gap-1.5",
+                    altNdiActive &&
+                      "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400"
+                  )}
                   onClick={handleAltToggleNdi}
                 >
-                  {altNdiActive ? (<><CastIcon className="size-3.5" />Stop NDI</>) : (<><CastIcon className="size-3.5" />Start NDI</>)}
+                  {altNdiActive ? (
+                    <>
+                      <CastIcon className="size-3.5" />
+                      Stop NDI
+                    </>
+                  ) : (
+                    <>
+                      <CastIcon className="size-3.5" />
+                      Start NDI
+                    </>
+                  )}
                 </Button>
               </div>
             )}
           </div>
         </div>
-
       </DialogContent>
     </Dialog>
   )

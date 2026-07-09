@@ -33,7 +33,10 @@ export function PropertiesPanel() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="text" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <Tabs
+        defaultValue="text"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
         <div className="shrink-0 px-4 pt-3">
           <TabsList variant="default" className="w-full">
             <TabsTrigger value="text">Text</TabsTrigger>
@@ -43,7 +46,7 @@ export function PropertiesPanel() {
           </TabsList>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
+        <div className="min-h-0 flex-1 [scrollbar-width:thin] overflow-y-auto">
           <TabsContent value="text" className="mt-0 p-4">
             <TextProperties />
           </TabsContent>

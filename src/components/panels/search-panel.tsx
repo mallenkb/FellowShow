@@ -10,7 +10,9 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "motion/react"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke, isTauri } from "@tauri-apps/api/core"
+import { open } from "@tauri-apps/plugin-dialog"
+import { toast } from "sonner"
 // Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
 import { Button } from "@/components/ui/button"
 import { Fader } from "@/components/ui/fader"
@@ -84,7 +86,7 @@ import type { Book, Verse, SemanticSearchResult } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
 import { createSongSearchIndex, searchSongs } from "@/lib/song-search"
 import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
-import { loadAllSongs } from "@/lib/songs-data"
+import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
 import { compareSongPdfOrder } from "@/lib/song-ordering"
 import { splitLyricBlocks } from "@/lib/lyrics"
 import { PresenterTimer } from "@/components/controls/presenter-timer"
@@ -122,7 +124,14 @@ const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
   { value: "theme-2026", label: "2026 Theme" },
   { value: "theme-2025", label: "2025 Theme" },
   { value: "pentecostal-book", label: "Pentecostal Book" },
+  { value: "easyworship", label: "EasyWorship import" },
 ]
+
+interface EasyWorshipImportedSong {
+  id: string
+  title: string
+  lyrics: string
+}
 
 function hashString(value: string) {
   let hash = 0
@@ -306,7 +315,7 @@ function SongFilterDropdown({
             }}
             className="fixed z-50 overflow-hidden rounded-md border border-border bg-popover shadow-lg ring-1 ring-foreground/10"
           >
-            <div className="max-h-80 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin]">
+            <div className="max-h-80 [scrollbar-width:thin] overflow-y-auto overscroll-contain p-1">
               <div className="px-2 py-1.5 text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
                 Song type
               </div>
@@ -486,6 +495,7 @@ export function SearchPanel({
   const [songLetterFilter, setSongLetterFilter] = useState("all")
   const [songSourceFilter, setSongSourceFilter] =
     useState<SongSourceFilter>("all")
+  const [allSongs, setAllSongs] = useState<CopSong[]>([])
   const [editingPresentationSlideId, setEditingPresentationSlideId] = useState<
     string | null
   >(null)
@@ -773,6 +783,59 @@ export function SearchPanel({
     }
   }, [])
 
+  const importEasyWorshipSongs = useCallback(async () => {
+    if (!isTauri()) {
+      toast.error("EasyWorship imports are available in the desktop app.")
+      return
+    }
+
+    const selected = await open({
+      multiple: true,
+      filters: [{ name: "EasyWorship databases", extensions: ["db"] }],
+    })
+    if (!selected) return
+
+    const paths = Array.isArray(selected) ? selected : [selected]
+    const songsDbPath = paths.find((path) => /(^|[/\\])songs\.db$/i.test(path))
+    const songWordsDbPath = paths.find((path) =>
+      /(^|[/\\])songwords\.db$/i.test(path)
+    )
+    if (!songsDbPath || !songWordsDbPath) {
+      toast.error("Choose both Songs.db and SongWords.db from EasyWorship.")
+      return
+    }
+
+    try {
+      const imported = await invoke<EasyWorshipImportedSong[]>(
+        "import_easyworship_songs",
+        { songsDbPath, songWordsDbPath }
+      )
+      const songs: CopSong[] = imported.map((song, index) => ({
+        id: song.id,
+        language: "english",
+        languageLabel: "EasyWorship",
+        number: index + 1,
+        title: song.title,
+        lyrics: song.lyrics,
+        source: "easyworship",
+        sourceLabel: "EasyWorship",
+      }))
+      saveEasyWorshipSongs(songs)
+      const catalog = await loadAllSongs()
+      setAllSongs(catalog)
+      setSongSourceFilter("easyworship")
+      toast.success(
+        `Imported ${songs.length} song${songs.length === 1 ? "" : "s"} from EasyWorship.`
+      )
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not import EasyWorship songs."
+      )
+    }
+  }, [])
+
   const handlePresentationDragOver = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       if (activeTab !== "presentation") return
@@ -842,7 +905,6 @@ export function SearchPanel({
   )
 
   // Song catalog is code-split and fetched the first time the Songs tab opens.
-  const [allSongs, setAllSongs] = useState<CopSong[]>([])
   useEffect(() => {
     if (activeTab !== "songs" || allSongs.length > 0) return
     let active = true
@@ -1343,7 +1405,7 @@ export function SearchPanel({
     >
       {/* STICKY: Tabs */}
       <div className="flex shrink-0 flex-col gap-2.5 border-b border-border px-3 pt-2 pb-3">
-        <div className="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="-mx-1 flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:hidden">
           <button
             data-tour="book-search"
             onClick={() => setSearchTab("book")}
@@ -1482,6 +1544,15 @@ export function SearchPanel({
               onSourceChange={setSongSourceFilter}
               onLetterChange={setSongLetterFilter}
             />
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10"
+              onClick={() => void importEasyWorshipSongs()}
+            >
+              <UploadIcon className="size-4" />
+              Import EasyWorship
+            </Button>
           </div>
         ) : activeTab === "presentation" ? (
           <div

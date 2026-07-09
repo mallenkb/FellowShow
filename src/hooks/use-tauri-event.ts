@@ -1,10 +1,8 @@
 import { useEffect, useRef } from "react"
+import { isTauri } from "@tauri-apps/api/core"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 
-export function useTauriEvent<T>(
-  event: string,
-  handler: (payload: T) => void
-) {
+export function useTauriEvent<T>(event: string, handler: (payload: T) => void) {
   const handlerRef = useRef(handler)
 
   useEffect(() => {
@@ -12,6 +10,8 @@ export function useTauriEvent<T>(
   }, [handler])
 
   useEffect(() => {
+    if (!isTauri()) return
+
     // Track whether this effect has been cleaned up.
     // React StrictMode unmounts/remounts effects, and the listen() Promise
     // may resolve after cleanup — the cancelled flag prevents stale listeners.
@@ -22,14 +22,18 @@ export function useTauriEvent<T>(
       if (!cancelled) {
         handlerRef.current(e.payload)
       }
-    }).then((fn) => {
-      if (cancelled) {
-        // Effect was already cleaned up before the listener registered — remove it immediately
-        fn()
-      } else {
-        unlisten = fn
-      }
     })
+      .then((fn) => {
+        if (cancelled) {
+          // Effect was already cleaned up before the listener registered — remove it immediately
+          fn()
+        } else {
+          unlisten = fn
+        }
+      })
+      .catch((error) => {
+        console.warn(`[tauri-event] failed to listen for ${event}:`, error)
+      })
 
     return () => {
       cancelled = true

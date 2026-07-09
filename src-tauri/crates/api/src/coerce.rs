@@ -90,7 +90,7 @@ pub fn coerce_string(arg: &OscType) -> Result<String, CommandError> {
 
 /// Parse an OSC address + arguments into a `RemoteCommand`.
 ///
-/// Handles all 8 FellowShow OSC addresses:
+/// Handles all 8 `FellowShow` OSC addresses:
 /// - `/fellowshow/next`, `/fellowshow/prev`, `/fellowshow/show`, `/fellowshow/hide` (no arguments)
 /// - `/fellowshow/theme` (string argument)
 /// - `/fellowshow/opacity`, `/fellowshow/confidence` (float argument, normalized to [0.0, 1.0])
@@ -142,22 +142,22 @@ mod tests {
 
     #[test]
     fn coerce_bool_from_true() {
-        assert_eq!(coerce_bool(&OscType::Bool(true)).unwrap(), true);
+        assert!(coerce_bool(&OscType::Bool(true)).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_false() {
-        assert_eq!(coerce_bool(&OscType::Bool(false)).unwrap(), false);
+        assert!(!coerce_bool(&OscType::Bool(false)).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_int_1() {
-        assert_eq!(coerce_bool(&OscType::Int(1)).unwrap(), true);
+        assert!(coerce_bool(&OscType::Int(1)).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_int_0() {
-        assert_eq!(coerce_bool(&OscType::Int(0)).unwrap(), false);
+        assert!(!coerce_bool(&OscType::Int(0)).unwrap());
     }
 
     #[test]
@@ -167,62 +167,61 @@ mod tests {
 
     #[test]
     fn coerce_bool_from_float_1_0() {
-        assert_eq!(coerce_bool(&OscType::Float(1.0)).unwrap(), true);
+        assert!(coerce_bool(&OscType::Float(1.0)).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_float_0_0() {
-        assert_eq!(coerce_bool(&OscType::Float(0.0)).unwrap(), false);
+        assert!(!coerce_bool(&OscType::Float(0.0)).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_float_0_7() {
-        assert_eq!(coerce_bool(&OscType::Float(0.7)).unwrap(), true);
+        assert!(coerce_bool(&OscType::Float(0.7)).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_string_true() {
-        assert_eq!(coerce_bool(&OscType::String("true".into())).unwrap(), true);
+        assert!(coerce_bool(&OscType::String("true".into())).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_string_false() {
-        assert_eq!(
-            coerce_bool(&OscType::String("false".into())).unwrap(),
-            false
-        );
+        assert!(!coerce_bool(&OscType::String("false".into())).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_string_on() {
-        assert_eq!(coerce_bool(&OscType::String("on".into())).unwrap(), true);
+        assert!(coerce_bool(&OscType::String("on".into())).unwrap());
     }
 
     #[test]
     fn coerce_bool_from_string_off() {
-        assert_eq!(coerce_bool(&OscType::String("off".into())).unwrap(), false);
+        assert!(!coerce_bool(&OscType::String("off".into())).unwrap());
     }
 
     // --- coerce_f32_normalized tests ---
 
     #[test]
     fn coerce_f32_from_float() {
-        assert_eq!(coerce_f32_normalized(&OscType::Float(0.75)).unwrap(), 0.75);
+        assert!(
+            (coerce_f32_normalized(&OscType::Float(0.75)).unwrap() - 0.75).abs() < f32::EPSILON
+        );
     }
 
     #[test]
     fn coerce_f32_from_int_percent() {
-        assert_eq!(coerce_f32_normalized(&OscType::Int(75)).unwrap(), 0.75);
+        assert!((coerce_f32_normalized(&OscType::Int(75)).unwrap() - 0.75).abs() < f32::EPSILON);
     }
 
     #[test]
     fn coerce_f32_from_int_0() {
-        assert_eq!(coerce_f32_normalized(&OscType::Int(0)).unwrap(), 0.0);
+        assert!(coerce_f32_normalized(&OscType::Int(0)).unwrap().abs() < f32::EPSILON);
     }
 
     #[test]
     fn coerce_f32_from_int_1_literal() {
-        assert_eq!(coerce_f32_normalized(&OscType::Int(1)).unwrap(), 1.0);
+        assert!((coerce_f32_normalized(&OscType::Int(1)).unwrap() - 1.0).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -233,12 +232,12 @@ mod tests {
 
     #[test]
     fn coerce_f32_clamps_high() {
-        assert_eq!(coerce_f32_normalized(&OscType::Float(1.5)).unwrap(), 1.0);
+        assert!((coerce_f32_normalized(&OscType::Float(1.5)).unwrap() - 1.0).abs() < f32::EPSILON);
     }
 
     #[test]
     fn coerce_f32_clamps_low() {
-        assert_eq!(coerce_f32_normalized(&OscType::Float(-0.5)).unwrap(), 0.0);
+        assert!(coerce_f32_normalized(&OscType::Float(-0.5)).unwrap().abs() < f32::EPSILON);
     }
 
     // --- coerce_string tests ---

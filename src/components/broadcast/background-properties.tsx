@@ -13,14 +13,15 @@ import { Button } from "@/components/ui/button"
 
 function parseColorOpacity(color: string): { hex: string; opacity: number } {
   const rgba = color.match(
-    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/i,
+    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*([0-9.]+))?\s*\)$/i
   )
   if (rgba) {
     const toHex = (value: string) =>
       Math.max(0, Math.min(255, Number(value)))
         .toString(16)
         .padStart(2, "0")
-    const alpha = rgba[4] === undefined ? 1 : Math.max(0, Math.min(1, Number(rgba[4])))
+    const alpha =
+      rgba[4] === undefined ? 1 : Math.max(0, Math.min(1, Number(rgba[4])))
     return {
       hex: `#${toHex(rgba[1])}${toHex(rgba[2])}${toHex(rgba[3])}`,
       opacity: Math.round(alpha * 100),
@@ -53,7 +54,9 @@ function SolidSection() {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-medium text-muted-foreground">Background Color</label>
+      <label className="text-xs font-medium text-muted-foreground">
+        Background Color
+      </label>
       <div className="flex items-center gap-2">
         <input
           type="color"
@@ -90,7 +93,9 @@ function GradientSection() {
     <div className="flex flex-col gap-3">
       {/* Gradient Type */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Gradient Type</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Gradient Type
+        </label>
         <Select
           value={gradient.type}
           onValueChange={(v) => update("background.gradient.type", v)}
@@ -120,12 +125,16 @@ function GradientSection() {
 
       {/* Color Stop 1 */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Color Stop 1</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Color Stop 1
+        </label>
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={stop0.color}
-            onChange={(e) => update("background.gradient.stops.0.color", e.target.value)}
+            onChange={(e) =>
+              update("background.gradient.stops.0.color", e.target.value)
+            }
             className="h-7 w-8 cursor-pointer rounded border border-input bg-transparent p-0.5"
           />
           <Input
@@ -151,12 +160,16 @@ function GradientSection() {
 
       {/* Color Stop 2 */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Color Stop 2</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Color Stop 2
+        </label>
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={stop1.color}
-            onChange={(e) => update("background.gradient.stops.1.color", e.target.value)}
+            onChange={(e) =>
+              update("background.gradient.stops.1.color", e.target.value)
+            }
             className="h-7 w-8 cursor-pointer rounded border border-input bg-transparent p-0.5"
           />
           <Input
@@ -190,13 +203,17 @@ function ImageSection() {
   if (!draftTheme || !draftTheme.background.image) return null
 
   const image = draftTheme.background.image
-  const tint = image.tint ? parseColorOpacity(image.tint) : { hex: "#000000", opacity: 50 }
+  const tint = image.tint
+    ? parseColorOpacity(image.tint)
+    : { hex: "#000000", opacity: 50 }
 
   return (
     <div className="flex flex-col gap-3">
       {/* Media Source */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Background Media</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Background Media
+        </label>
         <Button
           variant="outline"
           size="sm"
@@ -214,13 +231,16 @@ function ImageSection() {
           Change Media
         </Button>
         <p className="text-[0.6875rem] leading-relaxed text-muted-foreground">
-          Supports image and video backgrounds. Videos play muted and loop automatically.
+          Supports image and video backgrounds. Videos play muted and loop
+          automatically.
         </p>
       </div>
 
       {/* Fit Mode */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Fit Mode</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Fit Mode
+        </label>
         <Select
           value={image.fit}
           onValueChange={(v) => update("background.image.fit", v)}
@@ -269,7 +289,10 @@ function ImageSection() {
             checked={image.tint !== null}
             onChange={(e) => {
               if (e.target.checked) {
-                update("background.image.tint", buildColorWithOpacity("#000000", 50))
+                update(
+                  "background.image.tint",
+                  buildColorWithOpacity("#000000", 50)
+                )
               } else {
                 update("background.image.tint", null)
               }
@@ -285,7 +308,10 @@ function ImageSection() {
                 type="color"
                 value={tint.hex}
                 onChange={(e) =>
-                  update("background.image.tint", buildColorWithOpacity(e.target.value, tint.opacity))
+                  update(
+                    "background.image.tint",
+                    buildColorWithOpacity(e.target.value, tint.opacity)
+                  )
                 }
                 className="h-7 w-8 cursor-pointer rounded border border-input bg-transparent p-0.5"
               />
@@ -294,7 +320,10 @@ function ImageSection() {
                 onChange={(e) => {
                   const v = e.target.value
                   if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-                    update("background.image.tint", buildColorWithOpacity(v, tint.opacity))
+                    update(
+                      "background.image.tint",
+                      buildColorWithOpacity(v, tint.opacity)
+                    )
                   }
                 }}
                 className="w-20 font-mono"
@@ -307,7 +336,12 @@ function ImageSection() {
               max={100}
               unit="%"
               defaultValue={50}
-              onChange={(v) => update("background.image.tint", buildColorWithOpacity(tint.hex, v))}
+              onChange={(v) =>
+                update(
+                  "background.image.tint",
+                  buildColorWithOpacity(tint.hex, v)
+                )
+              }
             />
           </div>
         )}
@@ -356,7 +390,9 @@ function TextBoxSection() {
         <div className="flex flex-col gap-3">
           {/* Color */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Color</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              Color
+            </label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -421,7 +457,9 @@ export function BackgroundProperties() {
     <div className="flex flex-col gap-3">
       {/* Background Type */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Background Type</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Background Type
+        </label>
         <Select
           value={bgType}
           onValueChange={(v) => {

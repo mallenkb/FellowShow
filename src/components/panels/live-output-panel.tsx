@@ -4,6 +4,7 @@ import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
+import { getThemeForProgramContent } from "@/stores/broadcast-store"
 
 type LiveOutputMode = "book" | "context" | "songs" | "presentation" | "timer"
 
@@ -11,6 +12,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   void mode
   const isLive = useBroadcastStore((s) => s.isLive)
   const themes = useBroadcastStore((s) => s.themes)
+  const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const lowerThird = useBroadcastStore((s) => s.lowerThird)
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
@@ -24,19 +26,21 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
     (s) => s.backgroundOptions
   )
 
-  const liveThemeSection = liveVerse?.themeSection ?? "bible"
-  const activeTheme = liveVerse?.presentationImage
-    ? themes[0]
-    : (themes.find((t) => t.id === sectionThemeIds[liveThemeSection]) ??
-      themes[0])
+  const activeTheme = getThemeForProgramContent(
+    {
+      activeThemeId,
+      sectionThemeIds,
+      themes,
+    },
+    liveVerse
+  )
   const takePreviewLive = (checked: boolean) => {
     const store = useBroadcastStore.getState()
     if (checked) {
       store.takePreviewLive("manual")
       return
     }
-    store.setLive(checked)
-    store.syncBroadcastOutputFor("main")
+    store.setLive(false)
   }
   const currentTimer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null
@@ -94,7 +98,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
 
       <div
         className={cn(
-          "relative z-0 flex items-stretch justify-stretch transition-opacity",
+          "relative z-0 aspect-video w-full shrink-0 overflow-hidden transition-opacity",
           !isLive && "opacity-40"
         )}
       >
@@ -103,6 +107,8 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           verse={liveVerse}
           timer={liveTimer}
           lowerThird={lowerThird}
+          className="h-full"
+          fillContainer
         />
       </div>
     </div>

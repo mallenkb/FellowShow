@@ -20,7 +20,7 @@ impl Default for OscConfig {
     fn default() -> Self {
         Self {
             port: 8000,
-            host: "0.0.0.0".into(),
+            host: "127.0.0.1".into(),
         }
     }
 }
@@ -86,7 +86,7 @@ where
         CommandError::DispatchFailed(format!("Failed to bind OSC on {bind_addr}: {e}"))
     })?;
 
-    let bound_port = socket.local_addr().map(|a| a.port()).unwrap_or(config.port);
+    let bound_port = socket.local_addr().map_or(config.port, |a| a.port());
 
     // Non-blocking with a short timeout so we can check the active flag
     socket
@@ -280,6 +280,11 @@ mod tests {
         };
         handle_message(&msg, &sink);
         assert_eq!(sink.command_count(), 1);
+    }
+
+    #[test]
+    fn remote_servers_default_to_loopback() {
+        assert_eq!(OscConfig::default().host, "127.0.0.1");
     }
 
     #[test]

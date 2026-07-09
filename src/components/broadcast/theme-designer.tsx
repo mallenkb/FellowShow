@@ -12,8 +12,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { RotateCcwIcon, SaveIcon, Undo2Icon, Redo2Icon, XIcon } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
+  RotateCcwIcon,
+  SaveIcon,
+  Undo2Icon,
+  Redo2Icon,
+  XIcon,
+} from "lucide-react"
 import { ThemeLibrary } from "@/components/broadcast/theme-library"
 import { DesignCanvas } from "@/components/broadcast/design-canvas"
 import { PropertiesPanel } from "@/components/broadcast/properties-panel"
@@ -63,8 +73,12 @@ export function ThemeDesigner() {
   const selectedThemeSection = useBroadcastStore((s) => s.selectedThemeSection)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const layoutRef = useRef<HTMLDivElement>(null)
-  const [leftPanelWidth, setLeftPanelWidth] = useState(() => readStoredWidth(LEFT_WIDTH_KEY, 360))
-  const [rightPanelWidth, setRightPanelWidth] = useState(() => readStoredWidth(RIGHT_WIDTH_KEY, 340))
+  const [leftPanelWidth, setLeftPanelWidth] = useState(() =>
+    readStoredWidth(LEFT_WIDTH_KEY, 360)
+  )
+  const [rightPanelWidth, setRightPanelWidth] = useState(() =>
+    readStoredWidth(RIGHT_WIDTH_KEY, 340)
+  )
   const [canvasMinWidth, setCanvasMinWidth] = useState(CANVAS_MIN)
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const [confirmRevertOpen, setConfirmRevertOpen] = useState(false)
@@ -76,7 +90,7 @@ export function ThemeDesigner() {
     const canvasMin = isCompact ? CANVAS_MIN_COMPACT : CANVAS_MIN
     const availableForSides = Math.max(
       leftMin + rightMin,
-      layoutWidth - canvasMin - RESIZE_HANDLE_WIDTH * 2,
+      layoutWidth - canvasMin - RESIZE_HANDLE_WIDTH * 2
     )
 
     return { availableForSides, canvasMin, leftMin, rightMin }
@@ -86,10 +100,17 @@ export function ThemeDesigner() {
   useEffect(() => {
     if (isDesignerOpen && !draftTheme && themes.length > 0) {
       const activeThemeId = sectionThemeIds[selectedThemeSection]
-      const theme = themes.find((theme) => theme.id === activeThemeId) ?? themes[0]
+      const theme =
+        themes.find((theme) => theme.id === activeThemeId) ?? themes[0]
       useBroadcastStore.getState().startEditing(theme.id)
     }
-  }, [isDesignerOpen, draftTheme, themes, selectedThemeSection, sectionThemeIds])
+  }, [
+    isDesignerOpen,
+    draftTheme,
+    themes,
+    selectedThemeSection,
+    sectionThemeIds,
+  ])
 
   useEffect(() => {
     if (!isDesignerOpen) return
@@ -99,7 +120,8 @@ export function ThemeDesigner() {
       if (!layout) return
 
       const layoutWidth = layout.getBoundingClientRect().width
-      const { availableForSides, leftMin, rightMin } = getPanelConstraints(layoutWidth)
+      const { availableForSides, leftMin, rightMin } =
+        getPanelConstraints(layoutWidth)
       setCanvasMinWidth(layoutWidth < 1100 ? CANVAS_MIN_COMPACT : CANVAS_MIN)
 
       setLeftPanelWidth((currentLeft) => {
@@ -107,9 +129,19 @@ export function ThemeDesigner() {
         return clamp(currentLeft, leftMin, Math.max(leftMin, maxLeft))
       })
       setRightPanelWidth((currentRight) => {
-        const maxLeft = Math.min(LEFT_PANEL_MAX, availableForSides - currentRight)
-        const clampedLeft = clamp(leftPanelWidth, leftMin, Math.max(leftMin, maxLeft))
-        const maxRight = Math.min(RIGHT_PANEL_MAX, availableForSides - clampedLeft)
+        const maxLeft = Math.min(
+          LEFT_PANEL_MAX,
+          availableForSides - currentRight
+        )
+        const clampedLeft = clamp(
+          leftPanelWidth,
+          leftMin,
+          Math.max(leftMin, maxLeft)
+        )
+        const maxRight = Math.min(
+          RIGHT_PANEL_MAX,
+          availableForSides - clampedLeft
+        )
         return clamp(currentRight, rightMin, Math.max(rightMin, maxRight))
       })
     }
@@ -122,10 +154,16 @@ export function ThemeDesigner() {
 
   // Persist panel widths across sessions.
   useEffect(() => {
-    window.localStorage.setItem(LEFT_WIDTH_KEY, String(Math.round(leftPanelWidth)))
+    window.localStorage.setItem(
+      LEFT_WIDTH_KEY,
+      String(Math.round(leftPanelWidth))
+    )
   }, [leftPanelWidth])
   useEffect(() => {
-    window.localStorage.setItem(RIGHT_WIDTH_KEY, String(Math.round(rightPanelWidth)))
+    window.localStorage.setItem(
+      RIGHT_WIDTH_KEY,
+      String(Math.round(rightPanelWidth))
+    )
   }, [rightPanelWidth])
 
   const handleClose = useCallback(() => {
@@ -139,7 +177,8 @@ export function ThemeDesigner() {
     useBroadcastStore.getState().saveDraft()
     if (wasBuiltin) {
       toast.success("Saved as a copy", {
-        description: "Built-in themes can't be edited, so a custom copy was created.",
+        description:
+          "Built-in themes can't be edited, so a custom copy was created.",
       })
     } else {
       toast.success("Theme saved")
@@ -184,50 +223,60 @@ export function ThemeDesigner() {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [isDesignerOpen, handleSave])
 
-  const startPanelResize = useCallback((side: "left" | "right", event: React.PointerEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const layout = layoutRef.current
-    if (!layout) return
+  const startPanelResize = useCallback(
+    (side: "left" | "right", event: React.PointerEvent<HTMLDivElement>) => {
+      event.preventDefault()
+      const layout = layoutRef.current
+      if (!layout) return
 
-    const rect = layout.getBoundingClientRect()
-    const { canvasMin, leftMin, rightMin } = getPanelConstraints(rect.width)
+      const rect = layout.getBoundingClientRect()
+      const { canvasMin, leftMin, rightMin } = getPanelConstraints(rect.width)
 
-    const handlePointerMove = (moveEvent: PointerEvent) => {
-      const maxSideWidth = Math.max(
-        side === "left" ? leftMin : rightMin,
-        rect.width - canvasMin - RESIZE_HANDLE_WIDTH * 2 - (side === "left" ? rightPanelWidth : leftPanelWidth),
-      )
+      const handlePointerMove = (moveEvent: PointerEvent) => {
+        const maxSideWidth = Math.max(
+          side === "left" ? leftMin : rightMin,
+          rect.width -
+            canvasMin -
+            RESIZE_HANDLE_WIDTH * 2 -
+            (side === "left" ? rightPanelWidth : leftPanelWidth)
+        )
 
-      if (side === "left") {
-        setLeftPanelWidth(clamp(
-          moveEvent.clientX - rect.left,
-          leftMin,
-          Math.min(LEFT_PANEL_MAX, maxSideWidth),
-        ))
-        return
+        if (side === "left") {
+          setLeftPanelWidth(
+            clamp(
+              moveEvent.clientX - rect.left,
+              leftMin,
+              Math.min(LEFT_PANEL_MAX, maxSideWidth)
+            )
+          )
+          return
+        }
+
+        setRightPanelWidth(
+          clamp(
+            rect.right - moveEvent.clientX,
+            rightMin,
+            Math.min(RIGHT_PANEL_MAX, maxSideWidth)
+          )
+        )
       }
 
-      setRightPanelWidth(clamp(
-        rect.right - moveEvent.clientX,
-        rightMin,
-        Math.min(RIGHT_PANEL_MAX, maxSideWidth),
-      ))
-    }
+      const stopResize = () => {
+        document.body.style.cursor = ""
+        document.body.style.userSelect = ""
+        window.removeEventListener("pointermove", handlePointerMove)
+        window.removeEventListener("pointerup", stopResize)
+        window.removeEventListener("pointercancel", stopResize)
+      }
 
-    const stopResize = () => {
-      document.body.style.cursor = ""
-      document.body.style.userSelect = ""
-      window.removeEventListener("pointermove", handlePointerMove)
-      window.removeEventListener("pointerup", stopResize)
-      window.removeEventListener("pointercancel", stopResize)
-    }
-
-    document.body.style.cursor = "col-resize"
-    document.body.style.userSelect = "none"
-    window.addEventListener("pointermove", handlePointerMove)
-    window.addEventListener("pointerup", stopResize)
-    window.addEventListener("pointercancel", stopResize)
-  }, [getPanelConstraints, leftPanelWidth, rightPanelWidth])
+      document.body.style.cursor = "col-resize"
+      document.body.style.userSelect = "none"
+      window.addEventListener("pointermove", handlePointerMove)
+      window.addEventListener("pointerup", stopResize)
+      window.addEventListener("pointercancel", stopResize)
+    },
+    [getPanelConstraints, leftPanelWidth, rightPanelWidth]
+  )
 
   return (
     <DialogPrimitive.Root
@@ -239,7 +288,7 @@ export function ThemeDesigner() {
       }}
     >
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
 
         <DialogPrimitive.Content
           className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background text-foreground outline-none"
@@ -255,7 +304,7 @@ export function ThemeDesigner() {
           </DialogPrimitive.Title>
 
           {/* Top bar */}
-          <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-4 bg-card">
+          <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
             <span className="text-xl font-semibold text-foreground">
               Theme Designer
             </span>
@@ -366,7 +415,8 @@ export function ThemeDesigner() {
           <DialogHeader>
             <DialogTitle>Save changes before closing?</DialogTitle>
             <DialogDescription>
-              You have unsaved changes to this theme. Save them, or discard and close the designer.
+              You have unsaved changes to this theme. Save them, or discard and
+              close the designer.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

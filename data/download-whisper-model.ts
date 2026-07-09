@@ -29,7 +29,9 @@ async function main() {
 
   const response = await fetch(MODEL_URL, { redirect: "follow" })
   if (!response.ok) {
-    throw new Error(`Download failed: ${response.status} ${response.statusText}`)
+    throw new Error(
+      `Download failed: ${response.status} ${response.statusText}`
+    )
   }
 
   const totalBytes = Number(response.headers.get("content-length") ?? 0)
@@ -49,9 +51,12 @@ async function main() {
     writer.write(Buffer.from(value))
     downloaded += value.byteLength
 
-    const percent = totalBytes > 0 ? Math.floor((downloaded / totalBytes) * 100) : 0
+    const percent =
+      totalBytes > 0 ? Math.floor((downloaded / totalBytes) * 100) : 0
     if (percent !== lastPercent && percent % 5 === 0) {
-      process.stdout.write(`\r  ${percent}% (${(downloaded / 1_000_000).toFixed(0)}/${totalMB} MB)`)
+      process.stdout.write(
+        `\r  ${percent}% (${(downloaded / 1_000_000).toFixed(0)}/${totalMB} MB)`
+      )
       lastPercent = percent
     }
   }

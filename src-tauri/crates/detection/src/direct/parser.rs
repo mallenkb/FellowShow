@@ -302,17 +302,16 @@ fn try_chapter_verse_spoken(tokens: &[Token], book_match: &BookMatch) -> Option<
                         verse_start: 0,
                         verse_end: None,
                     });
-                } else {
-                    // "chapter" keyword found but no number follows
-                    // e.g., "Genesis chapter" (incomplete) → chapter-only
-                    return Some(VerseRef {
-                        book_number: book_match.book_number,
-                        book_name: book_match.book_name.clone(),
-                        chapter: 1,
-                        verse_start: 0,
-                        verse_end: None,
-                    });
                 }
+                // "chapter" keyword found but no number follows
+                // e.g., "Genesis chapter" (incomplete) → chapter-only
+                return Some(VerseRef {
+                    book_number: book_match.book_number,
+                    book_name: book_match.book_name.clone(),
+                    chapter: 1,
+                    verse_start: 0,
+                    verse_end: None,
+                });
             }
         }
     }
@@ -386,17 +385,16 @@ fn try_verse_only_pattern(tokens: &[Token], book_match: &BookMatch) -> Option<Ve
                             verse_start: verse,
                             verse_end: None,
                         });
-                    } else {
-                        // "verse" keyword found but no number follows
-                        // e.g., "Genesis verse" (incomplete) → Genesis 1:1
-                        return Some(VerseRef {
-                            book_number: book_match.book_number,
-                            book_name: book_match.book_name.clone(),
-                            chapter: 1,
-                            verse_start: 1,
-                            verse_end: None,
-                        });
                     }
+                    // "verse" keyword found but no number follows
+                    // e.g., "Genesis verse" (incomplete) → Genesis 1:1
+                    return Some(VerseRef {
+                        book_number: book_match.book_number,
+                        book_name: book_match.book_name.clone(),
+                        chapter: 1,
+                        verse_start: 1,
+                        verse_end: None,
+                    });
                 }
             }
         }

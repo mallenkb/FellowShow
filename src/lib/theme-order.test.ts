@@ -22,11 +22,24 @@ function theme(
       type: backgroundType,
       color: "#000000",
       gradient: null,
-      image: backgroundType === "image"
-        ? { url: "/test.jpg", fit: "cover", blur: 0, brightness: 100, tint: null }
-        : null,
+      image:
+        backgroundType === "image"
+          ? {
+              url: "/test.jpg",
+              fit: "cover",
+              blur: 0,
+              brightness: 100,
+              tint: null,
+            }
+          : null,
     },
-    textBox: { enabled: false, color: "#000000", opacity: 0, borderRadius: 0, padding: 0 },
+    textBox: {
+      enabled: false,
+      color: "#000000",
+      opacity: 0,
+      borderRadius: 0,
+      padding: 0,
+    },
     verseText: {
       fontFamily: "Geist Variable",
       fontSize: 64,
@@ -37,7 +50,12 @@ function theme(
       shadow: null,
       outline: null,
     },
-    verseNumbers: { visible: true, fontSize: 18, color: "#ffffff", superscript: true },
+    verseNumbers: {
+      visible: true,
+      fontSize: 18,
+      color: "#ffffff",
+      superscript: true,
+    },
     reference: {
       fontFamily: "Geist Variable",
       fontSize: 42,
@@ -58,7 +76,12 @@ function theme(
       textAreaWidth: 80,
       textAreaHeight: section === "bible" ? 44 : 30,
     },
-    transition: { type: "fade", duration: 300, easing: "ease-in-out", direction: "up" },
+    transition: {
+      type: "fade",
+      duration: 300,
+      easing: "ease-in-out",
+      direction: "up",
+    },
   }
 }
 
@@ -71,23 +94,29 @@ describe("sortThemesForSection", () => {
       theme("custom", "Custom", "bible", false, "image", 10),
     ]
 
-    expect(sortThemesForSection(themes, "bible", "bible-preview").map((t) => t.id)).toEqual([
-      "bible-preview",
-      "classic",
-      "overlay",
-      "custom",
-    ])
+    expect(
+      sortThemesForSection(themes, "bible", "bible-preview").map((t) => t.id)
+    ).toEqual(["bible-preview", "classic", "overlay", "custom"])
   })
 
   it("orders non-active themes by pinned state then section relevance", () => {
     const themes = [
       theme("custom-bible-image", "Custom Bible", "bible", false, "image", 10),
       theme("pinned-song-overlay", "Song Overlay", "songs", true, "image"),
-      theme("unpinned-song-overlay", "Song Overlay 2", "songs", false, "image", 20),
+      theme(
+        "unpinned-song-overlay",
+        "Song Overlay 2",
+        "songs",
+        false,
+        "image",
+        20
+      ),
       theme("unpinned-bible-solid", "Bible Solid", "bible", false, "solid", 30),
     ]
 
-    expect(sortThemesForSection(themes, "songs", "missing").map((t) => t.id)).toEqual([
+    expect(
+      sortThemesForSection(themes, "songs", "missing").map((t) => t.id)
+    ).toEqual([
       "pinned-song-overlay",
       "unpinned-song-overlay",
       "custom-bible-image",

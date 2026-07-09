@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { createSongSearchIndex, searchSongs, type SearchableSong } from "./song-search"
+import {
+  createSongSearchIndex,
+  searchSongs,
+  type SearchableSong,
+} from "./song-search"
 
 const songs: SearchableSong[] = [
   {

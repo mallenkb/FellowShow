@@ -10,6 +10,7 @@ import {
   usePresenterTimerStore,
   usePresentationStore,
 } from "@/stores"
+import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
@@ -98,9 +99,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const autoPreviewToLive = useBroadcastStore((s) => s.autoPreviewToLive)
-  const setAutoPreviewToLive = useBroadcastStore(
-    (s) => s.setAutoPreviewToLive
-  )
+  const setAutoPreviewToLive = useBroadcastStore((s) => s.setAutoPreviewToLive)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
   const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
@@ -140,24 +139,22 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     timerRemaining,
     timerTotal,
   ])
-  const previewThemeSection =
-    previewVerse?.themeSection ?? (isPresentationMode ? "presentation" : "bible")
-  const activeTheme = previewVerse?.presentationImage
-    ? themes[0]
-    : (themes.find((t) => t.id === sectionThemeIds[previewThemeSection]) ??
-      themes[0])
+  const activeTheme = getThemeForProgramContent(
+    {
+      activeThemeId: sectionThemeIds.bible,
+      sectionThemeIds,
+      themes,
+    },
+    previewVerse
+  )
 
   const setPreviewAndAutoLive = useCallback(
     (verse: VerseRenderData | null, timer: PresenterTimerRenderData | null) => {
       const store = useBroadcastStore.getState()
       store.setPreviewOutput(verse, timer)
-      if (store.autoPreviewToLive) {
-        store.showPreviewOnLive("preview")
-      }
     },
     []
   )
-
 
   useEffect(() => {
     if (!isPresentationMode) {
@@ -187,7 +184,10 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       return
     }
 
-    setPreviewAndAutoLive(null, null)
+    const store = useBroadcastStore.getState()
+    if (!store.previewVerse && !store.previewTimer) {
+      setPreviewAndAutoLive(null, null)
+    }
   }, [
     isPresentationMode,
     selectedSlide,
@@ -212,10 +212,10 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   return (
     <div
       data-slot="preview-panel"
-      className="flex h-[318px] shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <PanelHeader title="Program preview" />
-      <div className="relative z-0 flex min-h-0 flex-1 items-stretch justify-stretch">
+      <div className="relative z-0 aspect-video w-full shrink-0 overflow-hidden">
         <CanvasVerse
           theme={activeTheme}
           verse={previewVerse}
@@ -238,7 +238,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
           type="button"
           variant="secondary"
           size="sm"
-          className="h-auto min-h-8 w-full justify-center gap-2 whitespace-normal py-2 text-center"
+          className="h-auto min-h-8 w-full justify-center gap-2 py-2 text-center whitespace-normal"
           onClick={sendPreviewLive}
           disabled={autoPreviewToLive || (!previewVerse && !previewTimer)}
         >
@@ -251,7 +251,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 }
 
 export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
 
@@ -265,11 +265,8 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
   const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
 
   return (
-    <motion.div
+    <div
       data-slot="themes-panel"
-      initial={false}
-      animate={{ height: isOpen ? "auto" : 44 }}
-      transition={{ duration: 0.18, ease: "easeInOut" }}
       className="flex min-h-0 shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <button
@@ -288,61 +285,52 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
           )}
         />
       </button>
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            key="themes-content"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.14, ease: "easeOut" }}
-            className="px-3 pt-1 pb-4"
-          >
-            {visibleThemes.length > 0 ? (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
-                {visibleThemes.map((theme) => {
-                  const isActive = theme.id === activeThemeId
-                  return (
-                    <button
-                      key={theme.id}
-                      type="button"
-                      onClick={() => {
-                        useBroadcastStore
-                          .getState()
-                          .setActiveTheme(theme.id, selectedSection)
-                      }}
-                      className={cn(
-                        "group min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
-                        isActive &&
-                          "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70"
+      {isOpen && (
+        <div className="px-3 pt-1 pb-4">
+          {visibleThemes.length > 0 ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
+              {visibleThemes.map((theme) => {
+                const isActive = theme.id === activeThemeId
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => {
+                      useBroadcastStore
+                        .getState()
+                        .setActiveTheme(theme.id, selectedSection)
+                    }}
+                    className={cn(
+                      "group min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
+                      isActive &&
+                        "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70"
+                    )}
+                    title={`Use ${theme.name}`}
+                  >
+                    <div className="aspect-video overflow-hidden rounded-sm">
+                      <CanvasVerse theme={theme} verse={thumbnailVerse} />
+                    </div>
+                    <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+                      <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
+                        {theme.name}
+                      </span>
+                      {isActive && (
+                        <span className="size-2 shrink-0 rounded-full bg-[#101084] dark:bg-[#F1E600]" />
                       )}
-                      title={`Use ${theme.name}`}
-                    >
-                      <div className="aspect-video overflow-hidden rounded-sm">
-                        <CanvasVerse theme={theme} verse={thumbnailVerse} />
-                      </div>
-                      <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-                        <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
-                          {theme.name}
-                        </span>
-                        {isActive && (
-                          <span className="size-2 shrink-0 rounded-full bg-[#101084] dark:bg-[#F1E600]" />
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="py-3 text-center text-xs text-muted-foreground">
-                No themes available for{" "}
-                {THEME_SECTION_LABELS[selectedSection].toLowerCase()}.
-              </p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="py-3 text-center text-xs text-muted-foreground">
+              No themes available for{" "}
+              {THEME_SECTION_LABELS[selectedSection].toLowerCase()}.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -416,72 +404,72 @@ export function MotionPanel({ mode }: { mode: ThemeAwareMode }) {
             transition={{ duration: 0.14, ease: "easeOut" }}
             className="grid gap-3 px-4 pt-1 pb-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
           >
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">
-              Animation
-            </label>
-            <Select
-              value={activeTheme.transition.type}
-              onValueChange={(value) =>
-                updateActiveTransition({
-                  type: value as BroadcastTheme["transition"]["type"],
-                })
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fade">Fade</SelectItem>
-                <SelectItem value="slide">Slide</SelectItem>
-                <SelectItem value="scale">Scale</SelectItem>
-                <SelectItem value="none">None</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                Animation
+              </label>
+              <Select
+                value={activeTheme.transition.type}
+                onValueChange={(value) =>
+                  updateActiveTransition({
+                    type: value as BroadcastTheme["transition"]["type"],
+                  })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fade">Fade</SelectItem>
+                  <SelectItem value="slide">Slide</SelectItem>
+                  <SelectItem value="scale">Scale</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {activeTheme.transition.type !== "none" && (
-            <>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Easing
-                </label>
-                <Select
-                  value={activeTheme.transition.easing}
-                  onValueChange={(value) =>
-                    updateActiveTransition({
-                      easing: value as BroadcastTheme["transition"]["easing"],
-                    })
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ease-in-out">Ease in/out</SelectItem>
-                    <SelectItem value="ease-in">Ease in</SelectItem>
-                    <SelectItem value="ease-out">Ease out</SelectItem>
-                    <SelectItem value="linear">Linear</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {activeTheme.transition.type !== "none" && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Easing
+                  </label>
+                  <Select
+                    value={activeTheme.transition.easing}
+                    onValueChange={(value) =>
+                      updateActiveTransition({
+                        easing: value as BroadcastTheme["transition"]["easing"],
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ease-in-out">Ease in/out</SelectItem>
+                      <SelectItem value="ease-in">Ease in</SelectItem>
+                      <SelectItem value="ease-out">Ease out</SelectItem>
+                      <SelectItem value="linear">Linear</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="sm:col-span-2">
-                <SliderField
-                  label="Duration"
-                  value={activeTheme.transition.duration}
-                  min={100}
-                  max={2000}
-                  step={50}
-                  unit="ms"
-                  defaultValue={500}
-                  onChange={(value) =>
-                    updateActiveTransition({ duration: value })
-                  }
-                />
-              </div>
-            </>
-          )}
+                <div className="sm:col-span-2">
+                  <SliderField
+                    label="Duration"
+                    value={activeTheme.transition.duration}
+                    min={100}
+                    max={2000}
+                    step={50}
+                    unit="ms"
+                    defaultValue={500}
+                    onChange={(value) =>
+                      updateActiveTransition({ duration: value })
+                    }
+                  />
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

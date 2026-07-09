@@ -212,7 +212,11 @@ mod tests {
 
     fn make_frame(rms_level: f32) -> AudioFrame {
         // Create a frame with samples that produce roughly the desired RMS level
-        let amplitude = (rms_level * i16::MAX as f32) as i16;
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "test helper uses bounded normalized levels"
+        )]
+        let amplitude = (rms_level * f32::from(i16::MAX)) as i16;
         let samples = vec![amplitude; 1024];
         AudioFrame {
             samples,
@@ -244,8 +248,10 @@ mod tests {
 
     #[test]
     fn test_speech_detection() {
-        let mut config = VadConfig::default();
-        config.min_voice_frames = 2; // Lower for testing
+        let config = VadConfig {
+            min_voice_frames: 2,
+            ..VadConfig::default()
+        };
         let mut vad = Vad::new(config);
 
         // First voiced frame: not enough yet
@@ -262,8 +268,10 @@ mod tests {
 
     #[test]
     fn test_speech_forwards_audio() {
-        let mut config = VadConfig::default();
-        config.min_voice_frames = 1;
+        let config = VadConfig {
+            min_voice_frames: 1,
+            ..VadConfig::default()
+        };
         let mut vad = Vad::new(config);
 
         // Trigger speech
@@ -276,9 +284,11 @@ mod tests {
 
     #[test]
     fn test_silence_after_speech() {
-        let mut config = VadConfig::default();
-        config.min_voice_frames = 1;
-        config.silence_frame_count = 2; // Quick silence detection for testing
+        let config = VadConfig {
+            min_voice_frames: 1,
+            silence_frame_count: 2,
+            ..VadConfig::default()
+        };
         let mut vad = Vad::new(config);
 
         // Start speech
@@ -297,9 +307,11 @@ mod tests {
 
     #[test]
     fn test_pre_buffer_flushed_on_speech() {
-        let mut config = VadConfig::default();
-        config.min_voice_frames = 1;
-        config.pre_buffer_frames = 2;
+        let config = VadConfig {
+            min_voice_frames: 1,
+            pre_buffer_frames: 2,
+            ..VadConfig::default()
+        };
         let mut vad = Vad::new(config);
 
         // Feed 2 silent frames (goes into pre-buffer)
@@ -314,8 +326,10 @@ mod tests {
 
     #[test]
     fn test_reset() {
-        let mut config = VadConfig::default();
-        config.min_voice_frames = 1;
+        let config = VadConfig {
+            min_voice_frames: 1,
+            ..VadConfig::default()
+        };
         let mut vad = Vad::new(config);
 
         let _ = vad.process(&voiced_frame());

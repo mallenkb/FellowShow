@@ -115,9 +115,8 @@ describe("bible store persistence", () => {
   describe("initBiblePersistence", () => {
     it("writes to bible.json when activeTranslationId changes", async () => {
       vi.useFakeTimers()
-      const { initBiblePersistence, useBibleStore } = await import(
-        "./bible-store"
-      )
+      const { initBiblePersistence, useBibleStore } =
+        await import("./bible-store")
 
       await initBiblePersistence()
       useBibleStore.getState().setActiveTranslation(3)
@@ -131,9 +130,8 @@ describe("bible store persistence", () => {
 
     it("debounces rapid changes and only persists the last value", async () => {
       vi.useFakeTimers()
-      const { initBiblePersistence, useBibleStore } = await import(
-        "./bible-store"
-      )
+      const { initBiblePersistence, useBibleStore } =
+        await import("./bible-store")
 
       await initBiblePersistence()
       useBibleStore.getState().setActiveTranslation(2)

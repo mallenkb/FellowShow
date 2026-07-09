@@ -90,7 +90,7 @@ impl HnswVectorIndex {
             )));
         }
 
-        log::info!("HnswVectorIndex loaded: {num_vectors} vectors, dim={dim}",);
+        log::info!("HnswVectorIndex loaded: {num_vectors} vectors, dim={dim}");
 
         Ok(Self {
             embeddings,

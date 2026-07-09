@@ -337,6 +337,10 @@ pub fn set_active_translation(
     translation_id: i64,
 ) -> Result<i64, String> {
     let mut app_state = state.lock().map_err(|e| e.to_string())?;
+    if app_state.active_translation_id == translation_id {
+        return Ok(translation_id);
+    }
+
     // Verify the translation exists and has verse content installed.
     if let Some(ref db) = app_state.bible_db {
         let translations = db.list_translations().map_err(|e| e.to_string())?;

@@ -1,4 +1,4 @@
-//! NDI video broadcasting for the FellowShow application.
+//! NDI video broadcasting for the `FellowShow` application.
 //!
 //! Provides runtime-loaded NDI SDK integration for sending video
 //! frames over the network. Supports multiple concurrent sessions

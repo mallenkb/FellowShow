@@ -69,7 +69,13 @@ function buildColorWithOpacity(hex: string, opacity: number): string {
   return `${hex}${alphaHex}`
 }
 
-function SectionHeader({ title, description }: { title: string; description: string }) {
+function SectionHeader({
+  title,
+  description,
+}: {
+  title: string
+  description: string
+}) {
   return (
     <div className="flex flex-col gap-0.5 pb-1">
       <h4 className="text-xs font-semibold">{title}</h4>
@@ -84,7 +90,8 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
 
   if (!draftTheme) return null
 
-  const data = prefix === "verseText" ? draftTheme.verseText : draftTheme.reference
+  const data =
+    prefix === "verseText" ? draftTheme.verseText : draftTheme.reference
   const { hex: colorHex, opacity: colorOpacity } = parseColorOpacity(data.color)
   const horizontalAlign = data.horizontalAlign ?? draftTheme.layout.textAlign
   const verticalAlign = data.verticalAlign ?? "top"
@@ -95,7 +102,9 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
     <div className="flex flex-col gap-3">
       {/* Font Family */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Font Family</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Font Family
+        </label>
         <Select
           value={data.fontFamily}
           onValueChange={(v) => update(`${prefix}.fontFamily`, v)}
@@ -115,7 +124,9 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
 
       {/* Font Weight */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Font Weight</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Font Weight
+        </label>
         <Select
           value={String(data.fontWeight)}
           onValueChange={(v) => update(`${prefix}.fontWeight`, Number(v))}
@@ -171,7 +182,9 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
 
       {/* Horizontal Alignment */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Horizontal Alignment</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Horizontal Alignment
+        </label>
         <Select
           value={horizontalAlign}
           onValueChange={(v) => update(`${prefix}.horizontalAlign`, v)}
@@ -180,20 +193,22 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {HORIZONTAL_ALIGN_OPTIONS
-              .filter((option) => prefix === "verseText" || option.value !== "justify")
-              .map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+            {HORIZONTAL_ALIGN_OPTIONS.filter(
+              (option) => prefix === "verseText" || option.value !== "justify"
+            ).map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Vertical Alignment */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Vertical Alignment</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Vertical Alignment
+        </label>
         <Select
           value={verticalAlign}
           onValueChange={(v) => update(`${prefix}.verticalAlign`, v)}
@@ -213,7 +228,9 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
 
       {/* Text Transform */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Text Transform</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Text Transform
+        </label>
         <Select
           value={textTransform}
           onValueChange={(v) => update(`${prefix}.textTransform`, v)}
@@ -233,7 +250,9 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
 
       {/* Text Decoration */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Text Decoration</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Text Decoration
+        </label>
         <Select
           value={textDecoration}
           onValueChange={(v) => update(`${prefix}.textDecoration`, v)}
@@ -253,13 +272,18 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
 
       {/* Text Color */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Text Color</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Text Color
+        </label>
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={colorHex}
             onChange={(e) =>
-              update(`${prefix}.color`, buildColorWithOpacity(e.target.value, colorOpacity))
+              update(
+                `${prefix}.color`,
+                buildColorWithOpacity(e.target.value, colorOpacity)
+              )
             }
             className="h-7 w-8 cursor-pointer rounded border border-input bg-transparent p-0.5"
           />
@@ -268,7 +292,10 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
             onChange={(e) => {
               const v = e.target.value
               if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-                update(`${prefix}.color`, buildColorWithOpacity(v, colorOpacity))
+                update(
+                  `${prefix}.color`,
+                  buildColorWithOpacity(v, colorOpacity)
+                )
               }
             }}
             className="w-20 font-mono"
@@ -281,7 +308,9 @@ function FontControls({ prefix }: { prefix: "verseText" | "reference" }) {
           max={100}
           unit="%"
           defaultValue={100}
-          onChange={(v) => update(`${prefix}.color`, buildColorWithOpacity(colorHex, v))}
+          onChange={(v) =>
+            update(`${prefix}.color`, buildColorWithOpacity(colorHex, v))
+          }
         />
       </div>
     </div>
@@ -296,12 +325,17 @@ function ReferenceProperties() {
 
   return (
     <div className="flex flex-col gap-3">
-      <SectionHeader title="Reference Text" description="Customize how reference text appears" />
+      <SectionHeader
+        title="Reference Text"
+        description="Customize how reference text appears"
+      />
       <FontControls prefix="reference" />
 
       {/* Uppercase */}
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-muted-foreground">Uppercase</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Uppercase
+        </label>
         <input
           type="checkbox"
           checked={draftTheme.reference.uppercase}
@@ -322,12 +356,19 @@ function VerseProperties() {
   const shadow = draftTheme.verseText.shadow
   const outline = draftTheme.verseText.outline
 
-  const shadowColor = shadow ? parseColorOpacity(shadow.color) : { hex: "#000000", opacity: 100 }
-  const outlineColor = outline ? parseColorOpacity(outline.color) : { hex: "#000000", opacity: 100 }
+  const shadowColor = shadow
+    ? parseColorOpacity(shadow.color)
+    : { hex: "#000000", opacity: 100 }
+  const outlineColor = outline
+    ? parseColorOpacity(outline.color)
+    : { hex: "#000000", opacity: 100 }
 
   return (
     <div className="flex flex-col gap-3">
-      <SectionHeader title="Verse Text" description="Customize how verse text appears" />
+      <SectionHeader
+        title="Verse Text"
+        description="Customize how verse text appears"
+      />
       <FontControls prefix="verseText" />
 
       {/* Text Shadow */}
@@ -339,7 +380,12 @@ function VerseProperties() {
             checked={shadow !== null}
             onChange={(e) => {
               if (e.target.checked) {
-                update("verseText.shadow", { color: "#00000080", blur: 4, x: 2, y: 2 })
+                update("verseText.shadow", {
+                  color: "#00000080",
+                  blur: 4,
+                  x: 2,
+                  y: 2,
+                })
               } else {
                 update("verseText.shadow", null)
               }
@@ -380,7 +426,9 @@ function VerseProperties() {
 
             {/* Shadow Color */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Shadow Color</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                Shadow Color
+              </label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -415,7 +463,10 @@ function VerseProperties() {
                 unit="%"
                 defaultValue={100}
                 onChange={(v) =>
-                  update("verseText.shadow.color", buildColorWithOpacity(shadowColor.hex, v))
+                  update(
+                    "verseText.shadow.color",
+                    buildColorWithOpacity(shadowColor.hex, v)
+                  )
                 }
               />
             </div>
@@ -456,12 +507,16 @@ function VerseProperties() {
 
             {/* Outline Color */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Outline Color</label>
+              <label className="text-xs font-medium text-muted-foreground">
+                Outline Color
+              </label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={outlineColor.hex}
-                  onChange={(e) => update("verseText.outline.color", e.target.value)}
+                  onChange={(e) =>
+                    update("verseText.outline.color", e.target.value)
+                  }
                   className="h-7 w-8 cursor-pointer rounded border border-input bg-transparent p-0.5"
                 />
                 <Input
@@ -525,9 +580,12 @@ export function TextProperties() {
         <VerseProperties />
       ) : (
         <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-          <p className="text-sm font-medium text-muted-foreground">No element selected</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            No element selected
+          </p>
           <p className="text-xs text-muted-foreground">
-            Pick Verse or Reference above, or click the text on the canvas, to edit its properties.
+            Pick Verse or Reference above, or click the text on the canvas, to
+            edit its properties.
           </p>
         </div>
       )}

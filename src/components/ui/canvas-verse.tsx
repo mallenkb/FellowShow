@@ -154,7 +154,9 @@ export const CanvasVerse = memo(function CanvasVerse({
   ])
 
   const hasTicker =
-    shouldRenderTickerLayer(theme) && !!verse?.tickerText && !verse.presentationImage
+    shouldRenderTickerLayer(theme) &&
+    !!verse?.tickerText &&
+    !verse.presentationImage
 
   useEffect(() => {
     if (!hasTicker) return
@@ -184,14 +186,13 @@ export const CanvasVerse = memo(function CanvasVerse({
       fit === "contain" && availableHeight > 0
         ? Math.min(containerWidth, availableHeight * aspectRatio)
         : containerWidth
-    const displayH =
-      fit === "cover"
-        ? availableHeight
-        : displayW / aspectRatio
+    const displayH = fit === "cover" ? availableHeight : displayW / aspectRatio
     if (displayH <= 0) return
 
-    canvas.width = displayW * dpr
-    canvas.height = displayH * dpr
+    const targetCanvasWidth = Math.max(1, Math.round(displayW * dpr))
+    const targetCanvasHeight = Math.max(1, Math.round(displayH * dpr))
+    const sizeChanged =
+      canvas.width !== targetCanvasWidth || canvas.height !== targetCanvasHeight
     canvas.style.width = `${displayW}px`
     canvas.style.height = `${displayH}px`
 
@@ -221,14 +222,17 @@ export const CanvasVerse = memo(function CanvasVerse({
       width: displayW,
       height: displayH,
     })
+    const previousContentKey = previousContentKeyRef.current
     const shouldAnimate =
-      previousContentKeyRef.current !== null &&
-      previousContentKeyRef.current !== contentKey &&
+      previousContentKey !== null &&
+      previousContentKey !== contentKey &&
+      !sizeChanged &&
       theme.transition.type !== "none" &&
       theme.transition.duration > 0 &&
       canvas.width > 0 &&
       canvas.height > 0
 
+    let previousFrame: HTMLCanvasElement | null = null
     if (shouldAnimate) {
       const previous = document.createElement("canvas")
       previous.width = canvas.width
@@ -236,7 +240,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       const previousCtx = previous.getContext("2d")
       if (previousCtx) {
         previousCtx.drawImage(canvas, 0, 0)
-        previousFrameRef.current = previous
+        previousFrame = previous
       }
     }
     previousContentKeyRef.current = contentKey
@@ -245,19 +249,24 @@ export const CanvasVerse = memo(function CanvasVerse({
       window.cancelAnimationFrame(transitionFrameRef.current)
       transitionFrameRef.current = null
     }
+    previousFrameRef.current = previousFrame
 
-    const scale = fit === "cover"
-      ? Math.max(
-          displayW / theme.resolution.width,
-          displayH / theme.resolution.height
-        )
-      : displayW / theme.resolution.width
-    const offsetX = fit === "cover"
-      ? (displayW - theme.resolution.width * scale) / 2
-      : 0
-    const offsetY = fit === "cover"
-      ? (displayH - theme.resolution.height * scale) / 2
-      : 0
+    if (sizeChanged) {
+      canvas.width = targetCanvasWidth
+      canvas.height = targetCanvasHeight
+    }
+
+    const scale =
+      fit === "cover"
+        ? Math.max(
+            displayW / theme.resolution.width,
+            displayH / theme.resolution.height
+          )
+        : displayW / theme.resolution.width
+    const offsetX =
+      fit === "cover" ? (displayW - theme.resolution.width * scale) / 2 : 0
+    const offsetY =
+      fit === "cover" ? (displayH - theme.resolution.height * scale) / 2 : 0
     const next = document.createElement("canvas")
     next.width = canvas.width
     next.height = canvas.height
@@ -279,6 +288,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     if (!shouldAnimate || !previous) {
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.drawImage(next, 0, 0)
+      previousFrameRef.current = null
       return
     }
 

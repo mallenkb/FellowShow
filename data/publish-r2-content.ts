@@ -20,7 +20,13 @@
 
 import Database from "bun:sqlite"
 import { createHash } from "node:crypto"
-import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import {
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs"
 import { basename, join } from "node:path"
 
 const DATA_DIR = import.meta.dir
@@ -64,7 +70,9 @@ function resolveR2Target(): R2Target {
   const bucket = bucketFromEnv || pathBucket
 
   if (!bucket) {
-    throw new Error("R2_BUCKET is required when R2_ENDPOINT_URL does not include a bucket path")
+    throw new Error(
+      "R2_BUCKET is required when R2_ENDPOINT_URL does not include a bucket path"
+    )
   }
 
   url.pathname = ""
@@ -92,7 +100,9 @@ function sha256(path: string): string {
 }
 
 function packageVersion(): string {
-  const packageJson = JSON.parse(readFileSync(join(ROOT_DIR, "package.json"), "utf-8")) as { version?: string }
+  const packageJson = JSON.parse(
+    readFileSync(join(ROOT_DIR, "package.json"), "utf-8")
+  ) as { version?: string }
   return packageJson.version ?? "0.0.0"
 }
 
@@ -112,19 +122,25 @@ function tableCreateSql(db: Database, name: string): string {
  */
 function buildTranslationPack(
   abbreviation: string,
-  packPath: string,
+  packPath: string
 ): { sizeBytes: number; sha256: string } {
   rmSync(packPath, { force: true })
 
   const source = new Database(DB_PATH, { readonly: true })
   const translation = source
-    .query("SELECT id FROM translations WHERE abbreviation = ?1 AND is_downloaded = 1")
+    .query(
+      "SELECT id FROM translations WHERE abbreviation = ?1 AND is_downloaded = 1"
+    )
     .get(abbreviation) as { id: number } | null
-  const schemas = ["translations", "books", "verses"].map((name) => tableCreateSql(source, name))
+  const schemas = ["translations", "books", "verses"].map((name) =>
+    tableCreateSql(source, name)
+  )
   source.close()
 
   if (!translation) {
-    throw new Error(`${abbreviation} is not present (or not downloadable) in ${DB_PATH}`)
+    throw new Error(
+      `${abbreviation} is not present (or not downloadable) in ${DB_PATH}`
+    )
   }
 
   const id = translation.id
@@ -132,9 +148,15 @@ function buildTranslationPack(
   try {
     for (const sql of schemas) pack.run(sql)
     pack.run(`ATTACH DATABASE '${DB_PATH.replace(/'/g, "''")}' AS src`)
-    pack.run(`INSERT INTO translations SELECT * FROM src.translations WHERE id = ${id}`)
-    pack.run(`INSERT INTO books SELECT * FROM src.books WHERE translation_id = ${id}`)
-    pack.run(`INSERT INTO verses SELECT * FROM src.verses WHERE translation_id = ${id}`)
+    pack.run(
+      `INSERT INTO translations SELECT * FROM src.translations WHERE id = ${id}`
+    )
+    pack.run(
+      `INSERT INTO books SELECT * FROM src.books WHERE translation_id = ${id}`
+    )
+    pack.run(
+      `INSERT INTO verses SELECT * FROM src.verses WHERE translation_id = ${id}`
+    )
     pack.run(`UPDATE translations SET is_downloaded = 1 WHERE id = ${id}`)
     pack.run("DETACH DATABASE src")
     pack.run("VACUUM")
@@ -149,11 +171,15 @@ function buildPacksAndManifest(version: string, prefix: string) {
   const source = new Database(DB_PATH, { readonly: true })
   const abbreviations = (
     source
-      .query("SELECT abbreviation FROM translations WHERE is_downloaded = 1 ORDER BY id")
+      .query(
+        "SELECT abbreviation FROM translations WHERE is_downloaded = 1 ORDER BY id"
+      )
       .all() as Array<{ abbreviation: string }>
   )
     .map((row) => row.abbreviation)
-    .filter((abbreviation) => !BUNDLED_TRANSLATIONS.has(abbreviation.toUpperCase()))
+    .filter(
+      (abbreviation) => !BUNDLED_TRANSLATIONS.has(abbreviation.toUpperCase())
+    )
   source.close()
 
   rmSync(PACKS_DIR, { recursive: true, force: true })
@@ -162,7 +188,10 @@ function buildPacksAndManifest(version: string, prefix: string) {
   const packs = abbreviations.map((abbreviation) => {
     const fileName = `${abbreviation.toLowerCase()}.db`
     const localPath = join(PACKS_DIR, fileName)
-    const { sizeBytes, sha256: hash } = buildTranslationPack(abbreviation, localPath)
+    const { sizeBytes, sha256: hash } = buildTranslationPack(
+      abbreviation,
+      localPath
+    )
     console.log(`  ${abbreviation}: ${(sizeBytes / 1_000_000).toFixed(1)} MB`)
     return {
       id: `bible-${abbreviation.toLowerCase()}`,
@@ -194,7 +223,11 @@ function buildPacksAndManifest(version: string, prefix: string) {
   return { manifest, packs }
 }
 
-async function runCommand(command: string[], env: NodeJS.ProcessEnv, failureMessage: string) {
+async function runCommand(
+  command: string[],
+  env: NodeJS.ProcessEnv,
+  failureMessage: string
+) {
   const proc = Bun.spawn(command, {
     env,
     stdout: "inherit",
@@ -209,11 +242,16 @@ async function runCommand(command: string[], env: NodeJS.ProcessEnv, failureMess
 
 function contentTypeFor(path: string): string {
   if (path.endsWith(".json")) return "application/json"
-  if (path.endsWith(".db") || path.endsWith(".sqlite")) return "application/vnd.sqlite3"
+  if (path.endsWith(".db") || path.endsWith(".sqlite"))
+    return "application/vnd.sqlite3"
   return "application/octet-stream"
 }
 
-async function uploadFileWithAws(target: R2Target, localPath: string, remoteKey: string) {
+async function uploadFileWithAws(
+  target: R2Target,
+  localPath: string,
+  remoteKey: string
+) {
   if (!target.endpointUrl) {
     throw new Error("R2_ENDPOINT_URL is required when using R2_UPLOAD_TOOL=aws")
   }
@@ -236,11 +274,15 @@ async function uploadFileWithAws(target: R2Target, localPath: string, remoteKey:
       ...process.env,
       AWS_EC2_METADATA_DISABLED: "true",
     },
-    `aws s3 cp failed for ${localPath}`,
+    `aws s3 cp failed for ${localPath}`
   )
 }
 
-async function uploadFileWithWrangler(target: R2Target, localPath: string, remoteKey: string) {
+async function uploadFileWithWrangler(
+  target: R2Target,
+  localPath: string,
+  remoteKey: string
+) {
   const objectPath = `${target.bucket}/${remoteKey}`
   console.log(`  Uploading ${basename(localPath)} -> r2://${objectPath}`)
 
@@ -259,14 +301,17 @@ async function uploadFileWithWrangler(target: R2Target, localPath: string, remot
       contentTypeFor(localPath),
     ],
     process.env,
-    `wrangler r2 object put failed for ${localPath}`,
+    `wrangler r2 object put failed for ${localPath}`
   )
 }
 
 async function main() {
   const target = resolveR2Target()
   const uploadTool = resolveUploadTool()
-  const prefix = (process.env.R2_PREFIX?.trim() || "content").replace(/^\/+|\/+$/g, "")
+  const prefix = (process.env.R2_PREFIX?.trim() || "content").replace(
+    /^\/+|\/+$/g,
+    ""
+  )
   const version = process.env.CONTENT_VERSION?.trim() || packageVersion()
 
   statSync(DB_PATH)
@@ -277,20 +322,35 @@ async function main() {
   writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`)
 
   console.log(
-    `\nPublishing FellowShow content v${version} (${packs.length} translation packs) to R2 bucket ${target.bucket} with ${uploadTool}...\n`,
+    `\nPublishing FellowShow content v${version} (${packs.length} translation packs) to R2 bucket ${target.bucket} with ${uploadTool}...\n`
   )
 
-  const uploadFile = uploadTool === "wrangler" ? uploadFileWithWrangler : uploadFileWithAws
+  const uploadFile =
+    uploadTool === "wrangler" ? uploadFileWithWrangler : uploadFileWithAws
   for (const pack of packs) {
-    await uploadFile(target, pack.localPath, `${prefix}/v${version}/packs/${basename(pack.localPath)}`)
+    await uploadFile(
+      target,
+      pack.localPath,
+      `${prefix}/v${version}/packs/${basename(pack.localPath)}`
+    )
   }
-  await uploadFile(target, MANIFEST_PATH, `${prefix}/v${version}/content-manifest.json`)
-  await uploadFile(target, MANIFEST_PATH, `${prefix}/latest/content-manifest.json`)
+  await uploadFile(
+    target,
+    MANIFEST_PATH,
+    `${prefix}/v${version}/content-manifest.json`
+  )
+  await uploadFile(
+    target,
+    MANIFEST_PATH,
+    `${prefix}/latest/content-manifest.json`
+  )
 
   console.log("\nR2 content publish complete.\n")
 }
 
 main().catch((error) => {
-  console.error(`\nR2 publish failed: ${error instanceof Error ? error.message : String(error)}\n`)
+  console.error(
+    `\nR2 publish failed: ${error instanceof Error ? error.message : String(error)}\n`
+  )
   process.exit(1)
 })

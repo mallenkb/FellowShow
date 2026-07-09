@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const mockGet = vi.fn()
 const mockSet = vi.fn()
 const mockSave = vi.fn()
+const mockDelete = vi.fn()
 const mockLoad = vi.fn()
 
 vi.mock("@tauri-apps/plugin-store", () => ({
@@ -23,10 +24,12 @@ describe("settings store", () => {
     mockGet.mockReset()
     mockSet.mockReset()
     mockSave.mockReset()
+    mockDelete.mockReset()
     mockLoad.mockReset()
     mockLoad.mockResolvedValue({
       get: mockGet,
       set: mockSet,
+      delete: mockDelete,
       save: mockSave,
     })
     vi.resetModules()
@@ -47,7 +50,9 @@ describe("settings store", () => {
     const state = useSettingsStore.getState()
     expect(state.gain).toBe(2.5)
     expect(state.sttProvider).toBe("whisper")
-    expect(state.deepgramApiKey).toBe("dg-key")
+    expect(state.deepgramApiKey).toBeNull()
+    expect(mockGet).not.toHaveBeenCalledWith("deepgramApiKey")
+    expect(mockDelete).toHaveBeenCalledWith("deepgramApiKey")
     // Defaults remain for keys with null
     expect(state.autoMode).toBe(false)
     expect(state.confidenceThreshold).toBe(0.8)
@@ -124,7 +129,7 @@ describe("settings store", () => {
     expect(mockSet).toHaveBeenCalledWith("gain", 1.3)
   })
 
-  it("saveSettingsNow flushes pending settings immediately", async () => {
+  it("saveSettingsNow never persists API keys", async () => {
     mockGet.mockResolvedValue(null)
 
     const { hydrateSettings, saveSettingsNow, useSettingsStore } =
@@ -136,7 +141,7 @@ describe("settings store", () => {
     useSettingsStore.getState().setDeepgramApiKey("dg-key")
     await saveSettingsNow()
 
-    expect(mockSet).toHaveBeenCalledWith("deepgramApiKey", "dg-key")
+    expect(mockSet).not.toHaveBeenCalledWith("deepgramApiKey", "dg-key")
     expect(mockSave).toHaveBeenCalledTimes(1)
   })
 

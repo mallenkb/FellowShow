@@ -1,4 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
+// Load the same webfonts as the main window (see index.css) so canvas text
+// here renders identically to the live/preview panels — themes default to
+// "Inter Variable", which otherwise falls back to a system font.
+import "@fontsource-variable/inter"
+import "@fontsource-variable/geist"
+import "@fontsource-variable/source-serif-4"
+import "@fontsource/geist-mono"
 import { createRoot } from "react-dom/client"
 import { useRef, useEffect, useCallback } from "react"
 import { invoke } from "@tauri-apps/api/core"
@@ -13,7 +20,7 @@ import type {
   PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types/broadcast"
-import type { NdiConfigEventPayload, NdiFrameRequest } from "@/types"
+import type { NdiConfigEventPayload, NdiFrameRequest } from "@/types/ndi"
 
 /** Convert Uint8Array/Uint8ClampedArray to base64 using Function.apply (avoids spread stack overflow) */
 function uint8ToBase64(bytes: Uint8Array | Uint8ClampedArray): string {
@@ -37,6 +44,7 @@ const OUTPUT_ID =
 interface BroadcastPayload {
   theme: BroadcastTheme
   verse: VerseRenderData | null
+  opacity?: number
   timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
 }
@@ -65,6 +73,7 @@ function transitionKey(data: BroadcastPayload | null): string {
     lowerThirdLabel: includeLowerThird
       ? (data.lowerThird?.label ?? null)
       : null,
+    opacity: data.opacity ?? 1,
   })
 }
 
@@ -75,6 +84,7 @@ function BroadcastCanvas() {
   const videoCacheRef = useRef<Map<string, HTMLVideoElement>>(new Map())
   const animationFrameRef = useRef<number | null>(null)
   const transitionFrameRef = useRef<number | null>(null)
+  const transitionTimeoutRef = useRef<number | null>(null)
   const ndiConfigRef = useRef<NdiConfigEventPayload>({
     active: false,
     fps: 24,
@@ -106,11 +116,17 @@ function BroadcastCanvas() {
         return
       }
 
-      const { theme, verse, timer, lowerThird } = data
-      canvas.width = theme.resolution.width
-      canvas.height = theme.resolution.height
+      const { theme, verse, timer, lowerThird, opacity } = data
+      if (
+        canvas.width !== theme.resolution.width ||
+        canvas.height !== theme.resolution.height
+      ) {
+        canvas.width = theme.resolution.width
+        canvas.height = theme.resolution.height
+      }
       const result = renderVerse(ctx, theme, verse, {
         scale: 1,
+        opacity: opacity ?? 1,
         imageCache: imageCacheRef.current,
         videoCache: videoCacheRef.current,
         timer,
@@ -142,10 +158,19 @@ function BroadcastCanvas() {
         window.cancelAnimationFrame(transitionFrameRef.current)
         transitionFrameRef.current = null
       }
+      if (transitionTimeoutRef.current !== null) {
+        window.clearTimeout(transitionTimeoutRef.current)
+        transitionTimeoutRef.current = null
+      }
 
       const transition = nextData.theme.transition
+      // WebView2 on Windows suspends requestAnimationFrame for hidden or
+      // occluded windows — animating there would clear the canvas and never
+      // paint the new frame (black, frozen output). Draw synchronously instead.
+      const canAnimate = document.visibilityState === "visible"
       const shouldTransition =
         previousData &&
+        canAnimate &&
         transitionKey(previousData) !== transitionKey(nextData) &&
         transition.type !== "none" &&
         transition.duration > 0
@@ -179,9 +204,23 @@ function BroadcastCanvas() {
           transitionFrameRef.current = window.requestAnimationFrame(tick)
         } else {
           transitionFrameRef.current = null
+          if (transitionTimeoutRef.current !== null) {
+            window.clearTimeout(transitionTimeoutRef.current)
+            transitionTimeoutRef.current = null
+          }
         }
       }
       transitionFrameRef.current = window.requestAnimationFrame(tick)
+      // Safety net: if animation frames stop being delivered mid-transition,
+      // force-paint the final frame instead of leaving a stale canvas.
+      transitionTimeoutRef.current = window.setTimeout(() => {
+        transitionTimeoutRef.current = null
+        if (transitionFrameRef.current !== null) {
+          window.cancelAnimationFrame(transitionFrameRef.current)
+          transitionFrameRef.current = null
+          renderPayloadToCanvas(canvas, nextData)
+        }
+      }, duration + 300)
     },
     [renderPayloadToCanvas]
   )
@@ -343,6 +382,24 @@ function BroadcastCanvas() {
       }
     }
 
+    // Setting ctx.font does not reliably trigger @font-face loading, so load
+    // the webfonts explicitly and repaint — otherwise the first frames are
+    // drawn with a fallback font and stay that way until the next update.
+    void Promise.all(
+      [
+        '1rem "Inter Variable"',
+        '1rem "Geist Variable"',
+        '1rem "Source Serif 4 Variable"',
+        '1rem "Geist Mono"',
+      ].map((font) => document.fonts.load(font))
+    )
+      .catch(() => {})
+      .then(() => {
+        logDebug("Webfonts loaded; repainting")
+        draw()
+        pushNdiBurst()
+      })
+
     const currentWindow = getCurrentWebviewWindow()
     logDebug("Listener registration started", { label: currentWindow.label })
     const unlisten = currentWindow.listen<BroadcastPayload>(
@@ -407,10 +464,14 @@ function BroadcastCanvas() {
       if (transitionFrameRef.current !== null) {
         window.cancelAnimationFrame(transitionFrameRef.current)
       }
+      if (transitionTimeoutRef.current !== null) {
+        window.clearTimeout(transitionTimeoutRef.current)
+      }
       unlisten.then((fn) => fn())
       unlistenNdiConfig.then((fn) => fn())
     }
   }, [
+    draw,
     drawPayloadTransition,
     logDebug,
     preloadMedia,

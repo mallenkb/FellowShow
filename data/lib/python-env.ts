@@ -10,8 +10,8 @@ import { join } from "node:path"
 import { existsSync } from "node:fs"
 
 export const PROJECT_ROOT = join(import.meta.dir, "..", "..")
-export const VENV_DIR = join(PROJECT_ROOT, ".venv")
-export const MIN_PYTHON_VERSION: [number, number, number] = [3, 9, 0]
+const VENV_DIR = join(PROJECT_ROOT, ".venv")
+const MIN_PYTHON_VERSION: [number, number, number] = [3, 9, 0]
 
 export function getVenvBin(name: string): string {
   if (process.platform === "win32") {
@@ -20,7 +20,7 @@ export function getVenvBin(name: string): string {
   return join(VENV_DIR, "bin", name)
 }
 
-export async function findPython(): Promise<string> {
+async function findPython(): Promise<string> {
   for (const candidate of [
     "python3.12",
     "python3.11",
@@ -50,9 +50,7 @@ export async function findPython(): Promise<string> {
   process.exit(1)
 }
 
-export function parsePythonVersion(
-  output: string
-): [number, number, number] {
+function parsePythonVersion(output: string): [number, number, number] {
   const match = output.trim().match(/Python\s+(\d+)\.(\d+)\.(\d+)/)
   if (!match) {
     throw new Error(`Could not parse Python version from: ${output.trim()}`)
@@ -60,9 +58,7 @@ export function parsePythonVersion(
   return [Number(match[1]), Number(match[2]), Number(match[3])]
 }
 
-export function isVersionSufficient(
-  version: [number, number, number]
-): boolean {
+function isVersionSufficient(version: [number, number, number]): boolean {
   for (let i = 0; i < 3; i++) {
     if (version[i] > MIN_PYTHON_VERSION[i]) return true
     if (version[i] < MIN_PYTHON_VERSION[i]) return false
@@ -70,11 +66,9 @@ export function isVersionSufficient(
   return true
 }
 
-export async function ensureVenv(pythonCmd: string): Promise<void> {
+async function ensureVenv(pythonCmd: string): Promise<void> {
   const venvPython =
-    process.platform === "win32"
-      ? getVenvBin("python")
-      : getVenvBin("python3")
+    process.platform === "win32" ? getVenvBin("python") : getVenvBin("python3")
 
   if (existsSync(venvPython)) {
     console.log(`  ⏭ Virtual environment already exists at ${VENV_DIR}`)
@@ -94,7 +88,7 @@ export async function ensureVenv(pythonCmd: string): Promise<void> {
   console.log("  ✓ Virtual environment created")
 }
 
-export async function installPipDeps(packages: string[]): Promise<void> {
+async function installPipDeps(packages: string[]): Promise<void> {
   const pip = getVenvBin("pip")
   console.log(`  Installing ${packages.join(", ")}...`)
   const proc = Bun.spawn([pip, "install", ...packages], {
@@ -113,9 +107,7 @@ export async function installPipDeps(packages: string[]): Promise<void> {
  * Full Python environment setup: find Python, verify version, create venv,
  * install packages. Returns the path to the venv Python binary.
  */
-export async function ensurePythonEnv(
-  packages: string[]
-): Promise<string> {
+export async function ensurePythonEnv(packages: string[]): Promise<string> {
   console.log("\n🐍 Setting up Python environment...\n")
 
   const pythonCmd = await findPython()

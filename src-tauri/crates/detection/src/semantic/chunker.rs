@@ -181,7 +181,7 @@ mod tests {
             let parts: Vec<&str> = chunk.split("fish").collect();
             // Each sentence has "fish" once, so a 3-sentence window would
             // have 3 occurrences (4 parts when split)
-            assert!(parts.len() <= 3, "Window too large: {}", chunk);
+            assert!(parts.len() <= 3, "Window too large: {chunk}");
         }
     }
 }

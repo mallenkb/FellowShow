@@ -509,6 +509,10 @@ impl DirectDetector {
     /// Detect Bible references in the given transcript text.
     ///
     /// Returns a list of Detection objects for each reference found.
+    #[expect(
+        clippy::too_many_lines,
+        reason = "reference detection is a sequential state machine"
+    )]
     pub fn detect(&mut self, text: &str) -> Vec<Detection> {
         // Step 0: Clean filler phrases from the transcript
         let cleaned = clean_transcript(text);
@@ -928,7 +932,9 @@ mod tests {
         // Simulate timeout by replacing with an expired timestamp (exceeds 45s)
         detector.incomplete = Some(IncompleteRef {
             verse_ref: detector.incomplete.as_ref().unwrap().verse_ref.clone(),
-            timestamp: Instant::now() - std::time::Duration::from_secs(50),
+            timestamp: Instant::now()
+                .checked_sub(std::time::Duration::from_secs(50))
+                .unwrap(),
             chapter_is_default: detector.incomplete.as_ref().unwrap().chapter_is_default,
         });
 

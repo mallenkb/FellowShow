@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_ensemble_threshold() {
-        assert!(ENSEMBLE_THRESHOLD > 0.0);
-        assert!(ORIGINAL_WEIGHT + SYNONYM_WEIGHT + CONCEPT_WEIGHT <= 1.01);
+        const { assert!(ENSEMBLE_THRESHOLD > 0.0) };
+        const { assert!(ORIGINAL_WEIGHT + SYNONYM_WEIGHT + CONCEPT_WEIGHT <= 1.01) };
     }
 }

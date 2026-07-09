@@ -2,11 +2,9 @@ use std::collections::HashSet;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::cache::EmbeddingCache;
-use super::chunker::Chunker;
 use super::embedder::{StubEmbedder, TextEmbedder};
 use super::ensemble::EnsembleSearcher;
 use super::index::{StubIndex, VectorIndex};
-use super::synonyms::SynonymExpander;
 use crate::types::{Detection, DetectionSource, VerseRef};
 
 /// Default cache capacity (number of text-chunk entries).
@@ -21,12 +19,8 @@ const DEFAULT_CONFIDENCE_THRESHOLD: f64 = 0.50;
 pub struct SemanticDetector {
     embedder: Box<dyn TextEmbedder>,
     index: Box<dyn VectorIndex>,
-    #[allow(dead_code)]
-    chunker: Chunker,
     cache: EmbeddingCache,
     confidence_threshold: f64,
-    #[allow(dead_code)]
-    synonym_expander: SynonymExpander,
     ensemble: EnsembleSearcher,
     /// When true, uses ensemble search (3 strategies) for better accuracy.
     /// When false, single direct embedding for speed.
@@ -39,10 +33,8 @@ impl SemanticDetector {
         Self {
             embedder,
             index,
-            chunker: Chunker::new(),
             cache: EmbeddingCache::new(DEFAULT_CACHE_CAPACITY),
             confidence_threshold: DEFAULT_CONFIDENCE_THRESHOLD,
-            synonym_expander: SynonymExpander::new(),
             ensemble: EnsembleSearcher::new(),
             use_synonyms: false, // Off by default — enable via toggle_paraphrase_detection
         }

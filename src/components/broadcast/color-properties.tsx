@@ -39,13 +39,20 @@ function ColorControl({
 
   return (
     <div className="flex flex-col gap-1.5 rounded-md border border-border p-3">
-      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <label className="text-xs font-medium text-muted-foreground">
+        {label}
+      </label>
       <div className="flex items-center gap-2">
         <input
           type="color"
           value={parsed.hex}
           onChange={(e) => {
-            update(path, opacity ? buildColorWithOpacity(e.target.value, parsed.opacity) : e.target.value)
+            update(
+              path,
+              opacity
+                ? buildColorWithOpacity(e.target.value, parsed.opacity)
+                : e.target.value
+            )
           }}
           className="h-8 w-9 cursor-pointer rounded border border-input bg-transparent p-0.5"
         />
@@ -54,7 +61,10 @@ function ColorControl({
           onChange={(e) => {
             const next = e.target.value
             if (/^#[0-9a-fA-F]{6}$/.test(next)) {
-              update(path, opacity ? buildColorWithOpacity(next, parsed.opacity) : next)
+              update(
+                path,
+                opacity ? buildColorWithOpacity(next, parsed.opacity) : next
+              )
             }
           }}
           className="h-8 flex-1 font-mono text-xs"
@@ -69,7 +79,9 @@ function ColorControl({
             max={100}
             unit="%"
             defaultValue={100}
-            onChange={(next) => update(path, buildColorWithOpacity(parsed.hex, next))}
+            onChange={(next) =>
+              update(path, buildColorWithOpacity(parsed.hex, next))
+            }
           />
         </div>
       )}
@@ -77,11 +89,17 @@ function ColorControl({
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
   return (
     <section className="space-y-2">
       <div className="flex items-center gap-3">
-        <h4 className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground">
+        <h4 className="text-[0.65rem] font-semibold tracking-wider text-muted-foreground uppercase">
           {title}
         </h4>
         <div className="h-px flex-1 bg-border" />
@@ -99,13 +117,28 @@ export function ColorProperties() {
   return (
     <div className="flex flex-col gap-5">
       <Section title="Text">
-        <ColorControl label="Verse Text" value={draftTheme.verseText.color} path="verseText.color" opacity />
-        <ColorControl label="Verse Numbers" value={draftTheme.verseNumbers.color} path="verseNumbers.color" />
-        <ColorControl label="Reference" value={draftTheme.reference.color} path="reference.color" opacity />
+        <ColorControl
+          label="Verse Text"
+          value={draftTheme.verseText.color}
+          path="verseText.color"
+          opacity
+        />
+        <ColorControl
+          label="Verse Numbers"
+          value={draftTheme.verseNumbers.color}
+          path="verseNumbers.color"
+        />
+        <ColorControl
+          label="Reference"
+          value={draftTheme.reference.color}
+          path="reference.color"
+          opacity
+        />
       </Section>
 
       <Section title="Background">
-        {draftTheme.background.type === "gradient" && draftTheme.background.gradient ? (
+        {draftTheme.background.type === "gradient" &&
+        draftTheme.background.gradient ? (
           <>
             {draftTheme.background.gradient.stops.map((stop, index) => (
               <ColorControl
@@ -119,14 +152,22 @@ export function ColorProperties() {
         ) : (
           <ColorControl
             label="Background"
-            value={draftTheme.background.color === "transparent" ? "#000000" : draftTheme.background.color}
+            value={
+              draftTheme.background.color === "transparent"
+                ? "#000000"
+                : draftTheme.background.color
+            }
             path="background.color"
           />
         )}
       </Section>
 
       <Section title="Box and Effects">
-        <ColorControl label="Text Box" value={draftTheme.textBox.color} path="textBox.color" />
+        <ColorControl
+          label="Text Box"
+          value={draftTheme.textBox.color}
+          path="textBox.color"
+        />
         {draftTheme.verseText.shadow && (
           <ColorControl
             label="Text Shadow"

@@ -6,15 +6,16 @@ describe("presenter timer store", () => {
   })
 
   it("keeps Inter Variable as the default rendered timer font", async () => {
-    const { DEFAULT_TIMER_FONT_FAMILY } = await import("@/lib/font-options")
+    const { DEFAULT_PRESENTATION_FONT_FAMILY } =
+      await import("@/lib/font-options")
     const { usePresenterTimerStore } = await import("./presenter-timer-store")
 
     const state = usePresenterTimerStore.getState()
 
-    expect(state.fontFamily).toBe(DEFAULT_TIMER_FONT_FAMILY)
+    expect(state.fontFamily).toBe(DEFAULT_PRESENTATION_FONT_FAMILY)
     state.start()
     expect(usePresenterTimerStore.getState().getRenderData()?.fontFamily).toBe(
-      DEFAULT_TIMER_FONT_FAMILY
+      DEFAULT_PRESENTATION_FONT_FAMILY
     )
   })
 

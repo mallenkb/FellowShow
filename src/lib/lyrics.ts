@@ -3,8 +3,10 @@ export interface LyricBlock {
   text: string
 }
 
-const SECTION_RE = /^(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus)(\s+\d+)?\b[:\s-]*/i
-const SECTION_ONLY_RE = /^(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus)(\s+\d+)?\s*:?\s*$/i
+const SECTION_RE =
+  /^(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus)(\s+\d+)?\b[:\s-]*/i
+const SECTION_ONLY_RE =
+  /^(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus)(\s+\d+)?\s*:?\s*$/i
 const NUMBERED_LINE_RE = /^(\d+)[.)]?\s+(.+)/
 const MAX_PRESENTATION_LINES = 6
 const MAX_PRESENTATION_ROWS = 8
@@ -24,9 +26,10 @@ export function splitLyricBlocks(lyrics: string): LyricBlock[] {
     .map((block) => block.trim())
     .filter(Boolean)
 
-  const sourceBlocks = paragraphs.length > 1
-    ? mergeParagraphSections(paragraphs)
-    : splitLineSections(normalized)
+  const sourceBlocks =
+    paragraphs.length > 1
+      ? mergeParagraphSections(paragraphs)
+      : splitLineSections(normalized)
 
   const cleanedBlocks = sourceBlocks
     .map(({ label, text }, index) => ({
@@ -54,7 +57,10 @@ function mergeParagraphSections(paragraphs: string[]): LyricBlock[] {
       continue
     }
 
-    const lines = paragraph.split("\n").map((line) => line.trim()).filter(Boolean)
+    const lines = paragraph
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
     const firstLine = lines[0] ?? ""
 
     if (SECTION_ONLY_RE.test(firstLine) && lines.length === 1) {
@@ -80,11 +86,16 @@ function mergeParagraphSections(paragraphs: string[]): LyricBlock[] {
     blocks.push(labelBlock(paragraph, blocks.length))
   }
 
-  return blocks.length > 0 ? blocks : [{ label: "Slide 1", text: paragraphs.join("\n\n") }]
+  return blocks.length > 0
+    ? blocks
+    : [{ label: "Slide 1", text: paragraphs.join("\n\n") }]
 }
 
 function splitLineSections(lyrics: string): LyricBlock[] {
-  const lines = lyrics.split("\n").map((line) => line.trim()).filter(Boolean)
+  const lines = lyrics
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
   const blocks: LyricBlock[] = []
   let currentLabel: string | null = null
   let currentLines: string[] = []
@@ -138,17 +149,22 @@ function chunkLines(lines: string[]): LyricBlock[] {
 }
 
 function splitOversizedBlock(block: LyricBlock): LyricBlock[] {
-  const lines = block.text.split("\n").map((line) => line.trim()).filter(Boolean)
+  const lines = block.text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
   const estimatedRows = estimatePresentationRows(lines)
   if (!isOversizedPresentationBlock(lines, estimatedRows)) return [block]
 
   const chunks: string[][] = []
   const chunkCount = Math.max(
     2,
-    Math.ceil(Math.max(
-      lines.length / MAX_PRESENTATION_LINES,
-      estimatedRows / MAX_PRESENTATION_ROWS,
-    )),
+    Math.ceil(
+      Math.max(
+        lines.length / MAX_PRESENTATION_LINES,
+        estimatedRows / MAX_PRESENTATION_ROWS
+      )
+    )
   )
   const targetLinesPerChunk = Math.ceil(lines.length / chunkCount)
 
@@ -164,7 +180,10 @@ function splitOversizedBlock(block: LyricBlock): LyricBlock[] {
   }))
 }
 
-function isOversizedPresentationBlock(lines: string[], estimatedRows = estimatePresentationRows(lines)): boolean {
+function isOversizedPresentationBlock(
+  lines: string[],
+  estimatedRows = estimatePresentationRows(lines)
+): boolean {
   if (lines.length > MAX_PRESENTATION_LINES) return true
 
   return estimatedRows > MAX_PRESENTATION_ROWS
@@ -172,33 +191,36 @@ function isOversizedPresentationBlock(lines: string[], estimatedRows = estimateP
 
 function estimatePresentationRows(lines: string[]): number {
   return lines.reduce((total, line) => {
-    return total + Math.max(1, Math.ceil(line.length / ESTIMATED_PRESENTATION_CHARS_PER_ROW))
+    return (
+      total +
+      Math.max(1, Math.ceil(line.length / ESTIMATED_PRESENTATION_CHARS_PER_ROW))
+    )
   }, 0)
 }
 
 function labelBlock(block: string, index: number): LyricBlock {
-    const firstLine = block.split("\n").find(Boolean)?.trim() ?? ""
-    const sectionMatch = firstLine.match(SECTION_RE)
-    const numberedMatch = firstLine.match(NUMBERED_LINE_RE)
+  const firstLine = block.split("\n").find(Boolean)?.trim() ?? ""
+  const sectionMatch = firstLine.match(SECTION_RE)
+  const numberedMatch = firstLine.match(NUMBERED_LINE_RE)
 
-    if (sectionMatch) {
-      return {
-        label: normalizeSectionLabel(sectionMatch[0]),
-        text: block.replace(SECTION_RE, "").trim(),
-      }
-    }
-
-    if (numberedMatch) {
-      return {
-        label: `Verse ${numberedMatch[1]}`,
-        text: block.replace(NUMBERED_LINE_RE, "$2").trim(),
-      }
-    }
-
+  if (sectionMatch) {
     return {
-      label: `Slide ${index + 1}`,
-      text: block,
+      label: normalizeSectionLabel(sectionMatch[0]),
+      text: block.replace(SECTION_RE, "").trim(),
     }
+  }
+
+  if (numberedMatch) {
+    return {
+      label: `Verse ${numberedMatch[1]}`,
+      text: block.replace(NUMBERED_LINE_RE, "$2").trim(),
+    }
+  }
+
+  return {
+    label: `Slide ${index + 1}`,
+    text: block,
+  }
 }
 
 function normalizeSectionLabel(label: string): string {
@@ -223,34 +245,42 @@ function cleanDisplayText(text: string): string {
 
 function isMetadataBlock(block: string, isFirstBlock: boolean): boolean {
   if (!isFirstBlock) return false
-  const lines = block.split("\n").map((line) => line.trim()).filter(Boolean)
+  const lines = block
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
   if (lines.length === 0 || lines.length > 4) return false
-  return lines.every((line) =>
-    /^\[?key:/i.test(line) ||
-    /version$/i.test(line) ||
-    /^[1-3]?\s?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+/.test(line),
+  return lines.every(
+    (line) =>
+      /^\[?key:/i.test(line) ||
+      /version$/i.test(line) ||
+      /^[1-3]?\s?[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+\d+:\d+/.test(line)
   )
 }
 
 function isSourceCreditLine(line: string): boolean {
-  return /^([A-Z][A-Za-z'.-]*(?:\s+[A-Z][A-Za-z'.-]*){0,3},\s*)?(PH|RH|BBC songs|Blessings|Golden Bells|Living songs|P ANT)\b[.\s-]*\d*/i.test(line)
+  return /^([A-Z][A-Za-z'.-]*(?:\s+[A-Z][A-Za-z'.-]*){0,3},\s*)?(PH|RH|BBC songs|Blessings|Golden Bells|Living songs|P ANT)\b[.\s-]*\d*/i.test(
+    line
+  )
 }
 
 function isMetadataLine(line: string): boolean {
   return /^\[?key:/i.test(line) || isSourceCreditLine(line)
 }
 
-function isLikelyCreditLine(line: string, index: number, lines: string[]): boolean {
+function isLikelyCreditLine(
+  line: string,
+  index: number,
+  lines: string[]
+): boolean {
   if (index !== 0 && index !== lines.length - 1) return false
   if (line.length > 70 || !/\b(and|&)\b/i.test(line)) return false
   if (/[.!?;:]$/.test(line)) return false
-  if (!/^[A-Z][A-Za-z' .-]+(?:\s+(?:and|&)\s+[A-Z][A-Za-z' .-]+)+$/.test(line)) return false
+  if (!/^[A-Z][A-Za-z' .-]+(?:\s+(?:and|&)\s+[A-Z][A-Za-z' .-]+)+$/.test(line))
+    return false
 
-  const lyricLines = lines.filter((candidate) => !isMetadataLine(candidate) && candidate !== line)
+  const lyricLines = lines.filter(
+    (candidate) => !isMetadataLine(candidate) && candidate !== line
+  )
   return lyricLines.length > 0
-}
-
-export function getLyricBlockText(lyrics: string, blockIndex = 0): string {
-  const blocks = splitLyricBlocks(lyrics)
-  return blocks[Math.max(0, Math.min(blockIndex, blocks.length - 1))]?.text ?? lyrics
 }

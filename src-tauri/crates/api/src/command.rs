@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn serialize_theme() {
-        let json = serde_json::to_value(&RemoteCommand::Theme("Dark".into())).unwrap();
+        let json = serde_json::to_value(RemoteCommand::Theme("Dark".into())).unwrap();
         assert_eq!(
             json,
             serde_json::json!({"command": "theme", "value": "Dark"})
@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn serialize_opacity() {
-        let json = serde_json::to_value(&RemoteCommand::Opacity(0.75)).unwrap();
+        let json = serde_json::to_value(RemoteCommand::Opacity(0.75)).unwrap();
         assert_eq!(
             json,
             serde_json::json!({"command": "opacity", "value": 0.75})
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn serialize_confidence() {
-        let json = serde_json::to_value(&RemoteCommand::Confidence(0.75)).unwrap();
+        let json = serde_json::to_value(RemoteCommand::Confidence(0.75)).unwrap();
         assert_eq!(
             json,
             serde_json::json!({"command": "confidence", "value": 0.75})
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn serialize_on_air() {
-        let json = serde_json::to_value(&RemoteCommand::OnAir(true)).unwrap();
+        let json = serde_json::to_value(RemoteCommand::OnAir(true)).unwrap();
         assert_eq!(
             json,
             serde_json::json!({"command": "on_air", "value": true})
@@ -199,14 +199,14 @@ mod tests {
 
         for cmd in &cmds {
             match cmd {
-                RemoteCommand::Next => {}
-                RemoteCommand::Prev => {}
-                RemoteCommand::Show => {}
-                RemoteCommand::Hide => {}
-                RemoteCommand::Theme(_) => {}
-                RemoteCommand::Opacity(_) => {}
-                RemoteCommand::Confidence(_) => {}
-                RemoteCommand::OnAir(_) => {}
+                RemoteCommand::Next
+                | RemoteCommand::Prev
+                | RemoteCommand::Show
+                | RemoteCommand::Hide
+                | RemoteCommand::Theme(_)
+                | RemoteCommand::Opacity(_)
+                | RemoteCommand::Confidence(_)
+                | RemoteCommand::OnAir(_) => {}
             }
         }
 

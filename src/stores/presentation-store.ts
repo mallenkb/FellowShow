@@ -24,12 +24,16 @@ interface PresentationState {
   setSlideFit: (id: string, fit: PresentationSlide["fit"]) => void
   updateSlideTransform: (
     id: string,
-    transform: Partial<Pick<PresentationSlide, "scale" | "offsetX" | "offsetY">>,
+    transform: Partial<Pick<PresentationSlide, "scale" | "offsetX" | "offsetY">>
   ) => void
   setTickerText: (text: string) => void
   togglePin: (id: string) => void
   toggleLock: (id: string) => void
-  reorderSlides: (fromId: string, toId: string, position?: "before" | "after") => void
+  reorderSlides: (
+    fromId: string,
+    toId: string,
+    position?: "before" | "after"
+  ) => void
   removeSlide: (id: string) => void
   clearSlides: () => void
 }
@@ -62,23 +66,21 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   renameSlide: (id, name) =>
     set((state) => ({
       slides: state.slides.map((slide) =>
-        slide.id === id && !slide.locked ? { ...slide, name } : slide,
+        slide.id === id && !slide.locked ? { ...slide, name } : slide
       ),
     })),
 
   setSlideFit: (id, fit) =>
     set((state) => ({
       slides: state.slides.map((slide) =>
-        slide.id === id && !slide.locked ? { ...slide, fit } : slide,
+        slide.id === id && !slide.locked ? { ...slide, fit } : slide
       ),
     })),
 
   updateSlideTransform: (id, transform) =>
     set((state) => ({
       slides: state.slides.map((slide) =>
-        slide.id === id && !slide.locked
-          ? { ...slide, ...transform }
-          : slide,
+        slide.id === id && !slide.locked ? { ...slide, ...transform } : slide
       ),
     })),
 
@@ -106,7 +108,7 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   toggleLock: (id) =>
     set((state) => ({
       slides: state.slides.map((slide) =>
-        slide.id === id ? { ...slide, locked: !slide.locked } : slide,
+        slide.id === id ? { ...slide, locked: !slide.locked } : slide
       ),
     })),
 
@@ -114,14 +116,20 @@ export const usePresentationStore = create<PresentationState>((set) => ({
     set((state) => {
       const fromIndex = state.slides.findIndex((slide) => slide.id === fromId)
       const toIndex = state.slides.findIndex((slide) => slide.id === toId)
-      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return state
-      if (state.slides[fromIndex]?.locked || state.slides[toIndex]?.locked) return state
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex)
+        return state
+      if (state.slides[fromIndex]?.locked || state.slides[toIndex]?.locked)
+        return state
 
       const slides = [...state.slides]
       const [moved] = slides.splice(fromIndex, 1)
       const targetIndex = slides.findIndex((slide) => slide.id === toId)
       if (targetIndex === -1) return state
-      slides.splice(position === "after" ? targetIndex + 1 : targetIndex, 0, moved)
+      slides.splice(
+        position === "after" ? targetIndex + 1 : targetIndex,
+        0,
+        moved
+      )
       return { slides }
     }),
 
@@ -133,7 +141,9 @@ export const usePresentationStore = create<PresentationState>((set) => ({
 
       const slides = state.slides.filter((slide) => slide.id !== id)
       const selectedSlideId =
-        state.selectedSlideId === id ? slides[0]?.id ?? null : state.selectedSlideId
+        state.selectedSlideId === id
+          ? (slides[0]?.id ?? null)
+          : state.selectedSlideId
       return { slides, selectedSlideId }
     }),
 

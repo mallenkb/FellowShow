@@ -1,4 +1,4 @@
-export interface Word {
+interface Word {
   text: string
   start: number
   end: number
@@ -14,27 +14,3 @@ export interface TranscriptSegment {
   words: Word[]
   timestamp: number
 }
-
-export type TranscriptEventPayload =
-  | {
-      type: "partial"
-      transcript: string
-      words: Word[]
-    }
-  | {
-      type: "final"
-      transcript: string
-      words: Word[]
-      confidence: number
-      utterance_id: string
-    }
-  | {
-      type: "error"
-      message: string
-    }
-  | {
-      type: "connected"
-    }
-  | {
-      type: "disconnected"
-    }

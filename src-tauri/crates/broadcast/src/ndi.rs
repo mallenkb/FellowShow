@@ -448,3 +448,22 @@ fn load_symbol<'a, T>(
         message: e.to_string(),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{NdiFrameRate, NdiResolution};
+
+    #[test]
+    fn resolutions_map_to_expected_dimensions() {
+        assert_eq!(NdiResolution::R720p.dimensions(), (1280, 720));
+        assert_eq!(NdiResolution::R1080p.dimensions(), (1920, 1080));
+        assert_eq!(NdiResolution::R4k.dimensions(), (3840, 2160));
+    }
+
+    #[test]
+    fn frame_rates_map_to_expected_fps() {
+        assert_eq!(NdiFrameRate::Fps24.fps(), 24);
+        assert_eq!(NdiFrameRate::Fps30.fps(), 30);
+        assert_eq!(NdiFrameRate::Fps60.fps(), 60);
+    }
+}

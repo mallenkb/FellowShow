@@ -9,6 +9,7 @@ use std::sync::Mutex;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
+use super::detection::{FTS5_CONFIDENCE_DECAY, FTS5_MIN_CONFIDENCE, FTS5_RANK0_CONFIDENCE};
 use crate::events::{
     AudioLevelPayload, TranscriptPayload, EVENT_AUDIO_LEVEL, EVENT_TRANSCRIPT_FINAL,
     EVENT_TRANSCRIPT_PARTIAL,
@@ -253,8 +254,7 @@ pub async fn start_transcription(
             };
 
             log::info!(
-                "Starting {provider_label} transcription: model={model}, api_key={}..., device_id={device_id:?}, gain={gain:?}",
-                truncate_safe(&resolved_api_key, 8)
+                "Starting {provider_label} transcription: model={model}, device_id={device_id:?}, gain={gain:?}"
             );
 
             Box::new(OpenAiCompatibleSttProvider::new(OpenAiCompatibleConfig {
@@ -280,10 +280,7 @@ pub async fn start_transcription(
                 );
             }
 
-            log::info!(
-                "Starting Deepgram transcription: api_key={}..., device_id={device_id:?}, gain={gain:?}",
-                truncate_safe(&resolved_api_key, 8)
-            );
+            log::info!("Starting Deepgram transcription: device_id={device_id:?}, gain={gain:?}");
 
             let stt_config = SttConfig {
                 api_key: resolved_api_key,
@@ -335,6 +332,7 @@ pub async fn start_transcription(
                     let _ = fan_app.emit("stt_error", message);
                     fan_active.store(false, Ordering::SeqCst);
                     fan_audio_active.store(false, Ordering::SeqCst);
+                    let _ = fan_app.emit("stt_stopped", ());
                     return;
                 }
             };
@@ -342,6 +340,7 @@ pub async fn start_transcription(
             log::info!("Audio capture started on fanout thread");
 
             let mut frame_count: u64 = 0;
+            let mut dropped_audio_frames: u64 = 0;
 
             loop {
                 if !fan_active.load(Ordering::SeqCst) {
@@ -366,7 +365,14 @@ pub async fn start_transcription(
                         }
 
                         // (b) Forward all audio to STT provider
-                        let _ = audio_send_tx.try_send(frame.samples);
+                        if audio_send_tx.try_send(frame.samples).is_err() {
+                            dropped_audio_frames += 1;
+                            if dropped_audio_frames == 1 || dropped_audio_frames % 100 == 0 {
+                                log::warn!(
+                                    "Audio backpressure dropped {dropped_audio_frames} frame(s)"
+                                );
+                            }
+                        }
                     }
                     Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
                     Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
@@ -389,6 +395,7 @@ pub async fn start_transcription(
     let conn_active = stt_active.clone();
     let conn_audio_active = audio_active.clone();
     let provider_log_name = stt_provider.name().to_string();
+    let terminal_app = app.clone();
 
     // Task A: run the STT provider (Deepgram WS+REST or Whisper local).
     tauri::async_runtime::spawn(async move {
@@ -398,6 +405,7 @@ pub async fn start_transcription(
         }
         conn_active.store(false, Ordering::SeqCst);
         conn_audio_active.store(false, Ordering::SeqCst);
+        let _ = terminal_app.emit("stt_stopped", ());
         log::info!("[STT-{provider_log_name}] Provider task exited");
     });
 
@@ -441,6 +449,8 @@ pub async fn start_transcription(
     });
 
     tauri::async_runtime::spawn(async move {
+        let mut dropped_direct_jobs: u64 = 0;
+        let mut dropped_semantic_jobs: u64 = 0;
         while let Some(event) = event_rx.recv().await {
             if !evt_active.load(Ordering::SeqCst) {
                 break;
@@ -489,12 +499,26 @@ pub async fn start_transcription(
 
                         // Fire-and-forget: detection runs in background thread pool.
                         // Event consumer proceeds immediately to next transcript.
-                        let _ = detect_tx.try_send(transcript.clone());
+                        if detect_tx.try_send(transcript.clone()).is_err() {
+                            dropped_direct_jobs += 1;
+                            if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                                log::warn!(
+                                    "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
+                                );
+                            }
+                        }
 
                         // Send every is_final fragment to FTS5 immediately.
                         // No sentence buffer — FTS5 is fast enough (~20-50ms)
                         // to run on every fragment without waiting for pauses.
-                        let _ = semantic_tx.try_send(transcript.clone());
+                        if semantic_tx.try_send(transcript.clone()).is_err() {
+                            dropped_semantic_jobs += 1;
+                            if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0 {
+                                log::warn!(
+                                    "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
+                                );
+                            }
+                        }
 
                         log::debug!(
                             "[EVT] Final processed in {:?} ({:?})",
@@ -671,8 +695,6 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
         log::error!("Failed to lock AppState for verse resolution");
         return;
     };
-
-    use super::detection::{FTS5_CONFIDENCE_DECAY, FTS5_MIN_CONFIDENCE, FTS5_RANK0_CONFIDENCE};
 
     let results: Vec<super::detection::DetectionResult> = fts
         .iter()
@@ -868,7 +890,7 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
             if !rm.is_active() && !rm.has_verses() {
                 None
             } else {
-                log::info!("[READING] Checking chapter command for: {:?}", transcript);
+                log::info!("[READING] Checking chapter command for: {transcript:?}");
                 rm.check_chapter_command(transcript)
             }
         };
@@ -904,8 +926,7 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
                     let start_verse_text = chapter_verses
                         .iter()
                         .find(|v| v.verse == start_verse)
-                        .map(|v| v.text.clone())
-                        .unwrap_or_else(|| chapter_verses[0].text.clone());
+                        .map_or_else(|| chapter_verses[0].text.clone(), |v| v.text.clone());
 
                     let verses: Vec<(i32, String)> = chapter_verses
                         .into_iter()

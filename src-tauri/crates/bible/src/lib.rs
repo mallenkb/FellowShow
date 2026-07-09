@@ -1,4 +1,4 @@
-//! Bible database access for the FellowShow application.
+//! Bible database access for the `FellowShow` application.
 //!
 //! Provides SQLite-backed storage and retrieval for Bible translations,
 //! books, verses, and cross-references. Supports full-text search via

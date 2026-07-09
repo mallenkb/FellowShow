@@ -24,7 +24,9 @@ export const useDetectionStore = create<DetectionState>((set) => ({
     set((state) => {
       // Deduplicate: if same verse_ref exists, keep higher confidence at top
       const filtered = state.detections.filter(
-        (d) => d.verse_ref !== detection.verse_ref || d.confidence > detection.confidence,
+        (d) =>
+          d.verse_ref !== detection.verse_ref ||
+          d.confidence > detection.confidence
       )
       // If we filtered one out, the new one has higher (or equal) confidence
       if (filtered.length < state.detections.length) {
@@ -54,9 +56,11 @@ export const useDetectionStore = create<DetectionState>((set) => ({
         }
       }
       // Sort by confidence so high-confidence direct detections appear above semantic
-      return { detections: [...map.values()]
-        .sort((a, b) => b.confidence - a.confidence)
-        .slice(0, 50) }
+      return {
+        detections: [...map.values()]
+          .sort((a, b) => b.confidence - a.confidence)
+          .slice(0, 50),
+      }
     }),
   setDetections: (detections) => set({ detections }),
   removeDetection: (verseRef) =>
@@ -65,6 +69,5 @@ export const useDetectionStore = create<DetectionState>((set) => ({
     })),
   clearDetections: () => set({ detections: [] }),
   setAutoMode: (autoMode) => set({ autoMode }),
-  setConfidenceThreshold: (confidenceThreshold) =>
-    set({ confidenceThreshold }),
+  setConfidenceThreshold: (confidenceThreshold) => set({ confidenceThreshold }),
 }))

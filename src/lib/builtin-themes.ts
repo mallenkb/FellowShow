@@ -3,10 +3,9 @@ import type { BroadcastTheme } from "@/types/broadcast"
 
 const BUILTIN_PRESENTATION_BACKGROUND_LIGHT = "#101084"
 const BUILTIN_PRESENTATION_BACKGROUND_DARK = "#323294"
-export const BROADCAST_OVERLAY_PREVIEW_IMAGE =
+const BROADCAST_OVERLAY_PREVIEW_IMAGE =
   "/broadcast-previews/preacher-stage-unsplash-phil-hearing.jpg"
-export const BIBLE_VERSE_PREVIEW_IMAGE =
-  "/broadcast-previews/full-background.jpg"
+const BIBLE_VERSE_PREVIEW_IMAGE = "/broadcast-previews/full-background.jpg"
 const THEME_STORAGE_KEY = "theme"
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
 

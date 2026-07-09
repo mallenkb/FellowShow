@@ -23,11 +23,6 @@ export interface ReadingAdvance {
   confidence: number
 }
 
-export interface DetectionStatus {
-  has_direct: boolean
-  has_semantic: boolean
-}
-
 export interface SemanticSearchResult {
   verse_ref: string
   verse_text: string

@@ -50,7 +50,11 @@ export const transcriptionActions = {
     } catch (e) {
       const msg = String(e)
       transcript.setConnectionStatus("error")
-      if ((msg.includes(MISSING_DEEPGRAM_KEY_MARKER) || msg.includes(MISSING_API_KEY_MARKER)) && onMissingApiKey) {
+      if (
+        (msg.includes(MISSING_DEEPGRAM_KEY_MARKER) ||
+          msg.includes(MISSING_API_KEY_MARKER)) &&
+        onMissingApiKey
+      ) {
         onMissingApiKey()
       } else {
         toast.error("Could not start transcription", { description: msg })
@@ -85,8 +89,16 @@ export function useTranscription(options?: UseTranscriptionOptions) {
   useTauriEvent("stt_disconnected", () => {
     useTranscriptStore.getState().setConnectionStatus("disconnected")
   })
+  useTauriEvent("stt_stopped", () => {
+    const store = useTranscriptStore.getState()
+    store.setTranscribing(false)
+    store.setPartial("")
+    store.setConnectionStatus("disconnected")
+  })
   useTauriEvent<string>("stt_error", (msg) => {
-    useTranscriptStore.getState().setConnectionStatus("error")
+    const store = useTranscriptStore.getState()
+    store.setTranscribing(false)
+    store.setConnectionStatus("error")
     toast.error("Transcription error", { description: msg })
   })
 

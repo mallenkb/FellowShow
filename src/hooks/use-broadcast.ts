@@ -1,8 +1,10 @@
-import { useBroadcastStore } from "@/stores/broadcast-store"
 import type { VerseRenderData } from "@/types"
 import type { Verse } from "@/types"
 
-export function toVerseRenderData(verse: Verse, translation: string): VerseRenderData {
+export function toVerseRenderData(
+  verse: Verse,
+  translation: string
+): VerseRenderData {
   if (verse.book_number < 0) {
     return {
       reference: "",
@@ -30,16 +32,4 @@ export function deriveLiveVerse({
 }): VerseRenderData | null {
   if (!isLive || !selectedVerse) return null
   return toVerseRenderData(selectedVerse, translation)
-}
-
-export const broadcastActions = {
-  setLiveVerse: (verse: VerseRenderData | null) =>
-    useBroadcastStore.getState().setLiveVerse(verse),
-  setLive: (live: boolean) =>
-    useBroadcastStore.getState().setLive(live),
-  getActiveTheme: () => {
-    const s = useBroadcastStore.getState()
-    const themeId = s.sectionThemeIds[s.selectedThemeSection] ?? s.activeThemeId
-    return s.themes.find((t) => t.id === themeId) ?? s.themes[0]
-  },
 }

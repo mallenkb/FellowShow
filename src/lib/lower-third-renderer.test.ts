@@ -92,13 +92,19 @@ describe("getLowerThirdLayout", () => {
     expect(layout.container.x).toBe(128)
     expect(layout.container.width).toBe(960)
     expect(layout.container.y).toBeGreaterThanOrEqual(760)
-    expect(layout.container.y + layout.container.height).toBeLessThanOrEqual(984)
+    expect(layout.container.y + layout.container.height).toBeLessThanOrEqual(
+      984
+    )
     expect(layout.title.fontSize).toBe(42)
     expect(layout.subtitle?.fontSize).toBe(24)
   })
 
   it("does not create a layout for hidden or empty lower thirds", () => {
-    expect(getLowerThirdLayout(baseTheme, { ...lowerThird, visible: false }, 1)).toBeNull()
-    expect(getLowerThirdLayout(baseTheme, { visible: true, title: "   " }, 1)).toBeNull()
+    expect(
+      getLowerThirdLayout(baseTheme, { ...lowerThird, visible: false }, 1)
+    ).toBeNull()
+    expect(
+      getLowerThirdLayout(baseTheme, { visible: true, title: "   " }, 1)
+    ).toBeNull()
   })
 })

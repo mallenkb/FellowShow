@@ -20,7 +20,10 @@ export function TutorialOverlay() {
     if (import.meta.env.DEV) return true
     if (typeof window === "undefined") return false
     const params = new URLSearchParams(window.location.search)
-    return params.get("skipOnboarding") === "1" || params.get("skipOnboarding") === "true"
+    return (
+      params.get("skipOnboarding") === "1" ||
+      params.get("skipOnboarding") === "true"
+    )
   }, [])
 
   const [arrowColor, setArrowColor] = useState<string | undefined>()

@@ -32,20 +32,19 @@ Both protocols support the same command set and can run simultaneously.
 
 - **Toggle**: Enable/disable OSC listener
 - **Port**: Default `8000` (UDP)
-- **Host**: Binds to `0.0.0.0` (all network interfaces)
+- **Host**: Binds to `127.0.0.1` (this computer only)
 
 #### HTTP API
 
 - **Toggle**: Enable/disable HTTP server
 - **Port**: Default `8080` (TCP)
-- **Host**: Binds to `0.0.0.0` (all network interfaces)
+- **Host**: Binds to `127.0.0.1` (this computer only)
 
-### Firewall & Network
+### Network security
 
-If accessing FellowShow from another device on your network:
-- Allow incoming connections on your chosen ports (default 8000/8080)
-- Use your computer's local IP address (e.g., `192.168.1.100`)
-- For local-only access, change host to `127.0.0.1` in settings
+Remote control is intentionally loopback-only. Run controllers such as Companion
+on the FellowShow computer. LAN access is disabled until an authenticated remote
+mode is available; do not expose these ports through a proxy or port forward.
 
 ## Available Commands
 
@@ -175,8 +174,6 @@ curl -X POST http://localhost:8080/api/v1/command \
   -d '{"command":"opacity","value":0.75}'
 ```
 
-**Note:** This command is currently a placeholder and will be fully wired when the broadcast store adds opacity support.
-
 ### 8. **confidence** — Set Detection Confidence Threshold
 
 Adjusts the minimum confidence threshold for verse detection.
@@ -234,7 +231,7 @@ curl -X POST http://localhost:8080/api/v1/command \
 **Response:**
 ```json
 {
-  "status": "ok"
+  "success": true
 }
 ```
 

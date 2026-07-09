@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/broadcast-output.tsx",
+    "data/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "src/**/*.css",
+    "data/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "ignoreBinaries": ["optimum-cli", "python3", "powershell"]
+}

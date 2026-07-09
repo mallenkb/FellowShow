@@ -25,6 +25,7 @@ describe("broadcast store sync", () => {
     const theme = useBroadcastStore.getState().themes[0]
     useBroadcastStore.setState({
       activeThemeId: theme.id,
+      isLive: true,
       liveVerse: {
         reference: "John 3:16",
         segments: [{ text: "For God so loved the world", verseNumber: 16 }],
@@ -107,6 +108,24 @@ describe("broadcast store sync", () => {
     )
   })
 
+  it("clamps and emits remote output opacity", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().setOutputOpacity(1.5)
+
+    expect(useBroadcastStore.getState().outputOpacity).toBe(1)
+    expect(emitToMock).toHaveBeenCalledTimes(2)
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({ opacity: 1 })
+    )
+
+    useBroadcastStore.getState().setOutputOpacity(-0.5)
+    expect(useBroadcastStore.getState().outputOpacity).toBe(0)
+  })
+
   it("copies preview output to live output and turns live on", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
 
@@ -148,7 +167,7 @@ describe("broadcast store sync", () => {
     )
   })
 
-  it("can show preview output on live display without turning live on", async () => {
+  it("shows preview output on the live display and keeps live on", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
 
     useBroadcastStore.setState({
@@ -164,7 +183,7 @@ describe("broadcast store sync", () => {
 
     useBroadcastStore.getState().showPreviewOnLive()
 
-    expect(useBroadcastStore.getState().isLive).toBe(false)
+    expect(useBroadcastStore.getState().isLive).toBe(true)
     expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:1")
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast",
@@ -173,6 +192,104 @@ describe("broadcast store sync", () => {
         verse: expect.objectContaining({ reference: "Psalm 23:1" }),
       })
     )
+  })
+
+  it("blanks both external outputs when live is turned off", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+
+    useBroadcastStore.setState({
+      isLive: true,
+      liveVerse: {
+        reference: "John 3:16",
+        segments: [{ text: "For God so loved the world", verseNumber: 16 }],
+      },
+    })
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().setLive(false)
+
+    // Staged content is kept so going live again restores it
+    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("John 3:16")
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({ verse: null, timer: null })
+    )
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast-alt",
+      "broadcast:verse-update",
+      expect.objectContaining({ verse: null, timer: null })
+    )
+  })
+
+  it("auto preview keeps live on and does not blank output for empty selections", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+
+    useBroadcastStore.setState({
+      autoPreviewToLive: true,
+      isLive: true,
+      previewVerse: {
+        reference: "Psalm 23:1",
+        segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
+      },
+      previewTimer: null,
+      liveVerse: {
+        reference: "Psalm 23:1",
+        segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
+      },
+      presenterTimer: null,
+    })
+
+    useBroadcastStore.getState().setPreviewOutput(
+      {
+        reference: "Psalm 23:2",
+        segments: [{ text: "He maketh me to lie down", verseNumber: 2 }],
+      },
+      null
+    )
+
+    expect(useBroadcastStore.getState().isLive).toBe(true)
+    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:2")
+
+    useBroadcastStore.getState().setPreviewOutput(null, null)
+
+    expect(useBroadcastStore.getState().isLive).toBe(true)
+    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:2")
+  })
+
+  it("ignores duplicate preview payloads so canvases do not restart transitions", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    const verse = {
+      reference: "Psalm 23:1",
+      segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
+    }
+    const timer = {
+      remainingSeconds: 9,
+      totalSeconds: 30,
+      isRunning: true,
+      isFinished: false,
+      fontFamily: "Geist Variable",
+      backgroundUrl: "/timer-background.jpg",
+      backgroundMediaType: "image" as const,
+    }
+    const listener = vi.fn()
+    const unsubscribe = useBroadcastStore.subscribe(listener)
+
+    useBroadcastStore.getState().setPreviewOutput(verse, timer)
+    listener.mockClear()
+    emitToMock.mockClear()
+
+    useBroadcastStore.getState().setPreviewOutput(
+      {
+        reference: "Psalm 23:1",
+        segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
+      },
+      { ...timer }
+    )
+
+    expect(listener).not.toHaveBeenCalled()
+    expect(emitToMock).not.toHaveBeenCalled()
+    unsubscribe()
   })
 
   it("uses separate bible, songs, and presentation themes", async () => {

@@ -10,16 +10,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import { cn } from "@/lib/utils"
-import {
-  PlusIcon,
-  MinusIcon,
-  Grid3X3Icon,
-  MaximizeIcon,
-} from "lucide-react"
-import type { BroadcastTheme, BroadcastThemeSection, VerseRenderData } from "@/types"
+import { PlusIcon, MinusIcon, Grid3X3Icon, MaximizeIcon } from "lucide-react"
+import type {
+  BroadcastTheme,
+  BroadcastThemeSection,
+  VerseRenderData,
+} from "@/types"
 
 const WS_WIDTH = 1920
 const WS_HEIGHT = 1080
@@ -27,55 +30,67 @@ const GRID_STEP = 120
 
 // Preview content presets so a theme can be checked against the kind of text it
 // will actually display (short verse, long wrapping verse, lyric, slide).
-const SAMPLE_PRESETS: { id: string; label: string; verse: VerseRenderData }[] = [
-  {
-    id: "verse-short",
-    label: "Verse · short",
-    verse: {
-      reference: "Genesis 1:1 (KJV)",
-      segments: [{ verseNumber: 1, text: "In the beginning God created the heaven and the earth." }],
-    },
-  },
-  {
-    id: "verse-long",
-    label: "Verse · long",
-    verse: {
-      reference: "John 3:16 (KJV)",
-      segments: [
-        {
-          verseNumber: 16,
-          text: "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
-        },
-      ],
-    },
-  },
-  {
-    id: "lyric",
-    label: "Song lyric",
-    verse: {
-      reference: "",
-      themeSection: "songs",
-      referenceMode: "lyric-footer",
-      segments: [{ text: "Amazing grace, how sweet the sound, that saved a wretch like me" }],
-    },
-  },
-  {
-    id: "presentation",
-    label: "Presentation",
-    verse: {
-      reference: "Presentation Slide",
-      themeSection: "presentation",
-      segments: [],
-      presentationImage: {
-        url: "/broadcast-previews/full-background.jpg",
-        name: "Sample presentation",
-        fit: "cover",
+const SAMPLE_PRESETS: { id: string; label: string; verse: VerseRenderData }[] =
+  [
+    {
+      id: "verse-short",
+      label: "Verse · short",
+      verse: {
+        reference: "Genesis 1:1 (KJV)",
+        segments: [
+          {
+            verseNumber: 1,
+            text: "In the beginning God created the heaven and the earth.",
+          },
+        ],
       },
     },
-  },
-]
+    {
+      id: "verse-long",
+      label: "Verse · long",
+      verse: {
+        reference: "John 3:16 (KJV)",
+        segments: [
+          {
+            verseNumber: 16,
+            text: "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+          },
+        ],
+      },
+    },
+    {
+      id: "lyric",
+      label: "Song lyric",
+      verse: {
+        reference: "",
+        themeSection: "songs",
+        referenceMode: "lyric-footer",
+        segments: [
+          {
+            text: "Amazing grace, how sweet the sound, that saved a wretch like me",
+          },
+        ],
+      },
+    },
+    {
+      id: "presentation",
+      label: "Presentation",
+      verse: {
+        reference: "Presentation Slide",
+        themeSection: "presentation",
+        segments: [],
+        presentationImage: {
+          url: "/broadcast-previews/full-background.jpg",
+          name: "Sample presentation",
+          fit: "cover",
+        },
+      },
+    },
+  ]
 
-const SAMPLE_BY_ID = new Map(SAMPLE_PRESETS.map((preset) => [preset.id, preset.verse]))
+const SAMPLE_BY_ID = new Map(
+  SAMPLE_PRESETS.map((preset) => [preset.id, preset.verse])
+)
 
 function defaultSampleForSection(section: BroadcastThemeSection): string {
   if (section === "presentation") return "presentation"
@@ -90,7 +105,9 @@ export function DesignCanvas() {
   const latestThemeRef = useRef<BroadcastTheme | null>(null)
   const rafIdRef = useRef<number | null>(null)
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
-  const imageRequestsRef = useRef<Map<string, Promise<HTMLImageElement>>>(new Map())
+  const imageRequestsRef = useRef<Map<string, Promise<HTMLImageElement>>>(
+    new Map()
+  )
   const videoCacheRef = useRef<Map<string, HTMLVideoElement>>(new Map())
   const gridLinesRef = useRef<fabric.Line[]>([])
   const objectsRef = useRef<{
@@ -105,7 +122,9 @@ export function DesignCanvas() {
   const selectedThemeSection = useBroadcastStore((s) => s.selectedThemeSection)
   const [zoomLevel, setZoomLevel] = useState(0)
   const [showGrid, setShowGrid] = useState(false)
-  const [sampleId, setSampleId] = useState(() => defaultSampleForSection(selectedThemeSection))
+  const [sampleId, setSampleId] = useState(() =>
+    defaultSampleForSection(selectedThemeSection)
+  )
   const sampleVerseRef = useRef<VerseRenderData>(
     SAMPLE_BY_ID.get(sampleId) ?? SAMPLE_PRESETS[0].verse
   )
@@ -147,7 +166,8 @@ export function DesignCanvas() {
     canvas.setViewportTransform(identity)
 
     // Calculate zoom to fit workspace with padding
-    const scale = fabric.util.findScaleToFit(workspace, { width: cw, height: ch }) * 0.85
+    const scale =
+      fabric.util.findScaleToFit(workspace, { width: cw, height: ch }) * 0.85
     canvas.setZoom(scale)
 
     // Center the workspace
@@ -209,10 +229,14 @@ export function DesignCanvas() {
         visible: false,
       })
     for (let x = GRID_STEP; x < WS_WIDTH; x += GRID_STEP) {
-      gridLines.push(makeGridLine([wsLeft + x, wsTop, wsLeft + x, wsTop + WS_HEIGHT]))
+      gridLines.push(
+        makeGridLine([wsLeft + x, wsTop, wsLeft + x, wsTop + WS_HEIGHT])
+      )
     }
     for (let y = GRID_STEP; y < WS_HEIGHT; y += GRID_STEP) {
-      gridLines.push(makeGridLine([wsLeft, wsTop + y, wsLeft + WS_WIDTH, wsTop + y]))
+      gridLines.push(
+        makeGridLine([wsLeft, wsTop + y, wsLeft + WS_WIDTH, wsTop + y])
+      )
     }
     gridLines.forEach((line) => canvas.add(line))
     gridLinesRef.current = gridLines
@@ -298,7 +322,11 @@ export function DesignCanvas() {
       void canvas.dispose()
       fabricRef.current = null
       gridLinesRef.current = []
-      objectsRef.current = { workspace: null, referenceRegion: null, verseRegion: null }
+      objectsRef.current = {
+        workspace: null,
+        referenceRegion: null,
+        verseRegion: null,
+      }
     }
   }, [editingThemeId, autoZoom])
 
@@ -364,7 +392,8 @@ export function DesignCanvas() {
 
   // Apply the selected sample content to the live preview.
   useEffect(() => {
-    sampleVerseRef.current = SAMPLE_BY_ID.get(sampleId) ?? SAMPLE_PRESETS[0].verse
+    sampleVerseRef.current =
+      SAMPLE_BY_ID.get(sampleId) ?? SAMPLE_PRESETS[0].verse
     resyncLatestTheme()
   }, [sampleId, resyncLatestTheme])
 
@@ -391,8 +420,10 @@ export function DesignCanvas() {
   }, [resyncLatestTheme, applyGridStroke])
 
   const elementLabel =
-    selectedElement === "verse" ? "verse"
-      : selectedElement === "reference" ? "reference"
+    selectedElement === "verse"
+      ? "verse"
+      : selectedElement === "reference"
+        ? "reference"
         : "none"
 
   return (
@@ -426,7 +457,11 @@ export function DesignCanvas() {
             </SelectTrigger>
             <SelectContent>
               {SAMPLE_PRESETS.map((preset) => (
-                <SelectItem key={preset.id} value={preset.id} className="text-xs">
+                <SelectItem
+                  key={preset.id}
+                  value={preset.id}
+                  className="text-xs"
+                >
                   {preset.label}
                 </SelectItem>
               ))}
@@ -436,12 +471,18 @@ export function DesignCanvas() {
 
         <div className="flex-1" />
 
-        <span className="min-w-12 text-center text-[0.625rem] font-medium tabular-nums text-muted-foreground">
+        <span className="min-w-12 text-center text-[0.625rem] font-medium text-muted-foreground tabular-nums">
           {zoomLevel}%
         </span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-xs" onClick={zoomOut} className="text-muted-foreground" aria-label="Zoom out">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={zoomOut}
+              className="text-muted-foreground"
+              aria-label="Zoom out"
+            >
               <MinusIcon className="size-3" />
             </Button>
           </TooltipTrigger>
@@ -449,7 +490,13 @@ export function DesignCanvas() {
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-xs" onClick={zoomIn} className="text-muted-foreground" aria-label="Zoom in">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={zoomIn}
+              className="text-muted-foreground"
+              aria-label="Zoom in"
+            >
               <PlusIcon className="size-3" />
             </Button>
           </TooltipTrigger>
@@ -457,7 +504,13 @@ export function DesignCanvas() {
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-xs" onClick={autoZoom} className="text-muted-foreground" aria-label="Fit to screen">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={autoZoom}
+              className="text-muted-foreground"
+              aria-label="Fit to screen"
+            >
               <MaximizeIcon className="size-3.5" />
             </Button>
           </TooltipTrigger>
@@ -470,14 +523,18 @@ export function DesignCanvas() {
         <canvas ref={canvasElRef} />
         {!draftTheme && (
           <div className="absolute inset-0 flex items-center justify-center bg-background">
-            <p className="text-xs text-muted-foreground">Select a theme to begin editing</p>
+            <p className="text-xs text-muted-foreground">
+              Select a theme to begin editing
+            </p>
           </div>
         )}
       </div>
 
       {/* Status bar */}
       <div className="flex h-8 shrink-0 items-center border-t border-border bg-card px-3 text-[0.5625rem] text-muted-foreground">
-        <span>Output: {WS_WIDTH} × {WS_HEIGHT}px</span>
+        <span>
+          Output: {WS_WIDTH} × {WS_HEIGHT}px
+        </span>
         <span className="mx-2">·</span>
         <span>Zoom: {zoomLevel}%</span>
         <span className="mx-2">·</span>
@@ -485,7 +542,10 @@ export function DesignCanvas() {
         <span className="mx-2">·</span>
         <span>
           {selectedElement ? (
-            <>Editing: <span className="font-medium text-primary">{elementLabel}</span></>
+            <>
+              Editing:{" "}
+              <span className="font-medium text-primary">{elementLabel}</span>
+            </>
           ) : (
             "Click frame to select"
           )}
@@ -516,27 +576,40 @@ async function syncThemeToCanvas(
   if (!ws || !refRegion || !verseRegion) return
 
   // Preload a presentation sample image so the preview isn't blank.
-  if (sampleVerse.presentationImage?.url && !imageCache.has(sampleVerse.presentationImage.url)) {
-    ensureImage(sampleVerse.presentationImage.url, imageCache, imageRequests, onImageReady)
+  if (
+    sampleVerse.presentationImage?.url &&
+    !imageCache.has(sampleVerse.presentationImage.url)
+  ) {
+    ensureImage(
+      sampleVerse.presentationImage.url,
+      imageCache,
+      imageRequests,
+      onImageReady
+    )
   }
 
   if (theme.background.type === "image" && theme.background.image?.url) {
     if (theme.background.image.mediaType === "video") {
       ensureVideo(theme.background.image.url, videoCache, onImageReady)
     } else {
-    const img = imageCache.get(theme.background.image.url)
-    if (!img) {
-      ensureImage(
-        theme.background.image.url,
-        imageCache,
-        imageRequests,
-        onImageReady
-      )
-    }
+      const img = imageCache.get(theme.background.image.url)
+      if (!img) {
+        ensureImage(
+          theme.background.image.url,
+          imageCache,
+          imageRequests,
+          onImageReady
+        )
+      }
     }
   }
 
-  const { bitmap, metrics } = renderThemeBitmap(theme, imageCache, videoCache, sampleVerse)
+  const { bitmap, metrics } = renderThemeBitmap(
+    theme,
+    imageCache,
+    videoCache,
+    sampleVerse
+  )
   ws.set({
     fill: new fabric.Pattern({
       source: bitmap,
@@ -552,8 +625,14 @@ async function syncThemeToCanvas(
   ws.setCoords()
   const wsTopLeft = ws.getPointByOrigin("left", "top")
   const tightenedRects = tightenTextHitRects(referenceRect, verseRect, theme)
-  const mappedReferenceRect = mapLocalRectToWorkspaceRect(tightenedRects.referenceRect, wsTopLeft)
-  const mappedVerseRect = mapLocalRectToWorkspaceRect(tightenedRects.verseRect, wsTopLeft)
+  const mappedReferenceRect = mapLocalRectToWorkspaceRect(
+    tightenedRects.referenceRect,
+    wsTopLeft
+  )
+  const mappedVerseRect = mapLocalRectToWorkspaceRect(
+    tightenedRects.verseRect,
+    wsTopLeft
+  )
 
   refRegion.set({
     originX: "left",
@@ -613,7 +692,8 @@ function tightenTextHitRects(
 ) {
   const refFont = Math.max(1, theme.reference.fontSize)
   const verseFont = Math.max(1, theme.verseText.fontSize)
-  const verseExtraLeading = Math.max(0, theme.verseText.lineHeight - 1) * verseFont
+  const verseExtraLeading =
+    Math.max(0, theme.verseText.lineHeight - 1) * verseFont
   const referenceGap = Math.max(0, theme.layout.referenceGap ?? 0)
   const refPadX = Math.max(6, refFont * 0.25)
   const refPadTop = Math.max(2, refFont * 0.2)
@@ -624,13 +704,19 @@ function tightenTextHitRects(
     x: referenceRect.x - refPadX,
     y: referenceRect.y + refFont * 0.22 - refPadTop,
     width: referenceRect.width + refPadX * 2,
-    height: Math.max(refFont * 1.05, referenceRect.height - refFont * 0.42) + refPadTop + refPadBottom,
+    height:
+      Math.max(refFont * 1.05, referenceRect.height - refFont * 0.42) +
+      refPadTop +
+      refPadBottom,
   }
   const verseTight = {
     x: verseRect.x,
     y: verseRect.y + verseFont * 0.12,
     width: verseRect.width,
-    height: Math.max(verseFont, verseRect.height - verseExtraLeading - verseFont * 0.1),
+    height: Math.max(
+      verseFont,
+      verseRect.height - verseExtraLeading - verseFont * 0.1
+    ),
   }
 
   if (theme.reference.position === "above") {
@@ -665,7 +751,10 @@ function ensureImage(
       return img
     })
     .catch((error) => {
-      console.warn("[theme-designer] failed to load background image", { url: url.slice(0, 100), error })
+      console.warn("[theme-designer] failed to load background image", {
+        url: url.slice(0, 100),
+        error,
+      })
       throw error
     })
     .finally(() => {
@@ -700,7 +789,9 @@ function ensureVideo(
     onReady?.()
   }
   video.onerror = () => {
-    console.warn("[theme-designer] failed to load background video", { url: url.slice(0, 100) })
+    console.warn("[theme-designer] failed to load background video", {
+      url: url.slice(0, 100),
+    })
   }
   video.src = url
 }
@@ -717,6 +808,9 @@ function renderThemeBitmap(
   const ctx = offscreen.getContext("2d")
   if (!ctx) return { bitmap: offscreen, metrics: null }
 
-  const metrics = renderVerse(ctx, theme, sampleVerse, { imageCache, videoCache })
+  const metrics = renderVerse(ctx, theme, sampleVerse, {
+    imageCache,
+    videoCache,
+  })
   return { bitmap: offscreen, metrics }
 }

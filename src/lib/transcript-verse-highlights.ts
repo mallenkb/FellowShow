@@ -127,7 +127,9 @@ function phrasePatterns(annotation: TranscriptVerseAnnotation): {
             specificity: "explicit",
           },
           {
-            pattern: patternForText(`${book} chapter ${chapter} verse ${verse}`),
+            pattern: patternForText(
+              `${book} chapter ${chapter} verse ${verse}`
+            ),
             specificity: "explicit",
           },
           {
@@ -179,9 +181,7 @@ function findMatches(
   )
 
   return matches
-    .filter(
-      (match) => !hasExplicitMatch || match.specificity === "explicit"
-    )
+    .filter((match) => !hasExplicitMatch || match.specificity === "explicit")
     .sort((a, b) => a.start - b.start || b.end - a.end)
     .filter((match, index, all) => {
       const previous = all[index - 1]

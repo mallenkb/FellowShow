@@ -61,13 +61,18 @@ export async function hydrateBibleStore(): Promise<void> {
     const value = await store.get<number>("activeTranslationId")
     if (typeof value === "number") {
       try {
-        const activeTranslationId = await invoke<number>("set_active_translation", {
-          translationId: value,
-        })
+        const activeTranslationId = await invoke<number>(
+          "set_active_translation",
+          {
+            translationId: value,
+          }
+        )
         useBibleStore.getState().setActiveTranslation(activeTranslationId)
         return
       } catch {
-        const activeTranslationId = await invoke<number>("get_active_translation")
+        const activeTranslationId = await invoke<number>(
+          "get_active_translation"
+        )
         useBibleStore.getState().setActiveTranslation(activeTranslationId)
         await store.set("activeTranslationId", activeTranslationId)
         await store.save()

@@ -9,50 +9,25 @@ import {
   shouldRenderStandardBroadcastContent,
   shouldRenderTickerLayer,
 } from "@/lib/broadcast-output-mode"
-import { DEFAULT_TIMER_FONT_FAMILY, getFontFallback } from "@/lib/font-options"
+import {
+  DEFAULT_PRESENTATION_FONT_FAMILY,
+  getFontFallback,
+} from "@/lib/font-options"
 import { drawLowerThird } from "@/lib/lower-third-renderer"
 
-export interface VerseLayoutRect {
+interface VerseLayoutRect {
   x: number
   y: number
   width: number
   height: number
 }
 
-export interface VerseLayoutMetrics {
+interface VerseLayoutMetrics {
   scaledTheme: BroadcastTheme
   textAreaRect: VerseLayoutRect
   textRect: VerseLayoutRect
   referenceRect: VerseLayoutRect | null
   verseRect: VerseLayoutRect | null
-}
-
-export function wrapText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number
-): string[] {
-  const words = text.split(" ")
-  const lines: string[] = []
-  let currentLine = ""
-
-  for (const word of words) {
-    const testLine = currentLine ? `${currentLine} ${word}` : word
-    const metrics = ctx.measureText(testLine)
-
-    if (metrics.width > maxWidth && currentLine) {
-      lines.push(currentLine)
-      currentLine = word
-    } else {
-      currentLine = testLine
-    }
-  }
-
-  if (currentLine) {
-    lines.push(currentLine)
-  }
-
-  return lines
 }
 
 function alignX(
@@ -713,7 +688,7 @@ function drawPresenterTimer(
   const fontSize = Math.max(56, Math.min(width, height) * 0.16)
 
   ctx.save()
-  const fontFamily = timer.fontFamily ?? DEFAULT_TIMER_FONT_FAMILY
+  const fontFamily = timer.fontFamily ?? DEFAULT_PRESENTATION_FONT_FAMILY
   ctx.font = `700 ${fontSize}px "${fontFamily}", ${getFontFallback(fontFamily)}`
   const textMetrics = ctx.measureText(text)
   const timerColor = resolveTimerColor(
@@ -1371,7 +1346,7 @@ function rectForAlignedText(
   }
 }
 
-export function computeVerseLayoutMetrics(
+function computeVerseLayoutMetrics(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
   verse: VerseRenderData | null,

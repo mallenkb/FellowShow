@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke, isTauri } from "@tauri-apps/api/core"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { useBibleStore } from "@/stores/bible-store"
 import { useQueueStore } from "@/stores/queue-store"
@@ -16,6 +16,8 @@ import type { Verse } from "@/types"
  */
 export function useRemoteControl() {
   useEffect(() => {
+    if (!isTauri()) return
+
     let cancelled = false
     const unlisteners: UnlistenFn[] = []
 
@@ -75,10 +77,7 @@ export function useRemoteControl() {
         const payload = parsePayload(event.payload)
         const value = payload?.value as number | undefined
         if (value === undefined) return
-        // Opacity is stored on the live verse rendering; for now broadcast
-        // store doesn't have a dedicated opacity field — this is a placeholder
-        // that can be wired when the broadcast store adds opacity support.
-        void value
+        useBroadcastStore.getState().setOutputOpacity(value)
       })
       unlisteners.push(u4)
 
@@ -117,7 +116,9 @@ export function useRemoteControl() {
       unlisteners.push(u8)
     }
 
-    setup()
+    void setup().catch((error) => {
+      console.warn("[remote-control] failed to register listeners:", error)
+    })
 
     // Sync status snapshot to Rust backend periodically for HTTP GET /api/v1/status
     const statusInterval = setInterval(() => {

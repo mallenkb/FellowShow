@@ -31,6 +31,7 @@ interface BroadcastState {
   liveVerse: VerseRenderData | null
   presenterTimer: PresenterTimerRenderData | null
   lowerThird: LowerThirdRenderData | null
+  outputOpacity: number
 
   // Designer state
   isDesignerOpen: boolean
@@ -65,6 +66,7 @@ interface BroadcastState {
   setLiveVerse: (verse: VerseRenderData | null) => void
   setPresenterTimer: (timer: PresenterTimerRenderData | null) => void
   setLowerThird: (lowerThird: LowerThirdRenderData | null) => void
+  setOutputOpacity: (opacity: number) => void
   clearLowerThird: () => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
@@ -169,21 +171,25 @@ function isThemeDirty(
 function emitDraftToBroadcast(state: BroadcastState): void {
   if (!state.draftTheme) return
   const id = state.editingThemeId
+  const verse = state.isLive ? state.liveVerse : null
+  const timer = state.isLive ? state.presenterTimer : null
   const activeThemeIds = new Set(Object.values(state.sectionThemeIds))
   if (id && activeThemeIds.has(id)) {
     void emitTo("broadcast", "broadcast:verse-update", {
       theme: state.draftTheme,
-      verse: state.liveVerse,
-      timer: state.presenterTimer,
+      verse,
+      timer,
       lowerThird: state.lowerThird,
+      opacity: state.outputOpacity,
     }).catch(() => {})
   }
   if (id === state.altActiveThemeId) {
     void emitTo("broadcast-alt", "broadcast:verse-update", {
       theme: state.draftTheme,
-      verse: state.liveVerse,
-      timer: state.presenterTimer,
+      verse,
+      timer,
       lowerThird: state.lowerThird,
+      opacity: state.outputOpacity,
     }).catch(() => {})
   }
 }
@@ -197,13 +203,80 @@ function inferThemeSection(
   return "bible"
 }
 
-function getActiveThemeIdForState(
-  state: BroadcastState,
+type ProgramThemeState = Pick<
+  BroadcastState,
+  "activeThemeId" | "sectionThemeIds" | "themes"
+>
+
+function getActiveThemeIdForProgramState(
+  state: ProgramThemeState,
   section: BroadcastThemeSection
 ): string {
   const sharedSection = sharedThemeSection(section)
   if (sharedSection === "bible") return state.activeThemeId
   return state.sectionThemeIds[sharedSection] ?? state.activeThemeId
+}
+
+function hasProgramContent(
+  verse: VerseRenderData | null,
+  timer: PresenterTimerRenderData | null
+): boolean {
+  return Boolean(verse || timer)
+}
+
+function verseRenderKey(verse: VerseRenderData | null): string {
+  if (!verse) return "null"
+  return JSON.stringify({
+    reference: verse.reference,
+    themeSection: verse.themeSection ?? null,
+    referenceMode: verse.referenceMode ?? null,
+    segments: verse.segments.map((segment) => segment.text),
+    presentationImage: verse.presentationImage
+      ? {
+          url: verse.presentationImage.url,
+          mediaType: verse.presentationImage.mediaType ?? null,
+          fit: verse.presentationImage.fit ?? null,
+          scale: verse.presentationImage.scale ?? null,
+          offsetX: verse.presentationImage.offsetX ?? null,
+          offsetY: verse.presentationImage.offsetY ?? null,
+        }
+      : null,
+    tickerText: verse.tickerText ?? null,
+  })
+}
+
+function timerRenderKey(timer: PresenterTimerRenderData | null): string {
+  if (!timer) return "null"
+  return JSON.stringify({
+    remainingSeconds: timer.remainingSeconds,
+    totalSeconds: timer.totalSeconds,
+    isRunning: timer.isRunning,
+    isFinished: timer.isFinished,
+    fontFamily: timer.fontFamily,
+    backgroundUrl: timer.backgroundUrl ?? null,
+    backgroundMediaType: timer.backgroundMediaType ?? null,
+  })
+}
+
+function hasSameProgramPayload(
+  currentVerse: VerseRenderData | null,
+  currentTimer: PresenterTimerRenderData | null,
+  nextVerse: VerseRenderData | null,
+  nextTimer: PresenterTimerRenderData | null
+): boolean {
+  return (
+    verseRenderKey(currentVerse) === verseRenderKey(nextVerse) &&
+    timerRenderKey(currentTimer) === timerRenderKey(nextTimer)
+  )
+}
+
+export function getThemeForProgramContent(
+  state: ProgramThemeState,
+  verse: VerseRenderData | null
+): BroadcastTheme {
+  const section = inferThemeSection(verse)
+  const themeId = getActiveThemeIdForProgramState(state, section)
+  return state.themes.find((theme) => theme.id === themeId) ?? state.themes[0]
 }
 
 export const useBroadcastStore = create<BroadcastState>((set, get) => ({
@@ -221,6 +294,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   liveVerse: null,
   presenterTimer: null,
   lowerThird: null,
+  outputOpacity: 1,
   isDesignerOpen: false,
   editingThemeId: null,
   draftTheme: null,
@@ -384,20 +458,22 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     }),
   syncBroadcastOutputFor: (outputId: string) => {
     const s = get()
-    const section = inferThemeSection(s.liveVerse)
     const themeId =
       outputId === "alt"
         ? s.altActiveThemeId
-        : getActiveThemeIdForState(s, section)
+        : getThemeForProgramContent(s, s.liveVerse).id
     const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
     const theme = s.themes.find((t) => t.id === themeId) ?? s.themes[0]
     if (!theme) return
 
+    // External outputs only carry program content while live; off-air they
+    // fall back to the theme background instead of freezing on the last verse.
     void emitTo(label, "broadcast:verse-update", {
       theme,
-      verse: s.liveVerse,
-      timer: s.presenterTimer,
+      verse: s.isLive ? s.liveVerse : null,
+      timer: s.isLive ? s.presenterTimer : null,
       lowerThird: s.lowerThird,
+      opacity: s.outputOpacity,
     }).catch(() => {})
   },
   syncBroadcastOutput: () => {
@@ -424,20 +500,82 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutputFor("alt")
   },
   setAutoPreviewToLive: (autoPreviewToLive) =>
-    set({ autoPreviewToLive }),
-  setPreviewOutput: (previewVerse, previewTimer) =>
-    set({ previewVerse, previewTimer }),
-  setLive: (isLive) =>
+    set((s) => {
+      const shouldTakePreview =
+        autoPreviewToLive && hasProgramContent(s.previewVerse, s.previewTimer)
+      return {
+        autoPreviewToLive,
+        ...(shouldTakePreview
+          ? {
+              isLive: true,
+              liveVerse: s.previewVerse,
+              presenterTimer: s.previewTimer,
+              liveSource: "preview" as const,
+            }
+          : {}),
+      }
+    }),
+  setPreviewOutput: (previewVerse, previewTimer) => {
+    let shouldSyncOutput = false
+    set((s) => {
+      const shouldTakePreview =
+        s.autoPreviewToLive && hasProgramContent(previewVerse, previewTimer)
+      const samePreview = hasSameProgramPayload(
+        s.previewVerse,
+        s.previewTimer,
+        previewVerse,
+        previewTimer
+      )
+      const sameLive =
+        !shouldTakePreview ||
+        hasSameProgramPayload(
+          s.liveVerse,
+          s.presenterTimer,
+          previewVerse,
+          previewTimer
+        )
+
+      if (samePreview && sameLive) return s
+
+      shouldSyncOutput = shouldTakePreview
+      return {
+        ...(samePreview ? {} : { previewVerse, previewTimer }),
+        ...(shouldTakePreview
+          ? {
+              isLive: true,
+              liveVerse: previewVerse,
+              presenterTimer: previewTimer,
+              liveSource: "preview" as const,
+            }
+          : {}),
+      }
+    })
+    if (shouldSyncOutput) {
+      get().syncBroadcastOutput()
+    }
+  },
+  setLive: (isLive) => {
     set({
       isLive,
       liveSource: isLive ? "manual" : null,
-    }),
+    })
+    get().syncBroadcastOutput()
+  },
   showPreviewOnLive: (source = "preview") => {
-    set((s) => ({
-      liveVerse: s.previewVerse,
-      presenterTimer: s.previewTimer,
-      liveSource: source,
-    }))
+    set((s) => {
+      if (!hasProgramContent(s.previewVerse, s.previewTimer)) {
+        return {
+          isLive: true,
+          liveSource: source,
+        }
+      }
+      return {
+        isLive: true,
+        liveVerse: s.previewVerse,
+        presenterTimer: s.previewTimer,
+        liveSource: source,
+      }
+    })
     get().syncBroadcastOutput()
   },
   takePreviewLive: (source = "manual") => {
@@ -459,6 +597,10 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   },
   setLowerThird: (lowerThird) => {
     set({ lowerThird })
+    get().syncBroadcastOutput()
+  },
+  setOutputOpacity: (outputOpacity) => {
+    set({ outputOpacity: Math.min(1, Math.max(0, outputOpacity)) })
     get().syncBroadcastOutput()
   },
   clearLowerThird: () => {
@@ -627,22 +769,18 @@ export function hydrateBroadcastThemes(): Promise<void> {
     try {
       const store = await getThemeStore()
       const customThemes = (await store.get("customThemes")) as
-        | BroadcastTheme[]
-        | undefined
+        BroadcastTheme[] | undefined
       const deletedBuiltinThemeIds = (await store.get(
         "deletedBuiltinThemeIds"
       )) as string[] | undefined
       const activeId = (await store.get("activeThemeId")) as string | undefined
       const altActiveId = (await store.get("altActiveThemeId")) as
-        | string
-        | undefined
+        string | undefined
       const themeSortOrder = (await store.get("themeSortOrder")) as
-        | Record<string, number>
-        | undefined
+        Record<string, number> | undefined
       const sectionThemeIds = sanitizeSectionThemeIds(
         (await store.get("sectionThemeIds")) as
-          | Partial<Record<string, string>>
-          | undefined
+          Partial<Record<string, string>> | undefined
       )
 
       const patch: Partial<BroadcastState> = {}

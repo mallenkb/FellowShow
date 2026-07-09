@@ -47,7 +47,7 @@ impl OpenAiCompatibleSttProvider {
             return Ok(None);
         }
 
-        let wav = encode_wav_mono_i16(samples, self.config.sample_rate);
+        let wav = encode_wav_mono_i16(samples, self.config.sample_rate)?;
         let part = multipart::Part::bytes(wav)
             .file_name("audio.wav")
             .mime_str("audio/wav")
@@ -163,8 +163,9 @@ impl SttProvider for OpenAiCompatibleSttProvider {
     }
 }
 
-fn encode_wav_mono_i16(samples: &[i16], sample_rate: u32) -> Vec<u8> {
-    let data_len = (samples.len() * 2) as u32;
+fn encode_wav_mono_i16(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>, SttError> {
+    let data_len = u32::try_from(samples.len().saturating_mul(2))
+        .map_err(|_| SttError::ParseError("audio chunk is too large for WAV encoding".into()))?;
     let mut out = Vec::with_capacity(44 + samples.len() * 2);
 
     out.extend_from_slice(b"RIFF");
@@ -184,5 +185,22 @@ fn encode_wav_mono_i16(samples: &[i16], sample_rate: u32) -> Vec<u8> {
         out.extend_from_slice(&sample.to_le_bytes());
     }
 
-    out
+    Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::encode_wav_mono_i16;
+
+    #[test]
+    fn wav_encoder_writes_header_and_samples() {
+        let wav = encode_wav_mono_i16(&[i16::MIN, 0, i16::MAX], 16_000)
+            .expect("small audio buffer should encode");
+
+        assert_eq!(&wav[0..4], b"RIFF");
+        assert_eq!(&wav[8..12], b"WAVE");
+        assert_eq!(&wav[36..40], b"data");
+        assert_eq!(u32::from_le_bytes(wav[40..44].try_into().unwrap()), 6);
+        assert_eq!(wav.len(), 50);
+    }
 }

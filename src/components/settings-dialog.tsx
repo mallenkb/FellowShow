@@ -46,12 +46,13 @@ import {
   ChevronDownIcon,
   RefreshCwIcon,
 } from "lucide-react"
-import { useSettingsStore } from "@/stores"
-import { saveSettingsNow } from "@/stores/settings-store"
+import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
+import { useBibleStore } from "@/stores/bible-store"
 import { useTutorialStore } from "@/stores/tutorial-store"
+import { bibleActions } from "@/hooks/use-bible"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import type { DeviceInfo } from "@/types/audio"
-import { downloadAndInstallAvailableUpdate } from "@/components/app-updater"
+import { downloadAndInstallAvailableUpdate } from "@/lib/app-updater"
 
 const FELLOW_SHOW_RELEASES_URL =
   "https://github.com/mallenkb/FellowShow/releases/latest"
@@ -61,13 +62,7 @@ const FELLOW_SHOW_RELEASES_URL =
 /* -------------------------------------------------------------------------- */
 
 type NavSection =
-  | "audio"
-  | "speech"
-  | "bible"
-  | "display"
-  | "remote"
-  | "updates"
-  | "help"
+  "audio" | "speech" | "bible" | "display" | "remote" | "updates" | "help"
 
 const navItems: { name: string; id: NavSection; icon: React.ReactNode }[] = [
   {
@@ -781,7 +776,6 @@ function BibleSection() {
   const reloadTranslations = async () => {
     const trans = await invoke<TranslationInfo[]>("list_translations")
     setTranslations(trans)
-    const { useBibleStore } = await import("@/stores")
     useBibleStore.getState().setTranslations(trans)
     return trans
   }
@@ -792,11 +786,9 @@ function BibleSection() {
       await invoke("set_active_translation", { translationId: id })
       setActiveId(id)
       // Update frontend stores so all panels use the new translation
-      const { useBibleStore } = await import("@/stores")
       useBibleStore.getState().setActiveTranslation(id)
       // Refresh the book list for the newly active translation so the main
       // scripture view loads it immediately (the chapter reload is reactive).
-      const { bibleActions } = await import("@/hooks/use-bible")
       await bibleActions.loadBooks(id)
       if (hiddenTranslationIds.includes(id)) {
         useSettingsStore.getState().toggleHiddenTranslation(id)
@@ -837,7 +829,6 @@ function BibleSection() {
           translation.id === downloaded.id ? downloaded : translation
         )
       )
-      const { useBibleStore } = await import("@/stores")
       useBibleStore
         .getState()
         .setTranslations(
@@ -1944,7 +1935,7 @@ export function SettingsDialog() {
             <main className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
               <nav
                 aria-label="Settings sections"
-                className="flex shrink-0 gap-2 overflow-x-auto border-b border-border bg-background px-3 py-2 [scrollbar-width:none] md:hidden"
+                className="flex shrink-0 [scrollbar-width:none] gap-2 overflow-x-auto border-b border-border bg-background px-3 py-2 md:hidden"
               >
                 {navItems.map((item) => (
                   <Button

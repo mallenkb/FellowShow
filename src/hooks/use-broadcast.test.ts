@@ -34,7 +34,7 @@ describe("deriveLiveVerse", () => {
     expect(result).toEqual(
       expect.objectContaining({
         reference: "Genesis 1:2 (NKJV)",
-      }),
+      })
     )
   })
 })
