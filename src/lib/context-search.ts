@@ -1,14 +1,6 @@
 import Fuse from "fuse.js"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke, type VerseSearchRow } from "@/lib/ipc"
 import type { SemanticSearchResult } from "@/types/detection"
-
-type VerseSearchRow = {
-  book_number: number
-  book_name: string
-  chapter: number
-  verse: number
-  text: string
-}
 
 type ContextSearchDoc = SemanticSearchResult
 
@@ -39,12 +31,9 @@ async function getFuseIndex(
   const existing = fuseByTranslation.get(translationId)
   if (existing) return existing
 
-  const rows = await invoke<VerseSearchRow[]>(
-    "get_translation_verses_for_search",
-    {
-      translationId,
-    }
-  )
+  const rows = await invoke("get_translation_verses_for_search", {
+    translationId,
+  })
   const docs = rows.map(rowToDoc)
 
   const fuse = new Fuse(docs, {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { emitTo } from "@tauri-apps/api/event"
 import {
   availableMonitors,
@@ -30,7 +30,6 @@ import type {
   NdiAlphaMode,
   NdiFrameRate,
   NdiResolution,
-  NdiSessionInfo,
   NdiStartRequest,
 } from "@/types"
 import {
@@ -231,7 +230,7 @@ export function BroadcastSettings({
           frameRate: ndiFrameRate,
           alphaMode: ndiAlphaMode,
         }
-        const session = await invoke<NdiSessionInfo>("start_ndi", {
+        const session = await invoke("start_ndi", {
           outputId: "main",
           request,
         })
@@ -331,7 +330,7 @@ export function BroadcastSettings({
           frameRate: altNdiFrameRate,
           alphaMode: altNdiAlphaMode,
         }
-        const session = await invoke<NdiSessionInfo>("start_ndi", {
+        const session = await invoke("start_ndi", {
           outputId: "alt",
           request,
         })

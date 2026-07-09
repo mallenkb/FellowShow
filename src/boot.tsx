@@ -1,6 +1,7 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import { invoke, isTauri } from "@tauri-apps/api/core"
+import { isTauri } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 
 import "./index.css"
 import App from "./App.tsx"

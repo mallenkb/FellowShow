@@ -1,12 +1,12 @@
 import { useEffect } from "react"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
-import { invoke, isTauri } from "@tauri-apps/api/core"
+import { isTauri } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { useBibleStore } from "@/stores/bible-store"
 import { useQueueStore } from "@/stores/queue-store"
 import { useSettingsStore } from "@/stores/settings-store"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
-import type { Verse } from "@/types"
 
 /**
  * Listens for remote control events from the Rust backend (OSC / HTTP API)
@@ -162,7 +162,7 @@ async function presentQueueItem(index: number) {
 
     // Fetch the full verse from the backend to ensure we have complete data
     // (AI-detected queue items may have partial verse objects)
-    const fullVerse = await invoke<Verse | null>("get_verse", {
+    const fullVerse = await invoke("get_verse", {
       translationId: useBibleStore.getState().activeTranslationId,
       bookNumber: verse.book_number,
       chapter: verse.chapter,

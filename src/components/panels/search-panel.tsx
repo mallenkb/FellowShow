@@ -10,7 +10,8 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 import { motion } from "motion/react"
-import { invoke, isTauri } from "@tauri-apps/api/core"
+import { isTauri } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { open } from "@tauri-apps/plugin-dialog"
 import { toast } from "sonner"
 // Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
@@ -82,7 +83,7 @@ import {
   useSettingsStore,
   usePresentationStore,
 } from "@/stores"
-import type { Book, Verse, SemanticSearchResult } from "@/types"
+import type { Book, Verse } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
 import { createSongSearchIndex, searchSongs } from "@/lib/song-search"
 import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
@@ -126,12 +127,6 @@ const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
   { value: "pentecostal-book", label: "Pentecostal Book" },
   { value: "easyworship", label: "EasyWorship import" },
 ]
-
-interface EasyWorshipImportedSong {
-  id: string
-  title: string
-  lyrics: string
-}
 
 function hashString(value: string) {
   let hash = 0
@@ -806,10 +801,10 @@ export function SearchPanel({
     }
 
     try {
-      const imported = await invoke<EasyWorshipImportedSong[]>(
-        "import_easyworship_songs",
-        { songsDbPath, songWordsDbPath }
-      )
+      const imported = await invoke("import_easyworship_songs", {
+        songsDbPath,
+        songWordsDbPath,
+      })
       const songs: CopSong[] = imported.map((song, index) => ({
         id: song.id,
         language: "english",
@@ -1151,10 +1146,10 @@ export function SearchPanel({
       const isStale = () => requestId !== contextSearchRequestIdRef.current
 
       // Primary: hybrid search backend (combines vector + FTS5 BM25)
-      const hybridResults = await invoke<SemanticSearchResult[]>(
-        "semantic_search",
-        { query, limit: 15 }
-      ).catch(() => null)
+      const hybridResults = await invoke("semantic_search", {
+        query,
+        limit: 15,
+      }).catch(() => null)
 
       if (isStale()) return
 
@@ -1241,7 +1236,7 @@ export function SearchPanel({
       result.matchedBook &&
       result.chapter
     ) {
-      invoke<Verse[]>("get_chapter", {
+      invoke("get_chapter", {
         translationId: activeTranslationId,
         bookNumber: result.matchedBook.book_number,
         chapter: result.chapter,

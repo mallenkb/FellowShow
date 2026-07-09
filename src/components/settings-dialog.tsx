@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect, useCallback, useRef } from "react"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { getVersion } from "@tauri-apps/api/app"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import type { DownloadEvent } from "@tauri-apps/plugin-updater"
@@ -115,7 +115,7 @@ function AudioSection() {
   const loadDevices = useCallback(async () => {
     try {
       setLoading(true)
-      const result = await invoke<DeviceInfo[]>("get_audio_devices")
+      const result = await invoke("get_audio_devices")
       setDevices(result)
     } catch {
       // Tauri command may not be available during dev
@@ -244,7 +244,7 @@ function SpeechSection() {
           : sttProvider === "openai"
             ? "test_openai_connection"
             : "test_groq_connection"
-      const result = await invoke<{ ok: boolean; message: string }>(command, {
+      const result = await invoke(command, {
         apiKey: keyValue,
       })
       setConnectionResult(result)
@@ -759,8 +759,8 @@ function BibleSection() {
     async function load() {
       try {
         const [trans, active] = await Promise.all([
-          invoke<TranslationInfo[]>("list_translations"),
-          invoke<number>("get_active_translation"),
+          invoke("list_translations"),
+          invoke("get_active_translation"),
         ])
         setTranslations(trans)
         setActiveId(active)
@@ -774,7 +774,7 @@ function BibleSection() {
   }, [])
 
   const reloadTranslations = async () => {
-    const trans = await invoke<TranslationInfo[]>("list_translations")
+    const trans = await invoke("list_translations")
     setTranslations(trans)
     useBibleStore.getState().setTranslations(trans)
     return trans
@@ -817,7 +817,7 @@ function BibleSection() {
       )
     })
     try {
-      const downloaded = await invoke<TranslationInfo>("download_translation", {
+      const downloaded = await invoke("download_translation", {
         abbreviation,
       })
       if (cancelledDownloadsRef.current.has(abbreviation)) {
@@ -1326,14 +1326,14 @@ function RemoteControlSection() {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const osc = await invoke<RemoteStatus>("get_osc_status")
+        const osc = await invoke("get_osc_status")
         setOscStatus(osc)
         if (osc.running) setOscError(null)
       } catch {
         /* ignore */
       }
       try {
-        const http = await invoke<RemoteStatus>("get_http_status")
+        const http = await invoke("get_http_status")
         setHttpStatus(http)
         if (http.running) setHttpError(null)
       } catch {
@@ -1391,7 +1391,7 @@ function RemoteControlSection() {
         setOscError(null)
       } else {
         const port = parseInt(oscPort) || 8000
-        const boundPort = await invoke<number>("start_osc", { port })
+        const boundPort = await invoke("start_osc", { port })
         setOscPort(String(boundPort))
         setOscError(null)
       }
@@ -1407,7 +1407,7 @@ function RemoteControlSection() {
         setHttpError(null)
       } else {
         const port = parseInt(httpPort) || 8080
-        const boundPort = await invoke<number>("start_http", { port })
+        const boundPort = await invoke("start_http", { port })
         setHttpPort(String(boundPort))
         setHttpError(null)
       }

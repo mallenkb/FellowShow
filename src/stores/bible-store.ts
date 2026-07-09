@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { load } from "@tauri-apps/plugin-store"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import type { Translation, Book, Verse, CrossReference } from "@/types"
 import type { SemanticSearchResult } from "@/types/detection"
 
@@ -61,25 +61,20 @@ export async function hydrateBibleStore(): Promise<void> {
     const value = await store.get<number>("activeTranslationId")
     if (typeof value === "number") {
       try {
-        const activeTranslationId = await invoke<number>(
-          "set_active_translation",
-          {
-            translationId: value,
-          }
-        )
+        const activeTranslationId = await invoke("set_active_translation", {
+          translationId: value,
+        })
         useBibleStore.getState().setActiveTranslation(activeTranslationId)
         return
       } catch {
-        const activeTranslationId = await invoke<number>(
-          "get_active_translation"
-        )
+        const activeTranslationId = await invoke("get_active_translation")
         useBibleStore.getState().setActiveTranslation(activeTranslationId)
         await store.set("activeTranslationId", activeTranslationId)
         await store.save()
         return
       }
     }
-    const activeTranslationId = await invoke<number>("get_active_translation")
+    const activeTranslationId = await invoke("get_active_translation")
     useBibleStore.getState().setActiveTranslation(activeTranslationId)
   } catch {
     console.warn("[bible] Failed to hydrate bible store, using defaults")

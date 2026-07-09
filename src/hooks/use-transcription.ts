@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { toast } from "sonner"
 import { useSettingsStore } from "@/stores/settings-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
