@@ -8,10 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { BroadcastTheme } from "@/types"
 
 export function LayoutProperties() {
   const draftTheme = useBroadcastStore((s) => s.draftTheme)
-  const update = useBroadcastStore((s) => s.updateDraftNested)
+  const update = useBroadcastStore((s) => s.updateDraftDeep)
 
   if (!draftTheme) return null
 
@@ -42,7 +43,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.width)}
-        onChange={(v) => update("layout.backgroundWidth", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.backgroundWidth = v
+          }, "layout.backgroundWidth")
+        }
       />
       <SliderField
         label="Height"
@@ -50,7 +55,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.height)}
-        onChange={(v) => update("layout.backgroundHeight", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.backgroundHeight = v
+          }, "layout.backgroundHeight")
+        }
       />
 
       {/* Text Area Dimensions */}
@@ -64,7 +73,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.width)}
-        onChange={(v) => update("layout.textAreaWidth", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.textAreaWidth = v
+          }, "layout.textAreaWidth")
+        }
       />
       <SliderField
         label="Text Height"
@@ -72,7 +85,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.height)}
-        onChange={(v) => update("layout.textAreaHeight", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.textAreaHeight = v
+          }, "layout.textAreaHeight")
+        }
       />
 
       {/* Padding */}
@@ -90,7 +107,9 @@ export function LayoutProperties() {
             min={0}
             value={layout.padding.top}
             onChange={(e) =>
-              update("layout.padding.top", Number(e.target.value))
+              update((draft) => {
+                draft.layout.padding.top = Number(e.target.value)
+              }, "layout.padding.top")
             }
           />
         </div>
@@ -103,7 +122,9 @@ export function LayoutProperties() {
             min={0}
             value={layout.padding.right}
             onChange={(e) =>
-              update("layout.padding.right", Number(e.target.value))
+              update((draft) => {
+                draft.layout.padding.right = Number(e.target.value)
+              }, "layout.padding.right")
             }
           />
         </div>
@@ -116,7 +137,9 @@ export function LayoutProperties() {
             min={0}
             value={layout.padding.bottom}
             onChange={(e) =>
-              update("layout.padding.bottom", Number(e.target.value))
+              update((draft) => {
+                draft.layout.padding.bottom = Number(e.target.value)
+              }, "layout.padding.bottom")
             }
           />
         </div>
@@ -129,7 +152,9 @@ export function LayoutProperties() {
             min={0}
             value={layout.padding.left}
             onChange={(e) =>
-              update("layout.padding.left", Number(e.target.value))
+              update((draft) => {
+                draft.layout.padding.left = Number(e.target.value)
+              }, "layout.padding.left")
             }
           />
         </div>
@@ -146,7 +171,11 @@ export function LayoutProperties() {
         min={0}
         max={200}
         unit="px"
-        onChange={(v) => update("layout.referenceGap", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.referenceGap = v
+          }, "layout.referenceGap")
+        }
       />
 
       {/* Display Options */}
@@ -161,7 +190,12 @@ export function LayoutProperties() {
         </label>
         <Select
           value={draftTheme.reference.position}
-          onValueChange={(v) => update("reference.position", v)}
+          onValueChange={(v) =>
+            update((draft) => {
+              draft.reference.position =
+                v as BroadcastTheme["reference"]["position"]
+            }, "reference.position")
+          }
         >
           <SelectTrigger className="w-full">
             <SelectValue />
@@ -182,7 +216,11 @@ export function LayoutProperties() {
         <input
           type="checkbox"
           checked={verseNumbers.superscript}
-          onChange={(e) => update("verseNumbers.superscript", e.target.checked)}
+          onChange={(e) =>
+            update((draft) => {
+              draft.verseNumbers.superscript = e.target.checked
+            }, "verseNumbers.superscript")
+          }
           className="h-4 w-4 rounded border-input accent-primary"
         />
       </div>
@@ -199,7 +237,9 @@ export function LayoutProperties() {
             const newFontSize = Math.round(
               (v / 100) * draftTheme.verseText.fontSize
             )
-            update("verseNumbers.fontSize", newFontSize)
+            update((draft) => {
+              draft.verseNumbers.fontSize = newFontSize
+            }, "verseNumbers.fontSize")
           }}
         />
       )}

@@ -366,6 +366,26 @@ describe("broadcast store sync", () => {
     expect(state.editingThemeId).toBe(renamed?.id)
   })
 
+  it("updates draft themes through typed recipes and coalesces matching edits", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    const theme = useBroadcastStore.getState().themes[0]
+    useBroadcastStore.getState().startEditing(theme.id)
+
+    useBroadcastStore.getState().updateDraftDeep((draft) => {
+      draft.layout.backgroundWidth = 80
+    }, "layout.backgroundWidth")
+    useBroadcastStore.getState().updateDraftDeep((draft) => {
+      draft.layout.backgroundWidth = 75
+    }, "layout.backgroundWidth")
+
+    const state = useBroadcastStore.getState()
+    expect({
+      width: state.draftTheme?.layout.backgroundWidth,
+      historyLength: state.undoStack.length,
+      isPlainData: typeof state.draftTheme?.layout === "object",
+    }).toEqual({ width: 75, historyLength: 1, isPlainData: true })
+  })
+
   it("deletes built-in themes and moves every category using it to a remaining theme", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
     const state = useBroadcastStore.getState()

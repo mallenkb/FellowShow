@@ -75,7 +75,10 @@ interface BroadcastState {
   setDesignerOpen: (open: boolean) => void
   startEditing: (themeId: string) => void
   updateDraft: (updates: Partial<BroadcastTheme>) => void
-  updateDraftNested: (path: string, value: unknown) => void
+  updateDraftDeep: (
+    recipe: (draft: BroadcastTheme) => void,
+    coalesceKey: string
+  ) => void
   saveDraft: () => void
   discardDraft: () => void
   undo: () => void
@@ -102,44 +105,6 @@ function sanitizeSectionThemeIds(
     songs: sectionThemeIds.songs,
     presentation: sectionThemeIds.presentation,
   }
-}
-
-function setNestedValue(
-  obj: Record<string, unknown>,
-  path: string,
-  value: unknown
-): Record<string, unknown> {
-  const keys = path.split(".")
-  const isIndex = (key: string) => /^\d+$/.test(key)
-  const result: Record<string, unknown> = Array.isArray(obj)
-    ? ([...obj] as unknown as Record<string, unknown>)
-    : { ...obj }
-
-  let current: Record<string, unknown> | unknown[] = result
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key = keys[i]
-    const nextKey = keys[i + 1]
-    const currentIndex = isIndex(key) ? Number(key) : key
-    const existing = current[currentIndex as keyof typeof current]
-    const nextContainer = Array.isArray(existing)
-      ? // Removed with this path-based mutation helper in Step 6.
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        [...existing]
-      : existing && typeof existing === "object"
-        ? { ...(existing as Record<string, unknown>) }
-        : isIndex(nextKey)
-          ? []
-          : {}
-
-    current[currentIndex as keyof typeof current] = nextContainer as never
-    current = nextContainer as Record<string, unknown> | unknown[]
-  }
-
-  const lastKey = keys[keys.length - 1]
-  const lastIndex = isIndex(lastKey) ? Number(lastKey) : lastKey
-  current[lastIndex as keyof typeof current] = value as never
-
-  return result
 }
 
 // ── Designer undo/redo history ──
@@ -636,21 +601,19 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     }))
     emitDraftToBroadcast(get())
   },
-  updateDraftNested: (path, value) => {
+  updateDraftDeep: (recipe, coalesceKey) => {
     set((s) => {
       if (!s.draftTheme) return {}
       const now = Date.now()
       // Collapse a rapid run of edits to the same control into one history step.
       const sameGroup =
-        lastEditPath === path && now - lastEditAt < HISTORY_COALESCE_MS
-      lastEditPath = path
+        lastEditPath === coalesceKey && now - lastEditAt < HISTORY_COALESCE_MS
+      lastEditPath = coalesceKey
       lastEditAt = now
 
-      const next = setNestedValue(
-        s.draftTheme as unknown as Record<string, unknown>,
-        path,
-        value
-      ) as unknown as BroadcastTheme
+      const next = structuredClone(s.draftTheme)
+      recipe(next)
+      next.updatedAt = now
 
       const undoStack = sameGroup
         ? s.undoStack

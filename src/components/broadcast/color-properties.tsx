@@ -26,15 +26,14 @@ function buildColorWithOpacity(hex: string, opacity: number): string {
 function ColorControl({
   label,
   value,
-  path,
+  onChange,
   opacity = false,
 }: {
   label: string
   value: string
-  path: string
+  onChange: (value: string) => void
   opacity?: boolean
 }) {
-  const update = useBroadcastStore((s) => s.updateDraftNested)
   const parsed = parseColorOpacity(value)
 
   return (
@@ -47,8 +46,7 @@ function ColorControl({
           type="color"
           value={parsed.hex}
           onChange={(e) => {
-            update(
-              path,
+            onChange(
               opacity
                 ? buildColorWithOpacity(e.target.value, parsed.opacity)
                 : e.target.value
@@ -61,8 +59,7 @@ function ColorControl({
           onChange={(e) => {
             const next = e.target.value
             if (/^#[0-9a-fA-F]{6}$/.test(next)) {
-              update(
-                path,
+              onChange(
                 opacity ? buildColorWithOpacity(next, parsed.opacity) : next
               )
             }
@@ -80,7 +77,7 @@ function ColorControl({
             unit="%"
             defaultValue={100}
             onChange={(next) =>
-              update(path, buildColorWithOpacity(parsed.hex, next))
+              onChange(buildColorWithOpacity(parsed.hex, next))
             }
           />
         </div>
@@ -111,6 +108,7 @@ function Section({
 
 export function ColorProperties() {
   const draftTheme = useBroadcastStore((s) => s.draftTheme)
+  const update = useBroadcastStore((s) => s.updateDraftDeep)
 
   if (!draftTheme) return null
 
@@ -120,18 +118,30 @@ export function ColorProperties() {
         <ColorControl
           label="Verse Text"
           value={draftTheme.verseText.color}
-          path="verseText.color"
+          onChange={(value) =>
+            update((draft) => {
+              draft.verseText.color = value
+            }, "verseText.color")
+          }
           opacity
         />
         <ColorControl
           label="Verse Numbers"
           value={draftTheme.verseNumbers.color}
-          path="verseNumbers.color"
+          onChange={(value) =>
+            update((draft) => {
+              draft.verseNumbers.color = value
+            }, "verseNumbers.color")
+          }
         />
         <ColorControl
           label="Reference"
           value={draftTheme.reference.color}
-          path="reference.color"
+          onChange={(value) =>
+            update((draft) => {
+              draft.reference.color = value
+            }, "reference.color")
+          }
           opacity
         />
       </Section>
@@ -145,7 +155,14 @@ export function ColorProperties() {
                 key={index}
                 label={`Gradient Stop ${index + 1}`}
                 value={stop.color}
-                path={`background.gradient.stops.${index}.color`}
+                onChange={(value) =>
+                  update((draft) => {
+                    const gradient = draft.background.gradient
+                    if (gradient?.stops[index]) {
+                      gradient.stops[index].color = value
+                    }
+                  }, `background.gradient.stops.${index}.color`)
+                }
               />
             ))}
           </>
@@ -157,7 +174,11 @@ export function ColorProperties() {
                 ? "#000000"
                 : draftTheme.background.color
             }
-            path="background.color"
+            onChange={(value) =>
+              update((draft) => {
+                draft.background.color = value
+              }, "background.color")
+            }
           />
         )}
       </Section>
@@ -166,13 +187,23 @@ export function ColorProperties() {
         <ColorControl
           label="Text Box"
           value={draftTheme.textBox.color}
-          path="textBox.color"
+          onChange={(value) =>
+            update((draft) => {
+              draft.textBox.color = value
+            }, "textBox.color")
+          }
         />
         {draftTheme.verseText.shadow && (
           <ColorControl
             label="Text Shadow"
             value={draftTheme.verseText.shadow.color}
-            path="verseText.shadow.color"
+            onChange={(value) =>
+              update((draft) => {
+                if (draft.verseText.shadow) {
+                  draft.verseText.shadow.color = value
+                }
+              }, "verseText.shadow.color")
+            }
             opacity
           />
         )}
@@ -180,14 +211,26 @@ export function ColorProperties() {
           <ColorControl
             label="Text Outline"
             value={draftTheme.verseText.outline.color}
-            path="verseText.outline.color"
+            onChange={(value) =>
+              update((draft) => {
+                if (draft.verseText.outline) {
+                  draft.verseText.outline.color = value
+                }
+              }, "verseText.outline.color")
+            }
           />
         )}
         {draftTheme.background.image?.tint && (
           <ColorControl
             label="Image Overlay"
             value={draftTheme.background.image.tint}
-            path="background.image.tint"
+            onChange={(value) =>
+              update((draft) => {
+                if (draft.background.image) {
+                  draft.background.image.tint = value
+                }
+              }, "background.image.tint")
+            }
             opacity
           />
         )}
