@@ -83,7 +83,8 @@ import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
 import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
 import { compareSongPdfOrder } from "@/lib/song-ordering"
 import { splitLyricBlocks } from "@/lib/lyrics"
-import { PresenterTimer } from "@/components/controls/presenter-timer"
+import { SongsTab } from "@/components/panels/search/songs-tab"
+import { TimerTab } from "@/components/panels/search/timer-tab"
 
 type SearchTab = "book" | "context" | "songs" | "presentation" | "timer"
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
@@ -585,51 +586,6 @@ export function SearchPanel({
     [filteredSongs]
   )
   const hiddenSongCount = Math.max(0, songResultCount - visibleSongs.length)
-
-  const renderSongs = (songs: CopSong[]) => (
-    <div className="flex flex-col gap-1">
-      {songs.map((song) => {
-        const isActive = activeSongItem?.id === `song:${song.id}`
-
-        return (
-          <article
-            key={song.id}
-            className={cn(
-              "group rounded-lg border p-3 transition-colors",
-              "cursor-pointer",
-              isActive
-                ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                : "border-transparent hover:border-border hover:bg-muted/40"
-            )}
-            onClick={() => {
-              openSongDetail(song)
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 items-start justify-between gap-2">
-                  <h4 className="line-clamp-1 min-w-0 text-sm font-medium text-foreground">
-                    <HighlightedText
-                      text={formatSongReference(song)}
-                      query={songQuery}
-                    />
-                  </h4>
-                  {song.sourceLabel ? (
-                    <span className="shrink-0 rounded border border-border bg-background px-1.5 py-0.5 text-[0.625rem] font-medium text-muted-foreground">
-                      {song.sourceLabel}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-1 line-clamp-3 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">
-                  <HighlightedText text={song.lyrics} query={songQuery} />
-                </p>
-              </div>
-            </div>
-          </article>
-        )
-      })}
-    </div>
-  )
 
   const selectedBookNumber = selectedBook?.book_number
 
@@ -1513,31 +1469,15 @@ export function SearchPanel({
 
       {/* Songs tab */}
       {activeTab === "songs" && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          {filteredSongs.length === 0 ? (
-            <div className="flex h-full items-center justify-center p-6 text-center">
-              <div className="max-w-xs">
-                <MusicIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
-                <p className="text-sm font-medium text-foreground">
-                  No songs found
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Try searching by title or lyrics.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 p-2">
-              {renderSongs(visibleSongs)}
-              {hiddenSongCount > 0 ? (
-                <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-                  Showing first {visibleSongs.length} of {songResultCount}{" "}
-                  songs. Refine the search to narrow the list.
-                </p>
-              ) : null}
-            </div>
-          )}
-        </div>
+        <SongsTab
+          songs={visibleSongs}
+          totalCount={songResultCount}
+          hiddenCount={hiddenSongCount}
+          activeSongId={activeSongItem?.id ?? null}
+          query={songQuery}
+          onOpenSong={openSongDetail}
+          formatReference={formatSongReference}
+        />
       )}
 
       {/* Presentation tab */}
@@ -1835,11 +1775,7 @@ export function SearchPanel({
       )}
 
       {/* Timer tab */}
-      {activeTab === "timer" && (
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          <PresenterTimer variant="panel" />
-        </div>
-      )}
+      {activeTab === "timer" && <TimerTab />}
       <Dialog
         open={Boolean(renamingPresentationSlideId)}
         onOpenChange={(open) => {
