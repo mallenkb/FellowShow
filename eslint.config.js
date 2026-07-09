@@ -58,7 +58,7 @@ export default defineConfig([
   },
   {
     files: [
-      "src/components/settings-dialog.tsx",
+      "src/components/settings/**/*.tsx",
       "src/components/broadcast/broadcast-settings.tsx",
       "src/components/broadcast/design-canvas.tsx",
     ],
