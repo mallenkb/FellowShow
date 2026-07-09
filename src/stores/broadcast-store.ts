@@ -93,12 +93,6 @@ function isSelectableTheme(theme: BroadcastTheme): boolean {
   return theme.outputMode !== "lower-third" && theme.outputMode !== "ticker"
 }
 
-function sharedThemeSection(
-  section: BroadcastThemeSection
-): BroadcastThemeSection {
-  return section
-}
-
 function sanitizeSectionThemeIds(
   sectionThemeIds: Partial<Record<string, string>> | undefined
 ): Partial<Record<BroadcastThemeSection, string>> {
@@ -212,9 +206,8 @@ function getActiveThemeIdForProgramState(
   state: ProgramThemeState,
   section: BroadcastThemeSection
 ): string {
-  const sharedSection = sharedThemeSection(section)
-  if (sharedSection === "bible") return state.activeThemeId
-  return state.sectionThemeIds[sharedSection] ?? state.activeThemeId
+  if (section === "bible") return state.activeThemeId
+  return state.sectionThemeIds[section] ?? state.activeThemeId
 }
 
 function hasProgramContent(
@@ -481,9 +474,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutputFor("alt")
   },
   setActiveTheme: (themeId, section) => {
-    const targetSection = sharedThemeSection(
-      section ?? get().selectedThemeSection
-    )
+    const targetSection = section ?? get().selectedThemeSection
     set((s) => ({
       activeThemeId: targetSection === "bible" ? themeId : s.activeThemeId,
       sectionThemeIds: {
