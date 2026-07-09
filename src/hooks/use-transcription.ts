@@ -123,12 +123,13 @@ export function useTranscription(options?: UseTranscriptionOptions) {
     () => transcriptionActions.start(onMissingApiKey),
     [onMissingApiKey]
   )
+  const stopTranscription = useCallback(() => transcriptionActions.stop(), [])
 
   return {
     segments,
     isTranscribing,
     connectionStatus,
     startTranscription,
-    stopTranscription: transcriptionActions.stop,
+    stopTranscription,
   }
 }

@@ -63,10 +63,7 @@ function alignY(
 }
 
 function resolveHorizontalAlign(
-  value:
-    | BroadcastTheme["verseText"]["horizontalAlign"]
-    | BroadcastTheme["reference"]["horizontalAlign"]
-    | undefined,
+  value: BroadcastTheme["verseText"]["horizontalAlign"] | undefined,
   fallback: BroadcastTheme["layout"]["textAlign"],
   allowJustify: boolean
 ): "left" | "center" | "right" | "justify" {
@@ -76,28 +73,19 @@ function resolveHorizontalAlign(
 }
 
 function resolveVerticalAlign(
-  value:
-    | BroadcastTheme["verseText"]["verticalAlign"]
-    | BroadcastTheme["reference"]["verticalAlign"]
-    | undefined
+  value: BroadcastTheme["verseText"]["verticalAlign"] | undefined
 ): "top" | "middle" | "bottom" {
   return value ?? "top"
 }
 
 function resolveTextTransform(
-  value:
-    | BroadcastTheme["verseText"]["textTransform"]
-    | BroadcastTheme["reference"]["textTransform"]
-    | undefined
+  value: BroadcastTheme["verseText"]["textTransform"] | undefined
 ): "none" | "uppercase" | "lowercase" | "capitalize" {
   return value ?? "none"
 }
 
 function resolveTextDecoration(
-  value:
-    | BroadcastTheme["verseText"]["textDecoration"]
-    | BroadcastTheme["reference"]["textDecoration"]
-    | undefined
+  value: BroadcastTheme["verseText"]["textDecoration"] | undefined
 ): "none" | "underline" | "line-through" {
   return value ?? "none"
 }

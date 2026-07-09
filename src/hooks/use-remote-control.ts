@@ -34,7 +34,7 @@ export function useRemoteControl() {
           items.length - 1
         )
         useQueueStore.getState().setActive(nextIndex)
-        presentQueueItem(nextIndex)
+        void presentQueueItem(nextIndex).catch(console.error)
       })
       unlisteners.push(u1)
 
@@ -50,7 +50,7 @@ export function useRemoteControl() {
           0
         )
         useQueueStore.getState().setActive(prevIndex)
-        presentQueueItem(prevIndex)
+        void presentQueueItem(prevIndex).catch(console.error)
       })
       unlisteners.push(u2)
 
@@ -215,7 +215,10 @@ function syncStatusSnapshot() {
 function parsePayload(raw: unknown): Record<string, unknown> | null {
   if (typeof raw === "string") {
     try {
-      return JSON.parse(raw)
+      const parsed: unknown = JSON.parse(raw)
+      return typeof parsed === "object" && parsed !== null
+        ? (parsed as Record<string, unknown>)
+        : null
     } catch {
       return null
     }

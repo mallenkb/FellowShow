@@ -126,7 +126,7 @@ function AudioSection() {
   }, [])
 
   useEffect(() => {
-    loadDevices()
+    void loadDevices()
   }, [loadDevices])
 
   // gain is 0.0-2.0 in store, display as 0-100%
@@ -380,12 +380,12 @@ function SpeechSection() {
             <Button
               size="sm"
               variant="outline"
-              onClick={handleTestConnection}
+              onClick={() => void handleTestConnection()}
               disabled={testingConnection || keyValue.trim().length === 0}
             >
               {testingConnection ? "Testing..." : "Test"}
             </Button>
-            <Button size="sm" onClick={handleSaveKey}>
+            <Button size="sm" onClick={() => void handleSaveKey()}>
               {saved ? (
                 <>
                   <CheckIcon className="size-3" />
@@ -770,7 +770,7 @@ function BibleSection() {
         setLoading(false)
       }
     }
-    load()
+    void load()
   }, [])
 
   const reloadTranslations = async () => {
@@ -1141,7 +1141,7 @@ function BibleSection() {
         ) : (
           <RadioGroup
             value={String(activeId)}
-            onValueChange={handleChange}
+            onValueChange={(value) => void handleChange(value)}
             className="space-y-5"
           >
             <div
@@ -1245,8 +1245,10 @@ function BibleSection() {
               pinnedTranslationIds={pinnedTranslationIds}
               onToggleHidden={toggleHiddenTranslation}
               onTogglePinned={handleTogglePinned}
-              onSelectTranslation={(id) => handleChange(String(id))}
-              onDownloadTranslation={handleDownloadTranslation}
+              onSelectTranslation={(id) => void handleChange(String(id))}
+              onDownloadTranslation={(abbreviation) =>
+                void handleDownloadTranslation(abbreviation)
+              }
               onCancelDownload={handleCancelDownload}
               onTranslationDragStart={handleTranslationDragStart}
               onTranslationDragOver={handleTranslationDragOver}
@@ -1264,8 +1266,10 @@ function BibleSection() {
               pinnedTranslationIds={pinnedTranslationIds}
               onToggleHidden={toggleHiddenTranslation}
               onTogglePinned={handleTogglePinned}
-              onSelectTranslation={(id) => handleChange(String(id))}
-              onDownloadTranslation={handleDownloadTranslation}
+              onSelectTranslation={(id) => void handleChange(String(id))}
+              onDownloadTranslation={(abbreviation) =>
+                void handleDownloadTranslation(abbreviation)
+              }
               onCancelDownload={handleCancelDownload}
               onTranslationDragStart={handleTranslationDragStart}
               onTranslationDragOver={handleTranslationDragOver}
@@ -1377,7 +1381,7 @@ function RemoteControlSection() {
       }
     }
 
-    setup()
+    void setup().catch(console.error)
     return () => {
       cancelled = true
       unlisteners.forEach((fn) => fn())
@@ -1436,7 +1440,7 @@ function RemoteControlSection() {
           <Button
             size="sm"
             variant={oscStatus.running ? "destructive" : "default"}
-            onClick={handleOscToggle}
+            onClick={() => void handleOscToggle()}
             className="text-xs"
           >
             {oscStatus.running ? "Stop" : "Start"}
@@ -1472,7 +1476,7 @@ function RemoteControlSection() {
           <Button
             size="sm"
             variant={httpStatus.running ? "destructive" : "default"}
-            onClick={handleHttpToggle}
+            onClick={() => void handleHttpToggle()}
             className="text-xs"
           >
             {httpStatus.running ? "Stop" : "Start"}
@@ -1690,7 +1694,7 @@ function UpdatesSection() {
                 type="button"
                 size="sm"
                 disabled={isBusy}
-                onClick={handleCheckForUpdates}
+                onClick={() => void handleCheckForUpdates()}
                 className="text-xs"
               >
                 <RefreshCwIcon

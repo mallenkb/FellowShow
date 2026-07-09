@@ -94,7 +94,7 @@ function AppUpdater() {
           <Button variant="outline" onClick={() => setReadyVersion(null)}>
             Later
           </Button>
-          <Button onClick={handleRestartNow}>Restart now</Button>
+          <Button onClick={() => void handleRestartNow()}>Restart now</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

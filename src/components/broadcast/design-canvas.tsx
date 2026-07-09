@@ -172,7 +172,7 @@ export function DesignCanvas() {
 
     // Center the workspace
     const wsCenter = workspace.getCenterPoint()
-    const vpTransform = canvas.viewportTransform!
+    const vpTransform = canvas.viewportTransform
     vpTransform[4] = cw / 2 - wsCenter.x * vpTransform[0]
     vpTransform[5] = ch / 2 - wsCenter.y * vpTransform[3]
     canvas.setViewportTransform(vpTransform)
@@ -556,7 +556,7 @@ export function DesignCanvas() {
 }
 
 /** Sync BroadcastTheme properties to existing Fabric objects */
-async function syncThemeToCanvas(
+function syncThemeToCanvas(
   theme: BroadcastTheme,
   objectsRef: React.MutableRefObject<{
     workspace: fabric.Rect | null
@@ -750,7 +750,7 @@ function ensureImage(
       onReady?.()
       return img
     })
-    .catch((error) => {
+    .catch((error: unknown) => {
       console.warn("[theme-designer] failed to load background image", {
         url: url.slice(0, 100),
         error,

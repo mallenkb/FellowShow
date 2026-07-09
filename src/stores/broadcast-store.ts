@@ -120,28 +120,24 @@ function setNestedValue(
     const key = keys[i]
     const nextKey = keys[i + 1]
     const currentIndex = isIndex(key) ? Number(key) : key
-    const existing = (current as Record<string, unknown> | unknown[])[
-      currentIndex as keyof typeof current
-    ]
+    const existing = current[currentIndex as keyof typeof current]
     const nextContainer = Array.isArray(existing)
-      ? [...existing]
+      ? // Removed with this path-based mutation helper in Step 6.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        [...existing]
       : existing && typeof existing === "object"
         ? { ...(existing as Record<string, unknown>) }
         : isIndex(nextKey)
           ? []
           : {}
 
-    ;(current as Record<string, unknown> | unknown[])[
-      currentIndex as keyof typeof current
-    ] = nextContainer as never
+    current[currentIndex as keyof typeof current] = nextContainer as never
     current = nextContainer as Record<string, unknown> | unknown[]
   }
 
   const lastKey = keys[keys.length - 1]
   const lastIndex = isIndex(lastKey) ? Number(lastKey) : lastKey
-  ;(current as Record<string, unknown> | unknown[])[
-    lastIndex as keyof typeof current
-  ] = value as never
+  current[lastIndex as keyof typeof current] = value as never
 
   return result
 }
@@ -759,19 +755,18 @@ export function hydrateBroadcastThemes(): Promise<void> {
   hydrationPromise = (async () => {
     try {
       const store = await getThemeStore()
-      const customThemes = (await store.get("customThemes")) as
-        BroadcastTheme[] | undefined
-      const deletedBuiltinThemeIds = (await store.get(
+      const customThemes = await store.get<BroadcastTheme[]>("customThemes")
+      const deletedBuiltinThemeIds = await store.get<string[]>(
         "deletedBuiltinThemeIds"
-      )) as string[] | undefined
-      const activeId = (await store.get("activeThemeId")) as string | undefined
-      const altActiveId = (await store.get("altActiveThemeId")) as
-        string | undefined
-      const themeSortOrder = (await store.get("themeSortOrder")) as
-        Record<string, number> | undefined
+      )
+      const activeId = await store.get<string>("activeThemeId")
+      const altActiveId = await store.get<string>("altActiveThemeId")
+      const themeSortOrder =
+        await store.get<Record<string, number>>("themeSortOrder")
       const sectionThemeIds = sanitizeSectionThemeIds(
-        (await store.get("sectionThemeIds")) as
-          Partial<Record<string, string>> | undefined
+        await store.get<Partial<Record<BroadcastThemeSection, string>>>(
+          "sectionThemeIds"
+        )
       )
 
       const patch: Partial<BroadcastState> = {}

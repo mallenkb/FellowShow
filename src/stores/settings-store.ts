@@ -195,7 +195,7 @@ async function persistAll(state: SettingsState): Promise<void> {
   try {
     const store = await getStore()
     for (const key of PERSISTED_KEYS) {
-      await store.set(key, state[key] as unknown)
+      await store.set(key, state[key])
     }
     await store.save()
   } catch {

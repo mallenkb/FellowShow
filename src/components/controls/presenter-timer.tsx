@@ -217,7 +217,7 @@ export function PresenterTimer({ variant = "popover" }: PresenterTimerProps) {
           variant="ghost"
           size="sm"
           className="h-7 gap-1.5 px-2 text-xs"
-          onClick={uploadBackground}
+          onClick={() => void uploadBackground()}
         >
           <UploadIcon className="size-3.5" />
           Upload

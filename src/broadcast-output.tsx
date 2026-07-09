@@ -462,8 +462,8 @@ function BroadcastCanvas() {
       if (transitionTimeoutRef.current !== null) {
         window.clearTimeout(transitionTimeoutRef.current)
       }
-      unlisten.then((fn) => fn())
-      unlistenNdiConfig.then((fn) => fn())
+      void unlisten.then((fn) => fn()).catch(console.error)
+      void unlistenNdiConfig.then((fn) => fn()).catch(console.error)
     }
   }, [
     draw,

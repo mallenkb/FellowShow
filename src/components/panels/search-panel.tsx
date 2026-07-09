@@ -903,9 +903,11 @@ export function SearchPanel({
   useEffect(() => {
     if (activeTab !== "songs" || allSongs.length > 0) return
     let active = true
-    loadAllSongs().then((songs) => {
-      if (active) setAllSongs(songs)
-    })
+    void loadAllSongs()
+      .then((songs) => {
+        if (active) setAllSongs(songs)
+      })
+      .catch(console.error)
     return () => {
       active = false
     }
@@ -1347,7 +1349,7 @@ export function SearchPanel({
   const translationSelect = (
     <Select
       value={String(activeTranslationId)}
-      onValueChange={(v) => setActiveTranslation(Number(v))}
+      onValueChange={(v) => void setActiveTranslation(Number(v))}
     >
       <SelectTrigger className="!h-10 w-28 shrink-0 text-sm">
         <SelectValue />
@@ -1370,7 +1372,7 @@ export function SearchPanel({
             <button
               key={translation.id}
               type="button"
-              onClick={() => setActiveTranslation(translation.id)}
+              onClick={() => void setActiveTranslation(translation.id)}
               className={cn(
                 "h-6 shrink-0 rounded-md border px-2 text-[0.6875rem] font-medium transition-colors",
                 isActive

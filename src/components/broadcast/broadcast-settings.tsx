@@ -162,7 +162,7 @@ export function BroadcastSettings({
   }, [selectedMonitor])
 
   useEffect(() => {
-    if (open) fetchMonitors()
+    if (open) void fetchMonitors().catch(console.error)
   }, [open, fetchMonitors])
 
   // Sync theme selection with broadcast store
@@ -402,7 +402,7 @@ export function BroadcastSettings({
                 </span>
                 <Switch
                   checked={mainEnabled}
-                  onCheckedChange={handleMainToggle}
+                  onCheckedChange={(enabled) => void handleMainToggle(enabled)}
                 />
               </div>
             </div>
@@ -469,7 +469,7 @@ export function BroadcastSettings({
                       variant="ghost"
                       size="xs"
                       disabled={refreshing}
-                      onClick={fetchMonitors}
+                      onClick={() => void fetchMonitors()}
                       className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
                     >
                       <RefreshCwIcon
@@ -510,7 +510,7 @@ export function BroadcastSettings({
                   size="sm"
                   className="w-full gap-1.5"
                   disabled={monitors.length === 0}
-                  onClick={handleTogglePreview}
+                  onClick={() => void handleTogglePreview()}
                 >
                   {isPreviewOpen ? (
                     <>
@@ -616,7 +616,7 @@ export function BroadcastSettings({
                     ndiActive &&
                       "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400"
                   )}
-                  onClick={handleToggleNdi}
+                  onClick={() => void handleToggleNdi()}
                 >
                   {ndiActive ? (
                     <>
@@ -652,7 +652,7 @@ export function BroadcastSettings({
                 </span>
                 <Switch
                   checked={altEnabled}
-                  onCheckedChange={handleAltToggle}
+                  onCheckedChange={(enabled) => void handleAltToggle(enabled)}
                 />
               </div>
             </div>
@@ -716,7 +716,7 @@ export function BroadcastSettings({
                       variant="ghost"
                       size="xs"
                       disabled={refreshing}
-                      onClick={fetchMonitors}
+                      onClick={() => void fetchMonitors()}
                       className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
                     >
                       <RefreshCwIcon
@@ -756,7 +756,7 @@ export function BroadcastSettings({
                   size="sm"
                   className="w-full gap-1.5"
                   disabled={monitors.length === 0}
-                  onClick={handleAltTogglePreview}
+                  onClick={() => void handleAltTogglePreview()}
                 >
                   {altIsPreviewOpen ? (
                     <>
@@ -857,7 +857,7 @@ export function BroadcastSettings({
                     altNdiActive &&
                       "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400"
                   )}
-                  onClick={handleAltToggleNdi}
+                  onClick={() => void handleAltToggleNdi()}
                 >
                   {altNdiActive ? (
                     <>

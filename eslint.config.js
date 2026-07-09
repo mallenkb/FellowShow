@@ -12,12 +12,17 @@ export default defineConfig([
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
+      tseslint.configs.recommendedTypeChecked,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
     ],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
       "no-restricted-imports": [
@@ -33,11 +38,34 @@ export default defineConfig([
           ],
         },
       ],
-      "react-hooks/set-state-in-effect": "off",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
       ],
+    },
+  },
+  {
+    files: ["data/**/*.ts", "scripts/**/*.ts", "sdk/**/*.ts"],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    files: ["**/*.test.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/require-await": "off",
+    },
+  },
+  {
+    files: [
+      "src/components/settings-dialog.tsx",
+      "src/components/broadcast/broadcast-settings.tsx",
+      "src/components/broadcast/design-canvas.tsx",
+    ],
+    rules: {
+      // These synchronization effects are removed as the mega-components are
+      // split later in this quality pass.
+      "react-hooks/set-state-in-effect": "off",
     },
   },
   {

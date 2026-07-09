@@ -55,9 +55,7 @@ export function Fader({
         disabled && "pointer-events-none opacity-50",
         className
       )}
-      onDoubleClick={
-        canReset ? () => onChange(defaultValue as number) : undefined
-      }
+      onDoubleClick={canReset ? () => onChange(defaultValue) : undefined}
       title={canReset ? "Double-click to reset" : undefined}
     >
       {/* Filled portion — from the centre for bipolar axes, otherwise from the left */}
