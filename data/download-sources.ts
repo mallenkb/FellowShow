@@ -3,10 +3,11 @@
  * Run: bun run data/download-sources.ts
  */
 
-import { mkdir } from "node:fs/promises"
+import { mkdir, rm } from "node:fs/promises"
+import { fileURLToPath } from "node:url"
 import { join } from "node:path"
 
-const DATA_DIR = import.meta.dir
+const DATA_DIR = fileURLToPath(new URL(".", import.meta.url))
 const SOURCES_DIR = join(DATA_DIR, "sources")
 const CROSS_REFS_DIR = join(DATA_DIR, "cross-refs")
 
@@ -21,6 +22,25 @@ const TRANSLATIONS = [
 ]
 
 const CROSS_REFS_URL = "https://a.openbible.info/data/cross-references.zip"
+
+export function getZipExtractionCommand(
+  platform: NodeJS.Platform,
+  zipPath: string,
+  destination: string
+): string[] {
+  if (platform === "win32") {
+    return [
+      "powershell",
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      "Expand-Archive -LiteralPath $args[0] -DestinationPath $args[1] -Force",
+      zipPath,
+      destination,
+    ]
+  }
+  return ["unzip", "-o", zipPath, "-d", destination]
+}
 
 async function downloadFile(url: string, dest: string): Promise<void> {
   console.log(`  Downloading ${url}...`)
@@ -57,20 +77,25 @@ async function main() {
   } else {
     const zipDest = join(CROSS_REFS_DIR, "cross-references.zip")
     await downloadFile(CROSS_REFS_URL, zipDest)
-    // Unzip
-    const proc = Bun.spawn(["unzip", "-o", zipDest, "-d", CROSS_REFS_DIR], {
-      stdout: "inherit",
-      stderr: "inherit",
-    })
-    await proc.exited
-    // Clean up zip
-    await Bun.write(zipDest, "") // truncate
+    const proc = Bun.spawn(
+      getZipExtractionCommand(process.platform, zipDest, CROSS_REFS_DIR),
+      {
+        stdout: "inherit",
+        stderr: "inherit",
+      }
+    )
+    const exitCode = await proc.exited
+    if (exitCode !== 0)
+      throw new Error(`Archive extraction failed with exit code ${exitCode}`)
+    await rm(zipDest, { force: true })
   }
 
   console.log("\n✅ All source data downloaded!\n")
 }
 
-main().catch((err) => {
-  console.error("❌ Download failed:", err)
-  process.exit(1)
-})
+if (import.meta.main) {
+  main().catch((err) => {
+    console.error("❌ Download failed:", err)
+    process.exit(1)
+  })
+}

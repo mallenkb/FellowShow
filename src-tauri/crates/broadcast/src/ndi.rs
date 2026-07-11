@@ -410,31 +410,58 @@ impl Drop for ActiveNdiSession {
     }
 }
 
+fn windows_library_candidates(
+    runtime_dir: Option<&Path>,
+    executable_dir: &Path,
+    source_base: &Path,
+) -> Vec<PathBuf> {
+    const DLL_NAME: &str = "Processing.NDI.Lib.x64.dll";
+    let mut candidates = Vec::with_capacity(3);
+    if let Some(runtime_dir) = runtime_dir {
+        candidates.push(runtime_dir.join(DLL_NAME));
+    }
+    candidates.push(executable_dir.join(DLL_NAME));
+    candidates.push(source_base.join("sdk/ndi/windows").join(DLL_NAME));
+    candidates
+}
+
 fn resolve_library_path() -> Result<PathBuf, NdiError> {
-    let candidates: Vec<&str> = if cfg!(target_os = "macos") {
-        vec!["sdk/ndi/macos/libndi.dylib"]
-    } else if cfg!(target_os = "windows") {
-        vec!["sdk/ndi/windows/Processing.NDI.Lib.x64.dll"]
+    let source_base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    let executable_dir = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(Path::to_path_buf))
+        .unwrap_or_default();
+
+    let candidates = if cfg!(target_os = "windows") {
+        let runtime_dir = std::env::var_os("NDI_RUNTIME_DIR_V6").map(PathBuf::from);
+        windows_library_candidates(runtime_dir.as_deref(), &executable_dir, &source_base)
+    } else if cfg!(target_os = "macos") {
+        vec![
+            executable_dir.join("libndi.dylib"),
+            source_base.join("sdk/ndi/macos/libndi.dylib"),
+        ]
     } else {
         vec![
-            "sdk/ndi/linux/libndi.so",
-            "sdk/ndi/linux/x86_64/libndi.so.6",
-            "sdk/ndi/linux/libndi.so.6",
+            executable_dir.join("libndi.so.6"),
+            source_base.join("sdk/ndi/linux/libndi.so"),
+            source_base.join("sdk/ndi/linux/x86_64/libndi.so.6"),
+            source_base.join("sdk/ndi/linux/libndi.so.6"),
         ]
     };
 
-    let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
-    for candidate in &candidates {
-        if candidate.is_empty() {
-            continue;
-        }
-        let absolute = base.join(candidate);
-        if absolute.exists() {
-            return Ok(absolute);
-        }
-    }
-
-    Err(NdiError::LibraryNotFound(candidates.join(", ")))
+    candidates
+        .iter()
+        .find(|path| path.exists())
+        .cloned()
+        .ok_or_else(|| {
+            NdiError::LibraryNotFound(
+                candidates
+                    .iter()
+                    .map(|path| path.display().to_string())
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            )
+        })
 }
 
 fn load_symbol<'a, T>(
@@ -447,4 +474,27 @@ fn load_symbol<'a, T>(
         symbol: name,
         message: e.to_string(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn windows_library_candidates_prefer_installed_runtime_and_executable_directory() {
+        let candidates = windows_library_candidates(
+            Some(Path::new(r"C:\Program Files\NDI\NDI 6 Runtime")),
+            Path::new(r"C:\Program Files\FellowShow"),
+            Path::new(r"C:\src\FellowShow"),
+        );
+
+        assert_eq!(
+            candidates,
+            vec![
+                PathBuf::from(r"C:\Program Files\NDI\NDI 6 Runtime\Processing.NDI.Lib.x64.dll"),
+                PathBuf::from(r"C:\Program Files\FellowShow\Processing.NDI.Lib.x64.dll"),
+                PathBuf::from(r"C:\src\FellowShow\sdk\ndi\windows\Processing.NDI.Lib.x64.dll"),
+            ]
+        );
+    }
 }

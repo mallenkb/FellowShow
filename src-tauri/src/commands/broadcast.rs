@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use base64::Engine;
 use fellowshow_broadcast::ndi::{NdiRuntime, NdiSessionInfo, NdiStartRequest};
 use serde::{Deserialize, Serialize};
+use tauri::webview::PageLoadEvent;
 use tauri::State;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
@@ -24,33 +25,63 @@ fn window_url(output_id: &str) -> String {
     format!("broadcast-output.html?output={output_id}")
 }
 
-fn place_projector_window(
-    window: &tauri::WebviewWindow,
+trait ProjectorWindowOps {
+    fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String>;
+    fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String>;
+    fn show(&self) -> Result<(), String>;
+    fn set_focus(&self) -> Result<(), String>;
+}
+
+impl ProjectorWindowOps for tauri::WebviewWindow {
+    fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String> {
+        self.set_position(tauri::Position::Physical(position))
+            .map_err(|e| e.to_string())
+    }
+
+    fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String> {
+        self.set_size(tauri::Size::Physical(size))
+            .map_err(|e| e.to_string())
+    }
+
+    fn show(&self) -> Result<(), String> {
+        self.show().map_err(|e| e.to_string())
+    }
+
+    fn set_focus(&self) -> Result<(), String> {
+        self.set_focus().map_err(|e| e.to_string())
+    }
+}
+
+fn show_projector_window(
+    window: &impl ProjectorWindowOps,
+    position: tauri::PhysicalPosition<i32>,
+    size: tauri::PhysicalSize<u32>,
+) -> Result<(), String> {
+    window.set_physical_position(position)?;
+    window.set_physical_size(size)?;
+    window.show()?;
+    window.set_focus()?;
+    Ok(())
+}
+
+fn show_projector_window_on_monitor(
+    window: &impl ProjectorWindowOps,
     monitor: &tauri::Monitor,
 ) -> Result<(), String> {
-    let pos = monitor.position();
-    let size = monitor.size();
-
-    window
-        .set_position(tauri::Position::Physical(tauri::PhysicalPosition {
-            x: pos.x,
-            y: pos.y,
-        }))
-        .map_err(|e| e.to_string())?;
-    window
-        .set_size(tauri::Size::Physical(tauri::PhysicalSize {
-            width: size.width,
-            height: size.height,
-        }))
-        .map_err(|e| e.to_string())?;
+    show_projector_window(window, *monitor.position(), *monitor.size())?;
     Ok(())
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MonitorInfo {
+    pub index: usize,
     pub name: String,
     pub width: u32,
     pub height: u32,
+    pub x: i32,
+    pub y: i32,
+    pub is_primary: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -65,14 +96,24 @@ pub struct NdiFrameRequest {
 #[tauri::command]
 pub fn list_monitors(app: tauri::AppHandle) -> Result<Vec<MonitorInfo>, String> {
     let monitors = app.available_monitors().map_err(|e| e.to_string())?;
+    let primary_position = app
+        .primary_monitor()
+        .map_err(|e| e.to_string())?
+        .map(|monitor| *monitor.position());
     Ok(monitors
         .iter()
-        .map(|m| {
+        .enumerate()
+        .map(|(index, m)| {
             let size = m.size();
+            let position = *m.position();
             MonitorInfo {
+                index,
                 name: m.name().cloned().unwrap_or_else(|| "Unknown".to_string()),
                 width: size.width,
                 height: size.height,
+                x: position.x,
+                y: position.y,
+                is_primary: Some(position) == primary_position,
             }
         })
         .collect())
@@ -102,7 +143,7 @@ pub fn ensure_broadcast_window(app: tauri::AppHandle, output_id: String) -> Resu
 }
 
 #[tauri::command]
-pub fn open_broadcast_window(
+pub async fn open_broadcast_window(
     app: tauri::AppHandle,
     output_id: String,
     monitor_index: usize,
@@ -112,11 +153,22 @@ pub fn open_broadcast_window(
     let monitor = monitors
         .get(monitor_index)
         .ok_or_else(|| format!("Monitor index {monitor_index} out of range"))?;
+    log::info!(
+        "Opening {output_id} broadcast window on monitor {monitor_index} ({:?}, {}x{} at {},{})",
+        monitor.name(),
+        monitor.size().width,
+        monitor.size().height,
+        monitor.position().x,
+        monitor.position().y
+    );
 
     // If window already exists (e.g. hidden for NDI), reuse it
     if let Some(window) = app.get_webview_window(label) {
-        place_projector_window(&window, monitor)?;
-        window.show().map_err(|e| e.to_string())?;
+        log::info!(
+            "Reusing existing {output_id} broadcast window at {:?}",
+            window.url()
+        );
+        show_projector_window_on_monitor(&window, monitor)?;
         return Ok(());
     }
 
@@ -126,21 +178,36 @@ pub fn open_broadcast_window(
         "Projector - Program"
     };
 
-    let window = WebviewWindowBuilder::new(
-        &app,
-        label,
-        WebviewUrl::App(window_url(&output_id).into()),
-    )
-        .title(title)
-        .inner_size(1920.0, 1080.0)
-        .decorations(false)
-        .always_on_top(false)
-        .skip_taskbar(true)
-        .focused(false)
-        .build()
-        .map_err(|e| e.to_string())?;
+    let window =
+        WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
+            .title(title)
+            .inner_size(1920.0, 1080.0)
+            .decorations(false)
+            .always_on_top(false)
+            .skip_taskbar(true)
+            .focused(true)
+            .visible(true)
+            .on_page_load(|window, payload| {
+                log::info!(
+                    "Projector page load {:?}: {}",
+                    payload.event(),
+                    payload.url()
+                );
+                if payload.event() == PageLoadEvent::Finished {
+                    if let Err(error) = window.show() {
+                        log::error!("Failed to show projector after page load: {error}");
+                    }
+                    if let Err(error) = window.set_focus() {
+                        log::error!("Failed to focus projector after page load: {error}");
+                    }
+                }
+            })
+            .build()
+            .map_err(|e| e.to_string())?;
 
-    place_projector_window(&window, monitor)?;
+    log::info!("Projector window created at {:?}", window.url());
+
+    show_projector_window_on_monitor(&window, monitor)?;
 
     Ok(())
 }
@@ -225,4 +292,88 @@ pub fn push_ndi_frame(
             &rgba_data,
         )
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::RefCell;
+    use std::future::Future;
+
+    use super::*;
+
+    #[derive(Debug, PartialEq)]
+    enum WindowOperation {
+        Position(tauri::PhysicalPosition<i32>),
+        Size(tauri::PhysicalSize<u32>),
+        Show,
+        Focus,
+    }
+
+    #[derive(Default)]
+    struct RecordingWindow {
+        operations: RefCell<Vec<WindowOperation>>,
+    }
+
+    impl ProjectorWindowOps for RecordingWindow {
+        fn set_physical_position(
+            &self,
+            position: tauri::PhysicalPosition<i32>,
+        ) -> Result<(), String> {
+            self.operations
+                .borrow_mut()
+                .push(WindowOperation::Position(position));
+            Ok(())
+        }
+
+        fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String> {
+            self.operations
+                .borrow_mut()
+                .push(WindowOperation::Size(size));
+            Ok(())
+        }
+
+        fn show(&self) -> Result<(), String> {
+            self.operations.borrow_mut().push(WindowOperation::Show);
+            Ok(())
+        }
+
+        fn set_focus(&self) -> Result<(), String> {
+            self.operations.borrow_mut().push(WindowOperation::Focus);
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn projector_window_should_be_positioned_and_sized_before_being_shown() {
+        let window = RecordingWindow::default();
+        let position = tauri::PhysicalPosition { x: -1920, y: 0 };
+        let size = tauri::PhysicalSize {
+            width: 1920,
+            height: 1080,
+        };
+
+        show_projector_window(&window, position, size).unwrap();
+
+        assert_eq!(
+            *window.operations.borrow(),
+            vec![
+                WindowOperation::Position(position),
+                WindowOperation::Size(size),
+                WindowOperation::Show,
+                WindowOperation::Focus,
+            ]
+        );
+    }
+
+    fn assert_async_projector_command<F, Fut>(_: F)
+    where
+        F: Fn(tauri::AppHandle, String, usize) -> Fut,
+        Fut: Future<Output = Result<(), String>>,
+    {
+    }
+
+    #[test]
+    fn projector_creation_command_must_not_block_the_windows_ui_thread() {
+        assert_async_projector_command(open_broadcast_window);
+    }
 }
