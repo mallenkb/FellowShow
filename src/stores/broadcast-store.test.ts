@@ -13,7 +13,7 @@ describe("broadcast store sync", () => {
     vi.resetModules()
   })
 
-  it("starts with live output and auto preview disabled", async () => {
+  it("starts with live output off and auto preview disabled", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
 
     expect(useBroadcastStore.getState().isLive).toBe(false)

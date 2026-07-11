@@ -44,10 +44,10 @@ function showStartupError(error: unknown): void {
 }
 
 window.addEventListener("error", (event) => {
-  showStartupError(event.error ?? event.message)
+  console.error("[runtime] Uncaught error", event.error ?? event.message)
 })
 window.addEventListener("unhandledrejection", (event) => {
-  showStartupError(event.reason)
+  console.error("[runtime] Unhandled rejection", event.reason)
 })
 
 void import("./boot").catch(showStartupError)

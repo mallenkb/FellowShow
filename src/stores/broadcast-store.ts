@@ -451,10 +451,12 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     set({ altActiveThemeId })
     get().syncBroadcastOutputFor("alt")
   },
-  setAutoPreviewToLive: (autoPreviewToLive) =>
+  setAutoPreviewToLive: (autoPreviewToLive) => {
+    let shouldSyncOutput = false
     set((s) => {
       const shouldTakePreview =
         autoPreviewToLive && hasProgramContent(s.previewVerse, s.previewTimer)
+      shouldSyncOutput = shouldTakePreview
       return {
         autoPreviewToLive,
         ...(shouldTakePreview
@@ -466,7 +468,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
             }
           : {}),
       }
-    }),
+    })
+    if (shouldSyncOutput) get().syncBroadcastOutput()
+  },
   setPreviewOutput: (previewVerse, previewTimer) => {
     let shouldSyncOutput = false
     set((s) => {
@@ -724,6 +728,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
       )
       const activeId = await store.get<string>("activeThemeId")
       const altActiveId = await store.get<string>("altActiveThemeId")
+      const autoPreviewToLive = await store.get<boolean>("autoPreviewToLive")
       const themeSortOrder =
         await store.get<Record<string, number>>("themeSortOrder")
       const sectionThemeIds = sanitizeSectionThemeIds(
@@ -772,6 +777,9 @@ export function hydrateBroadcastThemes(): Promise<void> {
         patch.deletedBuiltinThemeIds = deletedBuiltinIds
       if (activeId) patch.activeThemeId = resolveThemeId(activeId)
       if (altActiveId) patch.altActiveThemeId = resolveThemeId(altActiveId)
+      if (typeof autoPreviewToLive === "boolean") {
+        patch.autoPreviewToLive = autoPreviewToLive
+      }
       patch.sectionThemeIds = {
         ...DEFAULT_SECTION_THEME_IDS,
         bible: resolveThemeId(activeId ?? DEFAULT_SECTION_THEME_IDS.bible),
@@ -794,6 +802,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
           state.deletedBuiltinThemeIds !== prevState.deletedBuiltinThemeIds ||
           state.activeThemeId !== prevState.activeThemeId ||
           state.altActiveThemeId !== prevState.altActiveThemeId ||
+          state.autoPreviewToLive !== prevState.autoPreviewToLive ||
           state.sectionThemeIds !== prevState.sectionThemeIds
         if (!changed) return
         if (saveTimer) clearTimeout(saveTimer)
@@ -833,6 +842,7 @@ async function persistBroadcastThemes(state: BroadcastState): Promise<void> {
     await store.set("deletedBuiltinThemeIds", state.deletedBuiltinThemeIds)
     await store.set("activeThemeId", state.activeThemeId)
     await store.set("altActiveThemeId", state.altActiveThemeId)
+    await store.set("autoPreviewToLive", state.autoPreviewToLive)
     await store.set("sectionThemeIds", state.sectionThemeIds)
     await store.save()
   } catch {

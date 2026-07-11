@@ -151,9 +151,12 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const setPreviewAndAutoLive = useCallback(
     (verse: VerseRenderData | null, timer: PresenterTimerRenderData | null) => {
       const store = useBroadcastStore.getState()
+      if (isPresentationMode && store.autoPreviewToLive) {
+        store.setAutoPreviewToLive(false)
+      }
       store.setPreviewOutput(verse, timer)
     },
-    []
+    [isPresentationMode]
   )
 
   useEffect(() => {
@@ -215,7 +218,10 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <PanelHeader title="Program preview" />
-      <div className="relative z-0 aspect-video w-full shrink-0 overflow-hidden">
+      <div
+        className="relative z-0 aspect-video w-full shrink-0 overflow-hidden"
+        onDoubleClick={sendPreviewLive}
+      >
         <CanvasVerse
           theme={activeTheme}
           verse={previewVerse}

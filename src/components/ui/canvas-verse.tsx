@@ -44,6 +44,7 @@ export const CanvasVerse = memo(function CanvasVerse({
   const [imageVersion, setImageVersion] = useState(0)
   const [videoVersion, setVideoVersion] = useState(0)
   const [tickerVersion, setTickerVersion] = useState(0)
+  const [fontVersion, setFontVersion] = useState(0)
 
   // Measure container size with ResizeObserver
   useEffect(() => {
@@ -59,6 +60,16 @@ export const CanvasVerse = memo(function CanvasVerse({
     })
     observer.observe(container)
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void document.fonts.ready.then(() => {
+      if (!cancelled) setFontVersion((version) => version + 1)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -141,8 +152,13 @@ export const CanvasVerse = memo(function CanvasVerse({
     if (!hasVideo) return
 
     let frame = 0
-    const tick = () => {
-      setVideoVersion((version) => version + 1)
+    let lastRender = 0
+    const tick = (now: number) => {
+      // Avoid a React render on every display refresh, especially in WebKit.
+      if (now - lastRender >= 66) {
+        lastRender = now
+        setVideoVersion((version) => version + 1)
+      }
       frame = window.requestAnimationFrame(tick)
     }
     frame = window.requestAnimationFrame(tick)
@@ -319,6 +335,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     imageVersion,
     videoVersion,
     tickerVersion,
+    fontVersion,
     hasTicker,
   ])
 

@@ -216,8 +216,8 @@ export function fitStandardVerseTheme(
   const baseReferenceSize = theme.reference.fontSize
   const baseReferenceGap =
     theme.layout.referenceGap ?? theme.reference.fontSize * 0.5
-  const minScale = 0.36
-  const maxScale = 1
+  const minimumScalePercent = 50
+  const shrinkStepPercent = 5
   const minVerseSize = 14
   const minNumberSize = 8
   const minReferenceSize = 10
@@ -242,27 +242,30 @@ export function fitStandardVerseTheme(
     },
   })
 
-  const fits = (candidate: BroadcastTheme): boolean =>
-    measureStandardBlockHeight(ctx, candidate, verse, textRectWidth) <=
-    textRectHeight
-
-  let low = minScale
-  let high = maxScale
-  let fittedTheme = buildCandidate(minScale)
-
-  for (let i = 0; i < 18; i += 1) {
-    const scale = (low + high) / 2
-    const candidate = buildCandidate(scale)
-
-    if (fits(candidate)) {
-      fittedTheme = candidate
-      low = scale
-    } else {
-      high = scale
-    }
+  const fits = (candidate: BroadcastTheme): boolean => {
+    const verseMetrics = measureVerseHeight(
+      ctx,
+      candidate,
+      verse,
+      textRectWidth
+    )
+    return (
+      verseMetrics.maxLineWidth <= textRectWidth &&
+      measureStandardBlockHeight(ctx, candidate, verse, textRectWidth) <=
+        textRectHeight
+    )
   }
 
-  return fittedTheme
+  for (
+    let scalePercent = 100;
+    scalePercent >= minimumScalePercent;
+    scalePercent -= shrinkStepPercent
+  ) {
+    const candidate = buildCandidate(scalePercent / 100)
+    if (fits(candidate)) return candidate
+  }
+
+  return buildCandidate(minimumScalePercent / 100)
 }
 
 export function lyricPresentationTheme(
@@ -272,7 +275,7 @@ export function lyricPresentationTheme(
   textRectWidth: number,
   textRectHeight: number
 ): BroadcastTheme {
-  let fittedTheme: BroadcastTheme = {
+  const baseTheme: BroadcastTheme = {
     ...theme,
     verseText: {
       ...theme.verseText,
@@ -280,21 +283,34 @@ export function lyricPresentationTheme(
       verticalAlign: "middle",
     },
   }
+  const baseFontSize = baseTheme.verseText.fontSize
+  const minScale = 0.68
+  const maxScale = 1.45
+  const buildCandidate = (scale: number): BroadcastTheme => ({
+    ...baseTheme,
+    verseText: {
+      ...baseTheme.verseText,
+      fontSize: Math.max(18, baseFontSize * scale),
+    },
+  })
+  const fits = (candidate: BroadcastTheme): boolean => {
+    const metrics = measureVerseHeight(ctx, candidate, verse, textRectWidth)
+    return (
+      metrics.maxLineWidth <= textRectWidth && metrics.height <= textRectHeight
+    )
+  }
 
-  const baseFontSize = fittedTheme.verseText.fontSize
-  const minFontSize = Math.max(18, baseFontSize * 0.68)
-
-  while (
-    fittedTheme.verseText.fontSize > minFontSize &&
-    measureVerseHeight(ctx, fittedTheme, verse, textRectWidth).height >
-      textRectHeight
-  ) {
-    fittedTheme = {
-      ...fittedTheme,
-      verseText: {
-        ...fittedTheme.verseText,
-        fontSize: Math.max(minFontSize, fittedTheme.verseText.fontSize - 2),
-      },
+  let low = minScale
+  let high = maxScale
+  let fittedTheme = buildCandidate(minScale)
+  for (let i = 0; i < 18; i += 1) {
+    const scale = (low + high) / 2
+    const candidate = buildCandidate(scale)
+    if (fits(candidate)) {
+      fittedTheme = candidate
+      low = scale
+    } else {
+      high = scale
     }
   }
 

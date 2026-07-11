@@ -27,7 +27,7 @@ import {
   TypeIcon,
   UnlockIcon,
 } from "lucide-react"
-import { usePresentationStore } from "@/stores"
+import { useBroadcastStore, usePresentationStore } from "@/stores"
 
 function VideoSlideThumbnail({
   src,
@@ -161,6 +161,28 @@ export function PresentationPanel() {
                   onClick={() =>
                     usePresentationStore.getState().selectSlide(slide.id)
                   }
+                  onDoubleClick={() => {
+                    usePresentationStore.getState().selectSlide(slide.id)
+                    const store = useBroadcastStore.getState()
+                    store.setPreviewOutput(
+                      {
+                        reference: slide.name,
+                        themeSection: "presentation",
+                        segments: [],
+                        presentationImage: {
+                          url: slide.url,
+                          name: slide.name,
+                          mediaType: slide.mediaType,
+                          fit: slide.fit,
+                          scale: slide.scale,
+                          offsetX: slide.offsetX,
+                          offsetY: slide.offsetY,
+                        },
+                      },
+                      null
+                    )
+                    store.showPreviewOnLive("manual")
+                  }}
                   onMouseEnter={() => setPreviewingSlideId(slide.id)}
                   onMouseLeave={() =>
                     setPreviewingSlideId((id) => (id === slide.id ? null : id))

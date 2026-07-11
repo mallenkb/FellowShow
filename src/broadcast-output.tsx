@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+import "./index.css"
 import { createRoot } from "react-dom/client"
 import { useRef, useEffect, useCallback, useState } from "react"
 import { invoke } from "@/lib/ipc"
@@ -101,27 +102,42 @@ function BroadcastCanvas() {
 
   useEffect(() => {
     let mounted = true
+    let unlistenResize: (() => void) | null = null
     const syncBrowserFullscreen = () => {
       if (!isTauriRuntime()) {
         setIsFullscreen(document.fullscreenElement !== null)
+      }
+    }
+    const syncTauriFullscreen = async () => {
+      try {
+        const fullscreen = await currentWindow.isFullscreen()
+        if (mounted) setIsFullscreen(fullscreen)
+      } catch (error) {
+        console.warn("[broadcast-output] failed to read fullscreen state", error)
       }
     }
 
     document.addEventListener("fullscreenchange", syncBrowserFullscreen)
 
     if (isTauriRuntime()) {
+      void syncTauriFullscreen()
       void currentWindow
-        .isFullscreen()
-        .then((fullscreen) => {
-          if (mounted) setIsFullscreen(fullscreen)
+        .onResized(() => void syncTauriFullscreen())
+        .then((unlisten) => {
+          if (mounted) unlistenResize = unlisten
+          else unlisten()
         })
         .catch((error) => {
-          console.warn("[broadcast-output] failed to read fullscreen state", error)
+          console.warn(
+            "[broadcast-output] failed to watch fullscreen state",
+            error
+          )
         })
     }
 
     return () => {
       mounted = false
+      unlistenResize?.()
       document.removeEventListener("fullscreenchange", syncBrowserFullscreen)
     }
   }, [])
@@ -216,6 +232,16 @@ function BroadcastCanvas() {
     if (!canvas) return
     renderPayloadToCanvas(canvas, latestData.current)
   }, [renderPayloadToCanvas])
+
+  useEffect(() => {
+    let cancelled = false
+    void document.fonts.ready.then(() => {
+      if (!cancelled) draw()
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [draw])
 
   const drawPayloadTransition = useCallback(
     (previousData: BroadcastPayload | null, nextData: BroadcastPayload) => {

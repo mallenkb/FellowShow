@@ -10,6 +10,7 @@ interface SongsTabProps {
   activeSongId: string | null
   query: string
   onOpenSong: (song: CopSong) => void
+  onPresentSong: (song: CopSong) => void
   formatReference: (song: CopSong) => string
 }
 
@@ -20,6 +21,7 @@ export function SongsTab({
   activeSongId,
   query,
   onOpenSong,
+  onPresentSong,
   formatReference,
 }: SongsTabProps) {
   if (songs.length === 0) {
@@ -51,6 +53,7 @@ export function SongsTab({
                   : "border-transparent hover:border-border hover:bg-muted/40"
               )}
               onClick={() => onOpenSong(song)}
+              onDoubleClick={() => onPresentSong(song)}
             >
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">

@@ -402,7 +402,9 @@ export function Dashboard() {
         <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch gap-3 overflow-y-auto overscroll-contain pr-1 *:min-h-0">
           <LiveOutputPanel mode={searchMode} />
           <PreviewPanel mode={searchMode} />
-          {searchMode !== "timer" && <ThemesPanel mode={searchMode} />}
+          {searchMode !== "timer" && searchMode !== "presentation" && (
+            <ThemesPanel mode={searchMode} />
+          )}
           {searchMode !== "timer" && <MotionPanel mode={searchMode} />}
         </div>
       </div>

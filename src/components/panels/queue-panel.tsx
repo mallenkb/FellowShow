@@ -46,9 +46,9 @@ function QueueItemRow({
         .translations.find(
           (t) => t.id === useBibleStore.getState().activeTranslationId
         )?.abbreviation ?? "KJV"
-    useBroadcastStore
-      .getState()
-      .setLiveVerse(toVerseRenderData(currentItem.verse, translation))
+    const store = useBroadcastStore.getState()
+    store.setPreviewOutput(toVerseRenderData(currentItem.verse, translation), null)
+    store.showPreviewOnLive("manual")
   }
 
   const handleRemove = () => {
@@ -75,6 +75,7 @@ function QueueItemRow({
       role="button"
       tabIndex={0}
       onClick={selectQueueItem}
+      onDoubleClick={handlePresent}
       onKeyDown={(event) => {
         if (event.key !== "Enter" && event.key !== " ") return
         event.preventDefault()

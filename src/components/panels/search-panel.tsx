@@ -70,8 +70,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useBible, bibleActions } from "@/hooks/use-bible"
+import { toVerseRenderData } from "@/hooks/use-broadcast"
 import {
   useBibleStore,
+  useBroadcastStore,
   useQueueStore,
   useSettingsStore,
   usePresentationStore,
@@ -113,6 +115,19 @@ type TransformInteraction =
 
 const SHOW_CONTEXT_SEARCH = false
 const SONG_RENDER_LIMIT = 100
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === "string") resolve(reader.result)
+      else reject(new Error(`Could not read ${file.name}`))
+    }
+    reader.onerror = () =>
+      reject(reader.error ?? new Error(`Could not read ${file.name}`))
+    reader.readAsDataURL(file)
+  })
+}
 
 function hashString(value: string) {
   let hash = 0
@@ -224,6 +239,31 @@ export function SearchPanel({
   const orderedPresentationSlides = useMemo(
     () => [...pinnedPresentationSlides, ...unpinnedPresentationSlides],
     [pinnedPresentationSlides, unpinnedPresentationSlides]
+  )
+  const presentSlide = useCallback(
+    (slide: (typeof presentationSlides)[number]) => {
+      usePresentationStore.getState().selectSlide(slide.id)
+      const store = useBroadcastStore.getState()
+      store.setPreviewOutput(
+        {
+          reference: slide.name,
+          themeSection: "presentation",
+          segments: [],
+          presentationImage: {
+            url: slide.url,
+            name: slide.name,
+            mediaType: slide.mediaType,
+            fit: slide.fit,
+            scale: slide.scale,
+            offsetX: slide.offsetX,
+            offsetY: slide.offsetY,
+          },
+        },
+        null
+      )
+      store.showPreviewOnLive("manual")
+    },
+    []
   )
   const editingPresentationSlide = useMemo(
     () =>
@@ -401,29 +441,53 @@ export function SearchPanel({
     setActiveTab(tab)
   }, [])
 
-  const handlePresentationFiles = useCallback((files: FileList | null) => {
+  const handlePresentationFiles = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return
 
-    const slides = Array.from(files)
+    const mediaFiles = Array.from(files)
       .filter(
         (file) =>
           file.type.startsWith("image/") || file.type.startsWith("video/")
       )
-      .map((file) => ({
-        id: crypto.randomUUID(),
-        name: file.name.replace(/\.[^.]+$/, ""),
-        url: URL.createObjectURL(file),
-        mediaType: file.type.startsWith("video/")
-          ? ("video" as const)
-          : ("image" as const),
-        createdAt: Date.now(),
-        pinned: false,
-        locked: false,
-        fit: "contain" as const,
-        scale: 1,
-        offsetX: 0,
-        offsetY: 0,
-      }))
+    let slides: Array<{
+      id: string
+      name: string
+      url: string
+      mediaType: "image" | "video"
+      createdAt: number
+      pinned: boolean
+      locked: boolean
+      fit: "contain"
+      scale: number
+      offsetX: number
+      offsetY: number
+    }> = []
+    try {
+      slides = await Promise.all(
+        mediaFiles.map(async (file) => ({
+          id: crypto.randomUUID(),
+          name: file.name.replace(/\.[^.]+$/, ""),
+          // A blob URL is scoped to the webview that created it. Data URLs can
+          // be rendered by both the main and isolated external display views.
+          url: await readFileAsDataUrl(file),
+          mediaType: file.type.startsWith("video/")
+            ? ("video" as const)
+            : ("image" as const),
+          createdAt: Date.now(),
+          pinned: false,
+          locked: false,
+          fit: "contain" as const,
+          scale: 1,
+          offsetX: 0,
+          offsetY: 0,
+        }))
+      )
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not load media."
+      )
+      return
+    }
 
     if (slides.length > 0) {
       usePresentationStore.getState().addSlides(slides)
@@ -522,7 +586,7 @@ export function SearchPanel({
       setIsPresentationDragging(false)
       setPresentationDropTargetId(null)
       setPresentationDropPosition("before")
-      handlePresentationFiles(event.dataTransfer.files)
+      void handlePresentationFiles(event.dataTransfer.files)
     },
     [activeTab, handlePresentationFiles]
   )
@@ -547,8 +611,26 @@ export function SearchPanel({
 
       useQueueStore.getState().replaceLyricItem(item, "song")
       bibleActions.selectVerse(verse)
+      return verse
     },
     [formatSongReference, makeSongVerse]
+  )
+
+  const presentSong = useCallback(
+    (song: CopSong) => {
+      const verse = openSongDetail(song)
+      const translation =
+        useBibleStore
+          .getState()
+          .translations.find(
+            (item) =>
+              item.id === useBibleStore.getState().activeTranslationId
+          )?.abbreviation ?? "KJV"
+      const store = useBroadcastStore.getState()
+      store.setPreviewOutput(toVerseRenderData(verse, translation), null)
+      store.showPreviewOnLive("manual")
+    },
+    [openSongDetail]
   )
 
   // Song catalog is code-split and fetched the first time the Songs tab opens.
@@ -695,6 +777,16 @@ export function SearchPanel({
     setSelectedVerseId(verse.id)
     bibleActions.selectVerse(verse)
   }, [])
+
+  const handleVerseDoubleClick = useCallback((verse: Verse) => {
+    handleVerseClick(verse)
+    const translation =
+      translations.find((item) => item.id === activeTranslationId)
+        ?.abbreviation ?? "KJV"
+    const store = useBroadcastStore.getState()
+    store.setPreviewOutput(toVerseRenderData(verse, translation), null)
+    store.showPreviewOnLive("manual")
+  }, [activeTranslationId, handleVerseClick, translations])
 
   // Arrow key navigation
   const handleKeyDown = useCallback(
@@ -1172,7 +1264,7 @@ export function SearchPanel({
               multiple
               className="hidden"
               onChange={(event) => {
-                handlePresentationFiles(event.target.files)
+                void handlePresentationFiles(event.target.files)
                 event.target.value = ""
               }}
             />
@@ -1244,6 +1336,7 @@ export function SearchPanel({
                   key={verse.id}
                   id={`verse-${verse.id}`}
                   onClick={() => handleVerseClick(verse)}
+                  onDoubleClick={() => handleVerseDoubleClick(verse)}
                   className={cn(
                     "group flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors",
                     verse.id === effectiveSelectedVerseId
@@ -1367,6 +1460,29 @@ export function SearchPanel({
                     text: result.verse_text,
                   })
                 }}
+                onDoubleClick={() => {
+                  const verse = {
+                    id: 0,
+                    translation_id: activeTranslationId,
+                    book_number: result.book_number,
+                    book_name: result.book_name,
+                    book_abbreviation: "",
+                    chapter: result.chapter,
+                    verse: result.verse,
+                    text: result.verse_text,
+                  }
+                  const store = useBroadcastStore.getState()
+                  store.setPreviewOutput(
+                    toVerseRenderData(
+                      verse,
+                      translations.find(
+                        (item) => item.id === activeTranslationId
+                      )?.abbreviation ?? "KJV"
+                    ),
+                    null
+                  )
+                  store.showPreviewOnLive("manual")
+                }}
                 className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
               >
                 <div className="flex shrink-0 flex-row items-start gap-2">
@@ -1476,6 +1592,7 @@ export function SearchPanel({
           activeSongId={activeSongItem?.id ?? null}
           query={songQuery}
           onOpenSong={openSongDetail}
+          onPresentSong={presentSong}
           formatReference={formatSongReference}
         />
       )}
@@ -1604,6 +1721,7 @@ export function SearchPanel({
                       onClick={() =>
                         usePresentationStore.getState().selectSlide(slide.id)
                       }
+                      onDoubleClick={() => presentSlide(slide)}
                       className={cn(
                         "group relative cursor-pointer overflow-hidden rounded-lg border p-2 transition-colors select-none active:cursor-grabbing",
                         isActive
