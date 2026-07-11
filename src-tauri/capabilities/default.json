@@ -5,6 +5,8 @@
   "windows": ["main", "broadcast", "broadcast-alt"],
   "permissions": [
     "core:default",
+    "core:window:allow-is-fullscreen",
+    "core:window:allow-set-fullscreen",
     "store:default",
     "dialog:default",
     "opener:default",

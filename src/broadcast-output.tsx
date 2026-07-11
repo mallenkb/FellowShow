@@ -1,12 +1,16 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createRoot } from "react-dom/client"
-import { useRef, useEffect, useCallback } from "react"
+import { useRef, useEffect, useCallback, useState } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import { shouldRenderLowerThirdLayer } from "@/lib/broadcast-output-mode"
+import {
+  getBroadcastContextMenuLabel,
+  getBroadcastContextMenuPosition,
+} from "@/lib/broadcast-output-context-menu"
 import type {
   BroadcastTheme,
   LowerThirdRenderData,
@@ -33,6 +37,11 @@ function uint8ToBase64(bytes: Uint8Array | Uint8ClampedArray): string {
 /** Read output ID from URL query param (?output=main or ?output=alt). Defaults to "main". */
 const OUTPUT_ID =
   new URLSearchParams(window.location.search).get("output") ?? "main"
+const currentWindow = getCurrentWebviewWindow()
+
+function isTauriRuntime(): boolean {
+  return "__TAURI_INTERNALS__" in window
+}
 
 interface BroadcastPayload {
   theme: BroadcastTheme
@@ -69,6 +78,7 @@ function transitionKey(data: BroadcastPayload | null): string {
 }
 
 function BroadcastCanvas() {
+  const rootRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const latestData = useRef<BroadcastPayload | null>(null)
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
@@ -84,6 +94,82 @@ function BroadcastCanvas() {
   const ndiCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const lastPushRef = useRef(0)
   const pushingRef = useRef(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(
+    null
+  )
+
+  useEffect(() => {
+    let mounted = true
+    const syncBrowserFullscreen = () => {
+      if (!isTauriRuntime()) {
+        setIsFullscreen(document.fullscreenElement !== null)
+      }
+    }
+
+    document.addEventListener("fullscreenchange", syncBrowserFullscreen)
+
+    if (isTauriRuntime()) {
+      void currentWindow
+        .isFullscreen()
+        .then((fullscreen) => {
+          if (mounted) setIsFullscreen(fullscreen)
+        })
+        .catch((error) => {
+          console.warn("[broadcast-output] failed to read fullscreen state", error)
+        })
+    }
+
+    return () => {
+      mounted = false
+      document.removeEventListener("fullscreenchange", syncBrowserFullscreen)
+    }
+  }, [])
+
+  const toggleFullscreen = useCallback(async () => {
+    const nextFullscreen = !isFullscreen
+
+    if (!isTauriRuntime()) {
+      try {
+        if (nextFullscreen) {
+          await document.documentElement.requestFullscreen()
+        } else if (document.fullscreenElement) {
+          await document.exitFullscreen()
+        }
+        setIsFullscreen(document.fullscreenElement !== null)
+        setContextMenu(null)
+      } catch (error) {
+        console.warn(
+          "[broadcast-output] failed to change browser fullscreen state",
+          error
+        )
+      }
+      return
+    }
+
+    try {
+      await currentWindow.setFullscreen(nextFullscreen)
+      setIsFullscreen(nextFullscreen)
+      setContextMenu(null)
+    } catch (error) {
+      console.warn("[broadcast-output] failed to change fullscreen state", error)
+    }
+  }, [isFullscreen])
+
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault()
+      setContextMenu(
+        getBroadcastContextMenuPosition(
+          event.clientX,
+          event.clientY,
+          window.innerWidth,
+          window.innerHeight
+        )
+      )
+    },
+    []
+  )
 
   const logDebug = useCallback((message: string, meta?: unknown) => {
     if (!import.meta.env.DEV) return
@@ -343,7 +429,6 @@ function BroadcastCanvas() {
       }
     }
 
-    const currentWindow = getCurrentWebviewWindow()
     logDebug("Listener registration started", { label: currentWindow.label })
     const unlisten = currentWindow.listen<BroadcastPayload>(
       "broadcast:verse-update",
@@ -430,15 +515,67 @@ function BroadcastCanvas() {
   }, [pushNdiFrame])
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
+      ref={rootRef}
+      onContextMenuCapture={handleContextMenu}
+      onPointerDown={() => setContextMenu(null)}
       style={{
+        position: "relative",
         width: "100vw",
         height: "100vh",
-        display: "block",
-        objectFit: "contain",
+        overflow: "hidden",
       }}
-    />
+    >
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "block",
+          objectFit: "contain",
+        }}
+      />
+      {contextMenu ? (
+        <div
+          role="menu"
+          aria-label="Projector display options"
+          onContextMenu={(event) => event.preventDefault()}
+          onPointerDown={(event) => event.stopPropagation()}
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 10,
+            minWidth: 180,
+            padding: 4,
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            borderRadius: 6,
+            background: "rgba(32, 32, 32, 0.98)",
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.35)",
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => void toggleFullscreen()}
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px 12px",
+              border: 0,
+              borderRadius: 4,
+              background: "transparent",
+              color: "#f5f5f5",
+              cursor: "pointer",
+              font: "inherit",
+              textAlign: "left",
+            }}
+          >
+            {getBroadcastContextMenuLabel(isFullscreen)}
+          </button>
+        </div>
+      ) : null}
+    </div>
   )
 }
 

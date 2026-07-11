@@ -26,13 +26,29 @@ fn window_url(output_id: &str) -> String {
 }
 
 trait ProjectorWindowOps {
+    fn set_decorations(&self, decorations: bool) -> Result<(), String>;
+    fn set_fullscreen(&self, fullscreen: bool) -> Result<(), String>;
+    fn set_skip_taskbar(&self, skip: bool) -> Result<(), String>;
     fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String>;
     fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String>;
+    fn maximize(&self) -> Result<(), String>;
     fn show(&self) -> Result<(), String>;
     fn set_focus(&self) -> Result<(), String>;
 }
 
 impl ProjectorWindowOps for tauri::WebviewWindow {
+    fn set_decorations(&self, decorations: bool) -> Result<(), String> {
+        self.set_decorations(decorations).map_err(|e| e.to_string())
+    }
+
+    fn set_fullscreen(&self, fullscreen: bool) -> Result<(), String> {
+        self.set_fullscreen(fullscreen).map_err(|e| e.to_string())
+    }
+
+    fn set_skip_taskbar(&self, skip: bool) -> Result<(), String> {
+        self.set_skip_taskbar(skip).map_err(|e| e.to_string())
+    }
+
     fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String> {
         self.set_position(tauri::Position::Physical(position))
             .map_err(|e| e.to_string())
@@ -41,6 +57,10 @@ impl ProjectorWindowOps for tauri::WebviewWindow {
     fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String> {
         self.set_size(tauri::Size::Physical(size))
             .map_err(|e| e.to_string())
+    }
+
+    fn maximize(&self) -> Result<(), String> {
+        self.maximize().map_err(|e| e.to_string())
     }
 
     fn show(&self) -> Result<(), String> {
@@ -57,8 +77,12 @@ fn show_projector_window(
     position: tauri::PhysicalPosition<i32>,
     size: tauri::PhysicalSize<u32>,
 ) -> Result<(), String> {
+    window.set_fullscreen(false)?;
+    window.set_decorations(true)?;
+    window.set_skip_taskbar(false)?;
     window.set_physical_position(position)?;
     window.set_physical_size(size)?;
+    window.maximize()?;
     window.show()?;
     window.set_focus()?;
     Ok(())
@@ -133,7 +157,7 @@ pub fn ensure_broadcast_window(app: tauri::AppHandle, output_id: String) -> Resu
             "FellowShow NDI"
         })
         .inner_size(1920.0, 1080.0)
-        .decorations(false)
+        .decorations(true)
         .visible(false)
         .skip_taskbar(true)
         .focused(false)
@@ -179,12 +203,12 @@ pub async fn open_broadcast_window(
     };
 
     let window =
-        WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
+            WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
             .title(title)
             .inner_size(1920.0, 1080.0)
-            .decorations(false)
+            .decorations(true)
             .always_on_top(false)
-            .skip_taskbar(true)
+            .skip_taskbar(false)
             .focused(true)
             .visible(true)
             .on_page_load(|window, payload| {
@@ -303,8 +327,12 @@ mod tests {
 
     #[derive(Debug, PartialEq)]
     enum WindowOperation {
+        Decorations(bool),
+        Fullscreen(bool),
+        SkipTaskbar(bool),
         Position(tauri::PhysicalPosition<i32>),
         Size(tauri::PhysicalSize<u32>),
+        Maximize,
         Show,
         Focus,
     }
@@ -315,6 +343,27 @@ mod tests {
     }
 
     impl ProjectorWindowOps for RecordingWindow {
+        fn set_decorations(&self, decorations: bool) -> Result<(), String> {
+            self.operations
+                .borrow_mut()
+                .push(WindowOperation::Decorations(decorations));
+            Ok(())
+        }
+
+        fn set_fullscreen(&self, fullscreen: bool) -> Result<(), String> {
+            self.operations
+                .borrow_mut()
+                .push(WindowOperation::Fullscreen(fullscreen));
+            Ok(())
+        }
+
+        fn set_skip_taskbar(&self, skip: bool) -> Result<(), String> {
+            self.operations
+                .borrow_mut()
+                .push(WindowOperation::SkipTaskbar(skip));
+            Ok(())
+        }
+
         fn set_physical_position(
             &self,
             position: tauri::PhysicalPosition<i32>,
@@ -329,6 +378,11 @@ mod tests {
             self.operations
                 .borrow_mut()
                 .push(WindowOperation::Size(size));
+            Ok(())
+        }
+
+        fn maximize(&self) -> Result<(), String> {
+            self.operations.borrow_mut().push(WindowOperation::Maximize);
             Ok(())
         }
 
@@ -357,8 +411,12 @@ mod tests {
         assert_eq!(
             *window.operations.borrow(),
             vec![
+                WindowOperation::Fullscreen(false),
+                WindowOperation::Decorations(true),
+                WindowOperation::SkipTaskbar(false),
                 WindowOperation::Position(position),
                 WindowOperation::Size(size),
+                WindowOperation::Maximize,
                 WindowOperation::Show,
                 WindowOperation::Focus,
             ]
