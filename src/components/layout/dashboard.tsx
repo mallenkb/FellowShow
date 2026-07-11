@@ -337,7 +337,12 @@ export function Dashboard() {
 
   const handleSearchModeChange = useCallback((mode: SearchMode) => {
     setSearchMode(mode)
-    const section = mode === "songs" ? "songs" : mode === "presentation" ? "presentation" : "bible"
+    const section =
+      mode === "songs"
+        ? "songs"
+        : mode === "presentation"
+          ? "presentation"
+          : "bible"
     useBroadcastStore.getState().setSelectedThemeSection(section)
   }, [])
 
@@ -394,15 +399,11 @@ export function Dashboard() {
           onPointerDown={(event) => startColumnResize(1, event)}
         />
 
-        <div className="flex h-full min-h-0 flex-col items-stretch gap-3 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] *:min-h-0">
+        <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch gap-3 overflow-y-auto overscroll-contain pr-1 *:min-h-0">
           <LiveOutputPanel mode={searchMode} />
           <PreviewPanel mode={searchMode} />
-          {searchMode !== "timer" && (
-            <ThemesPanel mode={searchMode} />
-          )}
-          {searchMode !== "timer" && (
-            <MotionPanel mode={searchMode} />
-          )}
+          {searchMode !== "timer" && <ThemesPanel mode={searchMode} />}
+          {searchMode !== "timer" && <MotionPanel mode={searchMode} />}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { lazy, Suspense, useCallback, useState } from "react"
 import { LevelMeter } from "@/components/ui/level-meter"
 import { LiveIndicator } from "@/components/ui/live-indicator"
 import {
@@ -6,22 +6,39 @@ import {
   MicOffIcon,
   PaletteIcon,
   CastIcon,
+  SettingsIcon,
   SunIcon,
   MoonIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ApiKeyPrompt } from "@/components/ui/api-key-prompt"
-import { SettingsDialog } from "@/components/settings-dialog"
-import { ThemeDesigner } from "@/components/broadcast/theme-designer"
-import { BroadcastSettings } from "@/components/broadcast/broadcast-settings"
 import { useAudioStore, useTranscriptStore, useBroadcastStore } from "@/stores"
+import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import { useTheme } from "@/components/theme-provider"
 import { transcriptionActions } from "@/hooks/use-transcription"
+
+const SettingsDialog = lazy(() =>
+  import("@/components/settings-dialog").then((module) => ({
+    default: module.SettingsDialog,
+  }))
+)
+const ThemeDesigner = lazy(() =>
+  import("@/components/broadcast/theme-designer").then((module) => ({
+    default: module.ThemeDesigner,
+  }))
+)
+const BroadcastSettings = lazy(() =>
+  import("@/components/broadcast/broadcast-settings").then((module) => ({
+    default: module.BroadcastSettings,
+  }))
+)
 
 export function TransportBar() {
   const { theme, setTheme } = useTheme()
   const audioLevel = useAudioStore((s) => s.level)
   const isTranscribing = useTranscriptStore((s) => s.isTranscribing)
+  const isDesignerOpen = useBroadcastStore((s) => s.isDesignerOpen)
+  const isSettingsOpen = useSettingsDialogStore((s) => s.isOpen)
   const [broadcastOpen, setBroadcastOpen] = useState(false)
   const [showKeyPrompt, setShowKeyPrompt] = useState(false)
 
@@ -84,10 +101,14 @@ export function TransportBar() {
         >
           <CastIcon className="size-3.5" />
         </Button>
-        <BroadcastSettings
-          open={broadcastOpen}
-          onOpenChange={setBroadcastOpen}
-        />
+        {broadcastOpen ? (
+          <Suspense fallback={null}>
+            <BroadcastSettings
+              open={broadcastOpen}
+              onOpenChange={setBroadcastOpen}
+            />
+          </Suspense>
+        ) : null}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -97,8 +118,24 @@ export function TransportBar() {
         >
           <PaletteIcon className="size-3.5" />
         </Button>
-        <ThemeDesigner />
-        <SettingsDialog />
+        {isDesignerOpen ? (
+          <Suspense fallback={null}>
+            <ThemeDesigner />
+          </Suspense>
+        ) : null}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          title="Settings"
+          onClick={() => useSettingsDialogStore.getState().openSettings()}
+        >
+          <SettingsIcon className="size-3.5" />
+        </Button>
+        {isSettingsOpen ? (
+          <Suspense fallback={null}>
+            <SettingsDialog />
+          </Suspense>
+        ) : null}
         <ApiKeyPrompt
           open={showKeyPrompt}
           onOpenChange={setShowKeyPrompt}

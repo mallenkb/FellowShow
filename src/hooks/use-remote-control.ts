@@ -1,12 +1,12 @@
 import { useEffect } from "react"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
-import { invoke } from "@tauri-apps/api/core"
+import { isTauri } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { useBibleStore } from "@/stores/bible-store"
 import { useQueueStore } from "@/stores/queue-store"
 import { useSettingsStore } from "@/stores/settings-store"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
-import type { Verse } from "@/types"
 
 /**
  * Listens for remote control events from the Rust backend (OSC / HTTP API)
@@ -16,6 +16,8 @@ import type { Verse } from "@/types"
  */
 export function useRemoteControl() {
   useEffect(() => {
+    if (!isTauri()) return
+
     let cancelled = false
     const unlisteners: UnlistenFn[] = []
 
@@ -32,7 +34,7 @@ export function useRemoteControl() {
           items.length - 1
         )
         useQueueStore.getState().setActive(nextIndex)
-        presentQueueItem(nextIndex)
+        void presentQueueItem(nextIndex).catch(console.error)
       })
       unlisteners.push(u1)
 
@@ -48,7 +50,7 @@ export function useRemoteControl() {
           0
         )
         useQueueStore.getState().setActive(prevIndex)
-        presentQueueItem(prevIndex)
+        void presentQueueItem(prevIndex).catch(console.error)
       })
       unlisteners.push(u2)
 
@@ -75,10 +77,7 @@ export function useRemoteControl() {
         const payload = parsePayload(event.payload)
         const value = payload?.value as number | undefined
         if (value === undefined) return
-        // Opacity is stored on the live verse rendering; for now broadcast
-        // store doesn't have a dedicated opacity field — this is a placeholder
-        // that can be wired when the broadcast store adds opacity support.
-        void value
+        useBroadcastStore.getState().setOutputOpacity(value)
       })
       unlisteners.push(u4)
 
@@ -117,7 +116,9 @@ export function useRemoteControl() {
       unlisteners.push(u8)
     }
 
-    setup()
+    void setup().catch((error) => {
+      console.warn("[remote-control] failed to register listeners:", error)
+    })
 
     // Sync status snapshot to Rust backend periodically for HTTP GET /api/v1/status
     const statusInterval = setInterval(() => {
@@ -161,7 +162,7 @@ async function presentQueueItem(index: number) {
 
     // Fetch the full verse from the backend to ensure we have complete data
     // (AI-detected queue items may have partial verse objects)
-    const fullVerse = await invoke<Verse | null>("get_verse", {
+    const fullVerse = await invoke("get_verse", {
       translationId: useBibleStore.getState().activeTranslationId,
       bookNumber: verse.book_number,
       chapter: verse.chapter,
@@ -214,7 +215,10 @@ function syncStatusSnapshot() {
 function parsePayload(raw: unknown): Record<string, unknown> | null {
   if (typeof raw === "string") {
     try {
-      return JSON.parse(raw)
+      const parsed: unknown = JSON.parse(raw)
+      return typeof parsed === "object" && parsed !== null
+        ? (parsed as Record<string, unknown>)
+        : null
     } catch {
       return null
     }

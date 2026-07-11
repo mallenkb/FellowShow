@@ -35,7 +35,11 @@ import {
 import { cn } from "@/lib/utils"
 import { importTheme, exportTheme } from "@/lib/theme-designer-files"
 import { sortThemesForSection } from "@/lib/theme-order"
-import type { BroadcastTheme, BroadcastThemeSection, VerseRenderData } from "@/types"
+import type {
+  BroadcastTheme,
+  BroadcastThemeSection,
+  VerseRenderData,
+} from "@/types"
 
 const PRESENTATION_HIDDEN_BUILTIN_THEME_IDS = new Set([
   "builtin-classic-dark",
@@ -131,12 +135,17 @@ function ThemeCard({
       }}
       className={cn(
         "group relative flex w-full flex-col gap-1.5 rounded-lg p-1.5 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        isEditing && "ring-2 ring-inset ring-primary"
+        isEditing && "ring-2 ring-primary ring-inset"
       )}
     >
       {/* Thumbnail */}
       <div className="relative aspect-video w-full overflow-hidden rounded-lg">
-        <CanvasVerse theme={theme} verse={thumbnailVerse} className="h-full w-full" fillContainer />
+        <CanvasVerse
+          theme={theme}
+          verse={thumbnailVerse}
+          className="h-full w-full"
+          fillContainer
+        />
 
         {/* Active badge */}
         {isActive && (
@@ -187,7 +196,9 @@ function ThemeCard({
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
-                useBroadcastStore.getState().setActiveTheme(theme.id, activeSection)
+                useBroadcastStore
+                  .getState()
+                  .setActiveTheme(theme.id, activeSection)
               }}
             >
               <CheckCircleIcon className="mr-2 size-3.5" />
@@ -200,9 +211,15 @@ function ThemeCard({
               }}
             >
               {theme.pinned ? (
-                <><PinOffIcon className="mr-2 size-3.5" />Unpin</>
+                <>
+                  <PinOffIcon className="mr-2 size-3.5" />
+                  Unpin
+                </>
               ) : (
-                <><PinIcon className="mr-2 size-3.5" />Pin</>
+                <>
+                  <PinIcon className="mr-2 size-3.5" />
+                  Pin
+                </>
               )}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -250,7 +267,11 @@ function ThemeCard({
               placeholder="Theme name"
             />
             <DialogFooter className="mt-4">
-              <Button type="button" variant="ghost" onClick={() => setRenameOpen(false)}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setRenameOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={!renameValue.trim()}>
@@ -290,7 +311,9 @@ export function ThemeLibrary() {
   const filteredThemes = useMemo(() => {
     let result = themes
     if (selectedThemeSection === "presentation") {
-      result = result.filter((theme) => !PRESENTATION_HIDDEN_BUILTIN_THEME_IDS.has(theme.id))
+      result = result.filter(
+        (theme) => !PRESENTATION_HIDDEN_BUILTIN_THEME_IDS.has(theme.id)
+      )
     }
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -328,7 +351,9 @@ export function ThemeLibrary() {
         if (theme) {
           useBroadcastStore.getState().saveTheme(theme)
           useBroadcastStore.getState().startEditing(theme.id)
-          useBroadcastStore.getState().setActiveTheme(theme.id, selectedThemeSection)
+          useBroadcastStore
+            .getState()
+            .setActiveTheme(theme.id, selectedThemeSection)
         }
       } catch (err) {
         console.error("[theme-library] import failed:", err)

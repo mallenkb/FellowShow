@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { emitTo, listen } from "@tauri-apps/api/event"
 import { getAllWindows } from "@tauri-apps/api/window"
 import {
@@ -31,7 +31,6 @@ import type {
   NdiAlphaMode,
   NdiFrameRate,
   NdiResolution,
-  NdiSessionInfo,
   NdiStartRequest,
 } from "@/types"
 import {
@@ -162,7 +161,7 @@ export function BroadcastSettings({
   const fetchMonitors = useCallback(async () => {
     setRefreshing(true)
     try {
-      const result = await invoke<MonitorInfo[]>("list_monitors")
+      const result = await invoke("list_monitors")
       setMonitors(result)
       if (result.length > 0) {
         const preferred = result[selectPreferredMonitorIndex(result)]
@@ -179,7 +178,7 @@ export function BroadcastSettings({
   }, [])
 
   useEffect(() => {
-    if (open) fetchMonitors()
+    if (open) void fetchMonitors()
   }, [open, fetchMonitors])
 
   // Sync theme selection with broadcast store
@@ -282,7 +281,7 @@ export function BroadcastSettings({
           frameRate: ndiFrameRate,
           alphaMode: ndiAlphaMode,
         }
-        const session = await invoke<NdiSessionInfo>("start_ndi", {
+        const session = await invoke("start_ndi", {
           outputId: "main",
           request,
         })
@@ -406,7 +405,7 @@ export function BroadcastSettings({
           frameRate: altNdiFrameRate,
           alphaMode: altNdiAlphaMode,
         }
-        const session = await invoke<NdiSessionInfo>("start_ndi", {
+        const session = await invoke("start_ndi", {
           outputId: "alt",
           request,
         })
@@ -502,7 +501,7 @@ export function BroadcastSettings({
                 </span>
                 <Switch
                   checked={mainEnabled}
-                  onCheckedChange={handleMainToggle}
+                  onCheckedChange={(checked) => void handleMainToggle(checked)}
                 />
               </div>
             </div>
@@ -569,7 +568,7 @@ export function BroadcastSettings({
                       variant="ghost"
                       size="xs"
                       disabled={refreshing}
-                      onClick={fetchMonitors}
+                      onClick={() => void fetchMonitors()}
                       className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
                     >
                       <RefreshCwIcon
@@ -610,7 +609,7 @@ export function BroadcastSettings({
                   size="sm"
                   className="w-full gap-1.5"
                   disabled={monitors.length === 0}
-                  onClick={handleTogglePreview}
+                  onClick={() => void handleTogglePreview()}
                 >
                   {isPreviewOpen ? (
                     <>
@@ -716,7 +715,7 @@ export function BroadcastSettings({
                     ndiActive &&
                       "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400"
                   )}
-                  onClick={handleToggleNdi}
+                  onClick={() => void handleToggleNdi()}
                 >
                   {ndiActive ? (
                     <>
@@ -752,7 +751,7 @@ export function BroadcastSettings({
                 </span>
                 <Switch
                   checked={altEnabled}
-                  onCheckedChange={handleAltToggle}
+                  onCheckedChange={(checked) => void handleAltToggle(checked)}
                 />
               </div>
             </div>
@@ -816,7 +815,7 @@ export function BroadcastSettings({
                       variant="ghost"
                       size="xs"
                       disabled={refreshing}
-                      onClick={fetchMonitors}
+                      onClick={() => void fetchMonitors()}
                       className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
                     >
                       <RefreshCwIcon
@@ -856,7 +855,7 @@ export function BroadcastSettings({
                   size="sm"
                   className="w-full gap-1.5"
                   disabled={monitors.length === 0}
-                  onClick={handleAltTogglePreview}
+                  onClick={() => void handleAltTogglePreview()}
                 >
                   {altIsPreviewOpen ? (
                     <>
@@ -957,7 +956,7 @@ export function BroadcastSettings({
                     altNdiActive &&
                       "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400"
                   )}
-                  onClick={handleAltToggleNdi}
+                  onClick={() => void handleAltToggleNdi()}
                 >
                   {altNdiActive ? (
                     <>

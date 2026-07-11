@@ -85,7 +85,7 @@ pub async fn start_osc(
 
     let config = OscConfig {
         port: port.unwrap_or(8000),
-        host: "0.0.0.0".into(),
+        host: "127.0.0.1".into(),
     };
 
     let sink = Arc::new(TauriSink { app });
@@ -182,7 +182,7 @@ pub async fn start_http(
 
     let config = HttpConfig {
         port: port.unwrap_or(8080),
-        host: "0.0.0.0".into(),
+        host: "127.0.0.1".into(),
     };
 
     let sink = Arc::new(TauriSink { app });

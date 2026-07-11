@@ -1,6 +1,9 @@
 import type { BroadcastTheme } from "@/types/broadcast"
 
-export function applyTransitionEasing(progress: number, easing: BroadcastTheme["transition"]["easing"]): number {
+function applyTransitionEasing(
+  progress: number,
+  easing: BroadcastTheme["transition"]["easing"]
+): number {
   const t = Math.max(0, Math.min(1, progress))
   switch (easing) {
     case "linear":
@@ -20,7 +23,7 @@ export function drawTransitionFrame(
   previous: HTMLCanvasElement,
   next: HTMLCanvasElement,
   theme: BroadcastTheme,
-  progress: number,
+  progress: number
 ): void {
   const width = ctx.canvas.width
   const height = ctx.canvas.height
@@ -49,17 +52,25 @@ export function drawTransitionFrame(
   ctx.save()
   ctx.globalAlpha = eased
   if (transition.type === "slide") {
-    const distanceX = transition.direction === "left"
-      ? width
-      : transition.direction === "right"
-        ? -width
-        : 0
-    const distanceY = transition.direction === "up"
-      ? height
-      : transition.direction === "down"
-        ? -height
-        : 0
-    ctx.drawImage(next, distanceX * (1 - eased), distanceY * (1 - eased), width, height)
+    const distanceX =
+      transition.direction === "left"
+        ? width
+        : transition.direction === "right"
+          ? -width
+          : 0
+    const distanceY =
+      transition.direction === "up"
+        ? height
+        : transition.direction === "down"
+          ? -height
+          : 0
+    ctx.drawImage(
+      next,
+      distanceX * (1 - eased),
+      distanceY * (1 - eased),
+      width,
+      height
+    )
   } else {
     const scale = 0.96 + eased * 0.04
     const drawW = width * scale

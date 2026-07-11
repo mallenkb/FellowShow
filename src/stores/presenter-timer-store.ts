@@ -1,9 +1,9 @@
 import { create } from "zustand"
-import { DEFAULT_TIMER_FONT_FAMILY } from "@/lib/font-options"
+import { DEFAULT_PRESENTATION_FONT_FAMILY } from "@/lib/font-options"
 import { PRESENTER_TIMER_BACKGROUND_URL } from "@/lib/presenter-timer-background"
 import type { PresenterTimerRenderData } from "@/types"
 
-export interface PresenterTimerBackgroundOption {
+interface PresenterTimerBackgroundOption {
   id: string
   name: string
   url: string
@@ -11,7 +11,7 @@ export interface PresenterTimerBackgroundOption {
   builtin?: boolean
 }
 
-export const DEFAULT_TIMER_BACKGROUND_OPTION: PresenterTimerBackgroundOption = {
+const DEFAULT_TIMER_BACKGROUND_OPTION: PresenterTimerBackgroundOption = {
   id: "paint-sweeps-red-blue-scripture",
   name: "Paint Sweeps",
   url: PRESENTER_TIMER_BACKGROUND_URL,
@@ -123,7 +123,7 @@ export const usePresenterTimerStore = create<PresenterTimerState>(
       totalSeconds: 30,
       remainingSeconds: 30,
       isRunning: false,
-      fontFamily: DEFAULT_TIMER_FONT_FAMILY,
+      fontFamily: DEFAULT_PRESENTATION_FONT_FAMILY,
       backgroundUrl: persistedBackgrounds.backgroundUrl,
       backgroundOptions: persistedBackgrounds.backgroundOptions,
 

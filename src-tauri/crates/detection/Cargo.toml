@@ -12,7 +12,7 @@ serde_json.workspace = true
 log.workspace = true
 thiserror.workspace = true
 aho-corasick = "1"
-lru = "0.12"
+lru = "0.18"
 fellowshow-bible = { path = "../bible" }
 
 # Optional heavy dependencies for real embedding / vector search

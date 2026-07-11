@@ -8,12 +8,13 @@ import {
   useDeferredValue,
   type PointerEvent,
 } from "react"
-import { createPortal } from "react-dom"
 import { motion } from "motion/react"
-import { invoke } from "@tauri-apps/api/core"
+import { isTauri } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
+import { open } from "@tauri-apps/plugin-dialog"
+import { toast } from "sonner"
 // Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
 import { Button } from "@/components/ui/button"
-import { Fader } from "@/components/ui/fader"
 import { Input } from "@/components/ui/input"
 import {
   getAutocompleteSuggestion,
@@ -22,10 +23,6 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
@@ -51,7 +48,6 @@ import {
   CheckIcon,
   PlusIcon,
   RotateCcwIcon,
-  ChevronDownIcon,
   TimerIcon,
 } from "lucide-react"
 import {
@@ -80,14 +76,15 @@ import {
   useSettingsStore,
   usePresentationStore,
 } from "@/stores"
-import type { Book, Verse, SemanticSearchResult } from "@/types"
+import type { Book, Verse } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
 import { createSongSearchIndex, searchSongs } from "@/lib/song-search"
 import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
-import { loadAllSongs } from "@/lib/songs-data"
+import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
 import { compareSongPdfOrder } from "@/lib/song-ordering"
 import { splitLyricBlocks } from "@/lib/lyrics"
-import { PresenterTimer } from "@/components/controls/presenter-timer"
+import { SongsTab } from "@/components/panels/search/songs-tab"
+import { TimerTab } from "@/components/panels/search/timer-tab"
 
 type SearchTab = "book" | "context" | "songs" | "presentation" | "timer"
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
@@ -114,15 +111,8 @@ type TransformInteraction =
       previewHeight: number
     }
 
-const LYRIC_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const SHOW_CONTEXT_SEARCH = false
 const SONG_RENDER_LIMIT = 100
-const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
-  { value: "all", label: "All songs" },
-  { value: "theme-2026", label: "2026 Theme" },
-  { value: "theme-2025", label: "2025 Theme" },
-  { value: "pentecostal-book", label: "Pentecostal Book" },
-]
 
 function hashString(value: string) {
   let hash = 0
@@ -132,344 +122,10 @@ function hashString(value: string) {
   return hash || 1
 }
 
-function TranslationOptions({
-  translations,
-}: {
-  translations: ReturnType<typeof useBible>["translations"]
-}) {
-  const preferredEnglishOrder = ["NKJV", "NIV", "KJV", "AMP", "NLT"]
-  const englishTranslations = translations
-    .filter((t) => t.language === "en")
-    .sort((a, b) => {
-      const aIndex = preferredEnglishOrder.indexOf(a.abbreviation)
-      const bIndex = preferredEnglishOrder.indexOf(b.abbreviation)
-      if (aIndex !== -1 || bIndex !== -1) {
-        return (
-          (aIndex === -1 ? preferredEnglishOrder.length : aIndex) -
-          (bIndex === -1 ? preferredEnglishOrder.length : bIndex)
-        )
-      }
-      return a.abbreviation.localeCompare(b.abbreviation)
-    })
-  const otherTranslations = translations.filter((t) => t.language !== "en")
-
-  return (
-    <>
-      {englishTranslations.length > 0 && (
-        <SelectGroup>
-          <SelectLabel className="text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
-            English
-          </SelectLabel>
-          {englishTranslations.map((t) => (
-            <SelectItem key={t.id} value={String(t.id)}>
-              {t.abbreviation}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      )}
-      {englishTranslations.length > 0 && otherTranslations.length > 0 && (
-        <SelectSeparator />
-      )}
-      {otherTranslations.length > 0 && (
-        <SelectGroup>
-          <SelectLabel className="text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
-            Other Languages
-          </SelectLabel>
-          {otherTranslations.map((t) => (
-            <SelectItem key={t.id} value={String(t.id)}>
-              {t.abbreviation}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      )}
-    </>
-  )
-}
-
-function SongFilterDropdown({
-  sourceValue,
-  letterValue,
-  onSourceChange,
-  onLetterChange,
-}: {
-  sourceValue: SongSourceFilter
-  letterValue: string
-  onSourceChange: (value: SongSourceFilter) => void
-  onLetterChange: (value: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-  const [menuPosition, setMenuPosition] = useState({
-    left: 0,
-    top: 0,
-    width: 260,
-  })
-  const letterOptions = ["all", ...LYRIC_LETTERS]
-  const sourceLabel =
-    songSourceOptions.find((option) => option.value === sourceValue)?.label ??
-    "All songs"
-  const letterLabel = letterValue === "all" ? "All" : letterValue
-  const label =
-    sourceValue === "all" && letterValue === "all"
-      ? "All songs"
-      : sourceValue !== "all" && letterValue !== "all"
-        ? `${sourceLabel} · ${letterLabel}`
-        : sourceValue !== "all"
-          ? sourceLabel
-          : `${letterLabel} songs`
-
-  const updateMenuPosition = useCallback(() => {
-    const trigger = triggerRef.current
-    if (!trigger) return
-
-    const rect = trigger.getBoundingClientRect()
-    const width = Math.max(260, Math.round(rect.width))
-    setMenuPosition({
-      left: Math.round(rect.right - width),
-      top: Math.round(rect.bottom + 6),
-      width,
-    })
-  }, [])
-
-  const toggleOpen = useCallback(() => {
-    updateMenuPosition()
-    setOpen((current) => !current)
-  }, [updateMenuPosition])
-
-  useEffect(() => {
-    if (!open) return
-
-    updateMenuPosition()
-
-    const handlePointerDown = (event: globalThis.PointerEvent) => {
-      const target = event.target as Node
-      if (
-        triggerRef.current?.contains(target) ||
-        menuRef.current?.contains(target)
-      )
-        return
-      setOpen(false)
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false)
-      }
-    }
-
-    const handleViewportChange = () => {
-      updateMenuPosition()
-    }
-
-    window.addEventListener("pointerdown", handlePointerDown)
-    window.addEventListener("keydown", handleKeyDown)
-    window.addEventListener("resize", handleViewportChange)
-    window.addEventListener("scroll", handleViewportChange, true)
-
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown)
-      window.removeEventListener("keydown", handleKeyDown)
-      window.removeEventListener("resize", handleViewportChange)
-      window.removeEventListener("scroll", handleViewportChange, true)
-    }
-  }, [open, updateMenuPosition])
-
-  return (
-    <div className="shrink-0">
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={toggleOpen}
-        className="flex h-10 w-44 items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:bg-input/30 dark:hover:bg-input/50"
-      >
-        <span className="min-w-0 truncate">{label}</span>
-        <ChevronDownIcon
-          className={cn(
-            "size-4 text-muted-foreground transition-transform",
-            open && "rotate-180"
-          )}
-        />
-      </button>
-
-      {open &&
-        createPortal(
-          <div
-            ref={menuRef}
-            role="menu"
-            style={{
-              left: menuPosition.left,
-              top: menuPosition.top,
-              width: menuPosition.width,
-            }}
-            className="fixed z-50 overflow-hidden rounded-md border border-border bg-popover shadow-lg ring-1 ring-foreground/10"
-          >
-            <div className="max-h-80 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin]">
-              <div className="px-2 py-1.5 text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
-                Song type
-              </div>
-              {songSourceOptions.map((option) => {
-                const isSelected = option.value === sourceValue
-
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="menuitemradio"
-                    aria-selected={isSelected}
-                    aria-checked={isSelected}
-                    onClick={() => {
-                      onSourceChange(option.value)
-                    }}
-                    className={cn(
-                      "flex h-9 w-full items-center justify-between rounded-sm px-2 text-left text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
-                      isSelected && "bg-foreground/10 text-foreground"
-                    )}
-                  >
-                    <span>{option.label}</span>
-                    {isSelected && (
-                      <CheckIcon className="size-4 text-[#101084] dark:text-[#F1E600]" />
-                    )}
-                  </button>
-                )
-              })}
-              <div className="my-1 h-px bg-border" />
-              <div className="px-2 py-1.5 text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
-                Starts with
-              </div>
-              <div className="grid grid-cols-5 gap-1 p-1">
-                {letterOptions.map((option) => {
-                  const isSelected = option === letterValue
-                  const optionLabel = option === "all" ? "All" : option
-
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      role="menuitemradio"
-                      aria-selected={isSelected}
-                      aria-checked={isSelected}
-                      onClick={() => {
-                        onLetterChange(option)
-                      }}
-                      className={cn(
-                        "flex h-8 items-center justify-center rounded-sm px-2 text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
-                        isSelected && "bg-foreground/10 text-foreground"
-                      )}
-                    >
-                      {optionLabel}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-    </div>
-  )
-}
-
-function TransformRange({
-  label,
-  value,
-  min,
-  max,
-  step,
-  defaultValue,
-  displayFactor = 100,
-  unit = "%",
-  bipolar = false,
-  onChange,
-}: {
-  label: string
-  value: number
-  min: number
-  max: number
-  step: number
-  defaultValue?: number
-  displayFactor?: number
-  unit?: string
-  bipolar?: boolean
-  onChange: (value: number) => void
-}) {
-  const display = `${Math.round(value * displayFactor)}${unit}`
-  const hasDefaultValue = defaultValue !== undefined
-  const isDefaultValue =
-    hasDefaultValue && Math.abs(value - defaultValue) < 0.0001
-
-  return (
-    <div className="grid gap-1.5">
-      <div className="flex items-center justify-between gap-3 px-1">
-        <span className="text-xs font-medium text-muted-foreground">
-          {label}
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {display}
-          </span>
-          {hasDefaultValue ? (
-            <button
-              type="button"
-              disabled={isDefaultValue}
-              onClick={() => onChange(defaultValue)}
-              className="rounded px-1.5 py-0.5 text-[0.6875rem] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-            >
-              Reset
-            </button>
-          ) : null}
-        </div>
-      </div>
-      <Fader
-        aria-label={label}
-        value={value}
-        min={min}
-        max={max}
-        step={step}
-        defaultValue={defaultValue}
-        bipolar={bipolar}
-        onChange={onChange}
-        formatValue={(v) => `${Math.round(v * displayFactor)}${unit}`}
-      />
-    </div>
-  )
-}
-
-/** Highlights words from the query that appear in the text. */
-function HighlightedText({ text, query }: { text: string; query: string }) {
-  if (!query || query.length < 2) return <>{text}</>
-
-  const queryWords = new Set(
-    query
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((w) => w.length >= 2)
-  )
-  if (queryWords.size === 0) return <>{text}</>
-
-  // Split text into words while preserving whitespace/punctuation
-  const parts = text.split(/(\s+)/)
-  return (
-    <>
-      {parts.map((part, i) => {
-        const cleaned = part.toLowerCase().replace(/[^a-z']/g, "")
-        if (cleaned.length >= 2 && queryWords.has(cleaned)) {
-          return (
-            <mark
-              key={i}
-              className="rounded-[2px] bg-foreground/20 px-0.5 text-black text-foreground dark:bg-[#F1E600]/90 dark:text-black"
-            >
-              {part}
-            </mark>
-          )
-        }
-        return <span key={i}>{part}</span>
-      })}
-    </>
-  )
-}
+import { TranslationOptions } from "@/components/panels/search/translation-options"
+import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
+import { TransformRange } from "@/components/panels/search/transform-range"
+import { HighlightedText } from "@/components/panels/search/highlighted-text"
 
 export function SearchPanel({
   onSearchModeChange,
@@ -486,6 +142,7 @@ export function SearchPanel({
   const [songLetterFilter, setSongLetterFilter] = useState("all")
   const [songSourceFilter, setSongSourceFilter] =
     useState<SongSourceFilter>("all")
+  const [allSongs, setAllSongs] = useState<CopSong[]>([])
   const [editingPresentationSlideId, setEditingPresentationSlideId] = useState<
     string | null
   >(null)
@@ -773,6 +430,59 @@ export function SearchPanel({
     }
   }, [])
 
+  const importEasyWorshipSongs = useCallback(async () => {
+    if (!isTauri()) {
+      toast.error("EasyWorship imports are available in the desktop app.")
+      return
+    }
+
+    const selected = await open({
+      multiple: true,
+      filters: [{ name: "EasyWorship databases", extensions: ["db"] }],
+    })
+    if (!selected) return
+
+    const paths = Array.isArray(selected) ? selected : [selected]
+    const songsDbPath = paths.find((path) => /(^|[/\\])songs\.db$/i.test(path))
+    const songWordsDbPath = paths.find((path) =>
+      /(^|[/\\])songwords\.db$/i.test(path)
+    )
+    if (!songsDbPath || !songWordsDbPath) {
+      toast.error("Choose both Songs.db and SongWords.db from EasyWorship.")
+      return
+    }
+
+    try {
+      const imported = await invoke("import_easyworship_songs", {
+        songsDbPath,
+        songWordsDbPath,
+      })
+      const songs: CopSong[] = imported.map((song, index) => ({
+        id: song.id,
+        language: "english",
+        languageLabel: "EasyWorship",
+        number: index + 1,
+        title: song.title,
+        lyrics: song.lyrics,
+        source: "easyworship",
+        sourceLabel: "EasyWorship",
+      }))
+      saveEasyWorshipSongs(songs)
+      const catalog = await loadAllSongs()
+      setAllSongs(catalog)
+      setSongSourceFilter("easyworship")
+      toast.success(
+        `Imported ${songs.length} song${songs.length === 1 ? "" : "s"} from EasyWorship.`
+      )
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not import EasyWorship songs."
+      )
+    }
+  }, [])
+
   const handlePresentationDragOver = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       if (activeTab !== "presentation") return
@@ -842,13 +552,14 @@ export function SearchPanel({
   )
 
   // Song catalog is code-split and fetched the first time the Songs tab opens.
-  const [allSongs, setAllSongs] = useState<CopSong[]>([])
   useEffect(() => {
     if (activeTab !== "songs" || allSongs.length > 0) return
     let active = true
-    loadAllSongs().then((songs) => {
-      if (active) setAllSongs(songs)
-    })
+    void loadAllSongs()
+      .then((songs) => {
+        if (active) setAllSongs(songs)
+      })
+      .catch(console.error)
     return () => {
       active = false
     }
@@ -875,51 +586,6 @@ export function SearchPanel({
     [filteredSongs]
   )
   const hiddenSongCount = Math.max(0, songResultCount - visibleSongs.length)
-
-  const renderSongs = (songs: CopSong[]) => (
-    <div className="flex flex-col gap-1">
-      {songs.map((song) => {
-        const isActive = activeSongItem?.id === `song:${song.id}`
-
-        return (
-          <article
-            key={song.id}
-            className={cn(
-              "group rounded-lg border p-3 transition-colors",
-              "cursor-pointer",
-              isActive
-                ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                : "border-transparent hover:border-border hover:bg-muted/40"
-            )}
-            onClick={() => {
-              openSongDetail(song)
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 items-start justify-between gap-2">
-                  <h4 className="line-clamp-1 min-w-0 text-sm font-medium text-foreground">
-                    <HighlightedText
-                      text={formatSongReference(song)}
-                      query={songQuery}
-                    />
-                  </h4>
-                  {song.sourceLabel ? (
-                    <span className="shrink-0 rounded border border-border bg-background px-1.5 py-0.5 text-[0.625rem] font-medium text-muted-foreground">
-                      {song.sourceLabel}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-1 line-clamp-3 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">
-                  <HighlightedText text={song.lyrics} query={songQuery} />
-                </p>
-              </div>
-            </div>
-          </article>
-        )
-      })}
-    </div>
-  )
 
   const selectedBookNumber = selectedBook?.book_number
 
@@ -1089,10 +755,10 @@ export function SearchPanel({
       const isStale = () => requestId !== contextSearchRequestIdRef.current
 
       // Primary: hybrid search backend (combines vector + FTS5 BM25)
-      const hybridResults = await invoke<SemanticSearchResult[]>(
-        "semantic_search",
-        { query, limit: 15 }
-      ).catch(() => null)
+      const hybridResults = await invoke("semantic_search", {
+        query,
+        limit: 15,
+      }).catch(() => null)
 
       if (isStale()) return
 
@@ -1179,7 +845,7 @@ export function SearchPanel({
       result.matchedBook &&
       result.chapter
     ) {
-      invoke<Verse[]>("get_chapter", {
+      invoke("get_chapter", {
         translationId: activeTranslationId,
         bookNumber: result.matchedBook.book_number,
         chapter: result.chapter,
@@ -1290,7 +956,7 @@ export function SearchPanel({
   const translationSelect = (
     <Select
       value={String(activeTranslationId)}
-      onValueChange={(v) => setActiveTranslation(Number(v))}
+      onValueChange={(v) => void setActiveTranslation(Number(v))}
     >
       <SelectTrigger className="!h-10 w-28 shrink-0 text-sm">
         <SelectValue />
@@ -1313,7 +979,7 @@ export function SearchPanel({
             <button
               key={translation.id}
               type="button"
-              onClick={() => setActiveTranslation(translation.id)}
+              onClick={() => void setActiveTranslation(translation.id)}
               className={cn(
                 "h-6 shrink-0 rounded-md border px-2 text-[0.6875rem] font-medium transition-colors",
                 isActive
@@ -1343,7 +1009,7 @@ export function SearchPanel({
     >
       {/* STICKY: Tabs */}
       <div className="flex shrink-0 flex-col gap-2.5 border-b border-border px-3 pt-2 pb-3">
-        <div className="-mx-1 flex min-w-0 items-center gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="-mx-1 flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:hidden">
           <button
             data-tour="book-search"
             onClick={() => setSearchTab("book")}
@@ -1482,6 +1148,15 @@ export function SearchPanel({
               onSourceChange={setSongSourceFilter}
               onLetterChange={setSongLetterFilter}
             />
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10"
+              onClick={() => void importEasyWorshipSongs()}
+            >
+              <UploadIcon className="size-4" />
+              Import EasyWorship
+            </Button>
           </div>
         ) : activeTab === "presentation" ? (
           <div
@@ -1794,31 +1469,15 @@ export function SearchPanel({
 
       {/* Songs tab */}
       {activeTab === "songs" && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          {filteredSongs.length === 0 ? (
-            <div className="flex h-full items-center justify-center p-6 text-center">
-              <div className="max-w-xs">
-                <MusicIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
-                <p className="text-sm font-medium text-foreground">
-                  No songs found
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Try searching by title or lyrics.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 p-2">
-              {renderSongs(visibleSongs)}
-              {hiddenSongCount > 0 ? (
-                <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-                  Showing first {visibleSongs.length} of {songResultCount}{" "}
-                  songs. Refine the search to narrow the list.
-                </p>
-              ) : null}
-            </div>
-          )}
-        </div>
+        <SongsTab
+          songs={visibleSongs}
+          totalCount={songResultCount}
+          hiddenCount={hiddenSongCount}
+          activeSongId={activeSongItem?.id ?? null}
+          query={songQuery}
+          onOpenSong={openSongDetail}
+          formatReference={formatSongReference}
+        />
       )}
 
       {/* Presentation tab */}
@@ -2116,11 +1775,7 @@ export function SearchPanel({
       )}
 
       {/* Timer tab */}
-      {activeTab === "timer" && (
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          <PresenterTimer variant="panel" />
-        </div>
-      )}
+      {activeTab === "timer" && <TimerTab />}
       <Dialog
         open={Boolean(renamingPresentationSlideId)}
         onOpenChange={(open) => {

@@ -17,7 +17,13 @@ interface QueueState {
   /** Find an existing item by book+chapter+verse. Returns its index or -1. */
   findDuplicate: (bookNumber: number, chapter: number, verse: number) => number
   /** Update a chapter-only queue item in place when the verse is refined. */
-  updateEarlyRef: (bookNumber: number, chapter: number, verse: number, reference: string, verseText: string) => boolean
+  updateEarlyRef: (
+    bookNumber: number,
+    chapter: number,
+    verse: number,
+    reference: string,
+    verseText: string
+  ) => boolean
   replaceLyricItem: (item: QueueItem, kind: "song") => void
   setLyricBlock: (id: string, blockIndex: number) => void
 }
@@ -35,7 +41,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         (i) =>
           i.verse.book_number === item.verse.book_number &&
           i.verse.chapter === item.verse.chapter &&
-          i.verse.verse === item.verse.verse,
+          i.verse.verse === item.verse.verse
       )
       if (duplicate) return state
       return { items: [item, ...state.items] }
@@ -63,7 +69,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
       (i) =>
         i.verse.book_number === bookNumber &&
         i.verse.chapter === chapter &&
-        i.verse.verse === verse,
+        i.verse.verse === verse
     ),
   updateEarlyRef: (bookNumber, chapter, verse, reference, verseText) => {
     let found = false
@@ -73,14 +79,12 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         (i) =>
           i.is_chapter_only &&
           i.verse.book_number === bookNumber &&
-          i.verse.chapter === chapter,
+          i.verse.chapter === chapter
       )
       // Fallback: same book, any chapter (book-only detection guessed chapter 1)
       if (idx === -1) {
         idx = state.items.findIndex(
-          (i) =>
-            i.is_chapter_only &&
-            i.verse.book_number === bookNumber,
+          (i) => i.is_chapter_only && i.verse.book_number === bookNumber
         )
       }
       if (idx === -1) return state
@@ -97,14 +101,20 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   },
   replaceLyricItem: (item, kind) =>
     set((state) => {
-      const items = [item, ...state.items.filter((candidate) => candidate.lyricKind !== kind)]
+      const items = [
+        item,
+        ...state.items.filter((candidate) => candidate.lyricKind !== kind),
+      ]
       return { items, activeIndex: 0 }
     }),
   setLyricBlock: (id, blockIndex) =>
     set((state) => ({
       items: state.items.map((item) => {
         if (item.id !== id || !item.lyricBlocks?.length) return item
-        const safeIndex = Math.max(0, Math.min(blockIndex, item.lyricBlocks.length - 1))
+        const safeIndex = Math.max(
+          0,
+          Math.min(blockIndex, item.lyricBlocks.length - 1)
+        )
         const block = item.lyricBlocks[safeIndex]
         return {
           ...item,

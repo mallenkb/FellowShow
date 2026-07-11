@@ -87,10 +87,6 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 }))
 
 const PERSISTED_KEYS = [
-  "deepgramApiKey",
-  "openaiApiKey",
-  "groqApiKey",
-  "claudeApiKey",
   "audioDeviceId",
   "gain",
   "autoMode",
@@ -102,6 +98,13 @@ const PERSISTED_KEYS = [
   "pinnedTranslationIds",
   "defaultPinnedTranslationsApplied",
 ] as const satisfies readonly (keyof SettingsState)[]
+
+const LEGACY_SECRET_KEYS = [
+  "deepgramApiKey",
+  "openaiApiKey",
+  "groqApiKey",
+  "claudeApiKey",
+] as const
 
 let tauriStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
@@ -121,6 +124,14 @@ export function hydrateSettings(): Promise<void> {
   hydrationPromise = (async () => {
     try {
       const store = await getStore()
+      try {
+        for (const key of LEGACY_SECRET_KEYS) {
+          await store.delete(key)
+        }
+        await store.save()
+      } catch {
+        console.warn("[settings] Failed to remove legacy persisted API keys")
+      }
       const patch: Partial<SettingsState> = {}
       for (const key of PERSISTED_KEYS) {
         const value = await store.get(key)
@@ -184,7 +195,7 @@ async function persistAll(state: SettingsState): Promise<void> {
   try {
     const store = await getStore()
     for (const key of PERSISTED_KEYS) {
-      await store.set(key, state[key] as unknown)
+      await store.set(key, state[key])
     }
     await store.save()
   } catch {

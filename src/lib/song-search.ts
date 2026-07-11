@@ -63,7 +63,11 @@ function normalizeSongSearchQuery(query: string) {
 }
 
 function matchesSongFilters(song: SearchableSong, filters: SongSearchFilters) {
-  if (filters.source && filters.source !== "all" && song.source !== filters.source) {
+  if (
+    filters.source &&
+    filters.source !== "all" &&
+    song.source !== filters.source
+  ) {
     return false
   }
 

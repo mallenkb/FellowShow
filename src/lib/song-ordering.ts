@@ -1,10 +1,7 @@
 import type { CopSong } from "./cop-songs"
 
 /** Case-insensitive, numeric-aware title comparison for lyric/song lists. */
-export function compareLyricTitles(
-  a: { title: string },
-  b: { title: string }
-) {
+export function compareLyricTitles(a: { title: string }, b: { title: string }) {
   return a.title.localeCompare(b.title, undefined, {
     sensitivity: "base",
     numeric: true,

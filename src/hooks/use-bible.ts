@@ -1,21 +1,31 @@
-import { invoke } from "@tauri-apps/api/core"
+import { isTauri } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { useBibleStore } from "@/stores"
 import { useSettingsStore } from "@/stores/settings-store"
-import type { Translation, Book, Verse, CrossReference } from "@/types"
-import type { SemanticSearchResult } from "@/types/detection"
+import type { Verse } from "@/types"
 
 // Stable action functions that use getState() instead of closing over the store.
 // This prevents the infinite re-render loop caused by useCallback deps changing every render.
 
 async function loadTranslations() {
-  const translations = await invoke<Translation[]>("list_translations")
+  if (!isTauri()) {
+    useBibleStore.getState().setTranslations([])
+    return []
+  }
+
+  const translations = await invoke("list_translations")
   useBibleStore.getState().setTranslations(translations)
   return translations
 }
 
 async function loadBooks(translationId?: number) {
+  if (!isTauri()) {
+    useBibleStore.getState().setBooks([])
+    return []
+  }
+
   const id = translationId ?? useBibleStore.getState().activeTranslationId
-  const books = await invoke<Book[]>("list_books", { translationId: id })
+  const books = await invoke("list_books", { translationId: id })
   useBibleStore.getState().setBooks(books)
   return books
 }
@@ -25,8 +35,13 @@ async function loadChapter(
   chapter: number,
   translationId?: number
 ) {
+  if (!isTauri()) {
+    useBibleStore.getState().setCurrentChapter([])
+    return []
+  }
+
   const id = translationId ?? useBibleStore.getState().activeTranslationId
-  const verses = await invoke<Verse[]>("get_chapter", {
+  const verses = await invoke("get_chapter", {
     translationId: id,
     bookNumber,
     chapter,
@@ -41,8 +56,10 @@ async function fetchVerse(
   verse: number,
   translationId?: number
 ) {
+  if (!isTauri()) return null
+
   const id = translationId ?? useBibleStore.getState().activeTranslationId
-  return invoke<Verse | null>("get_verse", {
+  return invoke("get_verse", {
     translationId: id,
     bookNumber,
     chapter,
@@ -50,13 +67,14 @@ async function fetchVerse(
   })
 }
 
-async function searchVerses(
-  query: string,
-  limit = 20,
-  translationId?: number
-) {
+async function searchVerses(query: string, limit = 20, translationId?: number) {
+  if (!isTauri()) {
+    useBibleStore.getState().setSearchResults([])
+    return []
+  }
+
   const id = translationId ?? useBibleStore.getState().activeTranslationId
-  const results = await invoke<Verse[]>("search_verses", {
+  const results = await invoke("search_verses", {
     query,
     translationId: id,
     limit,
@@ -66,7 +84,12 @@ async function searchVerses(
 }
 
 async function semanticSearch(query: string, limit = 10) {
-  const results = await invoke<SemanticSearchResult[]>("semantic_search", {
+  if (!isTauri()) {
+    useBibleStore.getState().setSemanticResults([])
+    return []
+  }
+
+  const results = await invoke("semantic_search", {
     query,
     limit,
   })
@@ -79,7 +102,12 @@ async function loadCrossReferences(
   chapter: number,
   verse: number
 ) {
-  const refs = await invoke<CrossReference[]>("get_cross_references", {
+  if (!isTauri()) {
+    useBibleStore.getState().setCrossReferences([])
+    return []
+  }
+
+  const refs = await invoke("get_cross_references", {
     bookNumber,
     chapter,
     verse,
@@ -123,7 +151,7 @@ export function useBible() {
         translation.is_downloaded &&
         (translation.abbreviation === "NKJV" ||
           translation.id === activeTranslationId ||
-          !hiddenTranslationIds.includes(translation.id)),
+          !hiddenTranslationIds.includes(translation.id))
     ),
     activeTranslationId,
     books,

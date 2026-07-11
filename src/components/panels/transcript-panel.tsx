@@ -402,13 +402,17 @@ export function TranscriptPanel() {
             variant="secondary"
             size="sm"
             className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
-            onClick={stopTranscription}
+            onClick={() => void stopTranscription()}
           >
             <MicIcon className="size-3" />
             Stop transcribing
           </Button>
         ) : (
-          <Button variant="secondary" size="sm" onClick={startTranscription}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void startTranscription()}
+          >
             <MicOffIcon className="size-3" />
             Start transcribing
           </Button>

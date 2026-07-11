@@ -142,25 +142,25 @@ mod tests {
     #[test]
     fn test_find_john() {
         let matcher = BookMatcher::new();
-        let matches = matcher.find_books("Jesus said in John 3:16");
-        assert_eq!(matches.len(), 1);
-        assert_eq!(matches[0].book_name, "John");
-        assert_eq!(matches[0].book_number, 43);
+        let found = matcher.find_books("Jesus said in John 3:16");
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].book_name, "John");
+        assert_eq!(found[0].book_number, 43);
     }
 
     #[test]
     fn test_find_psalm() {
         let matcher = BookMatcher::new();
-        let matches = matcher.find_books("David in Psalm thirty two");
-        assert_eq!(matches.len(), 1);
-        assert_eq!(matches[0].book_name, "Psalms");
+        let found = matcher.find_books("David in Psalm thirty two");
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].book_name, "Psalms");
     }
 
     #[test]
     fn test_find_numbered_book() {
         let matcher = BookMatcher::new();
-        let matches = matcher.find_books("Paul wrote in 1 Corinthians 13");
-        assert_eq!(matches.len(), 1);
-        assert_eq!(matches[0].book_name, "1 Corinthians");
+        let found = matcher.find_books("Paul wrote in 1 Corinthians 13");
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].book_name, "1 Corinthians");
     }
 }

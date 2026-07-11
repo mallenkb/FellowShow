@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createRoot } from "react-dom/client"
 import { useRef, useEffect, useCallback, useState } from "react"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke } from "@/lib/ipc"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
@@ -457,12 +457,7 @@ function BroadcastCanvas() {
 
     // Request current NDI status on mount (fixes race condition
     // where NDI is started before this window opens)
-    void invoke<{
-      active: boolean
-      width: number
-      height: number
-      fps: number
-    } | null>("get_ndi_status", { outputId: OUTPUT_ID })
+    void invoke("get_ndi_status", { outputId: OUTPUT_ID })
       .then((status) => {
         if (status && status.active) {
           ndiConfigRef.current = {
@@ -492,8 +487,8 @@ function BroadcastCanvas() {
       if (transitionFrameRef.current !== null) {
         window.cancelAnimationFrame(transitionFrameRef.current)
       }
-      unlisten.then((fn) => fn())
-      unlistenNdiConfig.then((fn) => fn())
+      void unlisten.then((fn) => fn()).catch(console.error)
+      void unlistenNdiConfig.then((fn) => fn()).catch(console.error)
     }
   }, [
     drawPayloadTransition,

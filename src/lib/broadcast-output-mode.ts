@@ -16,6 +16,8 @@ export function shouldRenderTickerLayer(theme: BroadcastTheme): boolean {
   return isTickerTheme(theme)
 }
 
-export function shouldRenderStandardBroadcastContent(theme: BroadcastTheme): boolean {
+export function shouldRenderStandardBroadcastContent(
+  theme: BroadcastTheme
+): boolean {
   return !isLowerThirdOverlayTheme(theme)
 }

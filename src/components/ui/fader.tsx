@@ -50,12 +50,12 @@ export function Fader({
   return (
     <div
       className={cn(
-        "group relative flex h-9 w-full select-none items-center justify-between gap-3 overflow-hidden rounded-full border border-border bg-background/40 px-4",
+        "group relative flex h-9 w-full items-center justify-between gap-3 overflow-hidden rounded-full border border-border bg-background/40 px-4 select-none",
         "focus-within:outline focus-within:outline-1 focus-within:outline-offset-2 focus-within:outline-ring",
         disabled && "pointer-events-none opacity-50",
-        className,
+        className
       )}
-      onDoubleClick={canReset ? () => onChange(defaultValue as number) : undefined}
+      onDoubleClick={canReset ? () => onChange(defaultValue) : undefined}
       title={canReset ? "Double-click to reset" : undefined}
     >
       {/* Filled portion — from the centre for bipolar axes, otherwise from the left */}
@@ -72,17 +72,17 @@ export function Fader({
       ) : null}
       {/* Indicator line: foreground/25 → /50 on hover → full on focus/drag */}
       <div
-        className="pointer-events-none absolute inset-y-2 z-[1] w-0.5 -translate-x-1/2 rounded-full bg-foreground/25 transition-colors group-hover:bg-foreground/50 group-focus-within:bg-foreground group-active:bg-foreground"
+        className="pointer-events-none absolute inset-y-2 z-[1] w-0.5 -translate-x-1/2 rounded-full bg-foreground/25 transition-colors group-focus-within:bg-foreground group-hover:bg-foreground/50 group-active:bg-foreground"
         style={{ left: `${pct}%` }}
       />
       {/* Label */}
       {label ? (
-        <span className="z-[2] min-w-0 shrink truncate text-[13px] text-muted-foreground transition-colors group-hover:text-foreground group-focus-within:text-foreground group-active:text-foreground">
+        <span className="z-[2] min-w-0 shrink truncate text-[13px] text-muted-foreground transition-colors group-focus-within:text-foreground group-hover:text-foreground group-active:text-foreground">
           {label}
         </span>
       ) : null}
       {/* Value readout */}
-      <span className="z-[2] shrink-0 text-[13px] tabular-nums text-muted-foreground transition-colors group-hover:text-foreground group-focus-within:text-foreground group-active:text-foreground">
+      <span className="z-[2] shrink-0 text-[13px] text-muted-foreground tabular-nums transition-colors group-focus-within:text-foreground group-hover:text-foreground group-active:text-foreground">
         {display}
       </span>
       {/* Interaction + accessibility layer */}

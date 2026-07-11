@@ -1,48 +1,53 @@
-import { StrictMode } from "react"
-import { createRoot } from "react-dom/client"
-import { invoke } from "@tauri-apps/api/core"
-
 import "./index.css"
-import App from "./App.tsx"
-import { ThemeProvider } from "@/components/theme-provider.tsx"
-import { TooltipProvider } from "@/components/ui/tooltip.tsx"
-import { hydrateSettings } from "@/stores/settings-store"
-import { hydrateBibleStore, initBiblePersistence } from "@/stores/bible-store"
-import { hydrateBroadcastThemes } from "@/stores/broadcast-store"
-import {
-  initTranscriptPersistence,
-  resetTranscriptSession,
-} from "@/stores/transcript-store"
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ThemeProvider defaultTheme="dark">
-      <TooltipProvider>
-        <App />
-      </TooltipProvider>
-    </ThemeProvider>
-  </StrictMode>
-)
+function formatStartupError(error: unknown): string {
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}\n${error.stack ?? ""}`
+  }
+  return String(error)
+}
 
-// Webview reloads do NOT restart the Rust backend, so any STT pipeline
-// left running from the previous webview session still has
-// `stt_active = true`. That makes the next `start_transcription` call
-// fail silently with "Transcription is already running". Reset the
-// backend and transcript UI to a clean state on boot, then hydrate
-// persisted settings and bible store without blocking the first paint.
-void invoke("stop_transcription")
-  .catch(() => {})
-  .then(() =>
-    Promise.all([
-      hydrateSettings(),
-      hydrateBibleStore(),
-      hydrateBroadcastThemes(),
-      resetTranscriptSession(),
-    ])
-  )
-  .then(() =>
-    Promise.all([initBiblePersistence(), initTranscriptPersistence()])
-  )
-  .catch((error) => {
-    console.error("Failed to hydrate app state", error)
-  })
+function showStartupError(error: unknown): void {
+  console.error("[startup] Failed to boot FellowShow", error)
+  const root = document.getElementById("root")
+  if (!root) return
+
+  root.innerHTML = ""
+  const panel = document.createElement("main")
+  panel.style.cssText = [
+    "min-height:100vh",
+    "padding:32px",
+    "background:#171717",
+    "color:#f5f5f5",
+    "font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+  ].join(";")
+  const heading = document.createElement("h1")
+  heading.textContent = "FellowShow could not start"
+  heading.style.cssText = "font-size:22px;margin:0 0 12px"
+  const copy = document.createElement("p")
+  copy.textContent =
+    "The local app hit a startup error before the dashboard could render."
+  copy.style.cssText = "color:#b8b8b8;margin:0 0 18px"
+  const pre = document.createElement("pre")
+  pre.textContent = formatStartupError(error)
+  pre.style.cssText = [
+    "white-space:pre-wrap",
+    "overflow:auto",
+    "max-height:70vh",
+    "padding:16px",
+    "border:1px solid #3a3a3a",
+    "border-radius:8px",
+    "background:#0d0d0d",
+  ].join(";")
+  panel.append(heading, copy, pre)
+  root.append(panel)
+}
+
+window.addEventListener("error", (event) => {
+  showStartupError(event.error ?? event.message)
+})
+window.addEventListener("unhandledrejection", (event) => {
+  showStartupError(event.reason)
+})
+
+void import("./boot").catch(showStartupError)

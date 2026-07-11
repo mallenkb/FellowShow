@@ -51,7 +51,7 @@ fn source_to_string(source: &fellowshow_detection::DetectionSource) -> String {
 /// Resolution order:
 /// 1. By `verse_id` (semantic detections with DB primary key)
 /// 2. By `book_number/chapter/verse_start` with active translation (direct + FTS5 detections)
-/// 3. Fallback to unresolved VerseRef fields (no DB available)
+/// 3. Fallback to unresolved `VerseRef` fields (no DB available)
 pub fn to_result(state: &AppState, merged: &MergedDetection) -> DetectionResult {
     let vr = &merged.detection.verse_ref;
     let vid = merged.detection.verse_id;
@@ -77,22 +77,20 @@ pub fn to_result(state: &AppState, merged: &MergedDetection) -> DetectionResult 
         None
     });
 
-    let (reference, verse_text, book_name, book_number, chapter, verse) = match resolved {
-        Some(v) => {
-            let r = format!("{} {}:{}", v.book_name, v.chapter, v.verse);
-            (r, v.text, v.book_name, v.book_number, v.chapter, v.verse)
-        }
-        None => {
-            let r = format!("{} {}:{}", vr.book_name, vr.chapter, vr.verse_start);
-            (
-                r,
-                String::new(),
-                vr.book_name.clone(),
-                vr.book_number,
-                vr.chapter,
-                vr.verse_start,
-            )
-        }
+    let (reference, verse_text, book_name, book_number, chapter, verse) = if let Some(v) = resolved
+    {
+        let r = format!("{} {}:{}", v.book_name, v.chapter, v.verse);
+        (r, v.text, v.book_name, v.book_number, v.chapter, v.verse)
+    } else {
+        let r = format!("{} {}:{}", vr.book_name, vr.chapter, vr.verse_start);
+        (
+            r,
+            String::new(),
+            vr.book_name.clone(),
+            vr.book_number,
+            vr.chapter,
+            vr.verse_start,
+        )
     };
 
     DetectionResult {

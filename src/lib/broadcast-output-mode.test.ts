@@ -16,7 +16,9 @@ describe("broadcast output mode", () => {
   })
 
   it("treats lower-third overlay themes as overlay sources when provided directly", () => {
-    const standardTheme = BUILTIN_THEMES.find((theme) => theme.id === "builtin-bible-verse-preview")
+    const standardTheme = BUILTIN_THEMES.find(
+      (theme) => theme.id === "builtin-bible-verse-preview"
+    )
     if (!standardTheme) throw new Error("expected standard built-in theme")
     const overlayTheme = {
       ...standardTheme,
@@ -30,12 +32,17 @@ describe("broadcast output mode", () => {
   })
 
   it("treats the presentation ticker as a standard program output with a ticker layer", () => {
-    const tickerTheme = BUILTIN_THEMES.find((theme) => theme.id === "builtin-presentation-ticker")
-    const standardTheme = BUILTIN_THEMES.find((theme) => theme.id === "builtin-bible-verse-preview")
+    const tickerTheme = BUILTIN_THEMES.find(
+      (theme) => theme.id === "builtin-presentation-ticker"
+    )
+    const standardTheme = BUILTIN_THEMES.find(
+      (theme) => theme.id === "builtin-bible-verse-preview"
+    )
 
     expect(tickerTheme).toBeTruthy()
     expect(standardTheme).toBeTruthy()
-    if (!tickerTheme || !standardTheme) throw new Error("expected built-in themes")
+    if (!tickerTheme || !standardTheme)
+      throw new Error("expected built-in themes")
 
     expect(isTickerTheme(tickerTheme)).toBe(true)
     expect(shouldRenderTickerLayer(tickerTheme)).toBe(true)

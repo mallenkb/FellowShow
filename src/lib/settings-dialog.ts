@@ -1,13 +1,7 @@
 import { create } from "zustand"
 
 type SettingsSection =
-  | "audio"
-  | "speech"
-  | "bible"
-  | "display"
-  | "remote"
-  | "updates"
-  | "help"
+  "audio" | "speech" | "bible" | "display" | "remote" | "updates" | "help"
 
 interface SettingsDialogState {
   isOpen: boolean

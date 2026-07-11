@@ -198,7 +198,6 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
     clippy::cast_possible_truncation,
     reason = "audio sample conversions are intentionally truncating"
 )]
-#[expect(clippy::cast_possible_wrap, reason = "channel count fits in i32")]
 fn process_and_send(
     samples: &[i16],
     source_channels: usize,

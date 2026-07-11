@@ -1,4 +1,4 @@
-export type BroadcastFontCategory = "sans" | "serif" | "handwritten" | "mono"
+type BroadcastFontCategory = "sans" | "serif" | "handwritten" | "mono"
 
 export interface BroadcastFontOption {
   value: string
@@ -7,7 +7,6 @@ export interface BroadcastFontOption {
 }
 
 export const DEFAULT_PRESENTATION_FONT_FAMILY = "Inter Variable"
-export const DEFAULT_TIMER_FONT_FAMILY = DEFAULT_PRESENTATION_FONT_FAMILY
 
 export const BROADCAST_FONT_FAMILIES: BroadcastFontOption[] = [
   { value: "Inter Variable", label: "Inter", category: "sans" },

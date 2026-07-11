@@ -68,11 +68,16 @@ export function PresentationPanel() {
   const selectedSlideId = usePresentationStore((s) => s.selectedSlideId)
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
-  const [previewingSlideId, setPreviewingSlideId] = useState<string | null>(null)
+  const [previewingSlideId, setPreviewingSlideId] = useState<string | null>(
+    null
+  )
   const [renamingSlideId, setRenamingSlideId] = useState<string | null>(null)
   const [renamingSlideName, setRenamingSlideName] = useState("")
   const lastDragOverIdRef = useRef<string | null>(null)
-  const pinnedSlides = useMemo(() => slides.filter((slide) => slide.pinned), [slides])
+  const pinnedSlides = useMemo(
+    () => slides.filter((slide) => slide.pinned),
+    [slides]
+  )
 
   return (
     <div
@@ -89,75 +94,90 @@ export function PresentationPanel() {
             <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
               <ImageIcon className="size-4" />
             </div>
-            <p className="text-sm font-medium text-foreground">No default slides</p>
+            <p className="text-sm font-medium text-foreground">
+              No default slides
+            </p>
             <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-              Pin presentation images from the left panel to keep them here. Drag pinned slides to set their order.
+              Pin presentation images from the left panel to keep them here.
+              Drag pinned slides to set their order.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 p-3 xl:grid-cols-3">
-	            {pinnedSlides.map((slide, index) => {
-		              const isActive = slide.id === selectedSlideId
-		              const isDragging = slide.id === draggedId
-		              const isDropTarget = slide.id === dropTargetId && slide.id !== draggedId
+            {pinnedSlides.map((slide, index) => {
+              const isActive = slide.id === selectedSlideId
+              const isDragging = slide.id === draggedId
+              const isDropTarget =
+                slide.id === dropTargetId && slide.id !== draggedId
 
-	              return (
-	                <article
-	                  key={slide.id}
-	                  draggable={!slide.locked}
-	                  onDragStart={(event) => {
-                      if (slide.locked) {
-                        event.preventDefault()
-                        return
-                      }
-	                    setDraggedId(slide.id)
-	                    setDropTargetId(null)
-	                    lastDragOverIdRef.current = slide.id
-	                    event.dataTransfer.effectAllowed = "move"
-	                    event.dataTransfer.setData("text/plain", slide.id)
-	                  }}
-		                  onDragEnd={() => {
-		                    setDraggedId(null)
-		                    setDropTargetId(null)
-	                    lastDragOverIdRef.current = null
-	                  }}
-	                  onDragOver={(event) => {
-	                    const fromId = draggedId || event.dataTransfer.getData("text/plain")
-	                    if (!fromId) return
-	                    event.preventDefault()
-	                    event.dataTransfer.dropEffect = "move"
-	                  }}
-	                  onDragEnter={(event) => {
-		                    const fromId = draggedId || event.dataTransfer.getData("text/plain")
-		                    if (!fromId || fromId === slide.id) return
-		                    event.preventDefault()
-		                    setDropTargetId(slide.id)
-		                    lastDragOverIdRef.current = slide.id
-		                  }}
-	                  onDrop={(event) => {
-	                    event.preventDefault()
-	                    const fromId = draggedId || event.dataTransfer.getData("text/plain")
-	                    if (fromId && fromId !== slide.id) {
-	                      usePresentationStore.getState().reorderSlides(fromId, slide.id)
-		                    }
-		                    setDraggedId(null)
-		                    setDropTargetId(null)
-		                    lastDragOverIdRef.current = null
-		                  }}
-                  onClick={() => usePresentationStore.getState().selectSlide(slide.id)}
+              return (
+                <article
+                  key={slide.id}
+                  draggable={!slide.locked}
+                  onDragStart={(event) => {
+                    if (slide.locked) {
+                      event.preventDefault()
+                      return
+                    }
+                    setDraggedId(slide.id)
+                    setDropTargetId(null)
+                    lastDragOverIdRef.current = slide.id
+                    event.dataTransfer.effectAllowed = "move"
+                    event.dataTransfer.setData("text/plain", slide.id)
+                  }}
+                  onDragEnd={() => {
+                    setDraggedId(null)
+                    setDropTargetId(null)
+                    lastDragOverIdRef.current = null
+                  }}
+                  onDragOver={(event) => {
+                    const fromId =
+                      draggedId || event.dataTransfer.getData("text/plain")
+                    if (!fromId) return
+                    event.preventDefault()
+                    event.dataTransfer.dropEffect = "move"
+                  }}
+                  onDragEnter={(event) => {
+                    const fromId =
+                      draggedId || event.dataTransfer.getData("text/plain")
+                    if (!fromId || fromId === slide.id) return
+                    event.preventDefault()
+                    setDropTargetId(slide.id)
+                    lastDragOverIdRef.current = slide.id
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault()
+                    const fromId =
+                      draggedId || event.dataTransfer.getData("text/plain")
+                    if (fromId && fromId !== slide.id) {
+                      usePresentationStore
+                        .getState()
+                        .reorderSlides(fromId, slide.id)
+                    }
+                    setDraggedId(null)
+                    setDropTargetId(null)
+                    lastDragOverIdRef.current = null
+                  }}
+                  onClick={() =>
+                    usePresentationStore.getState().selectSlide(slide.id)
+                  }
                   onMouseEnter={() => setPreviewingSlideId(slide.id)}
-                  onMouseLeave={() => setPreviewingSlideId((id) => (id === slide.id ? null : id))}
-	                  onFocus={() => setPreviewingSlideId(slide.id)}
-	                  onBlur={() => setPreviewingSlideId((id) => (id === slide.id ? null : id))}
-	                  className={cn(
-	                    "group cursor-grab overflow-hidden rounded-lg border bg-background/30 transition active:cursor-grabbing",
-	                    isActive
-	                      ? "border-[#101084]/60 ring-2 ring-[#101084]/20 dark:border-[#F1E600] dark:ring-[#F1E600]/20"
-	                      : "border-border hover:bg-muted/30",
-	                    isDropTarget && "border-[#F1E600] bg-[#F1E600]/10",
-	                    isDragging && "opacity-45",
-                      slide.locked && "cursor-default",
-	                  )}
+                  onMouseLeave={() =>
+                    setPreviewingSlideId((id) => (id === slide.id ? null : id))
+                  }
+                  onFocus={() => setPreviewingSlideId(slide.id)}
+                  onBlur={() =>
+                    setPreviewingSlideId((id) => (id === slide.id ? null : id))
+                  }
+                  className={cn(
+                    "group cursor-grab overflow-hidden rounded-lg border bg-background/30 transition active:cursor-grabbing",
+                    isActive
+                      ? "border-[#101084]/60 ring-2 ring-[#101084]/20 dark:border-[#F1E600] dark:ring-[#F1E600]/20"
+                      : "border-border hover:bg-muted/30",
+                    isDropTarget && "border-[#F1E600] bg-[#F1E600]/10",
+                    isDragging && "opacity-45",
+                    slide.locked && "cursor-default"
+                  )}
                 >
                   <div className="aspect-video overflow-hidden bg-black">
                     {slide.mediaType === "video" ? (
@@ -175,19 +195,19 @@ export function PresentationPanel() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 px-2.5 py-2">
-	                    <span className="rounded p-1 text-muted-foreground/50">
-	                      <GripVerticalIcon className="size-3 shrink-0" />
-	                    </span>
-	                    <div
-	                      className="min-w-0 flex-1 cursor-text select-text"
-	                      draggable={false}
-	                      onMouseDown={(event) => event.stopPropagation()}
-	                      onClick={(event) => event.stopPropagation()}
-	                    >
-	                      <p className="truncate text-sm font-medium text-foreground select-text">
-	                        {index + 1}. {slide.name}
-	                      </p>
-	                    </div>
+                    <span className="rounded p-1 text-muted-foreground/50">
+                      <GripVerticalIcon className="size-3 shrink-0" />
+                    </span>
+                    <div
+                      className="min-w-0 flex-1 cursor-text select-text"
+                      draggable={false}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <p className="truncate text-sm font-medium text-foreground select-text">
+                        {index + 1}. {slide.name}
+                      </p>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
@@ -208,7 +228,8 @@ export function PresentationPanel() {
                       size="icon-xs"
                       className={cn(
                         "shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
-                        slide.locked && "opacity-100 text-[#101084] dark:text-[#F1E600]"
+                        slide.locked &&
+                          "text-[#101084] opacity-100 dark:text-[#F1E600]"
                       )}
                       onClick={(event) => {
                         event.stopPropagation()
@@ -248,7 +269,9 @@ export function PresentationPanel() {
                           onSelect={() => {
                             setRenamingSlideId(slide.id)
                             setRenamingSlideName(slide.name)
-                            usePresentationStore.getState().selectSlide(slide.id)
+                            usePresentationStore
+                              .getState()
+                              .selectSlide(slide.id)
                           }}
                           disabled={slide.locked}
                         >
@@ -279,7 +302,9 @@ export function PresentationPanel() {
                         <DropdownMenuItem
                           variant="destructive"
                           onSelect={() => {
-                            usePresentationStore.getState().removeSlide(slide.id)
+                            usePresentationStore
+                              .getState()
+                              .removeSlide(slide.id)
                           }}
                           disabled={slide.locked}
                         >
@@ -314,7 +339,9 @@ export function PresentationPanel() {
               const nextName = renamingSlideName.trim()
               if (!renamingSlideId || !nextName) return
 
-              usePresentationStore.getState().renameSlide(renamingSlideId, nextName)
+              usePresentationStore
+                .getState()
+                .renameSlide(renamingSlideId, nextName)
               setRenamingSlideId(null)
               setRenamingSlideName("")
             }}

@@ -58,9 +58,7 @@ impl OnnxEmbedder {
     /// to a `tokenizer.json` file (`HuggingFace` format).
     pub fn load(model_path: &Path, tokenizer_path: &Path) -> Result<Self, DetectionError> {
         // Determine thread counts: use half of available CPUs for intra-op
-        let num_cpus = std::thread::available_parallelism()
-            .map(std::num::NonZero::get)
-            .unwrap_or(4);
+        let num_cpus = std::thread::available_parallelism().map_or(4, std::num::NonZero::get);
         let intra_threads = (num_cpus / 2).max(1);
 
         log::info!(
@@ -179,6 +177,10 @@ impl OnnxEmbedder {
     /// 4. Run ONNX inference.
     /// 5. Mean-pool the last hidden state over the attention mask.
     /// 6. L2-normalise the resulting vector.
+    #[expect(
+        clippy::too_many_lines,
+        reason = "tensor preparation and output decoding share validated shape invariants"
+    )]
     fn embed_impl(&self, text: &str) -> Result<Vec<f32>, DetectionError> {
         let embed_start = std::time::Instant::now();
         let prefixed = format!("{}{}", self.prompt_prefix, text);

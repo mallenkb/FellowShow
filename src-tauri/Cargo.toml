@@ -66,6 +66,7 @@ dotenvy = "0.15"
 base64 = "0.22"
 reqwest = { version = "0.12", features = ["json"] }
 sha2 = "0.10"
+rusqlite = { version = "0.34", features = ["bundled"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-opener = "2"
@@ -75,6 +76,9 @@ tauri-plugin-updater = "2"
 [features]
 default = ["whisper"]
 whisper = ["fellowshow-stt/whisper"]
+
+[dev-dependencies]
+tempfile = "3"
 
 [lints]
 workspace = true

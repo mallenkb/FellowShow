@@ -24,7 +24,7 @@ impl BibleDb {
         })
     }
 
-    /// Acquire the SQLite connection, recovering the guard even if a previous
+    /// Acquire the `SQLite` connection, recovering the guard even if a previous
     /// holder panicked while locked.
     ///
     /// A `Mutex` stays poisoned permanently once a thread panics inside it, so

@@ -7,8 +7,17 @@ import { defineConfig } from "vite"
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    host: "127.0.0.1",
     port: 3000,
     strictPort: true,
+  },
+  optimizeDeps: {
+    // Scan both webview entry pages at server start so all dependencies are
+    // pre-bundled upfront. Discovering a dep mid-session (e.g. one only
+    // imported by broadcast-output) re-optimizes the chunks and leaves open
+    // webviews holding a stale React copy — which crashes rendering with
+    // "null is not an object (evaluating 'dispatcher.useContext')".
+    entries: ["index.html", "broadcast-output.html"],
   },
   build: {
     outDir: "build",

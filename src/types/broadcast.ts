@@ -1,4 +1,4 @@
-export interface VerseSegment {
+interface VerseSegment {
   verseNumber?: number
   text: string
 }
@@ -51,10 +51,10 @@ export interface RenderOptions {
   lowerThird?: LowerThirdRenderData | null
 }
 
-export type TextHorizontalAlign = "left" | "center" | "right" | "justify"
-export type TextVerticalAlign = "top" | "middle" | "bottom"
-export type TextTransform = "none" | "uppercase" | "lowercase" | "capitalize"
-export type TextDecoration = "none" | "underline" | "line-through"
+type TextHorizontalAlign = "left" | "center" | "right" | "justify"
+type TextVerticalAlign = "top" | "middle" | "bottom"
+type TextTransform = "none" | "uppercase" | "lowercase" | "capitalize"
+type TextDecoration = "none" | "underline" | "line-through"
 
 export interface BroadcastTheme {
   id: string

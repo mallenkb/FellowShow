@@ -1,14 +1,6 @@
 import Fuse from "fuse.js"
-import { invoke } from "@tauri-apps/api/core"
+import { invoke, type VerseSearchRow } from "@/lib/ipc"
 import type { SemanticSearchResult } from "@/types/detection"
-
-type VerseSearchRow = {
-  book_number: number
-  book_name: string
-  chapter: number
-  verse: number
-  text: string
-}
 
 type ContextSearchDoc = SemanticSearchResult
 
@@ -18,10 +10,7 @@ const MIN_SIMILARITY = 0.55
 const fuseByTranslation = new Map<number, Fuse<ContextSearchDoc>>()
 
 function normalizeQuery(query: string) {
-  return query
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim()
+  return query.toLowerCase().replace(/\s+/g, " ").trim()
 }
 
 function rowToDoc(row: VerseSearchRow): ContextSearchDoc {
@@ -36,11 +25,13 @@ function rowToDoc(row: VerseSearchRow): ContextSearchDoc {
   }
 }
 
-async function getFuseIndex(translationId: number): Promise<Fuse<ContextSearchDoc>> {
+async function getFuseIndex(
+  translationId: number
+): Promise<Fuse<ContextSearchDoc>> {
   const existing = fuseByTranslation.get(translationId)
   if (existing) return existing
 
-  const rows = await invoke<VerseSearchRow[]>("get_translation_verses_for_search", {
+  const rows = await invoke("get_translation_verses_for_search", {
     translationId,
   })
   const docs = rows.map(rowToDoc)
@@ -67,14 +58,6 @@ function fuseScoreToSimilarity(score: number | undefined) {
   return Number((1 - clamped).toFixed(4))
 }
 
-export function clearContextSearchCache(translationId?: number) {
-  if (translationId == null) {
-    fuseByTranslation.clear()
-    return
-  }
-  fuseByTranslation.delete(translationId)
-}
-
 export async function searchContextWithFuse(
   query: string,
   translationId: number,
@@ -87,6 +70,9 @@ export async function searchContextWithFuse(
   const hits = fuse.search(normalized, { limit })
 
   return hits
-    .map(({ item, score }) => ({ ...item, similarity: fuseScoreToSimilarity(score) }))
+    .map(({ item, score }) => ({
+      ...item,
+      similarity: fuseScoreToSimilarity(score),
+    }))
     .filter((result) => result.similarity >= MIN_SIMILARITY)
 }

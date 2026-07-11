@@ -8,16 +8,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { BroadcastTheme } from "@/types"
 
 export function LayoutProperties() {
   const draftTheme = useBroadcastStore((s) => s.draftTheme)
-  const update = useBroadcastStore((s) => s.updateDraftNested)
+  const update = useBroadcastStore((s) => s.updateDraftDeep)
 
   if (!draftTheme) return null
 
   const layout = draftTheme.layout
   const resolution = draftTheme.resolution
-  const referenceGap = layout.referenceGap ?? Math.max(16, Math.round(draftTheme.reference.fontSize * 0.5))
+  const referenceGap =
+    layout.referenceGap ??
+    Math.max(16, Math.round(draftTheme.reference.fontSize * 0.5))
 
   const verseNumbers = draftTheme.verseNumbers
   const superscriptSizePct = Math.round(
@@ -40,7 +43,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.width)}
-        onChange={(v) => update("layout.backgroundWidth", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.backgroundWidth = v
+          }, "layout.backgroundWidth")
+        }
       />
       <SliderField
         label="Height"
@@ -48,7 +55,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.height)}
-        onChange={(v) => update("layout.backgroundHeight", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.backgroundHeight = v
+          }, "layout.backgroundHeight")
+        }
       />
 
       {/* Text Area Dimensions */}
@@ -62,7 +73,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.width)}
-        onChange={(v) => update("layout.textAreaWidth", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.textAreaWidth = v
+          }, "layout.textAreaWidth")
+        }
       />
       <SliderField
         label="Text Height"
@@ -70,7 +85,11 @@ export function LayoutProperties() {
         min={10}
         max={100}
         format={(v) => pctWithPx(v, resolution.height)}
-        onChange={(v) => update("layout.textAreaHeight", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.textAreaHeight = v
+          }, "layout.textAreaHeight")
+        }
       />
 
       {/* Padding */}
@@ -80,39 +99,63 @@ export function LayoutProperties() {
 
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Top</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Top
+          </label>
           <Input
             type="number"
             min={0}
             value={layout.padding.top}
-            onChange={(e) => update("layout.padding.top", Number(e.target.value))}
+            onChange={(e) =>
+              update((draft) => {
+                draft.layout.padding.top = Number(e.target.value)
+              }, "layout.padding.top")
+            }
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Right</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Right
+          </label>
           <Input
             type="number"
             min={0}
             value={layout.padding.right}
-            onChange={(e) => update("layout.padding.right", Number(e.target.value))}
+            onChange={(e) =>
+              update((draft) => {
+                draft.layout.padding.right = Number(e.target.value)
+              }, "layout.padding.right")
+            }
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Bottom</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Bottom
+          </label>
           <Input
             type="number"
             min={0}
             value={layout.padding.bottom}
-            onChange={(e) => update("layout.padding.bottom", Number(e.target.value))}
+            onChange={(e) =>
+              update((draft) => {
+                draft.layout.padding.bottom = Number(e.target.value)
+              }, "layout.padding.bottom")
+            }
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-muted-foreground">Left</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Left
+          </label>
           <Input
             type="number"
             min={0}
             value={layout.padding.left}
-            onChange={(e) => update("layout.padding.left", Number(e.target.value))}
+            onChange={(e) =>
+              update((draft) => {
+                draft.layout.padding.left = Number(e.target.value)
+              }, "layout.padding.left")
+            }
           />
         </div>
       </div>
@@ -128,7 +171,11 @@ export function LayoutProperties() {
         min={0}
         max={200}
         unit="px"
-        onChange={(v) => update("layout.referenceGap", v)}
+        onChange={(v) =>
+          update((draft) => {
+            draft.layout.referenceGap = v
+          }, "layout.referenceGap")
+        }
       />
 
       {/* Display Options */}
@@ -138,10 +185,17 @@ export function LayoutProperties() {
 
       {/* Reference Position */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-muted-foreground">Reference Position</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Reference Position
+        </label>
         <Select
           value={draftTheme.reference.position}
-          onValueChange={(v) => update("reference.position", v)}
+          onValueChange={(v) =>
+            update((draft) => {
+              draft.reference.position =
+                v as BroadcastTheme["reference"]["position"]
+            }, "reference.position")
+          }
         >
           <SelectTrigger className="w-full">
             <SelectValue />
@@ -156,11 +210,17 @@ export function LayoutProperties() {
 
       {/* Verse Number Superscript */}
       <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-muted-foreground">Verse Number Superscript</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Verse Number Superscript
+        </label>
         <input
           type="checkbox"
           checked={verseNumbers.superscript}
-          onChange={(e) => update("verseNumbers.superscript", e.target.checked)}
+          onChange={(e) =>
+            update((draft) => {
+              draft.verseNumbers.superscript = e.target.checked
+            }, "verseNumbers.superscript")
+          }
           className="h-4 w-4 rounded border-input accent-primary"
         />
       </div>
@@ -174,8 +234,12 @@ export function LayoutProperties() {
           max={100}
           unit="%"
           onChange={(v) => {
-            const newFontSize = Math.round((v / 100) * draftTheme.verseText.fontSize)
-            update("verseNumbers.fontSize", newFontSize)
+            const newFontSize = Math.round(
+              (v / 100) * draftTheme.verseText.fontSize
+            )
+            update((draft) => {
+              draft.verseNumbers.fontSize = newFontSize
+            }, "verseNumbers.fontSize")
           }}
         />
       )}

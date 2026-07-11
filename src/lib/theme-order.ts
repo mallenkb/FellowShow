@@ -1,6 +1,9 @@
 import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
 
-function themeSectionScore(theme: BroadcastTheme, section: BroadcastThemeSection): number {
+function themeSectionScore(
+  theme: BroadcastTheme,
+  section: BroadcastThemeSection
+): number {
   if (section === "bible") {
     let score = 0
     if (theme.layout.anchor === "center") score += 4
@@ -25,7 +28,10 @@ export function sortThemesForSection(
 ): BroadcastTheme[] {
   return [...themes].sort((a, b) => {
     if (a.sortOrder !== undefined || b.sortOrder !== undefined) {
-      return (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER)
+      return (
+        (a.sortOrder ?? Number.MAX_SAFE_INTEGER) -
+        (b.sortOrder ?? Number.MAX_SAFE_INTEGER)
+      )
     }
 
     if (a.id === activeThemeId && b.id !== activeThemeId) return -1
@@ -33,7 +39,8 @@ export function sortThemesForSection(
 
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
 
-    const relevance = themeSectionScore(b, section) - themeSectionScore(a, section)
+    const relevance =
+      themeSectionScore(b, section) - themeSectionScore(a, section)
     if (relevance !== 0) return relevance
 
     const updated = b.updatedAt - a.updatedAt

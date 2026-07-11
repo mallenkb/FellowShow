@@ -12,7 +12,6 @@ import { TutorialTooltip } from "./tutorial-tooltip"
 import { useTheme } from "@/components/theme-provider"
 
 export function TutorialOverlay() {
-  const [isHydrated, setIsHydrated] = useState(false)
   const isRunning = useTutorialStore((s) => s.isRunning)
   const onboardingComplete = useSettingsStore((s) => s.onboardingComplete)
   const { theme } = useTheme()
@@ -20,8 +19,12 @@ export function TutorialOverlay() {
     if (import.meta.env.DEV) return true
     if (typeof window === "undefined") return false
     const params = new URLSearchParams(window.location.search)
-    return params.get("skipOnboarding") === "1" || params.get("skipOnboarding") === "true"
+    return (
+      params.get("skipOnboarding") === "1" ||
+      params.get("skipOnboarding") === "true"
+    )
   }, [])
+  const [isHydrated, setIsHydrated] = useState(skipTutorial)
 
   const [arrowColor, setArrowColor] = useState<string | undefined>()
 
@@ -46,13 +49,12 @@ export function TutorialOverlay() {
   useEffect(() => {
     if (skipTutorial) {
       useSettingsStore.getState().setOnboardingComplete(true)
-      setIsHydrated(true)
       return
     }
 
-    hydrateOnboardingState().then(() => {
-      setIsHydrated(true)
-    })
+    void hydrateOnboardingState()
+      .then(() => setIsHydrated(true))
+      .catch(console.error)
   }, [skipTutorial])
 
   useEffect(() => {
@@ -69,7 +71,7 @@ export function TutorialOverlay() {
   const handleEvent = useCallback((data: EventData) => {
     if (data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED) {
       useTutorialStore.getState().stopTutorial()
-      persistOnboardingComplete()
+      void persistOnboardingComplete().catch(console.error)
 
       if (data.status === STATUS.SKIPPED) {
         toast.info("Tutorial skipped", {

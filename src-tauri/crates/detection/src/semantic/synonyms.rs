@@ -1028,8 +1028,7 @@ mod tests {
             variants
                 .iter()
                 .any(|v| v.contains("rescue") || v.contains("redeem") || v.contains("deliver")),
-            "Expected at least one variant with rescue/redeem/deliver, got: {:?}",
-            variants
+            "Expected at least one variant with rescue/redeem/deliver, got: {variants:?}"
         );
     }
 
@@ -1083,8 +1082,7 @@ mod tests {
             variants
                 .iter()
                 .any(|v| v.contains("trust") || v.contains("believe") || v.contains("confidence")),
-            "Expected faith synonyms, got: {:?}",
-            variants
+            "Expected faith synonyms, got: {variants:?}"
         );
     }
 
@@ -1097,8 +1095,7 @@ mod tests {
             variants.iter().any(|v| v.contains("transgression")
                 || v.contains("iniquity")
                 || v.contains("wickedness")),
-            "Expected sin synonyms, got: {:?}",
-            variants
+            "Expected sin synonyms, got: {variants:?}"
         );
     }
 
@@ -1111,8 +1108,7 @@ mod tests {
             variants
                 .iter()
                 .any(|v| v.contains("pardon") || v.contains("absolve") || v.contains("remit")),
-            "Expected forgiveness synonyms, got: {:?}",
-            variants
+            "Expected forgiveness synonyms, got: {variants:?}"
         );
     }
 
@@ -1134,8 +1130,7 @@ mod tests {
                 || v.contains("glorify")
                 || v.contains("adore")
                 || v.contains("exalt")),
-            "Expected worship synonyms, got: {:?}",
-            variants
+            "Expected worship synonyms, got: {variants:?}"
         );
     }
 
@@ -1156,8 +1151,7 @@ mod tests {
                 || v.contains("perish")
                 || v.contains("destruction")
                 || v.contains("grave")),
-            "Expected death synonyms, got: {:?}",
-            variants
+            "Expected death synonyms, got: {variants:?}"
         );
     }
 }

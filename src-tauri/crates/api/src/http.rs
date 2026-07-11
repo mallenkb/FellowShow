@@ -10,7 +10,6 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::watch;
-use tower_http::cors::CorsLayer;
 
 use crate::command::RemoteCommand;
 use crate::dispatch::{CommandDispatcher, CommandSink};
@@ -27,7 +26,7 @@ impl Default for HttpConfig {
     fn default() -> Self {
         Self {
             port: 8080,
-            host: "0.0.0.0".into(),
+            host: "127.0.0.1".into(),
         }
     }
 }
@@ -113,7 +112,7 @@ where
         .route("/api/v1/health", get(health_handler))
         .route("/api/v1/status", get(status_handler::<S>))
         .route("/api/v1/control", post(control_handler::<S>))
-        .layer(CorsLayer::permissive())
+        .route("/api/v1/command", post(control_handler::<S>))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(bind_addr)
@@ -122,10 +121,7 @@ where
             CommandError::DispatchFailed(format!("Failed to bind HTTP on {bind_addr}: {e}"))
         })?;
 
-    let bound_port = listener
-        .local_addr()
-        .map(|a| a.port())
-        .unwrap_or(config.port);
+    let bound_port = listener.local_addr().map_or(config.port, |a| a.port());
 
     let (shutdown_tx, mut shutdown_rx) = watch::channel(false);
 
@@ -355,7 +351,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn control_endpoint_dispatches_command() {
+    async fn documented_command_endpoint_dispatches_command() {
         let sink = Arc::new(MockSink::new());
         let status = new_shared_status();
         let config = HttpConfig {
@@ -371,7 +367,7 @@ mod tests {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
         let body = r#"{"command":"next"}"#;
-        let resp = raw_http_request(port, "POST", "/api/v1/control", Some(body)).await;
+        let resp = raw_http_request(port, "POST", "/api/v1/command", Some(body)).await;
         assert!(resp.contains("200 OK"), "Expected 200, got: {resp}");
         assert!(resp.contains("\"success\":true"));
 
@@ -400,5 +396,10 @@ mod tests {
 
         let result = start_http_server(config, sink, status).await;
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn remote_servers_default_to_loopback() {
+        assert_eq!(HttpConfig::default().host, "127.0.0.1");
     }
 }

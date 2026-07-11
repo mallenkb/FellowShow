@@ -64,25 +64,6 @@ fn bundled_bible_db_candidates(resource_dir: &std::path::Path) -> [std::path::Pa
     ]
 }
 
-#[cfg(test)]
-mod tests {
-    use super::bundled_bible_db_candidates;
-
-    #[test]
-    fn includes_tauri_preserved_relative_resource_path() {
-        let candidates = bundled_bible_db_candidates(std::path::Path::new("/Resources"));
-
-        assert_eq!(
-            candidates[0],
-            std::path::Path::new("/Resources/fellowshow.db")
-        );
-        assert_eq!(
-            candidates[1],
-            std::path::Path::new("/Resources/_up_/data/fellowshow.db")
-        );
-    }
-}
-
 #[expect(clippy::too_many_lines, reason = "app setup is inherently complex")]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -127,6 +108,7 @@ pub fn run() {
             commands::detection::toggle_paraphrase_detection,
             commands::detection::reading_mode_status,
             commands::detection::stop_reading_mode,
+            commands::easyworship::import_easyworship_songs,
             commands::audio::get_audio_devices,
             commands::stt::test_deepgram_connection,
             commands::stt::test_openai_connection,
@@ -156,11 +138,21 @@ pub fn run() {
             let db_path = resolve_working_db_path(app, &dev_data_dir);
 
             if let Some(db_path) = db_path {
-                let bible_db = fellowshow_bible::BibleDb::open(&db_path)
-                    .expect("Failed to open Bible database");
+                let bible_db = match fellowshow_bible::BibleDb::open(&db_path) {
+                    Ok(db) => db,
+                    Err(error) => {
+                        log::error!(
+                            "Bible database at {} could not be opened: {error}",
+                            db_path.display()
+                        );
+                        return Ok(());
+                    }
+                };
 
                 let managed_state = app.state::<Mutex<state::AppState>>();
-                let mut state = managed_state.lock().unwrap();
+                let mut state = managed_state
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner);
                 if let Ok(Some(nkjv_id)) = bible_db.get_translation_id_by_abbreviation("NKJV") {
                     state.active_translation_id = nkjv_id;
                 }
@@ -201,7 +193,9 @@ pub fn run() {
                     Ok(embedder) => {
                         log::info!("ONNX embedding model loaded");
                         let managed_pipeline = app.state::<Mutex<fellowshow_detection::DetectionPipeline>>();
-                        let mut pipeline = managed_pipeline.lock().unwrap();
+                        let mut pipeline = managed_pipeline
+                            .lock()
+                            .unwrap_or_else(std::sync::PoisonError::into_inner);
 
                         // If pre-computed embeddings exist, load the vector index
                         if embeddings_path.exists() && ids_path.exists() {
@@ -236,4 +230,23 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::bundled_bible_db_candidates;
+
+    #[test]
+    fn includes_tauri_preserved_relative_resource_path() {
+        let candidates = bundled_bible_db_candidates(std::path::Path::new("/Resources"));
+
+        assert_eq!(
+            candidates[0],
+            std::path::Path::new("/Resources/fellowshow.db")
+        );
+        assert_eq!(
+            candidates[1],
+            std::path::Path::new("/Resources/_up_/data/fellowshow.db")
+        );
+    }
 }
