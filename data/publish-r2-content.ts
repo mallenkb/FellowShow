@@ -194,7 +194,9 @@ function buildPacksAndManifest(version: string, prefix: string) {
   const prebuiltAbbreviations = [...PREBUILT_PACKS.entries()]
     .filter(([, packPath]) => existsSync(packPath))
     .map(([abbreviation]) => abbreviation)
-  const abbreviations = [...new Set([...databaseAbbreviations, ...prebuiltAbbreviations])]
+  const abbreviations = [
+    ...new Set([...databaseAbbreviations, ...prebuiltAbbreviations]),
+  ]
 
   rmSync(PACKS_DIR, { recursive: true, force: true })
   mkdirSync(PACKS_DIR, { recursive: true })
