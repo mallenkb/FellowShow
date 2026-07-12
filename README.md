@@ -195,17 +195,17 @@ bun run tauri build
 ```
 
 Release installers bundle the single SQLite database listed in
-`src-tauri/tauri.conf.json` (`data/fellowshow.db`). To ship NIV and NKJV by
-default without songs or hymns, place licensed exports at `data/sources/NIV.json`
-and `data/sources/NKJV.json`, then run:
+`src-tauri/tauri.conf.json` (`data/fellowshow.db`). To ship Asante Twi, NIV, and
+NKJV by default without songs or hymns, place licensed exports at
+`data/sources/NIV.json` and `data/sources/NKJV.json`, then run:
 
 ```bash
 bun run release:bundled
 ```
 
-That command verifies the licensed source files, builds `data/fellowshow.db`
-with only NIV and NKJV, and then runs the Tauri release build. It does not
-download or bundle song assets.
+That command downloads the open Asante Twi source, verifies the licensed source
+files, builds `data/fellowshow.db` with Asante Twi, NIV, and NKJV, and then runs
+the Tauri release build. It does not download or bundle song assets.
 
 ### Publish bundled content to R2
 

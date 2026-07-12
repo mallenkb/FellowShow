@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/fellowshow.db
-          key: bible-db-bundled-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/prepare-release-bible.ts', 'data/download-sources.ts', 'data/download-biblegateway.py') }}
+          key: bible-db-bundled-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/prepare-release-bible.ts', 'data/download-sources.ts', 'data/download-asante-twi.ts', 'data/download-biblegateway.py') }}
 
       - name: Set up Python
         if: steps.bible-db-cache.outputs.cache-hit != 'true'
@@ -57,6 +57,10 @@ jobs:
         run: |
           bun run download:bible-data
           python data/download-biblegateway.py
+
+      - name: Download Asante Twi source data
+        if: steps.bible-db-cache.outputs.cache-hit != 'true'
+        run: bun run download:asante-twi
 
       - name: Build Bible database
         if: steps.bible-db-cache.outputs.cache-hit != 'true'
