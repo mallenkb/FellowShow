@@ -26,6 +26,7 @@ dist-ssr
 # Build artifacts
 build
 data/*.db
+# External TK pack published to R2; it is not bundled into installers.
 !data/atwi.db
 data/*.db-shm
 data/*.db-wal
