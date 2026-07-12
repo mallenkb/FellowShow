@@ -441,58 +441,60 @@ export function SearchPanel({
     setActiveTab(tab)
   }, [])
 
-  const handlePresentationFiles = useCallback(async (files: FileList | null) => {
-    if (!files || files.length === 0) return
+  const handlePresentationFiles = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return
 
-    const mediaFiles = Array.from(files)
-      .filter(
+      const mediaFiles = Array.from(files).filter(
         (file) =>
           file.type.startsWith("image/") || file.type.startsWith("video/")
       )
-    let slides: Array<{
-      id: string
-      name: string
-      url: string
-      mediaType: "image" | "video"
-      createdAt: number
-      pinned: boolean
-      locked: boolean
-      fit: "contain"
-      scale: number
-      offsetX: number
-      offsetY: number
-    }> = []
-    try {
-      slides = await Promise.all(
-        mediaFiles.map(async (file) => ({
-          id: crypto.randomUUID(),
-          name: file.name.replace(/\.[^.]+$/, ""),
-          // A blob URL is scoped to the webview that created it. Data URLs can
-          // be rendered by both the main and isolated external display views.
-          url: await readFileAsDataUrl(file),
-          mediaType: file.type.startsWith("video/")
-            ? ("video" as const)
-            : ("image" as const),
-          createdAt: Date.now(),
-          pinned: false,
-          locked: false,
-          fit: "contain" as const,
-          scale: 1,
-          offsetX: 0,
-          offsetY: 0,
-        }))
-      )
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not load media."
-      )
-      return
-    }
+      let slides: Array<{
+        id: string
+        name: string
+        url: string
+        mediaType: "image" | "video"
+        createdAt: number
+        pinned: boolean
+        locked: boolean
+        fit: "contain"
+        scale: number
+        offsetX: number
+        offsetY: number
+      }> = []
+      try {
+        slides = await Promise.all(
+          mediaFiles.map(async (file) => ({
+            id: crypto.randomUUID(),
+            name: file.name.replace(/\.[^.]+$/, ""),
+            // A blob URL is scoped to the webview that created it. Data URLs can
+            // be rendered by both the main and isolated external display views.
+            url: await readFileAsDataUrl(file),
+            mediaType: file.type.startsWith("video/")
+              ? ("video" as const)
+              : ("image" as const),
+            createdAt: Date.now(),
+            pinned: false,
+            locked: false,
+            fit: "contain" as const,
+            scale: 1,
+            offsetX: 0,
+            offsetY: 0,
+          }))
+        )
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Could not load media."
+        )
+        return
+      }
 
-    if (slides.length > 0) {
-      usePresentationStore.getState().addSlides(slides)
-    }
-  }, [])
+      if (slides.length > 0) {
+        usePresentationStore.getState().addSlides(slides)
+      }
+    },
+    []
+  )
 
   const importEasyWorshipSongs = useCallback(async () => {
     if (!isTauri()) {
@@ -622,8 +624,7 @@ export function SearchPanel({
         useBibleStore
           .getState()
           .translations.find(
-            (item) =>
-              item.id === useBibleStore.getState().activeTranslationId
+            (item) => item.id === useBibleStore.getState().activeTranslationId
           )?.abbreviation ?? "KJV"
       const store = useBroadcastStore.getState()
       store.setPreviewOutput(toVerseRenderData(verse, translation), null)
@@ -777,15 +778,18 @@ export function SearchPanel({
     bibleActions.selectVerse(verse)
   }, [])
 
-  const handleVerseDoubleClick = useCallback((verse: Verse) => {
-    handleVerseClick(verse)
-    const translation =
-      translations.find((item) => item.id === activeTranslationId)
-        ?.abbreviation ?? "KJV"
-    const store = useBroadcastStore.getState()
-    store.setPreviewOutput(toVerseRenderData(verse, translation), null)
-    store.showPreviewOnLive("manual")
-  }, [activeTranslationId, handleVerseClick, translations])
+  const handleVerseDoubleClick = useCallback(
+    (verse: Verse) => {
+      handleVerseClick(verse)
+      const translation =
+        translations.find((item) => item.id === activeTranslationId)
+          ?.abbreviation ?? "KJV"
+      const store = useBroadcastStore.getState()
+      store.setPreviewOutput(toVerseRenderData(verse, translation), null)
+      store.showPreviewOnLive("manual")
+    },
+    [activeTranslationId, handleVerseClick, translations]
+  )
 
   // Arrow key navigation
   const handleKeyDown = useCallback(

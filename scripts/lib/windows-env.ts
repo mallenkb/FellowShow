@@ -1,4 +1,4 @@
-import { join } from "node:path"
+import { win32 as windowsPath } from "node:path"
 
 type Environment = Record<string, string | undefined>
 
@@ -23,15 +23,16 @@ export function withWindowsBuildEnvironment(
   const programFiles = programFilesKey ? env[programFilesKey] : undefined
   if (!programFiles) return env
 
-  const llvmBin = join(programFiles, "LLVM", "bin")
-  const cmakeBin = join(programFiles, "CMake", "bin")
+  const llvmBin = windowsPath.join(programFiles, "LLVM", "bin")
+  const cmakeBin = windowsPath.join(programFiles, "CMake", "bin")
   const pathEntries: string[] = []
 
-  if (exists(join(llvmBin, "libclang.dll"))) {
+  if (exists(windowsPath.join(llvmBin, "libclang.dll"))) {
     env.LIBCLANG_PATH ||= llvmBin
     pathEntries.push(llvmBin)
   }
-  if (exists(join(cmakeBin, "cmake.exe"))) pathEntries.push(cmakeBin)
+  if (exists(windowsPath.join(cmakeBin, "cmake.exe")))
+    pathEntries.push(cmakeBin)
 
   if (pathEntries.length > 0) {
     const pathKey = findEnvironmentKey("PATH")

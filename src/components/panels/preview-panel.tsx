@@ -339,7 +339,10 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
       store.setActiveTheme(theme.id, selectedSection)
     }
     reader.onerror = () => {
-      console.error("[themes] Failed to read uploaded theme image", reader.error)
+      console.error(
+        "[themes] Failed to read uploaded theme image",
+        reader.error
+      )
     }
     reader.readAsDataURL(file)
   }

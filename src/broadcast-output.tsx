@@ -96,9 +96,10 @@ function BroadcastCanvas() {
   const lastPushRef = useRef(0)
   const pushingRef = useRef(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(
-    null
-  )
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+  } | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -113,7 +114,10 @@ function BroadcastCanvas() {
         const fullscreen = await currentWindow.isFullscreen()
         if (mounted) setIsFullscreen(fullscreen)
       } catch (error) {
-        console.warn("[broadcast-output] failed to read fullscreen state", error)
+        console.warn(
+          "[broadcast-output] failed to read fullscreen state",
+          error
+        )
       }
     }
 
@@ -168,24 +172,24 @@ function BroadcastCanvas() {
       setIsFullscreen(nextFullscreen)
       setContextMenu(null)
     } catch (error) {
-      console.warn("[broadcast-output] failed to change fullscreen state", error)
+      console.warn(
+        "[broadcast-output] failed to change fullscreen state",
+        error
+      )
     }
   }, [isFullscreen])
 
-  const handleContextMenu = useCallback(
-    (event: React.MouseEvent) => {
-      event.preventDefault()
-      setContextMenu(
-        getBroadcastContextMenuPosition(
-          event.clientX,
-          event.clientY,
-          window.innerWidth,
-          window.innerHeight
-        )
+  const handleContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault()
+    setContextMenu(
+      getBroadcastContextMenuPosition(
+        event.clientX,
+        event.clientY,
+        window.innerWidth,
+        window.innerHeight
       )
-    },
-    []
-  )
+    )
+  }, [])
 
   const logDebug = useCallback((message: string, meta?: unknown) => {
     if (!import.meta.env.DEV) return

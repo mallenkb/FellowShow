@@ -47,7 +47,10 @@ function QueueItemRow({
           (t) => t.id === useBibleStore.getState().activeTranslationId
         )?.abbreviation ?? "KJV"
     const store = useBroadcastStore.getState()
-    store.setPreviewOutput(toVerseRenderData(currentItem.verse, translation), null)
+    store.setPreviewOutput(
+      toVerseRenderData(currentItem.verse, translation),
+      null
+    )
     store.showPreviewOnLive("manual")
   }
 

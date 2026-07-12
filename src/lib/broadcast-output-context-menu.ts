@@ -13,6 +13,9 @@ export function getBroadcastContextMenuPosition(
 ): { x: number; y: number } {
   return {
     x: Math.max(margin, Math.min(clientX, viewportWidth - menuWidth - margin)),
-    y: Math.max(margin, Math.min(clientY, viewportHeight - menuHeight - margin)),
+    y: Math.max(
+      margin,
+      Math.min(clientY, viewportHeight - menuHeight - margin)
+    ),
   }
 }

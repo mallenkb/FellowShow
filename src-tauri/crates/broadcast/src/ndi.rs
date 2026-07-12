@@ -418,11 +418,22 @@ fn windows_library_candidates(
     const DLL_NAME: &str = "Processing.NDI.Lib.x64.dll";
     let mut candidates = Vec::with_capacity(3);
     if let Some(runtime_dir) = runtime_dir {
-        candidates.push(runtime_dir.join(DLL_NAME));
+        candidates.push(join_windows_path(runtime_dir, DLL_NAME));
     }
-    candidates.push(executable_dir.join(DLL_NAME));
-    candidates.push(source_base.join("sdk/ndi/windows").join(DLL_NAME));
+    candidates.push(join_windows_path(executable_dir, DLL_NAME));
+    candidates.push(join_windows_path(
+        source_base,
+        &format!(r"sdk\ndi\windows\{DLL_NAME}"),
+    ));
     candidates
+}
+
+fn join_windows_path(base: &Path, suffix: &str) -> PathBuf {
+    let base = base
+        .to_string_lossy()
+        .trim_end_matches(['\\', '/'])
+        .to_owned();
+    PathBuf::from(format!(r"{base}\{suffix}"))
 }
 
 fn resolve_library_path() -> Result<PathBuf, NdiError> {

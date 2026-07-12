@@ -43,6 +43,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf clang libclang-dev cmake
         working-directory: .
+      - name: Prepare test database resource
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from pathlib import Path
+
+          database_path = Path("data/fellowshow.db")
+          schema = Path("data/schema.sql").read_text()
+          with sqlite3.connect(database_path) as connection:
+              connection.executescript(schema)
+          PY
+        working-directory: .
       - run: cargo fmt --all -- --check
       - run: cargo test --workspace --all-targets --locked
       - run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
