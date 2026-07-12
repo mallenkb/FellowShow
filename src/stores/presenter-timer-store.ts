@@ -12,8 +12,8 @@ interface PresenterTimerBackgroundOption {
 }
 
 const DEFAULT_TIMER_BACKGROUND_OPTION: PresenterTimerBackgroundOption = {
-  id: "paint-sweeps-red-blue-scripture",
-  name: "Paint Sweeps",
+  id: "paint-sweeps-hope",
+  name: "Paint Sweeps Hope",
   url: PRESENTER_TIMER_BACKGROUND_URL,
   mediaType: "image",
   builtin: true,

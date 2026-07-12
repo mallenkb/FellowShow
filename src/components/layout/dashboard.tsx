@@ -346,7 +346,6 @@ export function Dashboard() {
           : "bible"
     const broadcastStore = useBroadcastStore.getState()
     broadcastStore.setSelectedThemeSection(section)
-
   }, [])
 
   return (

@@ -378,7 +378,20 @@ export function BibleSection() {
       }
       return a.abbreviation.localeCompare(b.abbreviation)
     })
-  const otherTranslations = translations.filter((t) => t.language !== "en")
+  const preferredOtherOrder = ["ATWI", "WASNA"]
+  const otherTranslations = translations
+    .filter((t) => t.language !== "en")
+    .sort((a, b) => {
+      const aIndex = preferredOtherOrder.indexOf(a.abbreviation)
+      const bIndex = preferredOtherOrder.indexOf(b.abbreviation)
+      if (aIndex !== -1 || bIndex !== -1) {
+        return (
+          (aIndex === -1 ? preferredOtherOrder.length : aIndex) -
+          (bIndex === -1 ? preferredOtherOrder.length : bIndex)
+        )
+      }
+      return 0
+    })
   const activeTranslation = translations.find((t) => t.id === activeId)
   const installedTranslations = translations.filter(
     (translation) => translation.is_downloaded

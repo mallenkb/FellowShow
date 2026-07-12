@@ -1,5 +1,6 @@
 import type { VerseRenderData } from "@/types"
 import type { Verse } from "@/types"
+import { formatBibleReference } from "@/lib/bible-book-names"
 
 export function toVerseRenderData(
   verse: Verse,
@@ -15,7 +16,13 @@ export function toVerseRenderData(
   }
 
   return {
-    reference: `${verse.book_name} ${verse.chapter}:${verse.verse} (${translation})`,
+    reference: formatBibleReference(
+      verse.book_name,
+      verse.book_number,
+      verse.chapter,
+      verse.verse,
+      translation
+    ),
     themeSection: "bible",
     segments: [{ verseNumber: verse.verse, text: verse.text }],
   }

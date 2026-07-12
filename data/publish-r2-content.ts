@@ -40,7 +40,7 @@ const MANIFEST_PATH = join(DIST_DIR, "content-manifest.json")
 const PACKS_DIR = join(DIST_DIR, "packs")
 // Translations that ship inside the app and never need downloading.
 const BUNDLED_TRANSLATIONS = new Set(["NKJV", "NIV", "WASNA"])
-const PREBUILT_PACKS = new Map([["TK", join(DATA_DIR, "atwi.db")]])
+const PREBUILT_PACKS = new Map([["ATWI", join(DATA_DIR, "atwi.db")]])
 
 type R2Target = {
   endpointUrl?: string
@@ -262,7 +262,7 @@ function contentTypeFor(path: string): string {
 }
 
 function packFileName(abbreviation: string): string {
-  return abbreviation.toUpperCase() === "TK"
+  return abbreviation.toUpperCase() === "ATWI"
     ? "atwi.db"
     : `${abbreviation.toLowerCase()}.db`
 }

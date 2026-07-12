@@ -37,4 +37,32 @@ describe("deriveLiveVerse", () => {
       })
     )
   })
+
+  it("uses the Asante Twi book name for WASNA references", () => {
+    const result = deriveLiveVerse({
+      isLive: true,
+      selectedVerse: sampleVerse,
+      translation: "WASNA",
+    })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        reference: "1 Mose 1:2 (Asante Twi)",
+      })
+    )
+  })
+
+  it("uses the Asante Twi label for the ATWI translation", () => {
+    const result = deriveLiveVerse({
+      isLive: true,
+      selectedVerse: { ...sampleVerse, book_name: "Gyenesis" },
+      translation: "ATWI",
+    })
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        reference: "1 Mose 1:2 (Asante Twi)",
+      })
+    )
+  })
 })

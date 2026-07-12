@@ -34,7 +34,6 @@ trait ProjectorWindowOps {
     fn set_skip_taskbar(&self, skip: bool) -> Result<(), String>;
     fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String>;
     fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String>;
-    fn maximize(&self) -> Result<(), String>;
     fn show(&self) -> Result<(), String>;
     fn set_focus(&self) -> Result<(), String>;
 }
@@ -62,10 +61,6 @@ impl ProjectorWindowOps for tauri::WebviewWindow {
             .map_err(|e| e.to_string())
     }
 
-    fn maximize(&self) -> Result<(), String> {
-        self.maximize().map_err(|e| e.to_string())
-    }
-
     fn show(&self) -> Result<(), String> {
         self.show().map_err(|e| e.to_string())
     }
@@ -81,12 +76,12 @@ fn show_projector_window(
     size: tauri::PhysicalSize<u32>,
 ) -> Result<(), String> {
     window.set_fullscreen(false)?;
-    window.set_decorations(true)?;
-    window.set_skip_taskbar(false)?;
+    window.set_decorations(false)?;
+    window.set_skip_taskbar(true)?;
     window.set_physical_position(position)?;
     window.set_physical_size(size)?;
-    window.maximize()?;
     window.show()?;
+    window.set_fullscreen(true)?;
     window.set_focus()?;
     Ok(())
 }
@@ -210,7 +205,7 @@ pub async fn open_broadcast_window(
         WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(window_url(&output_id).into()))
             .title(title)
             .inner_size(1920.0, 1080.0)
-            .decorations(true)
+            .decorations(false)
             .always_on_top(false)
             .skip_taskbar(false)
             .focused(true)
@@ -347,7 +342,6 @@ mod tests {
         SkipTaskbar(bool),
         Position(tauri::PhysicalPosition<i32>),
         Size(tauri::PhysicalSize<u32>),
-        Maximize,
         Show,
         Focus,
     }
@@ -396,11 +390,6 @@ mod tests {
             Ok(())
         }
 
-        fn maximize(&self) -> Result<(), String> {
-            self.operations.borrow_mut().push(WindowOperation::Maximize);
-            Ok(())
-        }
-
         fn show(&self) -> Result<(), String> {
             self.operations.borrow_mut().push(WindowOperation::Show);
             Ok(())
@@ -427,12 +416,12 @@ mod tests {
             *window.operations.borrow(),
             vec![
                 WindowOperation::Fullscreen(false),
-                WindowOperation::Decorations(true),
-                WindowOperation::SkipTaskbar(false),
+                WindowOperation::Decorations(false),
+                WindowOperation::SkipTaskbar(true),
                 WindowOperation::Position(position),
                 WindowOperation::Size(size),
-                WindowOperation::Maximize,
                 WindowOperation::Show,
+                WindowOperation::Fullscreen(true),
                 WindowOperation::Focus,
             ]
         );

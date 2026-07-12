@@ -6,6 +6,6 @@ name = "FellowShow"
 script = ""
 
 [[actions]]
-name = "Run"
+name = "Run App"
 icon = "run"
 command = "./script/build_and_run.sh"

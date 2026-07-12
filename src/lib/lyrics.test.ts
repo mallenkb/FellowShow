@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest"
 import { splitLyricBlocks } from "./lyrics"
 
 describe("splitLyricBlocks", () => {
+  it("labels unmarked song sections as verses", () => {
+    const blocks = splitLyricBlocks(`First section line one
+First section line two
+
+Second section line one
+Second section line two`)
+
+    expect(blocks.map((block) => block.label)).toEqual(["Verse 1", "Verse 2"])
+  })
+
   it("merges standalone section headings with the following lyrics", () => {
     const blocks = splitLyricBlocks(`1 Peter 5:6
 King James Version

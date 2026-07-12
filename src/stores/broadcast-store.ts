@@ -192,6 +192,7 @@ function hasProgramContent(
 function verseRenderKey(verse: VerseRenderData | null): string {
   if (!verse) return "null"
   return JSON.stringify({
+    sourceId: verse.sourceId ?? null,
     reference: verse.reference,
     themeSection: verse.themeSection ?? null,
     referenceMode: verse.referenceMode ?? null,
@@ -429,12 +430,17 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     const s = get()
     const output = s.outputs.find((o) => o.id === outputId)
     if (!output) return
+    // A dedicated song display is an operator confidence surface: it mirrors
+    // the staged song verse without taking that verse to the main program.
+    const mirrorsSongPreview = output.content === "songs"
+    const outputVerse = mirrorsSongPreview ? s.previewVerse : s.liveVerse
+    const outputTimer = mirrorsSongPreview ? s.previewTimer : s.presenterTimer
     // Theme follows the staged content even off-air, so the background is
     // already right before going live; program content itself is gated below.
     const themeId = resolveOutputThemeId(
       output,
       s,
-      s.liveVerse,
+      outputVerse,
       s.selectedThemeSection
     )
     const theme = s.themes.find((t) => t.id === themeId) ?? s.themes[0]
@@ -445,9 +451,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     // to the theme background instead of freezing on the last verse.
     const { verse, timer } = getOutputProgramPayload(
       output.content,
-      s.isLive,
-      s.liveVerse,
-      s.presenterTimer
+      mirrorsSongPreview || s.isLive,
+      outputVerse,
+      outputTimer
     )
     void emitTo(windowLabelForOutput(output.id), "broadcast:verse-update", {
       theme,
@@ -499,6 +505,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutputFor(id)
   },
   setPreviewOutput: (previewVerse, previewTimer) => {
+    let previewChanged = false
     set((s) => {
       const samePreview = hasSameProgramPayload(
         s.previewVerse,
@@ -507,8 +514,16 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         previewTimer
       )
       if (samePreview) return s
+      previewChanged = true
       return { previewVerse, previewTimer }
     })
+    if (previewChanged) {
+      for (const output of get().outputs) {
+        if (output.content === "songs") {
+          get().syncBroadcastOutputFor(output.id)
+        }
+      }
+    }
   },
   setLive: (isLive) => {
     set({

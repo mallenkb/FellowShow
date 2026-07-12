@@ -72,6 +72,7 @@ import {
 } from "@/components/ui/dialog"
 import { useBible, bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
+import { formatBibleBookName } from "@/lib/bible-book-names"
 import {
   useBibleStore,
   useBroadcastStore,
@@ -673,6 +674,16 @@ export function SearchPanel({
   })
 
   const selectedBookNumber = selectedBook?.book_number
+  const activeTranslationAbbreviation =
+    translations.find((translation) => translation.id === activeTranslationId)
+      ?.abbreviation ?? ""
+  const selectedBookLabel = selectedBook
+    ? formatBibleBookName(
+        selectedBook.name,
+        selectedBook.book_number,
+        activeTranslationAbbreviation
+      )
+    : null
 
   // Load initial data and default to Genesis 1:1
   useEffect(() => {
@@ -1252,7 +1263,7 @@ export function SearchPanel({
               onClick={() => void importEasyWorshipSongs()}
             >
               <UploadIcon className="size-4" />
-              Import EasyWorship
+              Import
             </Button>
           </div>
         ) : activeTab === "presentation" ? (
@@ -1301,7 +1312,7 @@ export function SearchPanel({
           <div className="flex min-h-9 shrink-0 items-center justify-between px-3 py-2">
             {selectedBook ? (
               <h3 className="text-sm font-semibold text-foreground">
-                {selectedBook.name} {chapter}
+                {selectedBookLabel} {chapter}
               </h3>
             ) : null}
             {selectedBook ? (
