@@ -11,6 +11,7 @@ const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
   { value: "theme-2026", label: "2026 Theme" },
   { value: "theme-2025", label: "2025 Theme" },
   { value: "pentecostal-book", label: "Pentecostal Book" },
+  { value: "easyworship", label: "EasyWorship" },
 ]
 
 export function SongFilterDropdown({

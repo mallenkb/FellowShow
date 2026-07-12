@@ -346,9 +346,9 @@ export function Dashboard() {
     const broadcastStore = useBroadcastStore.getState()
     broadcastStore.setSelectedThemeSection(section)
 
-    if (section === "songs") {
-      broadcastStore.setAutoPreviewToLive(true)
-    } else if (section === "presentation") {
+    // Content selection should stage into preview by default. The operator can
+    // still enable Auto from the preview panel when they explicitly want it.
+    if (mode !== "timer") {
       broadcastStore.setAutoPreviewToLive(false)
     }
   }, [])

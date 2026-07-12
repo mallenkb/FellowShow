@@ -92,7 +92,7 @@ export function createSongSearchIndex<TSong extends SearchableSong>(
       shouldSort: true,
       threshold: 0.35,
       ignoreLocation: true,
-      minMatchCharLength: 2,
+      minMatchCharLength: 1,
       keys: [
         { name: "title", weight: 0.46 },
         { name: "lyrics", weight: 0.38 },

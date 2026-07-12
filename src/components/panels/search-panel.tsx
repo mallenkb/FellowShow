@@ -5,7 +5,6 @@ import {
   useCallback,
   useRef,
   useMemo,
-  useDeferredValue,
   type PointerEvent,
 } from "react"
 import { motion } from "motion/react"
@@ -153,7 +152,6 @@ export function SearchPanel({
   const [selectedVerseId, setSelectedVerseId] = useState<number | null>(null)
   const [contextQuery, setContextQuery] = useState("")
   const [songQuery, setSongQuery] = useState("")
-  const deferredSongQuery = useDeferredValue(songQuery)
   const [songLetterFilter, setSongLetterFilter] = useState("all")
   const [songSourceFilter, setSongSourceFilter] =
     useState<SongSourceFilter>("all")
@@ -650,15 +648,15 @@ export function SearchPanel({
     [allSongs]
   )
   const filteredSongs = useMemo(() => {
-    const matches = searchSongs(songSearchIndex, deferredSongQuery, {
+    const matches = searchSongs(songSearchIndex, songQuery, {
       source: songSourceFilter,
       letter: songLetterFilter,
     })
 
-    if (deferredSongQuery.trim()) return matches
+    if (songQuery.trim()) return matches
 
     return [...matches].sort(compareSongPdfOrder)
-  }, [deferredSongQuery, songLetterFilter, songSearchIndex, songSourceFilter])
+  }, [songLetterFilter, songQuery, songSearchIndex, songSourceFilter])
 
   const songResultCount = filteredSongs.length
   const visibleSongs = useMemo(
