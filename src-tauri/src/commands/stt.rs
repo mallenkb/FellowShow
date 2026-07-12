@@ -478,7 +478,6 @@ pub async fn start_transcription(
                 TranscriptEvent::Final {
                     transcript,
                     confidence,
-                    speech_final: _,
                     ..
                 } => {
                     if !transcript.is_empty() {
