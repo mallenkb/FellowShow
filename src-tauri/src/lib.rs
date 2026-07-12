@@ -64,6 +64,46 @@ fn bundled_bible_db_candidates(resource_dir: &std::path::Path) -> [std::path::Pa
     ]
 }
 
+fn bundled_asante_twi_pack_candidates(resource_dir: &std::path::Path) -> [std::path::PathBuf; 2] {
+    [
+        resource_dir.join("atwi.db"),
+        resource_dir.join("_up_/data/atwi.db"),
+    ]
+}
+
+fn install_bundled_asante_twi_pack(
+    bible_db: &fellowshow_bible::BibleDb,
+    resource_dir: &std::path::Path,
+) {
+    match bible_db.get_translation_id_by_abbreviation("TK") {
+        Ok(Some(_)) => return,
+        Ok(None) => {}
+        Err(error) => {
+            log::warn!("Could not check whether Asante Twi is installed: {error}");
+            return;
+        }
+    }
+
+    let Some(pack_path) = bundled_asante_twi_pack_candidates(resource_dir)
+        .into_iter()
+        .find(|path| path.exists())
+    else {
+        log::debug!("Bundled Asante Twi pack was not found");
+        return;
+    };
+
+    match bible_db.install_translation_from_db(&pack_path, "TK") {
+        Ok(_) => log::info!(
+            "Installed bundled Asante Twi Bible from {}",
+            pack_path.display()
+        ),
+        Err(error) => log::warn!(
+            "Failed to install bundled Asante Twi Bible from {}: {error}",
+            pack_path.display()
+        ),
+    }
+}
+
 #[expect(clippy::too_many_lines, reason = "app setup is inherently complex")]
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -148,6 +188,10 @@ pub fn run() {
                         return Ok(());
                     }
                 };
+
+                if let Ok(resource_dir) = app.path().resource_dir() {
+                    install_bundled_asante_twi_pack(&bible_db, &resource_dir);
+                }
 
                 let managed_state = app.state::<Mutex<state::AppState>>();
                 let mut state = managed_state
@@ -234,7 +278,7 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::bundled_bible_db_candidates;
+    use super::{bundled_asante_twi_pack_candidates, bundled_bible_db_candidates};
 
     #[test]
     fn includes_tauri_preserved_relative_resource_path() {
@@ -247,6 +291,17 @@ mod tests {
         assert_eq!(
             candidates[1],
             std::path::Path::new("/Resources/_up_/data/fellowshow.db")
+        );
+    }
+
+    #[test]
+    fn includes_bundled_asante_twi_pack_resource_paths() {
+        let candidates = bundled_asante_twi_pack_candidates(std::path::Path::new("/Resources"));
+
+        assert_eq!(candidates[0], std::path::Path::new("/Resources/atwi.db"));
+        assert_eq!(
+            candidates[1],
+            std::path::Path::new("/Resources/_up_/data/atwi.db")
         );
     }
 }

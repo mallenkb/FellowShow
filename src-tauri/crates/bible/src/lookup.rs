@@ -258,6 +258,13 @@ impl BibleDb {
             },
         )?;
 
+        tx.execute(
+            "INSERT OR IGNORE INTO translations (abbreviation, title, language, license, is_copyrighted, is_downloaded) \
+             SELECT abbreviation, title, language, license, is_copyrighted, 0 \
+             FROM source_db.translations WHERE abbreviation = ?1",
+            [abbreviation],
+        )?;
+
         let local_id: i64 = tx.query_row(
             "SELECT id FROM translations WHERE abbreviation = ?1",
             [abbreviation],

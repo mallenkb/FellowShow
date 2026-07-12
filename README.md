@@ -194,9 +194,11 @@ bun run tauri dev
 bun run tauri build
 ```
 
-Release installers bundle the single SQLite database listed in
-`src-tauri/tauri.conf.json` (`data/fellowshow.db`). To ship Asante Twi, NIV, and
-NKJV by default without songs or hymns, place licensed exports at
+Release installers bundle the main SQLite database and the Asante Twi TK2012
+pack listed in `src-tauri/tauri.conf.json` (`data/fellowshow.db` and
+`data/atwi.db`). The app installs `atwi.db` into its writable Bible database on
+first launch. To ship Asante Twi, NIV, and NKJV by default without songs or
+hymns, place licensed exports at
 `data/sources/NIV.json` and `data/sources/NKJV.json`, then run:
 
 ```bash

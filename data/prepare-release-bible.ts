@@ -12,6 +12,7 @@ import { join } from "node:path"
 const DATA_DIR = import.meta.dir
 const SOURCES_DIR = join(DATA_DIR, "sources")
 const REQUIRED_TRANSLATIONS = ["NKJV", "NIV", "WASNA"] as const
+const REQUIRED_PACKS = ["atwi.db"] as const
 
 function assertSourceExists(abbreviation: string) {
   const sourcePath = join(SOURCES_DIR, `${abbreviation}.json`)
@@ -29,12 +30,31 @@ function assertSourceExists(abbreviation: string) {
   }
 }
 
+function assertPackExists(fileName: string) {
+  const packPath = join(DATA_DIR, fileName)
+  if (!existsSync(packPath)) {
+    throw new Error(`Bundled Bible pack is missing at ${packPath}.`)
+  }
+
+  const size = statSync(packPath).size
+  if (size < 100_000) {
+    throw new Error(
+      `Bundled Bible pack ${fileName} is unexpectedly small (${size} bytes).`
+    )
+  }
+}
+
 async function main() {
   console.log("\nPreparing bundled release Bible database...\n")
 
   for (const translation of REQUIRED_TRANSLATIONS) {
     assertSourceExists(translation)
     console.log(`  OK ${translation}.json`)
+  }
+
+  for (const pack of REQUIRED_PACKS) {
+    assertPackExists(pack)
+    console.log(`  OK ${pack}`)
   }
 
   const proc = Bun.spawn(["bun", "run", "data/build-bible-db.ts"], {
