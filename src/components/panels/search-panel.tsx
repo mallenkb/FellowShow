@@ -1472,14 +1472,10 @@ export function SearchPanel({
                   const store = useBroadcastStore.getState()
                   const liveVerse = toVerseRenderData(
                     verse,
-                    translations.find(
-                      (item) => item.id === activeTranslationId
-                    )?.abbreviation ?? "KJV"
+                    translations.find((item) => item.id === activeTranslationId)
+                      ?.abbreviation ?? "KJV"
                   )
-                  store.presentOnLive(
-                    liveVerse,
-                    null
-                  )
+                  store.presentOnLive(liveVerse, null)
                 }}
                 className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
               >
