@@ -35,6 +35,7 @@
     "test": "vitest",
     "download:bible-data": "bun run data/download-sources.ts",
     "download:asante-twi": "bun run data/download-asante-twi.ts",
+    "import:tk2012": "bun run data/import-tk2012.ts",
     "download:thiagobodruk-bibles": "bun run data/download-thiagobodruk-bibles.ts",
     "build:bible": "bun run data/build-bible-db.ts",
     "prepare:release-bible": "bun run data/prepare-release-bible.ts",

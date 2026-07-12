@@ -288,6 +288,14 @@ const TRANSLATIONS_META: Array<{
     license: "CC BY-SA 4.0",
     isCopyrighted: true,
   },
+  {
+    file: "TK.json",
+    abbreviation: "TK",
+    title: "Twerɛ Kronkron (2012)",
+    language: "twi",
+    license: "Bible Society of Ghana",
+    isCopyrighted: true,
+  },
 ]
 
 function main() {

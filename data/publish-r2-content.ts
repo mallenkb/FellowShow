@@ -186,7 +186,7 @@ function buildPacksAndManifest(version: string, prefix: string) {
   mkdirSync(PACKS_DIR, { recursive: true })
 
   const packs = abbreviations.map((abbreviation) => {
-    const fileName = `${abbreviation.toLowerCase()}.db`
+    const fileName = packFileName(abbreviation)
     const localPath = join(PACKS_DIR, fileName)
     const { sizeBytes, sha256: hash } = buildTranslationPack(
       abbreviation,
@@ -245,6 +245,12 @@ function contentTypeFor(path: string): string {
   if (path.endsWith(".db") || path.endsWith(".sqlite"))
     return "application/vnd.sqlite3"
   return "application/octet-stream"
+}
+
+function packFileName(abbreviation: string): string {
+  return abbreviation.toUpperCase() === "TK"
+    ? "atwi.db"
+    : `${abbreviation.toLowerCase()}.db`
 }
 
 async function uploadFileWithAws(
