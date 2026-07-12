@@ -43,7 +43,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
     let host = cpal::default_host();
 
     // Select the device
-    log::info!("[AUDIO] Requested device_id: {:?}", &config.device_id);
+    log::info!("[AUDIO] Requested device_id: {:?}", config.device_id);
 
     let device = match &config.device_id {
         Some(id) if !id.is_empty() => {
@@ -76,7 +76,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
                 .ok_or(AudioError::NoInputDevices)?;
             log::info!(
                 "[AUDIO] Using default device: '{}'",
-                &d.name().unwrap_or_default()
+                d.name().unwrap_or_default()
             );
             d
         }
