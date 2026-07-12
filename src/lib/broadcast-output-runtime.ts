@@ -207,7 +207,7 @@ export async function openDisplayOutput(
       description:
         typeof error === "string"
           ? error
-          : "The selected display may have been disconnected. Refresh monitors in Manage and try again.",
+          : "That screen may have been disconnected. Refresh screens in Manage and try again.",
     })
     throw error
   }
@@ -287,7 +287,7 @@ export async function setOutputEnabled(
     }
     if (output.monitorIndex === null) {
       toast.error("Pick a screen first", {
-        description: `Choose a monitor for ${output.name} in Manage, then turn it on.`,
+        description: `Choose a screen for ${output.name} in Manage, then turn it on.`,
       })
       openBroadcastSettingsDeferred(output.id)
       return false

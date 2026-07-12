@@ -173,7 +173,7 @@ describe("sanitizeOutputConfigs", () => {
       [
         {
           id: "main",
-          name: "Main Output",
+          name: "Sanctuary",
           content: "nonsense",
           themeId: "deleted-theme",
           outputType: "display",
@@ -185,12 +185,40 @@ describe("sanitizeOutputConfigs", () => {
     expect(result).toEqual([
       {
         id: "main",
-        name: "Main Output",
+        name: "Sanctuary",
         content: "everything",
         themeId: null,
         outputType: "display",
         monitorIndex: null,
       },
+    ])
+  })
+
+  it("migrates the pre-routing default names to role names", () => {
+    const result = sanitizeOutputConfigs(
+      [
+        {
+          id: "main",
+          name: "Main Output",
+          content: "everything",
+          themeId: null,
+          outputType: "display",
+          monitorIndex: 1,
+        },
+        {
+          id: "alt",
+          name: "Alternate Output",
+          content: "bible",
+          themeId: null,
+          outputType: "display",
+          monitorIndex: 2,
+        },
+      ],
+      themeIds
+    )
+    expect(result?.map((output) => output.name)).toEqual([
+      "Program",
+      "Scripture",
     ])
   })
 

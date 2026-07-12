@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
   getOutputProgramPayload,
+  MAX_BROADCAST_OUTPUTS,
   outputContentLabel,
   resolveOutputThemeId,
   type OutputContent,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/broadcast-output-runtime"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
 import { useBroadcastStore } from "@/stores"
-import { MonitorIcon, RadioIcon, Settings2Icon } from "lucide-react"
+import { MonitorIcon, PlusIcon, RadioIcon, Settings2Icon } from "lucide-react"
 
 type DisplaysPanelMode = "book" | "context" | "songs" | "presentation" | "timer"
 
@@ -109,13 +110,7 @@ export function OutputsMultiviewPanel({
       data-slot="outputs-multiview-panel"
       className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
-      <PanelHeader
-        title={
-          onCount > 0
-            ? `Displays · ${onCount} on`
-            : `Displays · ${outputs.length}`
-        }
-      >
+      <PanelHeader title={`Displays · ${onCount} of ${outputs.length} on`}>
         <Button
           variant="ghost"
           size="xs"
@@ -186,7 +181,7 @@ export function OutputsMultiviewPanel({
                 )}
                 {active && !showingContent && (
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1">
-                    <span className="text-[0.5625rem] text-white/80">
+                    <span className="text-[0.625rem] text-white/80">
                       Waiting
                     </span>
                   </div>
@@ -214,10 +209,10 @@ export function OutputsMultiviewPanel({
                   onClick={() => openBroadcastSettings(output.id)}
                   title={`Manage ${output.name}`}
                 >
-                  <div className="truncate text-[0.625rem] font-medium">
+                  <div className="truncate text-[0.6875rem] font-medium">
                     {output.name}
                   </div>
-                  <div className="flex items-center gap-1 text-[0.5625rem] text-muted-foreground">
+                  <div className="flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                     {output.outputType === "ndi" ? (
                       <RadioIcon className="size-2.5 shrink-0" />
                     ) : (
@@ -249,6 +244,16 @@ export function OutputsMultiviewPanel({
             </div>
           )
         })}
+        {outputs.length < MAX_BROADCAST_OUTPUTS && (
+          <button
+            type="button"
+            onClick={() => openBroadcastSettings()}
+            className="flex aspect-video flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-foreground"
+          >
+            <PlusIcon className="size-4" />
+            <span className="text-[0.625rem] font-medium">Add display</span>
+          </button>
+        )}
       </div>
     </div>
   )

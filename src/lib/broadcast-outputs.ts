@@ -203,17 +203,23 @@ export function sanitizeOutputConfigs(
         : null
     if (!id || seenIds.has(id)) continue
     seenIds.add(id)
+    const content =
+      typeof candidate.content === "string" &&
+      OUTPUT_CONTENT_VALUES.has(candidate.content)
+        ? (candidate.content as OutputContent)
+        : "everything"
+    // Migrate the pre-routing default names to the role-based ones.
+    const isLegacyDefaultName =
+      candidate.name === "Main Output" || candidate.name === "Alternate Output"
     outputs.push({
       id,
       name:
-        typeof candidate.name === "string" && candidate.name.trim().length > 0
+        typeof candidate.name === "string" &&
+        candidate.name.trim().length > 0 &&
+        !isLegacyDefaultName
           ? candidate.name
-          : id,
-      content:
-        typeof candidate.content === "string" &&
-        OUTPUT_CONTENT_VALUES.has(candidate.content)
-          ? (candidate.content as OutputContent)
-          : "everything",
+          : defaultNameForContent(content),
+      content,
       themeId:
         typeof candidate.themeId === "string" &&
         validThemeIds.has(candidate.themeId)

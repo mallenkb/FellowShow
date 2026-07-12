@@ -82,7 +82,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
         isLive && "shadow-[inset_0_2px_0_0_rgba(239,68,68,0.3)]"
       )}
     >
-      <PanelHeader title="Live display">
+      <PanelHeader title="Program">
         <label className="flex min-w-0 flex-wrap items-center justify-end gap-2">
           <span
             className={cn(
@@ -90,7 +90,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
               isLive ? "text-red-400" : "text-muted-foreground"
             )}
           >
-            {isLive ? "Live" : "Go live"}
+            {isLive ? "Live" : "Off air"}
           </span>
           <Switch
             checked={isLive}
@@ -114,6 +114,13 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           className="h-full"
           fillContainer
         />
+        {!isLive && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="rounded bg-background/70 px-2 py-0.5 text-[0.6875rem] font-semibold tracking-widest text-muted-foreground uppercase">
+              Off air
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

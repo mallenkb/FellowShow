@@ -68,7 +68,7 @@ describe("MonitorSelectField", () => {
     renderField({
       takenMonitors: [{ index: 1, outputName: "Main Output" }],
     })
-    expect(screen.getByText(/same display as main output/i)).toBeTruthy()
+    expect(screen.getByText(/same screen as main output/i)).toBeTruthy()
   })
 
   it("names every output sharing the monitor", () => {
@@ -79,7 +79,7 @@ describe("MonitorSelectField", () => {
       ],
     })
     expect(
-      screen.getByText(/same display as main output and output 3/i)
+      screen.getByText(/same screen as main output and output 3/i)
     ).toBeTruthy()
   })
 

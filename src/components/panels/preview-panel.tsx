@@ -232,7 +232,13 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       data-slot="preview-panel"
       className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
-      <PanelHeader title="Program preview" />
+      <PanelHeader title="Preview">
+        {previewVerse?.reference && (
+          <span className="max-w-[60%] truncate text-[0.6875rem] text-muted-foreground">
+            Staged: {previewVerse.reference}
+          </span>
+        )}
+      </PanelHeader>
       <div
         className="relative z-0 aspect-video w-full shrink-0 overflow-hidden"
         onDoubleClick={sendPreviewLive}
@@ -244,6 +250,13 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
           className="h-full"
           fillContainer
         />
+        {!previewVerse && !previewTimer && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
+            <span className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+              Nothing staged
+            </span>
+          </div>
+        )}
       </div>
       <div className="relative z-10 border-t border-border bg-card px-3 py-2">
         <Button
@@ -255,7 +268,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
           disabled={!previewVerse && !previewTimer}
         >
           <RadioIcon className="size-3.5 shrink-0" />
-          Go Live
+          Show on Live
         </Button>
       </div>
     </div>

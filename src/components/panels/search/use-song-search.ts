@@ -20,6 +20,8 @@ interface SongSearchResult {
   isSearching: boolean
 }
 
+const WORKER_SUPPORTED = typeof Worker !== "undefined"
+
 export function useSongSearch({
   songs,
   query,
@@ -47,23 +49,26 @@ export function useSongSearch({
   const workerRef = useRef<Worker | null>(null)
   const latestRequestIdRef = useRef(0)
   const [workerReady, setWorkerReady] = useState(false)
-  const [useSynchronousFallback, setUseSynchronousFallback] = useState(false)
+  const [workerFailed, setWorkerFailed] = useState(false)
   const [workerResult, setWorkerResult] = useState<{
     searchKey: string
     query: string
     songIds: string[]
   } | null>(null)
+  const useSynchronousFallback = !WORKER_SUPPORTED || workerFailed
 
-  useEffect(() => {
+  // Reset worker state when the song list changes (adjust-during-render
+  // pattern, so the effect below doesn't set state synchronously).
+  const [prevOrderedSongs, setPrevOrderedSongs] = useState(orderedSongs)
+  if (prevOrderedSongs !== orderedSongs) {
+    setPrevOrderedSongs(orderedSongs)
     setWorkerReady(false)
     setWorkerResult(null)
-    setUseSynchronousFallback(false)
+    setWorkerFailed(false)
+  }
 
-    if (orderedSongs.length === 0) return
-    if (typeof Worker === "undefined") {
-      setUseSynchronousFallback(true)
-      return
-    }
+  useEffect(() => {
+    if (orderedSongs.length === 0 || !WORKER_SUPPORTED) return
 
     const worker = new Worker(
       new URL("../../../workers/song-search.worker.ts", import.meta.url),
@@ -94,7 +99,7 @@ export function useSongSearch({
       worker.terminate()
       workerRef.current = null
       setWorkerReady(false)
-      setUseSynchronousFallback(true)
+      setWorkerFailed(true)
     }
     worker.postMessage({ type: "initialize", songs: orderedSongs })
 

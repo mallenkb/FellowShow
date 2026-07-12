@@ -48,7 +48,7 @@ export function MonitorSelectField({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-xs text-muted-foreground">Target Monitor</label>
+        <label className="text-xs text-muted-foreground">Screen</label>
         <Button
           variant="ghost"
           size="xs"
@@ -70,7 +70,7 @@ export function MonitorSelectField({
         <SelectTrigger className="w-full" disabled={monitors.length === 0}>
           <SelectValue
             placeholder={
-              monitors.length === 0 ? "No monitors detected" : "Select monitor"
+              monitors.length === 0 ? "No screens detected" : "Select screen"
             }
           />
         </SelectTrigger>
@@ -97,7 +97,7 @@ export function MonitorSelectField({
         <div className="flex items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[0.6875rem] text-amber-500 dark:text-amber-400">
           <span className="flex items-center gap-1.5">
             <TriangleAlertIcon className="size-3 shrink-0" />
-            Same display as{" "}
+            Same screen as{" "}
             {collidingWith.map((taken) => taken.outputName).join(" and ")} —
             outputs will overlap.
           </span>

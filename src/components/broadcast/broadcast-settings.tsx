@@ -135,16 +135,16 @@ export function BroadcastSettings({
         <DialogHeader>
           <DialogTitle>Displays</DialogTitle>
           <DialogDescription>
-            Give each external screen a job and a monitor. Turn them on here or
-            from the Displays strip on the right during service.
+            Give each display a job and a screen. Turn them on here or from
+            the Displays strip on the right during service.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Connected monitors map */}
+        {/* Connected screens map */}
         <div className="space-y-2 rounded-lg border border-border bg-background p-3">
           <div className="flex items-center justify-between">
             <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
-              Connected monitors
+              Connected screens
             </span>
             <Button
               variant="ghost"
@@ -161,7 +161,7 @@ export function BroadcastSettings({
           </div>
           {monitors.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              No monitors detected. Connect a display and hit Refresh.
+              No screens detected. Connect a screen and hit Refresh.
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
