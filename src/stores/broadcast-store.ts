@@ -62,6 +62,11 @@ interface BroadcastState {
     timer: PresenterTimerRenderData | null
   ) => void
   setLive: (live: boolean) => void
+  presentOnLive: (
+    verse: VerseRenderData | null,
+    timer: PresenterTimerRenderData | null,
+    source?: "manual" | "preview"
+  ) => void
   showPreviewOnLive: (source?: "manual" | "preview") => void
   takePreviewLive: (source?: "manual" | "preview") => void
   setLiveVerse: (verse: VerseRenderData | null) => void
@@ -517,6 +522,17 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     set({
       isLive,
       liveSource: isLive ? "manual" : null,
+    })
+    get().syncBroadcastOutput()
+  },
+  presentOnLive: (previewVerse, previewTimer, source = "manual") => {
+    set({
+      previewVerse,
+      previewTimer,
+      isLive: true,
+      liveVerse: previewVerse,
+      presenterTimer: previewTimer,
+      liveSource: source,
     })
     get().syncBroadcastOutput()
   },

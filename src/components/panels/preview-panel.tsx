@@ -227,10 +227,11 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 
   const sendPreviewLive = () => {
     const store = useBroadcastStore.getState()
-    if (previewTimer) {
-      store.setPreviewOutput(previewVerse, timer)
-    }
-    store.showPreviewOnLive("preview")
+    store.presentOnLive(
+      previewVerse,
+      previewTimer ? timer : previewTimer,
+      "preview"
+    )
   }
 
   return (

@@ -164,7 +164,7 @@ export function PresentationPanel() {
                   onDoubleClick={() => {
                     usePresentationStore.getState().selectSlide(slide.id)
                     const store = useBroadcastStore.getState()
-                    store.setPreviewOutput(
+                    store.presentOnLive(
                       {
                         reference: slide.name,
                         themeSection: "presentation",
@@ -181,7 +181,6 @@ export function PresentationPanel() {
                       },
                       null
                     )
-                    store.showPreviewOnLive("manual")
                   }}
                   onMouseEnter={() => setPreviewingSlideId(slide.id)}
                   onMouseLeave={() =>

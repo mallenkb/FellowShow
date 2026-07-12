@@ -244,7 +244,7 @@ export function SearchPanel({
     (slide: (typeof presentationSlides)[number]) => {
       usePresentationStore.getState().selectSlide(slide.id)
       const store = useBroadcastStore.getState()
-      store.setPreviewOutput(
+      store.presentOnLive(
         {
           reference: slide.name,
           themeSection: "presentation",
@@ -261,7 +261,6 @@ export function SearchPanel({
         },
         null
       )
-      store.showPreviewOnLive("manual")
     },
     []
   )
@@ -627,8 +626,7 @@ export function SearchPanel({
             (item) => item.id === useBibleStore.getState().activeTranslationId
           )?.abbreviation ?? "KJV"
       const store = useBroadcastStore.getState()
-      store.setPreviewOutput(toVerseRenderData(verse, translation), null)
-      store.showPreviewOnLive("manual")
+      store.presentOnLive(toVerseRenderData(verse, translation), null)
     },
     [openSongDetail]
   )
@@ -785,8 +783,7 @@ export function SearchPanel({
         translations.find((item) => item.id === activeTranslationId)
           ?.abbreviation ?? "KJV"
       const store = useBroadcastStore.getState()
-      store.setPreviewOutput(toVerseRenderData(verse, translation), null)
-      store.showPreviewOnLive("manual")
+      store.presentOnLive(toVerseRenderData(verse, translation), null)
     },
     [activeTranslationId, handleVerseClick, translations]
   )
@@ -1475,16 +1472,16 @@ export function SearchPanel({
                     text: result.verse_text,
                   }
                   const store = useBroadcastStore.getState()
-                  store.setPreviewOutput(
-                    toVerseRenderData(
-                      verse,
-                      translations.find(
-                        (item) => item.id === activeTranslationId
-                      )?.abbreviation ?? "KJV"
-                    ),
+                  const liveVerse = toVerseRenderData(
+                    verse,
+                    translations.find(
+                      (item) => item.id === activeTranslationId
+                    )?.abbreviation ?? "KJV"
+                  )
+                  store.presentOnLive(
+                    liveVerse,
                     null
                   )
-                  store.showPreviewOnLive("manual")
                 }}
                 className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
               >
