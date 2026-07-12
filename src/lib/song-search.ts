@@ -19,7 +19,35 @@ export interface SongSearchFilters {
 
 export interface SongSearchIndex<TSong extends SearchableSong> {
   songs: TSong[]
-  fuse: Fuse<TSong>
+  normalizedSongs: Array<{
+    title: string
+    lyrics: string
+  }>
+  fuzzyDocuments: Array<{
+    songIndex: number
+    title: string
+    number: number
+    sourceLabel: string
+    languageLabel: string
+  }>
+  fuzzyTrigramPostings: Map<string, number[]>
+}
+
+type FuzzySongDocument = SongSearchIndex<SearchableSong>["fuzzyDocuments"][number]
+
+const FUZZY_CANDIDATE_LIMIT = 500
+const FUZZY_OPTIONS = {
+  includeScore: true,
+  shouldSort: true,
+  threshold: 0.35,
+  ignoreLocation: true,
+  minMatchCharLength: 1,
+  keys: [
+    { name: "title", weight: 0.78 },
+    { name: "number", weight: 0.1 },
+    { name: "sourceLabel", weight: 0.06 },
+    { name: "languageLabel", weight: 0.06 },
+  ],
 }
 
 const NATURAL_QUERY_STOP_WORDS = new Set([
@@ -45,13 +73,17 @@ const NATURAL_QUERY_STOP_WORDS = new Set([
   "to",
 ])
 
-function normalizeSongSearchQuery(query: string) {
-  const normalized = query
+function normalizeSearchText(value: string) {
+  return value
     .toLowerCase()
     .replace(/&/g, " and ")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim()
+}
+
+function normalizeSongSearchQuery(query: string) {
+  const normalized = normalizeSearchText(query)
 
   if (!normalized) return ""
 
@@ -60,6 +92,15 @@ function normalizeSongSearchQuery(query: string) {
     .filter((token) => !NATURAL_QUERY_STOP_WORDS.has(token))
 
   return meaningful.length > 0 ? meaningful.join(" ") : normalized
+}
+
+function getTrigrams(value: string) {
+  if (value.length < 3) return []
+  const trigrams: string[] = []
+  for (let index = 0; index <= value.length - 3; index += 1) {
+    trigrams.push(value.slice(index, index + 3))
+  }
+  return trigrams
 }
 
 function matchesSongFilters(song: SearchableSong, filters: SongSearchFilters) {
@@ -85,22 +126,35 @@ function matchesSongFilters(song: SearchableSong, filters: SongSearchFilters) {
 export function createSongSearchIndex<TSong extends SearchableSong>(
   songs: TSong[]
 ): SongSearchIndex<TSong> {
+  const normalizedSongs = songs.map((song) => ({
+    title: normalizeSearchText(song.title),
+    lyrics: normalizeSearchText(song.lyrics),
+  }))
+  const fuzzyDocuments = songs.map((song, songIndex) => ({
+    songIndex,
+    title: song.title,
+    number: song.number,
+    sourceLabel: song.sourceLabel ?? "",
+    languageLabel: song.languageLabel ?? "",
+  }))
+  const fuzzyTrigramPostings = new Map<string, number[]>()
+
+  for (const document of fuzzyDocuments) {
+    const searchableMetadata = normalizeSearchText(
+      `${document.title} ${document.sourceLabel} ${document.languageLabel}`
+    )
+    for (const trigram of new Set(getTrigrams(searchableMetadata))) {
+      const postings = fuzzyTrigramPostings.get(trigram)
+      if (postings) postings.push(document.songIndex)
+      else fuzzyTrigramPostings.set(trigram, [document.songIndex])
+    }
+  }
+
   return {
     songs,
-    fuse: new Fuse(songs, {
-      includeScore: true,
-      shouldSort: true,
-      threshold: 0.35,
-      ignoreLocation: true,
-      minMatchCharLength: 1,
-      keys: [
-        { name: "title", weight: 0.46 },
-        { name: "lyrics", weight: 0.38 },
-        { name: "number", weight: 0.08 },
-        { name: "sourceLabel", weight: 0.04 },
-        { name: "languageLabel", weight: 0.04 },
-      ],
-    }),
+    normalizedSongs,
+    fuzzyDocuments,
+    fuzzyTrigramPostings,
   }
 }
 
@@ -119,10 +173,92 @@ export function searchSongs<TSong extends SearchableSong>(
     )
   }
 
-  const results = index.fuse
-    .search(normalizedQuery)
-    .map(({ item }) => item)
-    .filter((song) => matchesSongFilters(song, filters))
+  const limit = filters.limit ?? Number.POSITIVE_INFINITY
+  if (limit <= 0) return []
 
-  return applyLimit(results)
+  const queryTokens = normalizedQuery.split(" ")
+  const rankedMatches: TSong[][] = [[], [], [], [], [], []]
+  const seenSongIndexes = new Set<number>()
+
+  for (let songIndex = 0; songIndex < index.songs.length; songIndex += 1) {
+    const song = index.songs[songIndex]
+    if (!matchesSongFilters(song, filters)) continue
+
+    const normalizedSong = index.normalizedSongs[songIndex]
+    let rank = -1
+
+    if (
+      normalizedSong.title === normalizedQuery ||
+      String(song.number) === normalizedQuery
+    ) {
+      rank = 0
+    } else if (normalizedSong.title.startsWith(normalizedQuery)) {
+      rank = 1
+    } else if (normalizedSong.title.includes(normalizedQuery)) {
+      rank = 2
+    } else if (normalizedSong.lyrics.includes(normalizedQuery)) {
+      rank = 3
+    } else if (
+      queryTokens.length > 1 &&
+      queryTokens.every((token) => normalizedSong.title.includes(token))
+    ) {
+      rank = 4
+    } else if (
+      queryTokens.length > 1 &&
+      queryTokens.every((token) => normalizedSong.lyrics.includes(token))
+    ) {
+      rank = 5
+    }
+
+    if (rank >= 0) {
+      rankedMatches[rank].push(song)
+      seenSongIndexes.add(songIndex)
+    }
+  }
+
+  const results: TSong[] = []
+  for (const matches of rankedMatches) {
+    for (const song of matches) {
+      results.push(song)
+      if (results.length >= limit) return results
+    }
+  }
+
+  // Fall back to fuzzy title matching for misspellings. Trigram overlap first
+  // narrows a large library to a small candidate set, so Fuse never scans all
+  // 20,000 titles on every keystroke.
+  const fuzzyCandidateScores = new Map<number, number>()
+  for (const trigram of new Set(getTrigrams(normalizedQuery))) {
+    for (const songIndex of index.fuzzyTrigramPostings.get(trigram) ?? []) {
+      fuzzyCandidateScores.set(
+        songIndex,
+        (fuzzyCandidateScores.get(songIndex) ?? 0) + 1
+      )
+    }
+  }
+
+  if (fuzzyCandidateScores.size === 0) return results
+
+  const fuzzyCandidates: FuzzySongDocument[] = [...fuzzyCandidateScores]
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, FUZZY_CANDIDATE_LIMIT)
+    .map(([songIndex]) => index.fuzzyDocuments[songIndex])
+  const candidateFuse = new Fuse(fuzzyCandidates, FUZZY_OPTIONS)
+  const fuzzyLimit = Number.isFinite(limit)
+    ? Math.max(100, limit * 3)
+    : undefined
+  const fuzzyResults = candidateFuse.search(
+    normalizedQuery,
+    fuzzyLimit == null ? undefined : { limit: fuzzyLimit }
+  )
+
+  for (const { item } of fuzzyResults) {
+    if (seenSongIndexes.has(item.songIndex)) continue
+    const song = index.songs[item.songIndex]
+    if (!matchesSongFilters(song, filters)) continue
+    results.push(song)
+    if (results.length >= limit) break
+  }
+
+  return results
 }

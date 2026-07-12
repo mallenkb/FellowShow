@@ -17,7 +17,6 @@ describe("broadcast store sync", () => {
     const { useBroadcastStore } = await import("./broadcast-store")
 
     expect(useBroadcastStore.getState().isLive).toBe(false)
-    expect(useBroadcastStore.getState().autoPreviewToLive).toBe(false)
   })
 
   it("syncBroadcastOutput emits current theme and verse to broadcast window", async () => {
@@ -288,7 +287,6 @@ describe("broadcast store sync", () => {
     useBroadcastStore.getState().presentOnLive(verse, null)
 
     const state = useBroadcastStore.getState()
-    expect(state.autoPreviewToLive).toBe(false)
     expect(state.isLive).toBe(true)
     expect(state.previewVerse).toEqual(verse)
     expect(state.liveVerse).toEqual(verse)
@@ -329,11 +327,10 @@ describe("broadcast store sync", () => {
     )
   })
 
-  it("auto preview keeps live on and does not blank output for empty selections", async () => {
+  it("keeps live output unchanged while preview changes", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
 
     useBroadcastStore.setState({
-      autoPreviewToLive: true,
       isLive: true,
       previewVerse: {
         reference: "Psalm 23:1",
@@ -356,12 +353,12 @@ describe("broadcast store sync", () => {
     )
 
     expect(useBroadcastStore.getState().isLive).toBe(true)
-    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:2")
+    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:1")
 
     useBroadcastStore.getState().setPreviewOutput(null, null)
 
     expect(useBroadcastStore.getState().isLive).toBe(true)
-    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:2")
+    expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:1")
   })
 
   it("ignores duplicate preview payloads so canvases do not restart transitions", async () => {

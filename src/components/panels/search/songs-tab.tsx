@@ -7,6 +7,8 @@ interface SongsTabProps {
   songs: CopSong[]
   totalCount: number
   hiddenCount: number
+  resultCountIsCapped: boolean
+  isSearching: boolean
   activeSongId: string | null
   query: string
   onOpenSong: (song: CopSong) => void
@@ -18,6 +20,8 @@ export function SongsTab({
   songs,
   totalCount,
   hiddenCount,
+  resultCountIsCapped,
+  isSearching,
   activeSongId,
   query,
   onOpenSong,
@@ -29,9 +33,13 @@ export function SongsTab({
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto p-6 text-center">
         <div className="max-w-xs">
           <MusicIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
-          <p className="text-sm font-medium text-foreground">No songs found</p>
+          <p className="text-sm font-medium text-foreground">
+            {isSearching ? "Searching songs…" : "No songs found"}
+          </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Try searching by title or lyrics.
+            {isSearching
+              ? "Preparing the fast song index."
+              : "Try searching by title or lyrics."}
           </p>
         </div>
       </div>
@@ -78,7 +86,12 @@ export function SongsTab({
             </article>
           )
         })}
-        {hiddenCount > 0 ? (
+        {resultCountIsCapped ? (
+          <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+            Showing the first {songs.length} matches. Refine the search to
+            narrow the list.
+          </p>
+        ) : hiddenCount > 0 ? (
           <p className="px-2 py-3 text-center text-xs text-muted-foreground">
             Showing first {songs.length} of {totalCount} songs. Refine the
             search to narrow the list.

@@ -7,7 +7,10 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
-import { shouldRenderLowerThirdLayer } from "@/lib/broadcast-output-mode"
+import {
+  shouldRenderLowerThirdLayer,
+  shouldRenderStandardBroadcastContent,
+} from "@/lib/broadcast-output-mode"
 import {
   getBroadcastContextMenuLabel,
   getBroadcastContextMenuPosition,
@@ -49,6 +52,21 @@ interface BroadcastPayload {
   verse: VerseRenderData | null
   timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
+}
+
+type DirectVideo = NonNullable<VerseRenderData["presentationImage"]>
+
+function directVideoFor(payload: BroadcastPayload): DirectVideo | null {
+  const video = payload.verse?.presentationImage
+  if (
+    video?.mediaType !== "video" ||
+    payload.timer ||
+    payload.verse?.tickerText ||
+    !shouldRenderStandardBroadcastContent(payload.theme)
+  ) {
+    return null
+  }
+  return video
 }
 
 function transitionKey(data: BroadcastPayload | null): string {
@@ -96,6 +114,8 @@ function BroadcastCanvas() {
   const lastPushRef = useRef(0)
   const pushingRef = useRef(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isNdiActive, setIsNdiActive] = useState(false)
+  const [directVideo, setDirectVideo] = useState<DirectVideo | null>(null)
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
@@ -213,8 +233,16 @@ function BroadcastCanvas() {
       }
 
       const { theme, verse, timer, lowerThird } = data
-      canvas.width = theme.resolution.width
-      canvas.height = theme.resolution.height
+      // Assigning a canvas dimension clears its backing store and forces a
+      // reallocation. This runs for every video frame, so only resize when
+      // the output resolution actually changes.
+      if (
+        canvas.width !== theme.resolution.width ||
+        canvas.height !== theme.resolution.height
+      ) {
+        canvas.width = theme.resolution.width
+        canvas.height = theme.resolution.height
+      }
       const result = renderVerse(ctx, theme, verse, {
         scale: 1,
         imageCache: imageCacheRef.current,
@@ -342,6 +370,10 @@ function BroadcastCanvas() {
       )
 
       const hasVideo = media.some((item) => item.mediaType === "video")
+      if (directVideoFor(payload) && !ndiConfigRef.current.active) {
+        stopAnimationLoop()
+        return
+      }
       if (hasVideo) startAnimationLoop()
       else stopAnimationLoop()
 
@@ -465,6 +497,7 @@ function BroadcastCanvas() {
       (event) => {
         const previousData = latestData.current
         latestData.current = event.payload
+        setDirectVideo(directVideoFor(event.payload))
         preloadMedia(event.payload)
         logDebug("Received broadcast:verse-update", {
           hasVerse: Boolean(event.payload.verse),
@@ -479,6 +512,10 @@ function BroadcastCanvas() {
       "broadcast:ndi-config",
       (event) => {
         ndiConfigRef.current = event.payload
+        setIsNdiActive(event.payload.active)
+        if (event.payload.active && latestData.current) {
+          preloadMedia(latestData.current)
+        }
         logDebug("Received broadcast:ndi-config", event.payload)
         // Push burst when NDI becomes active
         if (event.payload.active) pushNdiBurst()
@@ -496,6 +533,8 @@ function BroadcastCanvas() {
             width: status.width,
             height: status.height,
           }
+          setIsNdiActive(true)
+          if (latestData.current) preloadMedia(latestData.current)
           logDebug("Fetched NDI status on mount", status)
         }
       })
@@ -551,6 +590,29 @@ function BroadcastCanvas() {
         overflow: "hidden",
       }}
     >
+      {directVideo && !isNdiActive ? (
+        <video
+          key={directVideo.url}
+          src={directVideo.url}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit:
+              directVideo.fit === "stretch"
+                ? "fill"
+                : (directVideo.fit ?? "contain"),
+            transform: `translate(${(directVideo.offsetX ?? 0) * 100}%, ${(directVideo.offsetY ?? 0) * 100}%) scale(${directVideo.scale ?? 1})`,
+            zIndex: 1,
+          }}
+        />
+      ) : null}
       <canvas
         ref={canvasRef}
         style={{
@@ -558,6 +620,8 @@ function BroadcastCanvas() {
           height: "100%",
           display: "block",
           objectFit: "contain",
+          visibility: directVideo && !isNdiActive ? "hidden" : "visible",
+          zIndex: 2,
         }}
       />
       {contextMenu ? (

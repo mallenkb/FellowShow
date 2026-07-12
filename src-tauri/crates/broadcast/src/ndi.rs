@@ -106,7 +106,9 @@ pub struct NdiSessionInfo {
 pub enum NdiError {
     #[error("NDI source name must not be empty")]
     EmptySourceName,
-    #[error("unable to locate NDI library at {0}")]
+    #[error(
+        "unable to locate NDI library at {0}. Install the NDI runtime from https://ndi.video/tools/ or bundle libndi.dylib with the application"
+    )]
     LibraryNotFound(String),
     #[error("failed to load NDI library: {0}")]
     LibraryLoad(String),
@@ -449,6 +451,7 @@ fn resolve_library_path() -> Result<PathBuf, NdiError> {
     } else if cfg!(target_os = "macos") {
         vec![
             executable_dir.join("libndi.dylib"),
+            PathBuf::from("/usr/local/lib/libndi.dylib"),
             source_base.join("sdk/ndi/macos/libndi.dylib"),
         ]
     } else {

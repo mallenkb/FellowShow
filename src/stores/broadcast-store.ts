@@ -39,7 +39,6 @@ interface BroadcastState {
   outputs: BroadcastOutputConfig[]
   sectionThemeIds: Record<BroadcastThemeSection, string>
   selectedThemeSection: BroadcastThemeSection
-  autoPreviewToLive: boolean
   previewVerse: VerseRenderData | null
   previewTimer: PresenterTimerRenderData | null
   isLive: boolean
@@ -79,7 +78,6 @@ interface BroadcastState {
     id: string,
     updates: Partial<Omit<BroadcastOutputConfig, "id">>
   ) => void
-  setAutoPreviewToLive: (autoPreviewToLive: boolean) => void
   setPreviewOutput: (
     verse: VerseRenderData | null,
     timer: PresenterTimerRenderData | null
@@ -254,7 +252,6 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   outputs: createDefaultOutputs(),
   sectionThemeIds: { ...DEFAULT_SECTION_THEME_IDS },
   selectedThemeSection: "bible",
-  autoPreviewToLive: false,
   previewVerse: null,
   previewTimer: null,
   liveSource: null,
@@ -501,64 +498,17 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     }))
     get().syncBroadcastOutputFor(id)
   },
-  setAutoPreviewToLive: (autoPreviewToLive) => {
-    let shouldSyncOutput = false
-    set((s) => {
-      const shouldTakePreview =
-        autoPreviewToLive && hasProgramContent(s.previewVerse, s.previewTimer)
-      shouldSyncOutput = shouldTakePreview
-      return {
-        autoPreviewToLive,
-        ...(shouldTakePreview
-          ? {
-              isLive: true,
-              liveVerse: s.previewVerse,
-              presenterTimer: s.previewTimer,
-              liveSource: "preview" as const,
-            }
-          : {}),
-      }
-    })
-    if (shouldSyncOutput) get().syncBroadcastOutput()
-  },
   setPreviewOutput: (previewVerse, previewTimer) => {
-    let shouldSyncOutput = false
     set((s) => {
-      const shouldTakePreview =
-        s.autoPreviewToLive && hasProgramContent(previewVerse, previewTimer)
       const samePreview = hasSameProgramPayload(
         s.previewVerse,
         s.previewTimer,
         previewVerse,
         previewTimer
       )
-      const sameLive =
-        !shouldTakePreview ||
-        hasSameProgramPayload(
-          s.liveVerse,
-          s.presenterTimer,
-          previewVerse,
-          previewTimer
-        )
-
-      if (samePreview && sameLive) return s
-
-      shouldSyncOutput = shouldTakePreview
-      return {
-        ...(samePreview ? {} : { previewVerse, previewTimer }),
-        ...(shouldTakePreview
-          ? {
-              isLive: true,
-              liveVerse: previewVerse,
-              presenterTimer: previewTimer,
-              liveSource: "preview" as const,
-            }
-          : {}),
-      }
+      if (samePreview) return s
+      return { previewVerse, previewTimer }
     })
-    if (shouldSyncOutput) {
-      get().syncBroadcastOutput()
-    }
   },
   setLive: (isLive) => {
     set({
@@ -790,7 +740,6 @@ export function hydrateBroadcastThemes(): Promise<void> {
       const activeId = await store.get<string>("activeThemeId")
       const altActiveId = await store.get<string>("altActiveThemeId")
       const storedOutputs = await store.get<unknown>("outputs")
-      const autoPreviewToLive = await store.get<boolean>("autoPreviewToLive")
       const themeSortOrder =
         await store.get<Record<string, number>>("themeSortOrder")
       const sectionThemeIds = sanitizeSectionThemeIds(
@@ -857,9 +806,6 @@ export function hydrateBroadcastThemes(): Promise<void> {
           output.id === "alt" ? { ...output, themeId: altActiveId } : output
         )
       }
-      if (typeof autoPreviewToLive === "boolean") {
-        patch.autoPreviewToLive = autoPreviewToLive
-      }
       patch.sectionThemeIds = {
         ...DEFAULT_SECTION_THEME_IDS,
         bible: resolveThemeId(activeId ?? DEFAULT_SECTION_THEME_IDS.bible),
@@ -883,7 +829,6 @@ export function hydrateBroadcastThemes(): Promise<void> {
           state.deletedBuiltinThemeIds !== prevState.deletedBuiltinThemeIds ||
           state.activeThemeId !== prevState.activeThemeId ||
           state.outputs !== prevState.outputs ||
-          state.autoPreviewToLive !== prevState.autoPreviewToLive ||
           state.sectionThemeIds !== prevState.sectionThemeIds
         if (!changed) return
         if (saveTimer) clearTimeout(saveTimer)
@@ -923,7 +868,6 @@ async function persistBroadcastThemes(state: BroadcastState): Promise<void> {
     await store.set("deletedBuiltinThemeIds", state.deletedBuiltinThemeIds)
     await store.set("activeThemeId", state.activeThemeId)
     await store.set("outputs", state.outputs)
-    await store.set("autoPreviewToLive", state.autoPreviewToLive)
     await store.set("sectionThemeIds", state.sectionThemeIds)
     await store.save()
   } catch {

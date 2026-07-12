@@ -8,9 +8,11 @@ import {
   type PointerEvent,
 } from "react"
 import { motion } from "motion/react"
-import { isTauri } from "@tauri-apps/api/core"
+import { convertFileSrc, isTauri } from "@tauri-apps/api/core"
+import { appDataDir, join } from "@tauri-apps/api/path"
 import { invoke } from "@/lib/ipc"
 import { open } from "@tauri-apps/plugin-dialog"
+import { mkdir, writeFile } from "@tauri-apps/plugin-fs"
 import { toast } from "sonner"
 // Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
 import { Button } from "@/components/ui/button"
@@ -79,13 +81,12 @@ import {
 } from "@/stores"
 import type { Book, Verse } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
-import { createSongSearchIndex, searchSongs } from "@/lib/song-search"
 import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
 import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
-import { compareSongPdfOrder } from "@/lib/song-ordering"
 import { splitLyricBlocks } from "@/lib/lyrics"
 import { SongsTab } from "@/components/panels/search/songs-tab"
 import { TimerTab } from "@/components/panels/search/timer-tab"
+import { useSongSearch } from "@/components/panels/search/use-song-search"
 
 type SearchTab = "book" | "context" | "songs" | "presentation" | "timer"
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
@@ -126,6 +127,19 @@ function readFileAsDataUrl(file: File): Promise<string> {
       reject(reader.error ?? new Error(`Could not read ${file.name}`))
     reader.readAsDataURL(file)
   })
+}
+
+async function cachePresentationFile(file: File): Promise<string> {
+  if (!isTauri()) return readFileAsDataUrl(file)
+
+  const mediaDirectory = await join(await appDataDir(), "media")
+  await mkdir(mediaDirectory, { recursive: true })
+
+  const extension = file.name.split(".").pop()?.toLowerCase()
+  const fileName = `${crypto.randomUUID()}${extension ? `.${extension}` : ""}`
+  const filePath = await join(mediaDirectory, fileName)
+  await writeFile(filePath, new Uint8Array(await file.arrayBuffer()))
+  return convertFileSrc(filePath)
 }
 
 function hashString(value: string) {
@@ -464,9 +478,9 @@ export function SearchPanel({
           mediaFiles.map(async (file) => ({
             id: crypto.randomUUID(),
             name: file.name.replace(/\.[^.]+$/, ""),
-            // A blob URL is scoped to the webview that created it. Data URLs can
-            // be rendered by both the main and isolated external display views.
-            url: await readFileAsDataUrl(file),
+            // Cache media once, then give both webviews an asset URL. This avoids
+            // copying a large video into each broadcast event as a data URL.
+            url: await cachePresentationFile(file),
             mediaType: file.type.startsWith("video/")
               ? ("video" as const)
               : ("image" as const),
@@ -643,27 +657,20 @@ export function SearchPanel({
     }
   }, [activeTab, allSongs.length])
 
-  const songSearchIndex = useMemo(
-    () => createSongSearchIndex(allSongs),
-    [allSongs]
-  )
-  const filteredSongs = useMemo(() => {
-    const matches = searchSongs(songSearchIndex, songQuery, {
-      source: songSourceFilter,
-      letter: songLetterFilter,
-    })
-
-    if (songQuery.trim()) return matches
-
-    return [...matches].sort(compareSongPdfOrder)
-  }, [songLetterFilter, songQuery, songSearchIndex, songSourceFilter])
-
-  const songResultCount = filteredSongs.length
-  const visibleSongs = useMemo(
-    () => filteredSongs.slice(0, SONG_RENDER_LIMIT),
-    [filteredSongs]
-  )
-  const hiddenSongCount = Math.max(0, songResultCount - visibleSongs.length)
+  const {
+    songs: visibleSongs,
+    totalCount: songResultCount,
+    hiddenCount: hiddenSongCount,
+    resultCountIsCapped: songResultCountIsCapped,
+    effectiveQuery: effectiveSongQuery,
+    isSearching: isSongSearching,
+  } = useSongSearch({
+    songs: allSongs,
+    query: songQuery,
+    source: songSourceFilter,
+    letter: songLetterFilter,
+    renderLimit: SONG_RENDER_LIMIT,
+  })
 
   const selectedBookNumber = selectedBook?.book_number
 
@@ -1583,8 +1590,10 @@ export function SearchPanel({
           songs={visibleSongs}
           totalCount={songResultCount}
           hiddenCount={hiddenSongCount}
+          resultCountIsCapped={songResultCountIsCapped}
+          isSearching={isSongSearching}
           activeSongId={activeSongItem?.id ?? null}
-          query={songQuery}
+          query={effectiveSongQuery}
           onOpenSong={openSongDetail}
           onPresentSong={presentSong}
           formatReference={formatSongReference}

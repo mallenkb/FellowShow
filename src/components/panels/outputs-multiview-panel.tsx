@@ -127,7 +127,7 @@ export function OutputsMultiviewPanel({
         </Button>
       </PanelHeader>
 
-      <div className="grid grid-cols-2 gap-2 p-2">
+      <div className="grid grid-cols-3 gap-2 p-2">
         {outputs.map((output, index) => {
           const themeId = resolveOutputThemeId(
             output,
