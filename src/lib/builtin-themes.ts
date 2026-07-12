@@ -6,6 +6,43 @@ const BUILTIN_PRESENTATION_BACKGROUND_DARK = "#323294"
 const BROADCAST_OVERLAY_PREVIEW_IMAGE =
   "/broadcast-previews/preacher-stage-unsplash-phil-hearing.jpg"
 const BIBLE_VERSE_PREVIEW_IMAGE = "/broadcast-previews/full-background.jpg"
+const SONG_PAINT_SWEEPS_IMAGE = "/broadcast-previews/paint-sweeps-song.jpg"
+const SONG_THEME_IMAGE_DEFINITIONS = [
+  {
+    id: "builtin-song-mountains",
+    name: "Purple Mountains",
+    url: "/broadcast-previews/song-mountains.jpg",
+    color: "#1b1422",
+    brightness: 92,
+    tint: "rgba(20, 4, 24, 0.18)",
+  },
+  {
+    id: "builtin-song-water",
+    name: "Blue Water",
+    url: "/broadcast-previews/song-water.jpg",
+    color: "#07355c",
+    brightness: 78,
+    tint: "rgba(0, 17, 46, 0.34)",
+  },
+  {
+    id: "builtin-song-ocean",
+    name: "Deep Ocean",
+    url: "/broadcast-previews/song-ocean.jpg",
+    color: "#03151b",
+    brightness: 92,
+    tint: "rgba(0, 0, 0, 0.16)",
+  },
+  {
+    id: "builtin-song-black-texture",
+    name: "Black Texture",
+    url: "/broadcast-previews/song-black-texture.jpg",
+    color: "#050505",
+    brightness: 82,
+    tint: "rgba(0, 0, 0, 0.12)",
+  },
+] as const
+const SONG_PAINT_SWEEPS_THEME_ID = "builtin-song-paint-sweeps"
+export const DEFAULT_SONG_THEME_ID = "builtin-song-ocean"
 const THEME_STORAGE_KEY = "theme"
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
 
@@ -354,6 +391,50 @@ const BIBLE_VERSE_PREVIEW: BroadcastTheme = {
   },
 }
 
+const SONG_PAINT_SWEEPS: BroadcastTheme = {
+  ...BIBLE_VERSE_PREVIEW,
+  id: SONG_PAINT_SWEEPS_THEME_ID,
+  name: "Paint Sweeps Songs",
+  section: "songs",
+  pinned: true,
+  background: {
+    type: "image",
+    color: "#08131d",
+    gradient: null,
+    image: {
+      url: SONG_PAINT_SWEEPS_IMAGE,
+      mediaType: "image",
+      fit: "cover",
+      blur: 0,
+      brightness: 100,
+      tint: "rgba(0, 0, 0, 0.16)",
+    },
+  },
+}
+
+const SONG_IMAGE_THEMES: BroadcastTheme[] = SONG_THEME_IMAGE_DEFINITIONS.map(
+  (definition) => ({
+    ...BIBLE_VERSE_PREVIEW,
+    id: definition.id,
+    name: definition.name,
+    section: "songs",
+    pinned: true,
+    background: {
+      type: "image",
+      color: definition.color,
+      gradient: null,
+      image: {
+        url: definition.url,
+        mediaType: "image",
+        fit: "cover",
+        blur: 0,
+        brightness: definition.brightness,
+        tint: definition.tint,
+      },
+    },
+  })
+)
+
 const PRESENTATION_TICKER: BroadcastTheme = {
   ...baseTheme,
   pinned: true,
@@ -437,5 +518,7 @@ export const BUILTIN_THEMES: BroadcastTheme[] = [
   MODERN_LIGHT,
   BROADCAST_OVERLAY,
   BIBLE_VERSE_PREVIEW,
+  SONG_PAINT_SWEEPS,
+  ...SONG_IMAGE_THEMES,
   PRESENTATION_TICKER,
 ]

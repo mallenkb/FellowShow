@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
@@ -9,15 +9,17 @@ import {
   useBroadcastStore,
   usePresenterTimerStore,
   usePresentationStore,
+  useQueueStore,
 } from "@/stores"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
 import { cn } from "@/lib/utils"
-import { ChevronDownIcon } from "lucide-react"
+import { ChevronDownIcon, ImagePlusIcon } from "lucide-react"
 import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
 import { sortThemesForSection } from "@/lib/theme-order"
+import { DEFAULT_SONG_THEME_ID } from "@/lib/builtin-themes"
 import { SliderField } from "@/components/ui/slider-field"
 import {
   Select,
@@ -73,11 +75,17 @@ const THEME_THUMBNAIL_BY_SECTION: Record<
 
 export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const isPresentationMode = mode === "presentation"
+  const isSongMode = mode === "songs"
   const selectedVerse = useBibleStore((s) => s.selectedVerse)
   const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
   const slides = usePresentationStore((s) => s.slides)
   const selectedSlideId = usePresentationStore((s) => s.selectedSlideId)
+  const selectedSongVerse = useQueueStore((state) =>
+    isSongMode
+      ? (state.items.find((item) => item.lyricKind === "song")?.verse ?? null)
+      : null
+  )
 
   // When translation changes, re-fetch the selected verse in the new translation
   useEffect(() => {
@@ -145,7 +153,8 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       sectionThemeIds,
       themes,
     },
-    previewVerse
+    previewVerse,
+    sectionFromMode(mode)
   )
 
   const setPreviewAndAutoLive = useCallback(
@@ -160,6 +169,16 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   )
 
   useEffect(() => {
+    if (isSongMode) {
+      setPreviewAndAutoLive(
+        selectedSongVerse
+          ? toVerseRenderData(selectedSongVerse, translation)
+          : null,
+        null
+      )
+      return
+    }
+
     if (!isPresentationMode) {
       if (!selectedVerse) return
       setPreviewAndAutoLive(toVerseRenderData(selectedVerse, translation), null)
@@ -193,7 +212,9 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     }
   }, [
     isPresentationMode,
+    isSongMode,
     selectedSlide,
+    selectedSongVerse,
     selectedVerse,
     translation,
     setPreviewAndAutoLive,
@@ -258,17 +279,70 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 
 export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
   const [isOpen, setIsOpen] = useState(true)
+  const themeImageInputRef = useRef<HTMLInputElement>(null)
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
 
   const selectedSection = sectionFromMode(mode)
   const activeThemeId = sectionThemeIds[selectedSection]
+  const themesForSection =
+    selectedSection === "songs"
+      ? themes.filter(
+          (theme) =>
+            theme.id === DEFAULT_SONG_THEME_ID || theme.section === "songs"
+        )
+      : themes
   const visibleThemes = sortThemesForSection(
-    themes,
+    themesForSection,
     selectedSection,
     activeThemeId
   )
   const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
+
+  const uploadThemeImage = (file: File | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return
+      const currentTheme =
+        useBroadcastStore
+          .getState()
+          .themes.find((theme) => theme.id === activeThemeId) ?? themes[0]
+      if (!currentTheme) return
+
+      const now = Date.now()
+      const theme: BroadcastTheme = {
+        ...currentTheme,
+        id: crypto.randomUUID(),
+        name: file.name.replace(/\.[^.]+$/, "") || "Uploaded Theme",
+        builtin: false,
+        pinned: true,
+        section: selectedSection,
+        createdAt: now,
+        updatedAt: now,
+        background: {
+          type: "image",
+          color: currentTheme.background.color,
+          gradient: null,
+          image: {
+            url: reader.result,
+            mediaType: "image",
+            fit: "cover",
+            blur: 0,
+            brightness: 100,
+            tint: null,
+          },
+        },
+      }
+      const store = useBroadcastStore.getState()
+      store.saveTheme(theme)
+      store.setActiveTheme(theme.id, selectedSection)
+    }
+    reader.onerror = () => {
+      console.error("[themes] Failed to read uploaded theme image", reader.error)
+    }
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div
@@ -293,6 +367,26 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
       </button>
       {isOpen && (
         <div className="px-3 pt-1 pb-4">
+          <input
+            ref={themeImageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => {
+              uploadThemeImage(event.target.files?.[0])
+              event.target.value = ""
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mb-3 w-full justify-center"
+            onClick={() => themeImageInputRef.current?.click()}
+          >
+            <ImagePlusIcon className="size-3.5" />
+            Upload theme
+          </Button>
           {visibleThemes.length > 0 ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
               {visibleThemes.map((theme) => {

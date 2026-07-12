@@ -534,7 +534,7 @@ export function SearchPanel({
       saveEasyWorshipSongs(songs)
       const catalog = await loadAllSongs()
       setAllSongs(catalog)
-      setSongSourceFilter("easyworship")
+      setSongSourceFilter("all")
       toast.success(
         `Imported ${songs.length} song${songs.length === 1 ? "" : "s"} from EasyWorship.`
       )
@@ -610,7 +610,6 @@ export function SearchPanel({
       }
 
       useQueueStore.getState().replaceLyricItem(item, "song")
-      bibleActions.selectVerse(verse)
       return verse
     },
     [formatSongReference, makeSongVerse]

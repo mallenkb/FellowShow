@@ -61,6 +61,7 @@ export interface BroadcastTheme {
   name: string
   builtin: boolean
   pinned: boolean
+  section?: BroadcastThemeSection
   outputMode?: "standard" | "lower-third" | "ticker"
   sortOrder?: number
   createdAt: number

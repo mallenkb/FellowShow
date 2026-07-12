@@ -10,6 +10,7 @@ import type {
 } from "@/types"
 import {
   BUILTIN_THEMES,
+  DEFAULT_SONG_THEME_ID,
   getBuiltinPresentationBackground,
 } from "@/lib/builtin-themes"
 
@@ -88,7 +89,7 @@ interface BroadcastState {
 
 const DEFAULT_SECTION_THEME_IDS: Record<BroadcastThemeSection, string> = {
   bible: DEFAULT_BROADCAST_THEME_ID,
-  songs: DEFAULT_BROADCAST_THEME_ID,
+  songs: DEFAULT_SONG_THEME_ID,
   presentation: DEFAULT_BROADCAST_THEME_ID,
 }
 
@@ -226,9 +227,10 @@ function hasSameProgramPayload(
 
 export function getThemeForProgramContent(
   state: ProgramThemeState,
-  verse: VerseRenderData | null
+  verse: VerseRenderData | null,
+  emptySection: BroadcastThemeSection = "bible"
 ): BroadcastTheme {
-  const section = inferThemeSection(verse)
+  const section = verse ? inferThemeSection(verse) : emptySection
   const themeId = getActiveThemeIdForProgramState(state, section)
   return state.themes.find((theme) => theme.id === themeId) ?? state.themes[0]
 }
@@ -415,7 +417,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     const themeId =
       outputId === "alt"
         ? s.altActiveThemeId
-        : getThemeForProgramContent(s, s.liveVerse).id
+        : getThemeForProgramContent(s, s.liveVerse, s.selectedThemeSection).id
     const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
     const theme = s.themes.find((t) => t.id === themeId) ?? s.themes[0]
     if (!theme) return
@@ -438,6 +440,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     const targetSection = section ?? get().selectedThemeSection
     set((s) => ({
       activeThemeId: targetSection === "bible" ? themeId : s.activeThemeId,
+      selectedThemeSection: targetSection,
       sectionThemeIds: {
         ...s.sectionThemeIds,
         [targetSection]: themeId,
@@ -763,6 +766,13 @@ export function hydrateBroadcastThemes(): Promise<void> {
       const fallbackThemeId = nextThemes[0]?.id ?? DEFAULT_BROADCAST_THEME_ID
       const resolveThemeId = (themeId: string | undefined): string =>
         themeId && availableThemeIds.has(themeId) ? themeId : fallbackThemeId
+      const storedSongTheme = sectionThemeIds?.songs
+        ? nextThemes.find((theme) => theme.id === sectionThemeIds.songs)
+        : undefined
+      const songThemeId =
+        storedSongTheme?.section === "songs"
+          ? storedSongTheme.id
+          : DEFAULT_SONG_THEME_ID
 
       if (
         customThemes &&
@@ -784,6 +794,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
         ...DEFAULT_SECTION_THEME_IDS,
         bible: resolveThemeId(activeId ?? DEFAULT_SECTION_THEME_IDS.bible),
         ...sectionThemeIds,
+        songs: resolveThemeId(songThemeId),
       }
       patch.sectionThemeIds = Object.fromEntries(
         Object.entries(patch.sectionThemeIds).map(([section, themeId]) => [

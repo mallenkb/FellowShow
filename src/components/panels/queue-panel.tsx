@@ -170,10 +170,6 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
     if (!lyricItem || lyricBlocks.length === 0) return
     panelRef.current?.focus({ preventScroll: true })
     useQueueStore.getState().setLyricBlock(lyricItem.id, blockIndex)
-    const updatedItem = useQueueStore
-      .getState()
-      .items.find((item) => item.id === lyricItem.id)
-    bibleActions.selectVerse(updatedItem?.verse ?? lyricItem.verse)
   }
 
   const handleLyricKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {

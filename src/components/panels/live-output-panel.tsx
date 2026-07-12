@@ -9,7 +9,6 @@ import { getThemeForProgramContent } from "@/stores/broadcast-store"
 type LiveOutputMode = "book" | "context" | "songs" | "presentation" | "timer"
 
 export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
-  void mode
   const isLive = useBroadcastStore((s) => s.isLive)
   const themes = useBroadcastStore((s) => s.themes)
   const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
@@ -32,7 +31,12 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
       sectionThemeIds,
       themes,
     },
-    liveVerse
+    liveVerse,
+    mode === "songs"
+      ? "songs"
+      : mode === "presentation"
+        ? "presentation"
+        : "bible"
   )
   const takePreviewLive = (checked: boolean) => {
     const store = useBroadcastStore.getState()

@@ -343,7 +343,14 @@ export function Dashboard() {
         : mode === "presentation"
           ? "presentation"
           : "bible"
-    useBroadcastStore.getState().setSelectedThemeSection(section)
+    const broadcastStore = useBroadcastStore.getState()
+    broadcastStore.setSelectedThemeSection(section)
+
+    if (section === "songs") {
+      broadcastStore.setAutoPreviewToLive(true)
+    } else if (section === "presentation") {
+      broadcastStore.setAutoPreviewToLive(false)
+    }
   }, [])
 
   return (
