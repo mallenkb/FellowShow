@@ -285,7 +285,7 @@ export function lyricPresentationTheme(
   }
   const baseFontSize = baseTheme.verseText.fontSize
   const minScale = 0.68
-  const maxScale = 1.45
+  const maxScale = 1
   const buildCandidate = (scale: number): BroadcastTheme => ({
     ...baseTheme,
     verseText: {

@@ -26,8 +26,15 @@ dist-ssr
 # Build artifacts
 build
 data/*.db
+# External TK pack published to R2; it is not bundled into installers.
+!data/atwi.db
 data/*.db-shm
 data/*.db-wal
+/asante_twi_*.db
+/asante_twi_*.db-shm
+/asante_twi_*.db-wal
+/twiasante_vpl.db
+/twiasante_vpl.zip
 data/sources/*.json
 data/cross-refs/cross_references.txt
 data/cross-refs/cross-references.zip

@@ -5,7 +5,6 @@ import {
   useCallback,
   useRef,
   useMemo,
-  useDeferredValue,
   type PointerEvent,
 } from "react"
 import { motion } from "motion/react"
@@ -153,7 +152,6 @@ export function SearchPanel({
   const [selectedVerseId, setSelectedVerseId] = useState<number | null>(null)
   const [contextQuery, setContextQuery] = useState("")
   const [songQuery, setSongQuery] = useState("")
-  const deferredSongQuery = useDeferredValue(songQuery)
   const [songLetterFilter, setSongLetterFilter] = useState("all")
   const [songSourceFilter, setSongSourceFilter] =
     useState<SongSourceFilter>("all")
@@ -244,7 +242,7 @@ export function SearchPanel({
     (slide: (typeof presentationSlides)[number]) => {
       usePresentationStore.getState().selectSlide(slide.id)
       const store = useBroadcastStore.getState()
-      store.setPreviewOutput(
+      store.presentOnLive(
         {
           reference: slide.name,
           themeSection: "presentation",
@@ -261,7 +259,6 @@ export function SearchPanel({
         },
         null
       )
-      store.showPreviewOnLive("manual")
     },
     []
   )
@@ -627,8 +624,7 @@ export function SearchPanel({
             (item) => item.id === useBibleStore.getState().activeTranslationId
           )?.abbreviation ?? "KJV"
       const store = useBroadcastStore.getState()
-      store.setPreviewOutput(toVerseRenderData(verse, translation), null)
-      store.showPreviewOnLive("manual")
+      store.presentOnLive(toVerseRenderData(verse, translation), null)
     },
     [openSongDetail]
   )
@@ -652,15 +648,15 @@ export function SearchPanel({
     [allSongs]
   )
   const filteredSongs = useMemo(() => {
-    const matches = searchSongs(songSearchIndex, deferredSongQuery, {
+    const matches = searchSongs(songSearchIndex, songQuery, {
       source: songSourceFilter,
       letter: songLetterFilter,
     })
 
-    if (deferredSongQuery.trim()) return matches
+    if (songQuery.trim()) return matches
 
     return [...matches].sort(compareSongPdfOrder)
-  }, [deferredSongQuery, songLetterFilter, songSearchIndex, songSourceFilter])
+  }, [songLetterFilter, songQuery, songSearchIndex, songSourceFilter])
 
   const songResultCount = filteredSongs.length
   const visibleSongs = useMemo(
@@ -785,8 +781,7 @@ export function SearchPanel({
         translations.find((item) => item.id === activeTranslationId)
           ?.abbreviation ?? "KJV"
       const store = useBroadcastStore.getState()
-      store.setPreviewOutput(toVerseRenderData(verse, translation), null)
-      store.showPreviewOnLive("manual")
+      store.presentOnLive(toVerseRenderData(verse, translation), null)
     },
     [activeTranslationId, handleVerseClick, translations]
   )
@@ -1475,16 +1470,12 @@ export function SearchPanel({
                     text: result.verse_text,
                   }
                   const store = useBroadcastStore.getState()
-                  store.setPreviewOutput(
-                    toVerseRenderData(
-                      verse,
-                      translations.find(
-                        (item) => item.id === activeTranslationId
-                      )?.abbreviation ?? "KJV"
-                    ),
-                    null
+                  const liveVerse = toVerseRenderData(
+                    verse,
+                    translations.find((item) => item.id === activeTranslationId)
+                      ?.abbreviation ?? "KJV"
                   )
-                  store.showPreviewOnLive("manual")
+                  store.presentOnLive(liveVerse, null)
                 }}
                 className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
               >

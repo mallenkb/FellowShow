@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Fellow Show",
   "mainBinaryName": "fellowshow",
-  "version": "0.1.21",
+  "version": "0.1.23",
   "identifier": "com.openbezal.fellowshow",
   "build": {
     "frontendDist": "../build",

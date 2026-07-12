@@ -397,6 +397,10 @@ const SONG_PAINT_SWEEPS: BroadcastTheme = {
   name: "Paint Sweeps Songs",
   section: "songs",
   pinned: true,
+  verseText: {
+    ...BIBLE_VERSE_PREVIEW.verseText,
+    fontSize: 72,
+  },
   background: {
     type: "image",
     color: "#08131d",
@@ -419,6 +423,10 @@ const SONG_IMAGE_THEMES: BroadcastTheme[] = SONG_THEME_IMAGE_DEFINITIONS.map(
     name: definition.name,
     section: "songs",
     pinned: true,
+    verseText: {
+      ...BIBLE_VERSE_PREVIEW.verseText,
+      fontSize: 72,
+    },
     background: {
       type: "image",
       color: definition.color,

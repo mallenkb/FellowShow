@@ -280,6 +280,22 @@ const TRANSLATIONS_META: Array<{
     license: "Public Domain",
     isCopyrighted: false,
   },
+  {
+    file: "WASNA.json",
+    abbreviation: "WASNA",
+    title: "Asante Twi Contemporary Bible",
+    language: "twi",
+    license: "CC BY-SA 4.0",
+    isCopyrighted: true,
+  },
+  {
+    file: "TK.json",
+    abbreviation: "TK",
+    title: "Twerɛ Kronkron (2012)",
+    language: "twi",
+    license: "Bible Society of Ghana",
+    isCopyrighted: true,
+  },
 ]
 
 function main() {

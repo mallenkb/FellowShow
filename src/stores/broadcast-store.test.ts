@@ -194,6 +194,29 @@ describe("broadcast store sync", () => {
     )
   })
 
+  it("presents a double-click payload live without enabling Auto", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    const verse = {
+      reference: "Matthew 5:14",
+      segments: [{ text: "You are the light of the world", verseNumber: 14 }],
+    }
+
+    useBroadcastStore.getState().presentOnLive(verse, null)
+
+    const state = useBroadcastStore.getState()
+    expect(state.autoPreviewToLive).toBe(false)
+    expect(state.isLive).toBe(true)
+    expect(state.previewVerse).toEqual(verse)
+    expect(state.liveVerse).toEqual(verse)
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        verse: expect.objectContaining({ reference: "Matthew 5:14" }),
+      })
+    )
+  })
+
   it("blanks both external outputs when live is turned off", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
 

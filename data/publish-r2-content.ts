@@ -21,6 +21,8 @@
 import Database from "bun:sqlite"
 import { createHash } from "node:crypto"
 import {
+  copyFileSync,
+  existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
@@ -37,7 +39,8 @@ const DB_PATH = DIST_DB_PATH
 const MANIFEST_PATH = join(DIST_DIR, "content-manifest.json")
 const PACKS_DIR = join(DIST_DIR, "packs")
 // Translations that ship inside the app and never need downloading.
-const BUNDLED_TRANSLATIONS = new Set(["NKJV", "NIV"])
+const BUNDLED_TRANSLATIONS = new Set(["NKJV", "NIV", "WASNA"])
+const PREBUILT_PACKS = new Map([["TK", join(DATA_DIR, "atwi.db")]])
 
 type R2Target = {
   endpointUrl?: string
@@ -124,6 +127,12 @@ function buildTranslationPack(
   abbreviation: string,
   packPath: string
 ): { sizeBytes: number; sha256: string } {
+  const prebuiltPath = PREBUILT_PACKS.get(abbreviation.toUpperCase())
+  if (prebuiltPath && existsSync(prebuiltPath)) {
+    copyFileSync(prebuiltPath, packPath)
+    return { sizeBytes: statSync(packPath).size, sha256: sha256(packPath) }
+  }
+
   rmSync(packPath, { force: true })
 
   const source = new Database(DB_PATH, { readonly: true })
@@ -169,7 +178,7 @@ function buildTranslationPack(
 
 function buildPacksAndManifest(version: string, prefix: string) {
   const source = new Database(DB_PATH, { readonly: true })
-  const abbreviations = (
+  const databaseAbbreviations = (
     source
       .query(
         "SELECT abbreviation FROM translations WHERE is_downloaded = 1 ORDER BY id"
@@ -182,11 +191,18 @@ function buildPacksAndManifest(version: string, prefix: string) {
     )
   source.close()
 
+  const prebuiltAbbreviations = [...PREBUILT_PACKS.entries()]
+    .filter(([, packPath]) => existsSync(packPath))
+    .map(([abbreviation]) => abbreviation)
+  const abbreviations = [
+    ...new Set([...databaseAbbreviations, ...prebuiltAbbreviations]),
+  ]
+
   rmSync(PACKS_DIR, { recursive: true, force: true })
   mkdirSync(PACKS_DIR, { recursive: true })
 
   const packs = abbreviations.map((abbreviation) => {
-    const fileName = `${abbreviation.toLowerCase()}.db`
+    const fileName = packFileName(abbreviation)
     const localPath = join(PACKS_DIR, fileName)
     const { sizeBytes, sha256: hash } = buildTranslationPack(
       abbreviation,
@@ -245,6 +261,12 @@ function contentTypeFor(path: string): string {
   if (path.endsWith(".db") || path.endsWith(".sqlite"))
     return "application/vnd.sqlite3"
   return "application/octet-stream"
+}
+
+function packFileName(abbreviation: string): string {
+  return abbreviation.toUpperCase() === "TK"
+    ? "atwi.db"
+    : `${abbreviation.toLowerCase()}.db`
 }
 
 async function uploadFileWithAws(

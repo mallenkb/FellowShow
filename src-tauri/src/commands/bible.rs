@@ -84,6 +84,14 @@ fn resolve_pack_url(manifest_url: &str, pack_path: &str) -> Result<String, Strin
         .map_err(|e| e.to_string())
 }
 
+fn translation_pack_file_name(abbreviation: &str) -> String {
+    if abbreviation.eq_ignore_ascii_case("TK") {
+        "atwi.db".to_string()
+    } else {
+        format!("{abbreviation}.db")
+    }
+}
+
 fn local_content_pack_path() -> Option<PathBuf> {
     let data_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
     [
@@ -238,7 +246,7 @@ pub async fn download_translation(
         .join("content");
     std::fs::create_dir_all(&content_dir)
         .map_err(|e| format!("Failed to create content directory: {e}"))?;
-    let pack_path = content_dir.join(format!("{abbreviation}.db"));
+    let pack_path = content_dir.join(translation_pack_file_name(&abbreviation));
     std::fs::write(&pack_path, bytes)
         .map_err(|e| format!("Failed to save downloaded {abbreviation} pack: {e}"))?;
 
