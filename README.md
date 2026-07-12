@@ -202,9 +202,9 @@ contains these Bible translations with full verse text:
 - NIV — New International Version
 - WASNA — Asante Twi Contemporary Bible
 
-The remaining supported translations, including TK/Twerɛ Kronkron (2012), are
+The remaining supported translations, including ATWI/Twerɛ Kronkron (2012), are
 listed as downloadable metadata and their verse packs are fetched from R2.
-TK’s external pack is `data/atwi.db` and is published as `packs/atwi.db`; it is
+ATWI’s external pack is `data/atwi.db` and is published as `packs/atwi.db`; it is
 not bundled into the installer. To build the default database, place licensed
 exports at
 `data/sources/NIV.json` and `data/sources/NKJV.json`, then run:
@@ -238,7 +238,7 @@ bun run release:r2
 ```
 
 That command rebuilds `data/fellowshow.db` from every available translation
-source in `data/sources`, adds the prebuilt TK pack from `data/atwi.db`, writes
+source in `data/sources`, adds the prebuilt ATWI pack from `data/atwi.db`, writes
 `data/dist/content-manifest.json`, and uploads:
 
 ```text
@@ -247,7 +247,7 @@ content/v<app-version>/content-manifest.json
 content/latest/content-manifest.json
 ```
 
-The TK entry in the manifest points to `packs/atwi.db`. If you have a newer
+The ATWI entry in the manifest points to `packs/atwi.db`. If you have a newer
 TK2012 Access source, set `TK2012_BIB_PATH` before running the release command
 to regenerate that pack first.
 

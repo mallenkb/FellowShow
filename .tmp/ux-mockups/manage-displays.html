@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FellowShow — Manage displays</title>
+  <style>
+    :root {
+      --bg: #0c0c0e;
+      --card: #161618;
+      --card-2: #1c1c1f;
+      --border: #2a2a2e;
+      --text: #f4f4f5;
+      --muted: #8b8b93;
+      --accent: #d4e157;
+      --accent-dim: rgba(212, 225, 87, 0.14);
+      --on: #34d399;
+      --warn: #f59e0b;
+      --radius: 12px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: #1a1a1d;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .label-page {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .dialog {
+      width: 560px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 32px 100px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    .dialog-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dialog-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .dialog-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 46ch;
+    }
+    .dialog-body {
+      padding: 16px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Monitor map */
+    .map {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .map-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .map-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .link {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .monitors {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .mon {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+      min-height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .mon.used {
+      border-color: rgba(52, 211, 153, 0.4);
+      background: rgba(52, 211, 153, 0.06);
+    }
+    .mon.laptop {
+      opacity: 0.55;
+    }
+    .mon-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .mon-name {
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .mon-role {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--on);
+      letter-spacing: 0.03em;
+    }
+
+    /* Rows */
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .rows {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.1fr) 40px;
+      gap: 10px;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .row-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+    }
+    .row.on .row-num {
+      color: var(--text);
+      border-color: rgba(52, 211, 153, 0.4);
+    }
+    .field-label {
+      font-size: 9px;
+      color: var(--muted);
+      margin-bottom: 3px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .select {
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+      color: var(--text);
+      font-size: 12px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+    }
+    .select .caret {
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .select.accent {
+      border-color: rgba(212, 225, 87, 0.45);
+      background: var(--accent-dim);
+    }
+    .name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .name-sub {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .switch {
+      width: 32px;
+      height: 18px;
+      border-radius: 99px;
+      background: #3f3f46;
+      position: relative;
+      justify-self: end;
+    }
+    .switch.on { background: #059669; }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+    }
+    .switch.on::after { left: 16px; }
+
+    /* Presets */
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .chip {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chip .plus { color: var(--accent); font-weight: 700; }
+
+    .advanced {
+      font-size: 11px;
+      color: var(--muted);
+      padding-top: 4px;
+    }
+    .advanced span {
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .caption {
+      max-width: 560px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #a1a1aa;
+      text-align: center;
+    }
+    .caption strong { color: #e4e4e7; }
+
+    .cols-hint {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.1fr) 40px;
+      gap: 10px;
+      padding: 0 12px;
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #5c5c66;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="label-page">Manage · opened from Displays → Manage (or Cast icon)</p>
+    <div class="dialog">
+      <div class="dialog-head">
+        <div class="dialog-title">Displays</div>
+        <div class="dialog-desc">
+          Assign each screen a job and a monitor. Turn them on from here or from the side panel during service.
+        </div>
+      </div>
+      <div class="dialog-body">
+
+        <!-- Physical map -->
+        <div class="map">
+          <div class="map-head">
+            <span class="map-title">Connected monitors</span>
+            <span class="link">Refresh</span>
+          </div>
+          <div class="monitors">
+            <div class="mon laptop">
+              <div class="mon-num">Laptop</div>
+              <div class="mon-name">This computer</div>
+              <div class="mon-role" style="color:var(--muted)">Operator</div>
+            </div>
+            <div class="mon used">
+              <div class="mon-num">HDMI-1</div>
+              <div class="mon-name">4112×2658</div>
+              <div class="mon-role">Program</div>
+            </div>
+            <div class="mon used">
+              <div class="mon-num">HDMI-2</div>
+              <div class="mon-name">1920×1080</div>
+              <div class="mon-role">Scripture</div>
+            </div>
+            <div class="mon used">
+              <div class="mon-num">HDMI-3</div>
+              <div class="mon-name">1920×1080</div>
+              <div class="mon-role">Songs</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Your displays</div>
+          <div class="cols-hint">
+            <span></span>
+            <span>Name</span>
+            <span>Shows</span>
+            <span>Screen</span>
+            <span>On</span>
+          </div>
+          <div class="rows" style="margin-top:6px">
+            <div class="row on">
+              <div class="row-num">1</div>
+              <div>
+                <div class="name">Program</div>
+                <div class="name-sub">Main sanctuary</div>
+              </div>
+              <div>
+                <div class="field-label">Shows</div>
+                <div class="select accent">General <span class="caret">▾</span></div>
+              </div>
+              <div>
+                <div class="field-label">Screen</div>
+                <div class="select">HDMI-1 <span class="caret">▾</span></div>
+              </div>
+              <div class="switch on"></div>
+            </div>
+
+            <div class="row on">
+              <div class="row-num">2</div>
+              <div>
+                <div class="name">Scripture</div>
+                <div class="name-sub">Confidence / overflow</div>
+              </div>
+              <div>
+                <div class="field-label">Shows</div>
+                <div class="select accent">Scripture <span class="caret">▾</span></div>
+              </div>
+              <div>
+                <div class="field-label">Screen</div>
+                <div class="select">HDMI-2 <span class="caret">▾</span></div>
+              </div>
+              <div class="switch on"></div>
+            </div>
+
+            <div class="row on">
+              <div class="row-num">3</div>
+              <div>
+                <div class="name">Stage lyrics</div>
+                <div class="name-sub">Band wedge display</div>
+              </div>
+              <div>
+                <div class="field-label">Shows</div>
+                <div class="select accent">Songs <span class="caret">▾</span></div>
+              </div>
+              <div>
+                <div class="field-label">Screen</div>
+                <div class="select">HDMI-3 <span class="caret">▾</span></div>
+              </div>
+              <div class="switch on"></div>
+            </div>
+
+            <div class="row">
+              <div class="row-num">4</div>
+              <div>
+                <div class="name">Timer</div>
+                <div class="name-sub">Backstage</div>
+              </div>
+              <div>
+                <div class="field-label">Shows</div>
+                <div class="select">Timer <span class="caret">▾</span></div>
+              </div>
+              <div>
+                <div class="field-label">Screen</div>
+                <div class="select" style="color:var(--muted)">Choose… <span class="caret">▾</span></div>
+              </div>
+              <div class="switch"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-label" style="margin-bottom:8px">Add display</div>
+          <div class="presets">
+            <span class="chip"><span class="plus">+</span> General</span>
+            <span class="chip"><span class="plus">+</span> Scripture</span>
+            <span class="chip"><span class="plus">+</span> Songs</span>
+            <span class="chip"><span class="plus">+</span> Presentation</span>
+            <span class="chip"><span class="plus">+</span> Timer</span>
+            <span class="chip" style="opacity:0.7">NDI…</span>
+          </div>
+        </div>
+
+        <div class="advanced">Theme & NDI options · <span>Show advanced</span></div>
+      </div>
+    </div>
+    <p class="caption">
+      <strong>One row = one screen.</strong> Three decisions only: what it shows, which monitor, on or off.
+      No stacked form cards, no triple overlap warnings as the default path.
+    </p>
+  </div>
+</body>
+</html>

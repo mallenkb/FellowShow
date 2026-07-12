@@ -4,6 +4,8 @@ interface VerseSegment {
 }
 
 export interface VerseRenderData {
+  /** Stable content identity used to keep live song navigation scoped. */
+  sourceId?: number
   reference: string
   segments: VerseSegment[]
   themeSection?: BroadcastThemeSection

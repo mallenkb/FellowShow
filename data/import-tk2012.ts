@@ -183,7 +183,7 @@ function createTranslationPack(
 
     db.transaction(() => {
       insertTranslation.run(
-        "TK",
+        "ATWI",
         translationName,
         "twi",
         "Bible Society of Ghana",
@@ -320,7 +320,7 @@ async function main() {
       {
         translation: {
           name: translationName,
-          abbreviation: info.get("BibleShortName") || "TK",
+          abbreviation: info.get("BibleShortName") || "ATWI",
         },
         books,
       },

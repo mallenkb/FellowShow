@@ -6,7 +6,7 @@ const BUILTIN_PRESENTATION_BACKGROUND_DARK = "#323294"
 const BROADCAST_OVERLAY_PREVIEW_IMAGE =
   "/broadcast-previews/preacher-stage-unsplash-phil-hearing.jpg"
 const BIBLE_VERSE_PREVIEW_IMAGE = "/broadcast-previews/full-background.jpg"
-const SONG_PAINT_SWEEPS_IMAGE = "/broadcast-previews/paint-sweeps-song.jpg"
+const SONG_PAINT_SWEEPS_IMAGE = "/broadcast-previews/paint-sweeps-hope.jpg"
 const SONG_THEME_IMAGE_DEFINITIONS = [
   {
     id: "builtin-song-mountains",
@@ -394,7 +394,7 @@ const BIBLE_VERSE_PREVIEW: BroadcastTheme = {
 const SONG_PAINT_SWEEPS: BroadcastTheme = {
   ...BIBLE_VERSE_PREVIEW,
   id: SONG_PAINT_SWEEPS_THEME_ID,
-  name: "Paint Sweeps Songs",
+  name: "Paint Sweeps Hope",
   section: "songs",
   pinned: true,
   verseText: {

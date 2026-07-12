@@ -1,2 +1,2 @@
 export const PRESENTER_TIMER_BACKGROUND_URL =
-  "/timer-backgrounds/paint-sweeps-red-blue-scripture.jpg"
+  "/broadcast-previews/paint-sweeps-hope.jpg"

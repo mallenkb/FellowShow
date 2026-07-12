@@ -33,19 +33,16 @@ export function splitLyricBlocks(lyrics: string): LyricBlock[] {
 
   const cleanedBlocks = sourceBlocks
     .map(({ label, text }, index) => ({
-      label: label || `Slide ${index + 1}`,
+      label: label || defaultVerseLabel(index),
       text: cleanDisplayText(text),
     }))
     .filter((block) => block.text.length > 0)
 
-  if (
-    cleanedBlocks[0]?.label === "Slide 1" &&
-    cleanedBlocks.some((block) => /^Verse\s+2$/i.test(block.label))
-  ) {
-    cleanedBlocks[0] = { ...cleanedBlocks[0], label: "Verse 1" }
-  }
-
   return cleanedBlocks.flatMap(splitOversizedBlock)
+}
+
+function defaultVerseLabel(index: number): string {
+  return `Verse ${index + 1}`
 }
 
 function mergeParagraphSections(paragraphs: string[]): LyricBlock[] {
@@ -88,7 +85,7 @@ function mergeParagraphSections(paragraphs: string[]): LyricBlock[] {
 
   return blocks.length > 0
     ? blocks
-    : [{ label: "Slide 1", text: paragraphs.join("\n\n") }]
+    : [{ label: defaultVerseLabel(0), text: paragraphs.join("\n\n") }]
 }
 
 function splitLineSections(lyrics: string): LyricBlock[] {
@@ -103,7 +100,7 @@ function splitLineSections(lyrics: string): LyricBlock[] {
   const flush = () => {
     if (currentLines.length === 0) return
     blocks.push({
-      label: currentLabel ?? `Slide ${blocks.length + 1}`,
+      label: currentLabel ?? defaultVerseLabel(blocks.length),
       text: currentLines.join("\n"),
     })
     currentLabel = null
@@ -140,7 +137,7 @@ function chunkLines(lines: string[]): LyricBlock[] {
 
   for (let i = 0; i < lines.length; i += 4) {
     blocks.push({
-      label: `Slide ${blocks.length + 1}`,
+      label: defaultVerseLabel(blocks.length),
       text: lines.slice(i, i + 4).join("\n"),
     })
   }
@@ -218,7 +215,7 @@ function labelBlock(block: string, index: number): LyricBlock {
   }
 
   return {
-    label: `Slide ${index + 1}`,
+    label: defaultVerseLabel(index),
     text: block,
   }
 }

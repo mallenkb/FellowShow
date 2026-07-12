@@ -14,6 +14,10 @@ import { Button } from "@/components/ui/button"
 import { ApiKeyPrompt } from "@/components/ui/api-key-prompt"
 import { useAudioStore, useTranscriptStore, useBroadcastStore } from "@/stores"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
+import {
+  openBroadcastSettings,
+  useBroadcastSettingsDialogStore,
+} from "@/lib/broadcast-settings-dialog"
 import { useTheme } from "@/components/theme-provider"
 import { transcriptionActions } from "@/hooks/use-transcription"
 
@@ -39,7 +43,7 @@ export function TransportBar() {
   const isTranscribing = useTranscriptStore((s) => s.isTranscribing)
   const isDesignerOpen = useBroadcastStore((s) => s.isDesignerOpen)
   const isSettingsOpen = useSettingsDialogStore((s) => s.isOpen)
-  const [broadcastOpen, setBroadcastOpen] = useState(false)
+  const broadcastOpen = useBroadcastSettingsDialogStore((s) => s.isOpen)
   const [showKeyPrompt, setShowKeyPrompt] = useState(false)
 
   const startTranscription = useCallback(() => {
@@ -95,9 +99,9 @@ export function TransportBar() {
         <Button
           variant="ghost"
           size="icon-sm"
-          title="Broadcast Settings"
+          title="Displays"
           data-tour="broadcast"
-          onClick={() => setBroadcastOpen(true)}
+          onClick={() => openBroadcastSettings()}
         >
           <CastIcon className="size-3.5" />
         </Button>
@@ -105,7 +109,9 @@ export function TransportBar() {
           <Suspense fallback={null}>
             <BroadcastSettings
               open={broadcastOpen}
-              onOpenChange={setBroadcastOpen}
+              onOpenChange={(open) =>
+                useBroadcastSettingsDialogStore.getState().setOpen(open)
+              }
             />
           </Suspense>
         ) : null}

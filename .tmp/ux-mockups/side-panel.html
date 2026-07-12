@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FellowShow — External displays (side panel)</title>
+  <style>
+    :root {
+      --bg: #0c0c0e;
+      --card: #161618;
+      --card-2: #1c1c1f;
+      --border: #2a2a2e;
+      --text: #f4f4f5;
+      --muted: #8b8b93;
+      --muted-2: #5c5c66;
+      --accent: #d4e157;
+      --accent-dim: rgba(212, 225, 87, 0.15);
+      --live: #ef4444;
+      --on: #34d399;
+      --off: #52525b;
+      --radius: 10px;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: #1a1a1d;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .frame {
+      width: 360px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+    }
+    .label-page {
+      position: absolute;
+      top: 16px;
+      left: 24px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    /* —— External displays —— */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-ghost {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: default;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .btn-ghost.accent {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .btn-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-2);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+    }
+    .tiles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px;
+    }
+    .tile {
+      background: #0a0a0b;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+    .tile.on {
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+    .tile.tab-match {
+      box-shadow: 0 0 0 1px var(--accent);
+      border-color: var(--accent);
+    }
+    .tile-canvas {
+      aspect-ratio: 16/9;
+      background:
+        radial-gradient(ellipse at 30% 40%, #2a3548 0%, transparent 55%),
+        linear-gradient(160deg, #12161c 0%, #0a0c10 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+    .tile.songs .tile-canvas {
+      background:
+        radial-gradient(ellipse at 70% 60%, #3a2a18 0%, transparent 55%),
+        linear-gradient(160deg, #1a1410 0%, #0a0806 100%);
+    }
+    .tile.idle .tile-canvas {
+      background: linear-gradient(160deg, #141416 0%, #0a0a0b 100%);
+    }
+    .tile-verse {
+      font-size: 9px;
+      line-height: 1.35;
+      text-align: center;
+      color: #e8eef8;
+      opacity: 0.95;
+      max-width: 95%;
+    }
+    .tile.idle .tile-verse {
+      color: var(--muted-2);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+    }
+    .tile.songs .tile-verse {
+      font-size: 11px;
+      font-weight: 500;
+      color: #f5e6c8;
+    }
+    .badge-role {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .badge-status {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--off);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.4);
+    }
+    .badge-status.live { background: var(--on); box-shadow: 0 0 8px rgba(52,211,153,0.6); }
+    .tile-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      padding: 6px 8px;
+      border-top: 1px solid var(--border);
+      background: var(--card-2);
+    }
+    .tile-meta {
+      min-width: 0;
+      flex: 1;
+    }
+    .tile-name {
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tile-sub {
+      font-size: 9px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .switch {
+      width: 28px;
+      height: 16px;
+      border-radius: 99px;
+      background: #3f3f46;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .switch.on { background: #059669; }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.15s;
+    }
+    .switch.on::after { left: 14px; }
+    .add-row {
+      padding: 0 10px 10px;
+    }
+    .btn-add {
+      width: 100%;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px dashed var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    /* —— Go Live compact —— */
+    .live-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      border-top: 2px solid rgba(239, 68, 68, 0.45);
+    }
+    .live-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .live-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .live-state {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--live);
+    }
+    .live-state.off { color: var(--muted); }
+    .switch.big {
+      width: 36px;
+      height: 20px;
+    }
+    .switch.big.on { background: var(--live); }
+    .switch.big::after {
+      width: 16px;
+      height: 16px;
+    }
+    .switch.big.on::after { left: 18px; }
+
+    /* —— Staged preview —— */
+    .preview-canvas {
+      aspect-ratio: 16/9;
+      background:
+        radial-gradient(ellipse at 40% 45%, #2a3548 0%, transparent 50%),
+        linear-gradient(160deg, #12161c, #0a0c10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .preview-verse {
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #e8eef8;
+      max-width: 90%;
+    }
+    .preview-ref {
+      margin-top: 8px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .preview-actions {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .auto-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .btn-primary {
+      width: 100%;
+      height: 34px;
+      border-radius: 8px;
+      border: none;
+      background: #27272a;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .caption {
+      margin-top: 20px;
+      max-width: 360px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #a1a1aa;
+      text-align: center;
+    }
+    .caption strong { color: #e4e4e7; }
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .note {
+      font-size: 10px;
+      color: var(--accent);
+      padding: 0 10px 8px;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="label-page">Right column · every tab (Bible / Songs / Presentation / Timer)</p>
+    <div class="frame">
+
+      <!-- EXTERNAL DISPLAYS — always visible -->
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Displays · 3 on</span>
+          <div class="panel-actions">
+            <span class="btn-ghost accent">Manage</span>
+          </div>
+        </div>
+        <p class="note">Same strip on every tab. Yellow ring = matches current tab (Scripture).</p>
+        <div class="tiles">
+          <!-- Program / General -->
+          <div class="tile on">
+            <div class="tile-canvas">
+              <span class="badge-role">1 · General</span>
+              <span class="badge-status live"></span>
+              <div class="tile-verse">In the beginning God created the heavens and the earth.</div>
+            </div>
+            <div class="tile-foot">
+              <div class="tile-meta">
+                <div class="tile-name">Program</div>
+                <div class="tile-sub">HDMI-1 · live</div>
+              </div>
+              <div class="switch on" title="On"></div>
+            </div>
+          </div>
+
+          <!-- Scripture — matches current tab -->
+          <div class="tile on tab-match">
+            <div class="tile-canvas">
+              <span class="badge-role">2 · Scripture</span>
+              <span class="badge-status live"></span>
+              <div class="tile-verse">In the beginning God created the heavens and the earth.</div>
+            </div>
+            <div class="tile-foot">
+              <div class="tile-meta">
+                <div class="tile-name">Scripture</div>
+                <div class="tile-sub">HDMI-2 · live</div>
+              </div>
+              <div class="switch on" title="On"></div>
+            </div>
+          </div>
+
+          <!-- Songs — on but idle (no song live) -->
+          <div class="tile on songs idle">
+            <div class="tile-canvas">
+              <span class="badge-role">3 · Songs</span>
+              <span class="badge-status live"></span>
+              <div class="tile-verse">Theme background</div>
+            </div>
+            <div class="tile-foot">
+              <div class="tile-meta">
+                <div class="tile-name">Stage lyrics</div>
+                <div class="tile-sub">HDMI-3 · waiting</div>
+              </div>
+              <div class="switch on" title="On"></div>
+            </div>
+          </div>
+
+          <!-- Timer — off -->
+          <div class="tile">
+            <div class="tile-canvas idle">
+              <span class="badge-role">4 · Timer</span>
+              <span class="badge-status"></span>
+              <div class="tile-verse">Off</div>
+            </div>
+            <div class="tile-foot">
+              <div class="tile-meta">
+                <div class="tile-name">Timer</div>
+                <div class="tile-sub">Not assigned</div>
+              </div>
+              <div class="switch" title="Off"></div>
+            </div>
+          </div>
+        </div>
+        <div class="add-row">
+          <button class="btn-add">+ Add display</button>
+        </div>
+      </section>
+
+      <!-- Compact Go Live -->
+      <div class="live-bar">
+        <div class="live-left">
+          <span class="live-title">Program bus</span>
+          <span class="live-state">Live</span>
+        </div>
+        <div class="switch big on"></div>
+      </div>
+
+      <!-- Staged -->
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Staged</span>
+        </div>
+        <div class="preview-canvas">
+          <div>
+            <div class="preview-verse">In the beginning God created the heavens and the earth.</div>
+            <div class="preview-ref">Genesis 1:1 · KJV</div>
+          </div>
+        </div>
+        <div class="preview-actions">
+          <div class="auto-row">
+            <span>Auto take live</span>
+            <div class="switch"></div>
+          </div>
+          <button class="btn-primary">Show on Live</button>
+        </div>
+      </section>
+
+    </div>
+    <p class="caption">
+      <strong>Operate here.</strong> Every external that matters is a tile with On/Off.
+      You always see all of them, on every tab. Manage is only for wiring screens.
+    </p>
+  </div>
+</body>
+</html>

@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "motion/react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
 import {
   useBibleStore,
   useBroadcastStore,
@@ -106,8 +105,6 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   }, [activeTranslationId])
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
-  const autoPreviewToLive = useBroadcastStore((s) => s.autoPreviewToLive)
-  const setAutoPreviewToLive = useBroadcastStore((s) => s.setAutoPreviewToLive)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
   const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
@@ -157,20 +154,16 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     sectionFromMode(mode)
   )
 
-  const setPreviewAndAutoLive = useCallback(
+  const setPreview = useCallback(
     (verse: VerseRenderData | null, timer: PresenterTimerRenderData | null) => {
-      const store = useBroadcastStore.getState()
-      if (isPresentationMode && store.autoPreviewToLive) {
-        store.setAutoPreviewToLive(false)
-      }
-      store.setPreviewOutput(verse, timer)
+      useBroadcastStore.getState().setPreviewOutput(verse, timer)
     },
-    [isPresentationMode]
+    []
   )
 
   useEffect(() => {
     if (isSongMode) {
-      setPreviewAndAutoLive(
+      setPreview(
         selectedSongVerse
           ? toVerseRenderData(selectedSongVerse, translation)
           : null,
@@ -181,12 +174,12 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 
     if (!isPresentationMode) {
       if (!selectedVerse) return
-      setPreviewAndAutoLive(toVerseRenderData(selectedVerse, translation), null)
+      setPreview(toVerseRenderData(selectedVerse, translation), null)
       return
     }
 
     if (selectedSlide) {
-      setPreviewAndAutoLive(
+      setPreview(
         {
           reference: selectedSlide.name,
           themeSection: "presentation",
@@ -208,7 +201,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 
     const store = useBroadcastStore.getState()
     if (!store.previewVerse && !store.previewTimer) {
-      setPreviewAndAutoLive(null, null)
+      setPreview(null, null)
     }
   }, [
     isPresentationMode,
@@ -217,13 +210,13 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     selectedSongVerse,
     selectedVerse,
     translation,
-    setPreviewAndAutoLive,
+    setPreview,
   ])
 
   useEffect(() => {
     if (!previewTimer) return
-    setPreviewAndAutoLive(previewVerse, timer)
-  }, [previewTimer, timer, previewVerse, setPreviewAndAutoLive])
+    setPreview(previewVerse, timer)
+  }, [previewTimer, timer, previewVerse, setPreview])
 
   const sendPreviewLive = () => {
     const store = useBroadcastStore.getState()
@@ -239,7 +232,13 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       data-slot="preview-panel"
       className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
-      <PanelHeader title="Program preview" />
+      <PanelHeader title="Preview">
+        {previewVerse?.reference && (
+          <span className="max-w-[60%] truncate text-[0.6875rem] text-muted-foreground">
+            Staged: {previewVerse.reference}
+          </span>
+        )}
+      </PanelHeader>
       <div
         className="relative z-0 aspect-video w-full shrink-0 overflow-hidden"
         onDoubleClick={sendPreviewLive}
@@ -251,27 +250,25 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
           className="h-full"
           fillContainer
         />
+        {!previewVerse && !previewTimer && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
+            <span className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+              Nothing staged
+            </span>
+          </div>
+        )}
       </div>
       <div className="relative z-10 border-t border-border bg-card px-3 py-2">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
-            Auto
-          </span>
-          <Switch
-            checked={autoPreviewToLive}
-            onCheckedChange={setAutoPreviewToLive}
-          />
-        </div>
         <Button
           type="button"
           variant="secondary"
           size="sm"
           className="h-auto min-h-8 w-full justify-center gap-2 py-2 text-center whitespace-normal"
           onClick={sendPreviewLive}
-          disabled={autoPreviewToLive || (!previewVerse && !previewTimer)}
+          disabled={!previewVerse && !previewTimer}
         >
           <RadioIcon className="size-3.5 shrink-0" />
-          Show on Live display
+          Show on Live
         </Button>
       </div>
     </div>

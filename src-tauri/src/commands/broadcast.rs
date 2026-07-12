@@ -12,11 +12,14 @@ use tauri::webview::PageLoadEvent;
 use tauri::State;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
-/// Map `output_id` ("main" | "alt") to Tauri window label.
-fn window_label(output_id: &str) -> &'static str {
+/// Map `output_id` to its Tauri window label. "main" and "alt" keep their
+/// historical labels; added outputs get a label derived from their id. Must
+/// stay in sync with `windowLabelForOutput` in `src/lib/broadcast-outputs.ts`.
+fn window_label(output_id: &str) -> String {
     match output_id {
-        "alt" => "broadcast-alt",
-        _ => "broadcast",
+        "alt" => "broadcast-alt".to_owned(),
+        "main" => "broadcast".to_owned(),
+        other => format!("broadcast-{other}"),
     }
 }
 
@@ -31,7 +34,6 @@ trait ProjectorWindowOps {
     fn set_skip_taskbar(&self, skip: bool) -> Result<(), String>;
     fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String>;
     fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String>;
-    fn maximize(&self) -> Result<(), String>;
     fn show(&self) -> Result<(), String>;
     fn set_focus(&self) -> Result<(), String>;
 }
@@ -59,10 +61,6 @@ impl ProjectorWindowOps for tauri::WebviewWindow {
             .map_err(|e| e.to_string())
     }
 
-    fn maximize(&self) -> Result<(), String> {
-        self.maximize().map_err(|e| e.to_string())
-    }
-
     fn show(&self) -> Result<(), String> {
         self.show().map_err(|e| e.to_string())
     }
@@ -78,12 +76,12 @@ fn show_projector_window(
     size: tauri::PhysicalSize<u32>,
 ) -> Result<(), String> {
     window.set_fullscreen(false)?;
-    window.set_decorations(true)?;
-    window.set_skip_taskbar(false)?;
+    window.set_decorations(false)?;
+    window.set_skip_taskbar(true)?;
     window.set_physical_position(position)?;
     window.set_physical_size(size)?;
-    window.maximize()?;
     window.show()?;
+    window.set_fullscreen(true)?;
     window.set_focus()?;
     Ok(())
 }
@@ -147,14 +145,14 @@ pub fn list_monitors(app: tauri::AppHandle) -> Result<Vec<MonitorInfo>, String> 
 #[tauri::command]
 pub fn ensure_broadcast_window(app: tauri::AppHandle, output_id: String) -> Result<(), String> {
     let label = window_label(&output_id);
-    if app.get_webview_window(label).is_some() {
+    if app.get_webview_window(&label).is_some() {
         return Ok(());
     }
-    WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
-        .title(if output_id == "alt" {
-            "FellowShow NDI Alt"
-        } else {
-            "FellowShow NDI"
+    WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(window_url(&output_id).into()))
+        .title(match output_id.as_str() {
+            "alt" => "FellowShow NDI Alt".to_owned(),
+            "main" => "FellowShow NDI".to_owned(),
+            other => format!("FellowShow NDI {other}"),
         })
         .inner_size(1920.0, 1080.0)
         .decorations(true)
@@ -187,26 +185,27 @@ pub async fn open_broadcast_window(
     );
 
     // If window already exists (e.g. hidden for NDI), reuse it
-    if let Some(window) = app.get_webview_window(label) {
+    if let Some(window) = app.get_webview_window(&label) {
         log::info!(
             "Reusing existing {output_id} broadcast window at {:?}",
             window.url()
         );
         show_projector_window_on_monitor(&window, monitor)?;
+        refocus_operator_window(&app);
         return Ok(());
     }
 
-    let title = if output_id == "alt" {
-        "Projector - Alt"
-    } else {
-        "Projector - Program"
+    let title = match output_id.as_str() {
+        "alt" => "Projector - Alt".to_owned(),
+        "main" => "Projector - Program".to_owned(),
+        other => format!("Projector - {other}"),
     };
 
     let window =
-        WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
+        WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(window_url(&output_id).into()))
             .title(title)
             .inner_size(1920.0, 1080.0)
-            .decorations(true)
+            .decorations(false)
             .always_on_top(false)
             .skip_taskbar(false)
             .focused(true)
@@ -221,9 +220,9 @@ pub async fn open_broadcast_window(
                     if let Err(error) = window.show() {
                         log::error!("Failed to show projector after page load: {error}");
                     }
-                    if let Err(error) = window.set_focus() {
-                        log::error!("Failed to focus projector after page load: {error}");
-                    }
+                    // Hand the keyboard back to the operator console; the
+                    // projector only needs to be visible, not focused.
+                    refocus_operator_window(window.app_handle());
                 }
             })
             .build()
@@ -232,8 +231,19 @@ pub async fn open_broadcast_window(
     log::info!("Projector window created at {:?}", window.url());
 
     show_projector_window_on_monitor(&window, monitor)?;
+    refocus_operator_window(&app);
 
     Ok(())
+}
+
+/// Return keyboard focus to the operator console after raising a projector,
+/// so turning an output on never interrupts typing or shortcuts mid-service.
+fn refocus_operator_window(app: &tauri::AppHandle) {
+    if let Some(main) = app.get_webview_window("main") {
+        if let Err(error) = main.set_focus() {
+            log::warn!("Failed to refocus operator window: {error}");
+        }
+    }
 }
 
 #[tauri::command]
@@ -243,7 +253,7 @@ pub fn close_broadcast_window(
     runtime: State<'_, Mutex<NdiRuntime>>,
 ) -> Result<(), String> {
     let label = window_label(&output_id);
-    if let Some(window) = app.get_webview_window(label) {
+    if let Some(window) = app.get_webview_window(&label) {
         let ndi_active = runtime
             .lock()
             .map_err(|e| e.to_string())?
@@ -332,7 +342,6 @@ mod tests {
         SkipTaskbar(bool),
         Position(tauri::PhysicalPosition<i32>),
         Size(tauri::PhysicalSize<u32>),
-        Maximize,
         Show,
         Focus,
     }
@@ -381,11 +390,6 @@ mod tests {
             Ok(())
         }
 
-        fn maximize(&self) -> Result<(), String> {
-            self.operations.borrow_mut().push(WindowOperation::Maximize);
-            Ok(())
-        }
-
         fn show(&self) -> Result<(), String> {
             self.operations.borrow_mut().push(WindowOperation::Show);
             Ok(())
@@ -412,12 +416,12 @@ mod tests {
             *window.operations.borrow(),
             vec![
                 WindowOperation::Fullscreen(false),
-                WindowOperation::Decorations(true),
-                WindowOperation::SkipTaskbar(false),
+                WindowOperation::Decorations(false),
+                WindowOperation::SkipTaskbar(true),
                 WindowOperation::Position(position),
                 WindowOperation::Size(size),
-                WindowOperation::Maximize,
                 WindowOperation::Show,
+                WindowOperation::Fullscreen(true),
                 WindowOperation::Focus,
             ]
         );
@@ -433,5 +437,12 @@ mod tests {
     #[test]
     fn projector_creation_command_must_not_block_the_windows_ui_thread() {
         assert_async_projector_command(open_broadcast_window);
+    }
+
+    #[test]
+    fn window_labels_stay_stable_for_main_and_alt_and_derive_for_added_outputs() {
+        assert_eq!(window_label("main"), "broadcast");
+        assert_eq!(window_label("alt"), "broadcast-alt");
+        assert_eq!(window_label("output-3"), "broadcast-output-3");
     }
 }

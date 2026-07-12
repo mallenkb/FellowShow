@@ -64,6 +64,10 @@ export function PresenterTimer({ variant = "popover" }: PresenterTimerProps) {
     [minutes, seconds]
   )
   const isFinished = remainingSeconds === 0
+  const outputs = useBroadcastStore((s) => s.outputs)
+  const timerDisplays = outputs.filter(
+    (output) => output.content === "timer" || output.content === "everything"
+  )
 
   const startTimer = () => {
     setDuration(configuredSeconds)
@@ -203,6 +207,12 @@ export function PresenterTimer({ variant = "popover" }: PresenterTimerProps) {
           Reset
         </Button>
       </div>
+
+      <p className="text-[0.6875rem] text-muted-foreground">
+        {timerDisplays.length > 0
+          ? `Shows on: ${timerDisplays.map((output) => output.name).join(", ")}`
+          : "No display shows the timer — add one from Displays → Manage."}
+      </p>
     </>
   )
 

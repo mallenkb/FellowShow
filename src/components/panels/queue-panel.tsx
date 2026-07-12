@@ -166,9 +166,34 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
   }, [activeBlockIndex, lyricBlocks.length, lyricItem])
 
   const selectLyricBlock = (blockIndex: number) => {
-    if (!lyricItem || lyricBlocks.length === 0) return
+    if (!lyricItem || lyricBlocks.length === 0) return null
     panelRef.current?.focus({ preventScroll: true })
-    useQueueStore.getState().setLyricBlock(lyricItem.id, blockIndex)
+    const safeIndex = Math.max(0, Math.min(blockIndex, lyricBlocks.length - 1))
+    const block = lyricBlocks[safeIndex]
+    const verse = {
+      ...lyricItem.verse,
+      text: block?.text ?? lyricItem.verse.text,
+    }
+
+    useQueueStore.getState().setLyricBlock(lyricItem.id, safeIndex)
+    const renderData = toVerseRenderData(verse, "")
+    const broadcast = useBroadcastStore.getState()
+    const followsCurrentLiveSong =
+      broadcast.isLive &&
+      broadcast.liveVerse?.themeSection === "songs" &&
+      broadcast.liveVerse.sourceId === renderData.sourceId
+    if (followsCurrentLiveSong) {
+      broadcast.presentOnLive(renderData, null, "preview")
+    }
+    return verse
+  }
+
+  const presentLyricBlock = (blockIndex: number) => {
+    const verse = selectLyricBlock(blockIndex)
+    if (!verse) return
+    useBroadcastStore
+      .getState()
+      .presentOnLive(toVerseRenderData(verse, ""), null, "preview")
   }
 
   const handleLyricKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -233,6 +258,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
                     key={`${lyricItem.id}-${index}`}
                     aria-current={isActive ? "true" : undefined}
                     onClick={() => selectLyricBlock(index)}
+                    onDoubleClick={() => presentLyricBlock(index)}
                     className={cn(
                       "group flex w-full cursor-pointer items-start gap-4 rounded-lg border p-3 text-left transition-colors",
                       isActive

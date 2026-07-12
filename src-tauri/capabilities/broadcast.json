@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "broadcast-output",
   "description": "Minimum permissions required by isolated broadcast output windows",
-  "windows": ["broadcast", "broadcast-alt"],
+  "windows": ["broadcast", "broadcast-*"],
   "permissions": [
     "core:default",
     "core:window:allow-is-fullscreen",
