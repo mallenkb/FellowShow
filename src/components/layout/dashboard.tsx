@@ -7,6 +7,7 @@ import {
   ThemesPanel,
 } from "@/components/panels/preview-panel"
 import { LiveOutputPanel } from "@/components/panels/live-output-panel"
+import { OutputsMultiviewPanel } from "@/components/panels/outputs-multiview-panel"
 import { QueuePanel } from "@/components/panels/queue-panel"
 import { SearchPanel } from "@/components/panels/search-panel"
 import { PresentationPanel } from "@/components/panels/presentation-panel"
@@ -408,6 +409,7 @@ export function Dashboard() {
 
         <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch gap-3 overflow-y-auto overscroll-contain pr-1 *:min-h-0">
           <LiveOutputPanel mode={searchMode} />
+          <OutputsMultiviewPanel mode={searchMode} />
           <PreviewPanel mode={searchMode} />
           {searchMode !== "timer" && searchMode !== "presentation" && (
             <ThemesPanel mode={searchMode} />

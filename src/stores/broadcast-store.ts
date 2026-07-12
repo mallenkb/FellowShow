@@ -13,6 +13,20 @@ import {
   DEFAULT_SONG_THEME_ID,
   getBuiltinPresentationBackground,
 } from "@/lib/builtin-themes"
+import {
+  createDefaultOutputs,
+  createOutputConfig,
+  getOutputProgramPayload,
+  getSectionThemeId,
+  inferThemeSection,
+  MAX_BROADCAST_OUTPUTS,
+  resolveOutputThemeId,
+  sanitizeOutputConfigs,
+  windowLabelForOutput,
+  type BroadcastOutputConfig,
+  type OutputContent,
+} from "@/lib/broadcast-outputs"
+import type { OutputType } from "@/lib/broadcast-output-control"
 
 type SelectedElement = "verse" | "reference" | null
 const DEFAULT_BROADCAST_THEME_ID = "builtin-bible-verse-preview"
@@ -22,7 +36,7 @@ interface BroadcastState {
   themes: BroadcastTheme[]
   deletedBuiltinThemeIds: string[]
   activeThemeId: string
-  altActiveThemeId: string
+  outputs: BroadcastOutputConfig[]
   sectionThemeIds: Record<BroadcastThemeSection, string>
   selectedThemeSection: BroadcastThemeSection
   autoPreviewToLive: boolean
@@ -55,7 +69,16 @@ interface BroadcastState {
   reorderThemes: (orderedIds: string[]) => void
   setActiveTheme: (id: string, section?: BroadcastThemeSection) => void
   setSelectedThemeSection: (section: BroadcastThemeSection) => void
-  setAltActiveTheme: (id: string) => void
+  addOutput: (options?: {
+    content?: OutputContent
+    name?: string
+    outputType?: OutputType
+  }) => BroadcastOutputConfig | null
+  removeOutput: (id: string) => void
+  updateOutput: (
+    id: string,
+    updates: Partial<Omit<BroadcastOutputConfig, "id">>
+  ) => void
   setAutoPreviewToLive: (autoPreviewToLive: boolean) => void
   setPreviewOutput: (
     verse: VerseRenderData | null,
@@ -130,52 +153,36 @@ function isThemeDirty(
 }
 
 function emitDraftToBroadcast(state: BroadcastState): void {
-  if (!state.draftTheme) return
-  const id = state.editingThemeId
-  const verse = state.isLive ? state.liveVerse : null
-  const timer = state.isLive ? state.presenterTimer : null
-  const activeThemeIds = new Set(Object.values(state.sectionThemeIds))
-  if (id && activeThemeIds.has(id)) {
-    void emitTo("broadcast", "broadcast:verse-update", {
+  if (!state.draftTheme || !state.editingThemeId) return
+  // Live-preview the draft on every output currently rendering this theme.
+  for (const output of state.outputs) {
+    const effectiveThemeId = resolveOutputThemeId(
+      output,
+      state,
+      state.liveVerse,
+      state.selectedThemeSection
+    )
+    if (effectiveThemeId !== state.editingThemeId) continue
+    const { verse, timer } = getOutputProgramPayload(
+      output.content,
+      state.isLive,
+      state.liveVerse,
+      state.presenterTimer
+    )
+    void emitTo(windowLabelForOutput(output.id), "broadcast:verse-update", {
       theme: state.draftTheme,
       verse,
       timer,
-      lowerThird: state.lowerThird,
+      lowerThird: output.content === "everything" ? state.lowerThird : null,
       opacity: state.outputOpacity,
     }).catch(() => {})
   }
-  if (id === state.altActiveThemeId) {
-    void emitTo("broadcast-alt", "broadcast:verse-update", {
-      theme: state.draftTheme,
-      verse,
-      timer,
-      lowerThird: state.lowerThird,
-      opacity: state.outputOpacity,
-    }).catch(() => {})
-  }
-}
-
-function inferThemeSection(
-  verse: VerseRenderData | null
-): BroadcastThemeSection {
-  if (verse?.themeSection) return verse.themeSection
-  if (verse?.presentationImage) return "presentation"
-  if (verse?.referenceMode === "lyric-footer") return "songs"
-  return "bible"
 }
 
 type ProgramThemeState = Pick<
   BroadcastState,
   "activeThemeId" | "sectionThemeIds" | "themes"
 >
-
-function getActiveThemeIdForProgramState(
-  state: ProgramThemeState,
-  section: BroadcastThemeSection
-): string {
-  if (section === "bible") return state.activeThemeId
-  return state.sectionThemeIds[section] ?? state.activeThemeId
-}
 
 function hasProgramContent(
   verse: VerseRenderData | null,
@@ -236,7 +243,7 @@ export function getThemeForProgramContent(
   emptySection: BroadcastThemeSection = "bible"
 ): BroadcastTheme {
   const section = verse ? inferThemeSection(verse) : emptySection
-  const themeId = getActiveThemeIdForProgramState(state, section)
+  const themeId = getSectionThemeId(state, section)
   return state.themes.find((theme) => theme.id === themeId) ?? state.themes[0]
 }
 
@@ -244,7 +251,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   themes: [...BUILTIN_THEMES],
   deletedBuiltinThemeIds: [],
   activeThemeId: DEFAULT_BROADCAST_THEME_ID,
-  altActiveThemeId: DEFAULT_BROADCAST_THEME_ID,
+  outputs: createDefaultOutputs(),
   sectionThemeIds: { ...DEFAULT_SECTION_THEME_IDS },
   selectedThemeSection: "bible",
   autoPreviewToLive: false,
@@ -302,8 +309,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
             : s.deletedBuiltinThemeIds,
         activeThemeId:
           s.activeThemeId === id ? fallbackThemeId : s.activeThemeId,
-        altActiveThemeId:
-          s.altActiveThemeId === id ? fallbackThemeId : s.altActiveThemeId,
+        outputs: s.outputs.map((output) =>
+          output.themeId === id ? { ...output, themeId: null } : output
+        ),
         sectionThemeIds,
         editingThemeId: s.editingThemeId === id ? null : s.editingThemeId,
         draftTheme: s.editingThemeId === id ? null : s.draftTheme,
@@ -371,8 +379,11 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
               : themeId,
           ])
         ) as Record<BroadcastThemeSection, string>,
-        altActiveThemeId:
-          s.altActiveThemeId === id ? renamedTheme.id : s.altActiveThemeId,
+        outputs: s.outputs.map((output) =>
+          output.themeId === id
+            ? { ...output, themeId: renamedTheme.id }
+            : output
+        ),
         editingThemeId: renamedTheme.id,
         draftTheme: renamedTheme,
       }))
@@ -419,27 +430,40 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     }),
   syncBroadcastOutputFor: (outputId: string) => {
     const s = get()
-    const themeId =
-      outputId === "alt"
-        ? s.altActiveThemeId
-        : getThemeForProgramContent(s, s.liveVerse, s.selectedThemeSection).id
-    const label = outputId === "alt" ? "broadcast-alt" : "broadcast"
+    const output = s.outputs.find((o) => o.id === outputId)
+    if (!output) return
+    // Theme follows the staged content even off-air, so the background is
+    // already right before going live; program content itself is gated below.
+    const themeId = resolveOutputThemeId(
+      output,
+      s,
+      s.liveVerse,
+      s.selectedThemeSection
+    )
     const theme = s.themes.find((t) => t.id === themeId) ?? s.themes[0]
     if (!theme) return
 
-    // External outputs only carry program content while live; off-air they
-    // fall back to the theme background instead of freezing on the last verse.
-    void emitTo(label, "broadcast:verse-update", {
+    // Outputs only carry program content while live — and only the content
+    // routed to them; off-air (or when other content is live) they fall back
+    // to the theme background instead of freezing on the last verse.
+    const { verse, timer } = getOutputProgramPayload(
+      output.content,
+      s.isLive,
+      s.liveVerse,
+      s.presenterTimer
+    )
+    void emitTo(windowLabelForOutput(output.id), "broadcast:verse-update", {
       theme,
-      verse: s.isLive ? s.liveVerse : null,
-      timer: s.isLive ? s.presenterTimer : null,
-      lowerThird: s.lowerThird,
+      verse,
+      timer,
+      lowerThird: output.content === "everything" ? s.lowerThird : null,
       opacity: s.outputOpacity,
     }).catch(() => {})
   },
   syncBroadcastOutput: () => {
-    get().syncBroadcastOutputFor("main")
-    get().syncBroadcastOutputFor("alt")
+    for (const output of get().outputs) {
+      get().syncBroadcastOutputFor(output.id)
+    }
   },
   setActiveTheme: (themeId, section) => {
     const targetSection = section ?? get().selectedThemeSection
@@ -451,13 +475,31 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         [targetSection]: themeId,
       },
     }))
-    get().syncBroadcastOutputFor("main")
+    // Section themes drive every output without a fixed theme.
+    get().syncBroadcastOutput()
   },
   setSelectedThemeSection: (selectedThemeSection) =>
     set({ selectedThemeSection }),
-  setAltActiveTheme: (altActiveThemeId) => {
-    set({ altActiveThemeId })
-    get().syncBroadcastOutputFor("alt")
+  addOutput: (options) => {
+    const s = get()
+    if (s.outputs.length >= MAX_BROADCAST_OUTPUTS) return null
+    const output = createOutputConfig(s.outputs, options)
+    set({ outputs: [...s.outputs, output] })
+    return output
+  },
+  removeOutput: (id) => {
+    if (id === "main") return
+    set((s) => ({
+      outputs: s.outputs.filter((output) => output.id !== id),
+    }))
+  },
+  updateOutput: (id, updates) => {
+    set((s) => ({
+      outputs: s.outputs.map((output) =>
+        output.id === id ? { ...output, ...updates } : output
+      ),
+    }))
+    get().syncBroadcastOutputFor(id)
   },
   setAutoPreviewToLive: (autoPreviewToLive) => {
     let shouldSyncOutput = false
@@ -747,6 +789,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
       )
       const activeId = await store.get<string>("activeThemeId")
       const altActiveId = await store.get<string>("altActiveThemeId")
+      const storedOutputs = await store.get<unknown>("outputs")
       const autoPreviewToLive = await store.get<boolean>("autoPreviewToLive")
       const themeSortOrder =
         await store.get<Record<string, number>>("themeSortOrder")
@@ -802,7 +845,18 @@ export function hydrateBroadcastThemes(): Promise<void> {
       if (deletedBuiltinIds.length > 0)
         patch.deletedBuiltinThemeIds = deletedBuiltinIds
       if (activeId) patch.activeThemeId = resolveThemeId(activeId)
-      if (altActiveId) patch.altActiveThemeId = resolveThemeId(altActiveId)
+      const sanitizedOutputs = sanitizeOutputConfigs(
+        storedOutputs,
+        availableThemeIds
+      )
+      if (sanitizedOutputs) {
+        patch.outputs = sanitizedOutputs
+      } else if (altActiveId && availableThemeIds.has(altActiveId)) {
+        // Migrate the pre-routing "alternate output theme" setting.
+        patch.outputs = createDefaultOutputs().map((output) =>
+          output.id === "alt" ? { ...output, themeId: altActiveId } : output
+        )
+      }
       if (typeof autoPreviewToLive === "boolean") {
         patch.autoPreviewToLive = autoPreviewToLive
       }
@@ -828,7 +882,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
           state.themes !== prevState.themes ||
           state.deletedBuiltinThemeIds !== prevState.deletedBuiltinThemeIds ||
           state.activeThemeId !== prevState.activeThemeId ||
-          state.altActiveThemeId !== prevState.altActiveThemeId ||
+          state.outputs !== prevState.outputs ||
           state.autoPreviewToLive !== prevState.autoPreviewToLive ||
           state.sectionThemeIds !== prevState.sectionThemeIds
         if (!changed) return
@@ -868,7 +922,7 @@ async function persistBroadcastThemes(state: BroadcastState): Promise<void> {
     await store.set("themeSortOrder", themeSortOrder)
     await store.set("deletedBuiltinThemeIds", state.deletedBuiltinThemeIds)
     await store.set("activeThemeId", state.activeThemeId)
-    await store.set("altActiveThemeId", state.altActiveThemeId)
+    await store.set("outputs", state.outputs)
     await store.set("autoPreviewToLive", state.autoPreviewToLive)
     await store.set("sectionThemeIds", state.sectionThemeIds)
     await store.save()

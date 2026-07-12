@@ -48,10 +48,94 @@ describe("broadcast store sync", () => {
       "broadcast-alt",
       "broadcast:verse-update",
       expect.objectContaining({
-        theme: expect.objectContaining({
-          id: useBroadcastStore.getState().altActiveThemeId,
-        }),
+        theme: expect.objectContaining({ id: theme.id }),
         verse: expect.objectContaining({ reference: "John 3:16" }),
+      })
+    )
+  })
+
+  it("routes content only to outputs assigned to its type", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    useBroadcastStore.setState((s) => ({
+      outputs: [
+        ...s.outputs.map((output) =>
+          output.id === "alt"
+            ? { ...output, content: "songs" as const }
+            : output
+        ),
+        {
+          id: "output-3",
+          name: "Output 3",
+          content: "timer" as const,
+          themeId: null,
+          outputType: "display" as const,
+          monitorIndex: null,
+        },
+      ],
+      isLive: true,
+      liveVerse: {
+        reference: "John 3:16",
+        segments: [{ text: "For God so loved the world", verseNumber: 16 }],
+      },
+      presenterTimer: {
+        remainingSeconds: 60,
+        totalSeconds: 300,
+        isRunning: true,
+        isFinished: false,
+        fontFamily: "Geist Variable",
+      },
+    }))
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().syncBroadcastOutput()
+
+    // The everything output carries the full program.
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        verse: expect.objectContaining({ reference: "John 3:16" }),
+        timer: expect.objectContaining({ remainingSeconds: 60 }),
+      })
+    )
+    // Scripture is live, so the songs-only screen stays on its background.
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast-alt",
+      "broadcast:verse-update",
+      expect.objectContaining({ verse: null, timer: null })
+    )
+    // The timer screen shows only the timer.
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast-output-3",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        verse: null,
+        timer: expect.objectContaining({ remainingSeconds: 60 }),
+      })
+    )
+  })
+
+  it("routes song lyrics to a songs screen", async () => {
+    const { useBroadcastStore } = await import("./broadcast-store")
+    useBroadcastStore.setState((s) => ({
+      outputs: s.outputs.map((output) =>
+        output.id === "alt" ? { ...output, content: "songs" as const } : output
+      ),
+      isLive: true,
+    }))
+
+    emitToMock.mockClear()
+    useBroadcastStore.getState().setLiveVerse({
+      reference: "Amazing Grace",
+      segments: [{ text: "Amazing grace, how sweet the sound" }],
+      referenceMode: "lyric-footer",
+    })
+
+    expect(emitToMock).toHaveBeenCalledWith(
+      "broadcast-alt",
+      "broadcast:verse-update",
+      expect.objectContaining({
+        verse: expect.objectContaining({ reference: "Amazing Grace" }),
       })
     )
   })
@@ -74,6 +158,8 @@ describe("broadcast store sync", () => {
     })
 
     expect(emitToMock).toHaveBeenCalledTimes(2)
+    // Lower thirds only ride general ("everything") outputs — dedicated
+    // scripture/songs/… screens stay clear of speaker bugs.
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast",
       "broadcast:verse-update",
@@ -90,9 +176,7 @@ describe("broadcast store sync", () => {
       "broadcast-alt",
       "broadcast:verse-update",
       expect.objectContaining({
-        lowerThird: expect.objectContaining({
-          title: "Pastor Maya Johnson",
-        }),
+        lowerThird: null,
       })
     )
 
@@ -422,9 +506,11 @@ describe("broadcast store sync", () => {
     expect(themeToDelete).toBeTruthy()
     expect(fallbackTheme).toBeTruthy()
 
-    useBroadcastStore.setState({
+    useBroadcastStore.setState((s) => ({
       activeThemeId: themeToDelete!.id,
-      altActiveThemeId: themeToDelete!.id,
+      outputs: s.outputs.map((output) =>
+        output.id === "alt" ? { ...output, themeId: themeToDelete!.id } : output
+      ),
       sectionThemeIds: {
         bible: themeToDelete!.id,
         songs: themeToDelete!.id,
@@ -432,7 +518,7 @@ describe("broadcast store sync", () => {
       },
       editingThemeId: themeToDelete!.id,
       draftTheme: themeToDelete,
-    })
+    }))
 
     useBroadcastStore.getState().deleteTheme(themeToDelete!.id)
 
@@ -442,7 +528,10 @@ describe("broadcast store sync", () => {
     )
     expect(next.deletedBuiltinThemeIds).toEqual([themeToDelete!.id])
     expect(next.activeThemeId).toBe(fallbackTheme!.id)
-    expect(next.altActiveThemeId).toBe(fallbackTheme!.id)
+    // Outputs pinned to the deleted theme fall back to following content.
+    expect(
+      next.outputs.find((output) => output.id === "alt")?.themeId
+    ).toBeNull()
     expect(next.sectionThemeIds).toEqual({
       bible: fallbackTheme!.id,
       songs: fallbackTheme!.id,

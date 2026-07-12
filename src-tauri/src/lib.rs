@@ -83,6 +83,33 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .on_window_event(|window, event| {
+            use tauri::Manager;
+            // Closing the operator window shuts down every projector window
+            // and NDI session, so nothing keeps broadcasting (or keeps the
+            // process alive) after the app is closed.
+            if window.label() != "main"
+                || !matches!(event, tauri::WindowEvent::CloseRequested { .. })
+            {
+                return;
+            }
+            let app = window.app_handle();
+            if let Some(runtime) =
+                app.try_state::<Mutex<fellowshow_broadcast::ndi::NdiRuntime>>()
+            {
+                runtime
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .stop_all();
+            }
+            for (label, webview) in app.webview_windows() {
+                if label.starts_with("broadcast") {
+                    if let Err(error) = webview.close() {
+                        log::warn!("Failed to close {label} during app close: {error}");
+                    }
+                }
+            }
+        })
         .manage(Mutex::new(state::AppState::new()))
         .manage(Mutex::new(fellowshow_detection::DetectionPipeline::new()))
         .manage(Mutex::new(fellowshow_broadcast::ndi::NdiRuntime::default()))

@@ -6,6 +6,6 @@ name = "FellowShow"
 script = ""
 
 [[actions]]
-name = "Run App"
+name = "Run"
 icon = "run"
-command = "bun run tauri dev"
+command = "./script/build_and_run.sh"
