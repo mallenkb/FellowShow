@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { invoke } from "@/lib/ipc"
+import { invoke, type MonitorInfo } from "@/lib/ipc"
 import { emitTo, listen } from "@tauri-apps/api/event"
 import { getAllWindows } from "@tauri-apps/api/window"
 import {
@@ -59,16 +59,6 @@ const NDI_ALPHA_OPTIONS: Array<{ value: NdiAlphaMode; label: string }> = [
   { value: "straightAlpha", label: "Straight Alpha" },
   { value: "premultipliedAlpha", label: "Premultiplied Alpha" },
 ]
-
-interface MonitorInfo {
-  index: number
-  name: string
-  width: number
-  height: number
-  x: number
-  y: number
-  isPrimary: boolean
-}
 
 function ndiFrameRateToNumber(frameRate: NdiFrameRate): number {
   switch (frameRate) {

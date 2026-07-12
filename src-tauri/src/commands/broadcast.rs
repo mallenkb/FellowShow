@@ -203,7 +203,7 @@ pub async fn open_broadcast_window(
     };
 
     let window =
-            WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
+        WebviewWindowBuilder::new(&app, label, WebviewUrl::App(window_url(&output_id).into()))
             .title(title)
             .inner_size(1920.0, 1080.0)
             .decorations(true)

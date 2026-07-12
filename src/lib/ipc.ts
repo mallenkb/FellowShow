@@ -42,10 +42,14 @@ interface ReadingModeStatus {
   current_verse: number | null
 }
 
-interface MonitorInfo {
+export interface MonitorInfo {
+  index: number
   name: string
   width: number
   height: number
+  x: number
+  y: number
+  isPrimary: boolean
 }
 
 interface NdiStatus {
