@@ -124,11 +124,14 @@ describe("broadcast store sync", () => {
     }))
 
     emitToMock.mockClear()
-    useBroadcastStore.getState().setLiveVerse({
-      reference: "Amazing Grace",
-      segments: [{ text: "Amazing grace, how sweet the sound" }],
-      referenceMode: "lyric-footer",
-    })
+    useBroadcastStore.getState().setPreviewOutput(
+      {
+        reference: "Amazing Grace",
+        segments: [{ text: "Amazing grace, how sweet the sound" }],
+        referenceMode: "lyric-footer",
+      },
+      null
+    )
 
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast-alt",
