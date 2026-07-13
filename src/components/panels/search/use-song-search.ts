@@ -138,8 +138,7 @@ export function useSongSearch({
   ])
 
   const fallbackIndex = useMemo(
-    () =>
-      useSynchronousFallback ? createSongSearchIndex(orderedSongs) : null,
+    () => (useSynchronousFallback ? createSongSearchIndex(orderedSongs) : null),
     [orderedSongs, useSynchronousFallback]
   )
 

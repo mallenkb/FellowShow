@@ -135,8 +135,8 @@ export function BroadcastSettings({
         <DialogHeader>
           <DialogTitle>Displays</DialogTitle>
           <DialogDescription>
-            Give each display a job and a screen. Turn them on here or from
-            the Displays strip on the right during service.
+            Give each display a job and a screen. Turn them on here or from the
+            Displays strip on the right during service.
           </DialogDescription>
         </DialogHeader>
 

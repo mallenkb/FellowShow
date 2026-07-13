@@ -33,7 +33,8 @@ export interface SongSearchIndex<TSong extends SearchableSong> {
   fuzzyTrigramPostings: Map<string, number[]>
 }
 
-type FuzzySongDocument = SongSearchIndex<SearchableSong>["fuzzyDocuments"][number]
+type FuzzySongDocument =
+  SongSearchIndex<SearchableSong>["fuzzyDocuments"][number]
 
 const FUZZY_CANDIDATE_LIMIT = 500
 const FUZZY_OPTIONS = {
