@@ -504,9 +504,7 @@ export function SearchPanel({
     })
     if (!selected) return
     const paths = Array.isArray(selected) ? selected : [selected]
-    const documentExtensions = new Set<string>(
-      PRESENTATION_DOCUMENT_EXTENSIONS
-    )
+    const documentExtensions = new Set<string>(PRESENTATION_DOCUMENT_EXTENSIONS)
     const documentPaths: string[] = []
     const mediaSlides = []
 

@@ -161,10 +161,9 @@ export function OutputCard({
           <p className="text-[0.6875rem] text-muted-foreground">
             {output.id === "main"
               ? "Program always receives the complete live feed."
-              :
-              OUTPUT_CONTENT_OPTIONS.find(
-                (option) => option.value === output.content
-              )?.description}
+              : OUTPUT_CONTENT_OPTIONS.find(
+                  (option) => option.value === output.content
+                )?.description}
           </p>
         )}
       </div>

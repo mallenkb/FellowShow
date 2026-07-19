@@ -12,11 +12,7 @@ import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { searchContextWithFuse } from "@/lib/context-search"
 import { invoke } from "@/lib/ipc"
-import {
-  useBibleStore,
-  useBroadcastStore,
-  useTranscriptStore,
-} from "@/stores"
+import { useBibleStore, useBroadcastStore, useTranscriptStore } from "@/stores"
 import type { SemanticSearchResult, TranscriptSegment, Verse } from "@/types"
 
 const SEARCH_DEBOUNCE_MS = 900
