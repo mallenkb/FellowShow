@@ -427,7 +427,7 @@ export function SearchPanel({
           : song.language === "english"
             ? -1
             : -2,
-      book_name: `${song.sourceLabel ?? song.languageLabel} ${song.number}: ${song.title}`,
+      book_name: `${song.sourceLabel ?? song.languageLabel}: ${song.title}`,
       book_abbreviation:
         song.source === "theme-2026"
           ? "T26"
@@ -446,7 +446,7 @@ export function SearchPanel({
   )
 
   const formatSongReference = useCallback((song: CopSong) => {
-    return `${song.number}. ${song.title}`
+    return song.title
   }, [])
 
   const setSearchTab = useCallback((tab: SearchTab) => {
@@ -1245,7 +1245,7 @@ export function SearchPanel({
         ) : activeTab === "songs" ? (
           <div className="flex flex-wrap items-center gap-2">
             <Input
-              placeholder={`Search ${songResultCount} songs...`}
+              placeholder="Search song titles..."
               value={songQuery}
               onChange={(e) => setSongQuery(e.target.value)}
               className="h-10 min-w-0 flex-1 text-sm"

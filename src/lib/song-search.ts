@@ -21,14 +21,10 @@ export interface SongSearchIndex<TSong extends SearchableSong> {
   songs: TSong[]
   normalizedSongs: Array<{
     title: string
-    lyrics: string
   }>
   fuzzyDocuments: Array<{
     songIndex: number
     title: string
-    number: number
-    sourceLabel: string
-    languageLabel: string
   }>
   fuzzyTrigramPostings: Map<string, number[]>
 }
@@ -43,12 +39,7 @@ const FUZZY_OPTIONS = {
   threshold: 0.35,
   ignoreLocation: true,
   minMatchCharLength: 1,
-  keys: [
-    { name: "title", weight: 0.78 },
-    { name: "number", weight: 0.1 },
-    { name: "sourceLabel", weight: 0.06 },
-    { name: "languageLabel", weight: 0.06 },
-  ],
+  keys: ["title"],
 }
 
 const NATURAL_QUERY_STOP_WORDS = new Set([
@@ -129,22 +120,16 @@ export function createSongSearchIndex<TSong extends SearchableSong>(
 ): SongSearchIndex<TSong> {
   const normalizedSongs = songs.map((song) => ({
     title: normalizeSearchText(song.title),
-    lyrics: normalizeSearchText(song.lyrics),
   }))
   const fuzzyDocuments = songs.map((song, songIndex) => ({
     songIndex,
     title: song.title,
-    number: song.number,
-    sourceLabel: song.sourceLabel ?? "",
-    languageLabel: song.languageLabel ?? "",
   }))
   const fuzzyTrigramPostings = new Map<string, number[]>()
 
   for (const document of fuzzyDocuments) {
-    const searchableMetadata = normalizeSearchText(
-      `${document.title} ${document.sourceLabel} ${document.languageLabel}`
-    )
-    for (const trigram of new Set(getTrigrams(searchableMetadata))) {
+    const normalizedTitle = normalizeSearchText(document.title)
+    for (const trigram of new Set(getTrigrams(normalizedTitle))) {
       const postings = fuzzyTrigramPostings.get(trigram)
       if (postings) postings.push(document.songIndex)
       else fuzzyTrigramPostings.set(trigram, [document.songIndex])
@@ -178,7 +163,7 @@ export function searchSongs<TSong extends SearchableSong>(
   if (limit <= 0) return []
 
   const queryTokens = normalizedQuery.split(" ")
-  const rankedMatches: TSong[][] = [[], [], [], [], [], []]
+  const rankedMatches: TSong[][] = [[], [], [], []]
   const seenSongIndexes = new Set<number>()
 
   for (let songIndex = 0; songIndex < index.songs.length; songIndex += 1) {
@@ -188,27 +173,17 @@ export function searchSongs<TSong extends SearchableSong>(
     const normalizedSong = index.normalizedSongs[songIndex]
     let rank = -1
 
-    if (
-      normalizedSong.title === normalizedQuery ||
-      String(song.number) === normalizedQuery
-    ) {
+    if (normalizedSong.title === normalizedQuery) {
       rank = 0
     } else if (normalizedSong.title.startsWith(normalizedQuery)) {
       rank = 1
     } else if (normalizedSong.title.includes(normalizedQuery)) {
       rank = 2
-    } else if (normalizedSong.lyrics.includes(normalizedQuery)) {
-      rank = 3
     } else if (
       queryTokens.length > 1 &&
       queryTokens.every((token) => normalizedSong.title.includes(token))
     ) {
-      rank = 4
-    } else if (
-      queryTokens.length > 1 &&
-      queryTokens.every((token) => normalizedSong.lyrics.includes(token))
-    ) {
-      rank = 5
+      rank = 3
     }
 
     if (rank >= 0) {

@@ -38,12 +38,34 @@ describe("song search", () => {
     expect(results[0]?.id).toBe("amazing-grace")
   })
 
-  it("matches lyric phrases even when punctuation and casing differ", () => {
+  it("does not match lyric phrases that are absent from the title", () => {
     const index = createSongSearchIndex(songs)
 
-    const results = searchSongs(index, "lord lift me up")
+    const results = searchSongs(index, "saved a wretch like me")
 
-    expect(results[0]?.id).toBe("higher-ground")
+    expect(results).toEqual([])
+  })
+
+  it("does not match song numbers", () => {
+    const index = createSongSearchIndex(songs)
+
+    const results = searchSongs(index, "393")
+
+    expect(results).toEqual([])
+  })
+
+  it("does not match source or language descriptions", () => {
+    const index = createSongSearchIndex([
+      {
+        ...songs[0],
+        sourceLabel: "Theme 2026",
+        languageLabel: "English",
+      },
+    ])
+
+    const results = searchSongs(index, "Theme 2026")
+
+    expect(results).toEqual([])
   })
 
   it("tolerates small title typos", () => {
