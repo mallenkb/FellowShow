@@ -114,13 +114,12 @@ fn prepare_document(
 
     #[cfg(target_os = "windows")]
     if microsoft_office_application(&extension).is_some() {
-        match convert_with_microsoft_office(path, &extension) {
+        match convert_with_libreoffice(path, resource_dir) {
             Ok(pdf) => return Ok(pdf),
-            Err(office_error) => match convert_with_libreoffice(path, resource_dir) {
-                Ok(pdf) => return Ok(pdf),
-                Err(DocumentImportError::LibreOfficeUnavailable) => return Err(office_error),
-                Err(libreoffice_error) => return Err(libreoffice_error),
-            },
+            Err(DocumentImportError::LibreOfficeUnavailable) => {
+                return convert_with_microsoft_office(path, &extension);
+            }
+            Err(libreoffice_error) => return Err(libreoffice_error),
         }
     }
 
@@ -297,18 +296,25 @@ mod tests {
 
     #[test]
     fn windows_office_formats_map_to_their_native_converter() {
-        assert_eq!(microsoft_office_application("docx"), Some("Word.Application"));
-        assert_eq!(microsoft_office_application("pptx"), Some("PowerPoint.Application"));
-        assert_eq!(microsoft_office_application("xlsx"), Some("Excel.Application"));
+        assert_eq!(
+            microsoft_office_application("docx"),
+            Some("Word.Application")
+        );
+        assert_eq!(
+            microsoft_office_application("pptx"),
+            Some("PowerPoint.Application")
+        );
+        assert_eq!(
+            microsoft_office_application("xlsx"),
+            Some("Excel.Application")
+        );
         assert_eq!(microsoft_office_application("pdf"), None);
     }
 
     #[test]
     fn pdf_documents_are_returned_without_conversion() {
-        let path = std::env::temp_dir().join(format!(
-            "fellowshow-pdf-test-{}.pdf",
-            std::process::id()
-        ));
+        let path =
+            std::env::temp_dir().join(format!("fellowshow-pdf-test-{}.pdf", std::process::id()));
         let bytes = b"%PDF-1.4\n%%EOF\n";
         fs::write(&path, bytes).expect("write PDF fixture");
 
@@ -325,8 +331,9 @@ mod tests {
         let fixture_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_TEST_DIR")
             .map(PathBuf::from)
             .expect("set FELLOWSHOW_DOCUMENT_TEST_DIR");
+        let resource_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_RESOURCE_DIR").map(PathBuf::from);
         for name in ["sample.docx", "sample.pptx", "sample.xlsx"] {
-            let pdf = prepare_document(&fixture_dir.join(name), None)
+            let pdf = prepare_document(&fixture_dir.join(name), resource_dir.as_deref())
                 .unwrap_or_else(|error| panic!("convert {name}: {error}"));
             assert!(pdf.starts_with(b"%PDF-"), "{name} did not produce a PDF");
         }
@@ -335,12 +342,8 @@ mod tests {
 
 fn microsoft_office_application(extension: &str) -> Option<&'static str> {
     match extension {
-        "doc" | "docx" | "docm" | "dot" | "dotx" | "odt" | "rtf" => {
-            Some("Word.Application")
-        }
-        "ppt" | "pptx" | "pps" | "ppsx" | "pot" | "potx" | "odp" => {
-            Some("PowerPoint.Application")
-        }
+        "doc" | "docx" | "docm" | "dot" | "dotx" | "odt" | "rtf" => Some("Word.Application"),
+        "ppt" | "pptx" | "pps" | "ppsx" | "pot" | "potx" | "odp" => Some("PowerPoint.Application"),
         "xls" | "xlsx" | "xlsm" | "ods" => Some("Excel.Application"),
         _ => None,
     }
@@ -351,8 +354,8 @@ fn convert_with_microsoft_office(
     path: &Path,
     extension: &str,
 ) -> Result<Vec<u8>, DocumentImportError> {
-    let application = microsoft_office_application(extension)
-        .ok_or(DocumentImportError::Unsupported)?;
+    let application =
+        microsoft_office_application(extension).ok_or(DocumentImportError::Unsupported)?;
     let workspace = ConversionWorkspace::create()?;
     let output_path = workspace.output_dir().join("converted.pdf");
     let script_path = workspace.root.join("convert.ps1");
