@@ -52,14 +52,14 @@ describe("master overlays", () => {
     })
   })
 
-  it("uses deterministic two-second lower-third fades", () => {
+  it("uses deterministic lower-third fades", () => {
     const lowerThird = { startedAt: 1_000, durationMs: 14_000 }
 
     expect(getLowerThirdOpacity(lowerThird, 1_000)).toBe(0)
-    expect(getLowerThirdOpacity(lowerThird, 2_000)).toBe(0.5)
-    expect(getLowerThirdOpacity(lowerThird, 3_000)).toBe(1)
-    expect(getLowerThirdOpacity(lowerThird, 13_000)).toBe(1)
-    expect(getLowerThirdOpacity(lowerThird, 14_000)).toBe(0.5)
+    expect(getLowerThirdOpacity(lowerThird, 1_300)).toBe(0.5)
+    expect(getLowerThirdOpacity(lowerThird, 1_600)).toBe(1)
+    expect(getLowerThirdOpacity(lowerThird, 14_000)).toBe(1)
+    expect(getLowerThirdOpacity(lowerThird, 14_700)).toBe(0.5)
     expect(getLowerThirdOpacity(lowerThird, 15_000)).toBe(0)
   })
 
