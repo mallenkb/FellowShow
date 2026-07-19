@@ -23,8 +23,7 @@ function themeSectionScore(
 
 export function sortThemesForSection(
   themes: BroadcastTheme[],
-  section: BroadcastThemeSection,
-  activeThemeId: string
+  section: BroadcastThemeSection
 ): BroadcastTheme[] {
   return [...themes].sort((a, b) => {
     if (a.sortOrder !== undefined || b.sortOrder !== undefined) {
@@ -33,9 +32,6 @@ export function sortThemesForSection(
         (b.sortOrder ?? Number.MAX_SAFE_INTEGER)
       )
     }
-
-    if (a.id === activeThemeId && b.id !== activeThemeId) return -1
-    if (b.id === activeThemeId && a.id !== activeThemeId) return 1
 
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
 

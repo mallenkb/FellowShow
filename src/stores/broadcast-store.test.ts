@@ -514,6 +514,7 @@ describe("broadcast store sync", () => {
       sectionThemeIds: {
         bible: themeToDelete!.id,
         songs: themeToDelete!.id,
+        announcements: themeToDelete!.id,
         presentation: themeToDelete!.id,
       },
       editingThemeId: themeToDelete!.id,

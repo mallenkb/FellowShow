@@ -28,6 +28,7 @@ import {
   UnlockIcon,
 } from "lucide-react"
 import { useBroadcastStore, usePresentationStore } from "@/stores"
+import { PresentationDocumentViewer } from "@/components/panels/presentation-document-viewer"
 
 function VideoSlideThumbnail({
   src,
@@ -65,7 +66,9 @@ function VideoSlideThumbnail({
 
 export function PresentationPanel() {
   const slides = usePresentationStore((s) => s.slides)
+  const documents = usePresentationStore((s) => s.documents)
   const selectedSlideId = usePresentationStore((s) => s.selectedSlideId)
+  const selectedDocumentId = usePresentationStore((s) => s.selectedDocumentId)
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const [previewingSlideId, setPreviewingSlideId] = useState<string | null>(
@@ -78,6 +81,13 @@ export function PresentationPanel() {
     () => slides.filter((slide) => slide.pinned),
     [slides]
   )
+  const selectedDocument = documents.find(
+    (document) => document.id === selectedDocumentId
+  )
+
+  if (selectedDocument) {
+    return <PresentationDocumentViewer document={selectedDocument} />
+  }
 
   return (
     <div

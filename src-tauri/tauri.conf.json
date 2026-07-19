@@ -2,13 +2,13 @@
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Fellow Show",
   "mainBinaryName": "fellowshow",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "identifier": "com.openbezal.fellowshow",
   "build": {
     "frontendDist": "../build",
     "devUrl": "http://127.0.0.1:3000",
     "beforeDevCommand": "bun dev",
-    "beforeBuildCommand": "bun run build"
+    "beforeBuildCommand": "bun run prepare:document-converter && bun run build"
   },
   "app": {
     "windows": [
@@ -37,7 +37,10 @@
     "active": true,
     "targets": "all",
     "createUpdaterArtifacts": true,
-    "resources": ["../data/fellowshow.db"],
+    "resources": {
+      "../data/fellowshow.db": "fellowshow.db",
+      "../vendor/document-converter/runtime/": "document-converter/"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

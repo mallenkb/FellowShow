@@ -30,10 +30,10 @@ const songs: SearchableSong[] = [
 ]
 
 describe("song search", () => {
-  it("matches natural-language searches without filler words", () => {
+  it("matches words entered from a song title", () => {
     const index = createSongSearchIndex(songs)
 
-    const results = searchSongs(index, "song about grace")
+    const results = searchSongs(index, "amazing grace")
 
     expect(results[0]?.id).toBe("amazing-grace")
   })
@@ -83,7 +83,7 @@ describe("song search", () => {
     }))
     const index = createSongSearchIndex(sourcedSongs)
 
-    const results = searchSongs(index, "song about grace", {
+    const results = searchSongs(index, "amazing grace", {
       source: "theme-2026",
       letter: "A",
     })

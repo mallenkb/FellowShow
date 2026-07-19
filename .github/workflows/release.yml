@@ -142,6 +142,9 @@ jobs:
             libasound2-dev \
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
+            libreoffice-calc \
+            libreoffice-impress \
+            libreoffice-writer \
             librsvg2-dev \
             patchelf
 
@@ -158,6 +161,15 @@ jobs:
           "$llvmBin" | Out-File -FilePath $env:GITHUB_PATH -Append
           "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append
 
+      - name: Install bundled document converter source on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install libreoffice-fresh -y --no-progress
+
+      - name: Install bundled document converter source on macOS
+        if: runner.os == 'macOS'
+        run: brew install --cask libreoffice
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -169,6 +181,9 @@ jobs:
 
       - name: Verify bundled Bible database exists
         run: bun -e "if (!require('node:fs').statSync('data/fellowshow.db').size) process.exit(1)"
+
+      - name: Stage bundled document converter
+        run: bun run prepare:document-converter
 
       - name: Build bundles
         env:

@@ -9,10 +9,8 @@ import {
 } from "react"
 import { motion } from "motion/react"
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core"
-import { appDataDir, join } from "@tauri-apps/api/path"
 import { invoke } from "@/lib/ipc"
 import { open } from "@tauri-apps/plugin-dialog"
-import { mkdir, writeFile } from "@tauri-apps/plugin-fs"
 import { toast } from "sonner"
 // Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
 import { Button } from "@/components/ui/button"
@@ -33,6 +31,8 @@ import {
   SparklesIcon,
   MusicIcon,
   ImageIcon,
+  FileTextIcon,
+  LoaderCircleIcon,
   UploadIcon,
   LockIcon,
   UnlockIcon,
@@ -50,6 +50,8 @@ import {
   PlusIcon,
   RotateCcwIcon,
   TimerIcon,
+  MegaphoneIcon,
+  LayersIcon,
 } from "lucide-react"
 import {
   Tooltip,
@@ -84,12 +86,24 @@ import type { Book, Verse } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
 import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
 import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
-import { splitLyricBlocks } from "@/lib/lyrics"
+import { prepareSong, presentSong } from "@/lib/song-presentation"
 import { SongsTab } from "@/components/panels/search/songs-tab"
 import { TimerTab } from "@/components/panels/search/timer-tab"
+import { AnnouncementsTab } from "@/components/panels/search/announcements-tab"
+import { OnDisplayOverview } from "@/components/on-display/on-display-overview"
 import { useSongSearch } from "@/components/panels/search/use-song-search"
+import { usePresentationDocumentImport } from "@/components/panels/search/use-presentation-document-import"
+import { cachePresentationMedia } from "@/lib/presentation-media"
+import { PRESENTATION_DOCUMENT_EXTENSIONS } from "@/lib/presentation-documents"
 
-type SearchTab = "book" | "context" | "songs" | "presentation" | "timer"
+type SearchTab =
+  | "book"
+  | "context"
+  | "songs"
+  | "announcements"
+  | "presentation"
+  | "timer"
+  | "on-display"
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
 type TransformHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w"
 type TransformInteraction =
@@ -115,41 +129,25 @@ type TransformInteraction =
     }
 
 const SHOW_CONTEXT_SEARCH = false
-const SONG_RENDER_LIMIT = 100
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === "string") resolve(reader.result)
-      else reject(new Error(`Could not read ${file.name}`))
-    }
-    reader.onerror = () =>
-      reject(reader.error ?? new Error(`Could not read ${file.name}`))
-    reader.readAsDataURL(file)
-  })
-}
-
-async function cachePresentationFile(file: File): Promise<string> {
-  if (!isTauri()) return readFileAsDataUrl(file)
-
-  const mediaDirectory = await join(await appDataDir(), "media")
-  await mkdir(mediaDirectory, { recursive: true })
-
-  const extension = file.name.split(".").pop()?.toLowerCase()
-  const fileName = `${crypto.randomUUID()}${extension ? `.${extension}` : ""}`
-  const filePath = await join(mediaDirectory, fileName)
-  await writeFile(filePath, new Uint8Array(await file.arrayBuffer()))
-  return convertFileSrc(filePath)
-}
-
-function hashString(value: string) {
-  let hash = 0
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) | 0
-  }
-  return hash || 1
-}
+const PRESENTATION_MEDIA_EXTENSIONS = [
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
+  "svg",
+  "mp4",
+  "mov",
+  "m4v",
+  "webm",
+] as const
+const PRESENTATION_MEDIA_EXTENSION_SET = new Set<string>(
+  PRESENTATION_MEDIA_EXTENSIONS
+)
+const PRESENTATION_VIDEO_EXTENSIONS = new Set(["mp4", "mov", "m4v", "webm"])
+// Song cards include lyric previews, so keep the initial DOM small. Search and
+// source/letter filters still expose the full catalog on demand.
+const SONG_RENDER_LIMIT = 40
 
 import { TranslationOptions } from "@/components/panels/search/translation-options"
 import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
@@ -202,6 +200,8 @@ export function SearchPanel({
   const transformPreviewRef = useRef<HTMLDivElement>(null)
   const lastPresentationDragOverIdRef = useRef<string | null>(null)
   const draggedPresentationIdRef = useRef<string | null>(null)
+  const { importPresentationDocuments, isImportingDocuments } =
+    usePresentationDocumentImport()
 
   const updatePresentationDropTarget = useCallback(
     (event: React.DragEvent<HTMLElement>, slideId: string) => {
@@ -238,8 +238,12 @@ export function SearchPanel({
 
   const queueItems = useQueueStore((s) => s.items)
   const presentationSlides = usePresentationStore((s) => s.slides)
+  const presentationDocuments = usePresentationStore((s) => s.documents)
   const selectedPresentationSlideId = usePresentationStore(
     (s) => s.selectedSlideId
+  )
+  const selectedPresentationDocumentId = usePresentationStore(
+    (s) => s.selectedDocumentId
   )
   const pinnedPresentationSlides = useMemo(
     () => presentationSlides.filter((slide) => slide.pinned),
@@ -417,34 +421,6 @@ export function SearchPanel({
     )
   }, [queueItems])
 
-  const makeSongVerse = useCallback(
-    (song: CopSong, text = song.lyrics): Verse => ({
-      id: -Math.abs(hashString(`song:${song.id}`)),
-      translation_id: 0,
-      book_number:
-        song.source && song.source !== "built-in"
-          ? -4
-          : song.language === "english"
-            ? -1
-            : -2,
-      book_name: `${song.sourceLabel ?? song.languageLabel}: ${song.title}`,
-      book_abbreviation:
-        song.source === "theme-2026"
-          ? "T26"
-          : song.source === "theme-2025"
-            ? "T25"
-            : song.source === "pentecostal-book"
-              ? "PSB"
-              : song.language === "english"
-                ? "ENG"
-                : "TWI",
-      chapter: 1,
-      verse: song.number,
-      text,
-    }),
-    []
-  )
-
   const formatSongReference = useCallback((song: CopSong) => {
     return song.title
   }, [])
@@ -481,7 +457,7 @@ export function SearchPanel({
             name: file.name.replace(/\.[^.]+$/, ""),
             // Cache media once, then give both webviews an asset URL. This avoids
             // copying a large video into each broadcast event as a data URL.
-            url: await cachePresentationFile(file),
+            url: await cachePresentationMedia(file, file.name),
             mediaType: file.type.startsWith("video/")
               ? ("video" as const)
               : ("image" as const),
@@ -507,6 +483,65 @@ export function SearchPanel({
     },
     []
   )
+
+  const importPresentationContent = useCallback(async () => {
+    if (!isTauri()) {
+      presentationInputRef.current?.click()
+      return
+    }
+
+    const selected = await open({
+      multiple: true,
+      filters: [
+        {
+          name: "Media and documents",
+          extensions: [
+            ...PRESENTATION_MEDIA_EXTENSIONS,
+            ...PRESENTATION_DOCUMENT_EXTENSIONS,
+          ],
+        },
+      ],
+    })
+    if (!selected) return
+    const paths = Array.isArray(selected) ? selected : [selected]
+    const documentExtensions = new Set<string>(
+      PRESENTATION_DOCUMENT_EXTENSIONS
+    )
+    const documentPaths: string[] = []
+    const mediaSlides = []
+
+    for (const path of paths) {
+      const fileName = path.split(/[/\\]/).pop() ?? path
+      const extension = fileName.split(".").pop()?.toLowerCase() ?? ""
+      if (documentExtensions.has(extension)) {
+        documentPaths.push(path)
+        continue
+      }
+      if (!PRESENTATION_MEDIA_EXTENSION_SET.has(extension)) continue
+      mediaSlides.push({
+        id: crypto.randomUUID(),
+        name: fileName.replace(/\.[^.]+$/, ""),
+        url: convertFileSrc(path),
+        mediaType: PRESENTATION_VIDEO_EXTENSIONS.has(extension)
+          ? ("video" as const)
+          : ("image" as const),
+        createdAt: Date.now(),
+        pinned: false,
+        locked: false,
+        fit: "contain" as const,
+        scale: 1,
+        offsetX: 0,
+        offsetY: 0,
+      })
+    }
+
+    if (mediaSlides.length > 0) {
+      usePresentationStore.getState().addSlides(mediaSlides)
+    }
+    if (documentPaths.length > 0) {
+      importPresentationDocuments(documentPaths)
+    }
+  }, [importPresentationDocuments])
 
   const importEasyWorshipSongs = useCallback(async () => {
     if (!isTauri()) {
@@ -603,45 +638,6 @@ export function SearchPanel({
       void handlePresentationFiles(event.dataTransfer.files)
     },
     [activeTab, handlePresentationFiles]
-  )
-
-  const openSongDetail = useCallback(
-    (song: CopSong) => {
-      const lyricBlocks = splitLyricBlocks(song.lyrics)
-      const text = lyricBlocks[0]?.text ?? song.lyrics
-      const verse = makeSongVerse(song, text)
-      const item = {
-        id: `song:${song.id}`,
-        verse,
-        reference: formatSongReference(song),
-        confidence: 1,
-        source: "manual" as const,
-        added_at: Date.now(),
-        lyricKind: "song" as const,
-        fullText: song.lyrics,
-        lyricBlocks,
-        activeBlockIndex: 0,
-      }
-
-      useQueueStore.getState().replaceLyricItem(item, "song")
-      return verse
-    },
-    [formatSongReference, makeSongVerse]
-  )
-
-  const presentSong = useCallback(
-    (song: CopSong) => {
-      const verse = openSongDetail(song)
-      const translation =
-        useBibleStore
-          .getState()
-          .translations.find(
-            (item) => item.id === useBibleStore.getState().activeTranslationId
-          )?.abbreviation ?? "KJV"
-      const store = useBroadcastStore.getState()
-      store.presentOnLive(toVerseRenderData(verse, translation), null)
-    },
-    [openSongDetail]
   )
 
   // Song catalog is code-split and fetched the first time the Songs tab opens.
@@ -1078,6 +1074,7 @@ export function SearchPanel({
   const pinnedTranslationRow =
     pinnedTranslations.length > 0 &&
     activeTab !== "songs" &&
+    activeTab !== "announcements" &&
     activeTab !== "presentation" &&
     activeTab !== "timer" ? (
       <div className="-mt-0.5 flex min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5">
@@ -1124,7 +1121,7 @@ export function SearchPanel({
             className={tabButtonClass("book")}
           >
             <BookOpenIcon className={tabIconClass("book")} />
-            Scriptures
+            <span className="search-tab-label">Sermon</span>
           </button>
           {SHOW_CONTEXT_SEARCH && (
             <button
@@ -1136,7 +1133,7 @@ export function SearchPanel({
               className={tabButtonClass("context")}
             >
               <SparklesIcon className={tabIconClass("context")} />
-              Context search
+              <span className="search-tab-label">Context search</span>
             </button>
           )}
           <button
@@ -1144,21 +1141,35 @@ export function SearchPanel({
             className={tabButtonClass("songs")}
           >
             <MusicIcon className={tabIconClass("songs")} />
-            Songs
+            <span className="search-tab-label">Songs</span>
+          </button>
+          <button
+            onClick={() => setSearchTab("announcements")}
+            className={tabButtonClass("announcements")}
+          >
+            <MegaphoneIcon className={tabIconClass("announcements")} />
+            <span className="search-tab-label">Announcements</span>
           </button>
           <button
             onClick={() => setSearchTab("presentation")}
             className={tabButtonClass("presentation")}
           >
             <ImageIcon className={tabIconClass("presentation")} />
-            Presentation
+            <span className="search-tab-label">Presentations</span>
           </button>
           <button
             onClick={() => setSearchTab("timer")}
             className={tabButtonClass("timer")}
           >
             <TimerIcon className={tabIconClass("timer")} />
-            Timer
+            <span className="search-tab-label">Timer</span>
+          </button>
+          <button
+            onClick={() => setSearchTab("on-display")}
+            className={tabButtonClass("on-display")}
+          >
+            <LayersIcon className={tabIconClass("on-display")} />
+            <span className="search-tab-label">On Display</span>
           </button>
         </div>
 
@@ -1248,23 +1259,27 @@ export function SearchPanel({
               placeholder="Search song titles..."
               value={songQuery}
               onChange={(e) => setSongQuery(e.target.value)}
-              className="h-10 min-w-0 flex-1 text-sm"
+              className="h-10 min-w-0 basis-full text-sm"
             />
-            <SongFilterDropdown
-              sourceValue={songSourceFilter}
-              letterValue={songLetterFilter}
-              onSourceChange={setSongSourceFilter}
-              onLetterChange={setSongLetterFilter}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10"
-              onClick={() => void importEasyWorshipSongs()}
-            >
-              <UploadIcon className="size-4" />
-              Import
-            </Button>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <SongFilterDropdown
+                sourceValue={songSourceFilter}
+                letterValue={songLetterFilter}
+                onSourceChange={setSongSourceFilter}
+                onLetterChange={setSongLetterFilter}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="responsive-secondary-action h-10 min-w-0 flex-1"
+                onClick={() => void importEasyWorshipSongs()}
+                title="Import EasyWorship songs"
+                aria-label="Import EasyWorship songs"
+              >
+                <UploadIcon className="size-4" />
+                <span className="responsive-action-label">Import</span>
+              </Button>
+            </div>
           </div>
         ) : activeTab === "presentation" ? (
           <div
@@ -1276,7 +1291,7 @@ export function SearchPanel({
             <input
               ref={presentationInputRef}
               type="file"
-              accept="image/*,video/*"
+              accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.odp,.ods,.rtf"
               multiple
               className="hidden"
               onChange={(event) => {
@@ -1287,16 +1302,33 @@ export function SearchPanel({
             <Button
               type="button"
               className="h-10 flex-1 justify-center"
-              onClick={() => presentationInputRef.current?.click()}
+              disabled={isImportingDocuments}
+              onClick={() => void importPresentationContent()}
             >
-              <UploadIcon className="size-4" />
-              Upload media
+              {isImportingDocuments ? (
+                <LoaderCircleIcon className="size-4 animate-spin" />
+              ) : (
+                <UploadIcon className="size-4" />
+              )}
+              <span>{isImportingDocuments ? "Importing…" : "Import"}</span>
             </Button>
+          </div>
+        ) : activeTab === "announcements" ? (
+          <div className="flex h-10 items-center">
+            <span className="text-xs font-medium text-muted-foreground">
+              Choose a set and item, then edit it in the workspace
+            </span>
           </div>
         ) : activeTab === "timer" ? (
           <div className="flex h-10 items-center">
             <span className="text-xs font-medium text-muted-foreground">
               Timer controls
+            </span>
+          </div>
+        ) : activeTab === "on-display" ? (
+          <div className="flex h-10 items-center">
+            <span className="text-xs font-medium text-muted-foreground">
+              Logo, scrolling text, and lower thirds
             </span>
           </div>
         ) : null}
@@ -1605,7 +1637,7 @@ export function SearchPanel({
           isSearching={isSongSearching}
           activeSongId={activeSongItem?.id ?? null}
           query={effectiveSongQuery}
-          onOpenSong={openSongDetail}
+          onOpenSong={prepareSong}
           onPresentSong={presentSong}
           formatReference={formatSongReference}
         />
@@ -1620,21 +1652,104 @@ export function SearchPanel({
           onDragLeave={handlePresentationDragLeave}
           onDrop={handlePresentationDrop}
         >
-          {presentationSlides.length === 0 ? (
+          {presentationSlides.length === 0 &&
+          presentationDocuments.length === 0 ? (
             <div className="flex h-full items-center justify-center p-6 text-center">
               <div className="max-w-xs">
                 <ImageIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
                 <p className="text-sm font-medium text-foreground">
-                  No presentation images
+                  No presentation media
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Upload or drag announcement, tithe, offering, or service media
-                  here to preview them.
+                  Add images, videos, PDFs, PowerPoint, Word, or other documents
+                  to preview and present them.
                 </p>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-2 p-2">
+              {presentationDocuments.length > 0 ? (
+                <>
+                  <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+                    <span>Documents</span>
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+                  {presentationDocuments.map((document) => {
+                    const isActive =
+                      document.id === selectedPresentationDocumentId
+                    return (
+                      <article
+                        key={document.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() =>
+                          usePresentationStore
+                            .getState()
+                            .selectDocument(document.id)
+                        }
+                        onKeyDown={(event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return
+                          event.preventDefault()
+                          usePresentationStore
+                            .getState()
+                            .selectDocument(document.id)
+                        }}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          isActive
+                            ? "border-[#101084]/60 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
+                            : "border-border bg-background/30 hover:bg-muted/40"
+                        )}
+                      >
+                        <FileTextIcon className="size-5 shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-foreground">
+                            {document.name}
+                          </span>
+                          <span className="block text-[0.625rem] text-muted-foreground">
+                            {document.status === "importing"
+                              ? `Importing ${document.pages.length}${
+                                  document.totalPages > 0
+                                    ? ` of ${document.totalPages}`
+                                    : ""
+                                } pages`
+                              : document.status === "error"
+                                ? "Import failed"
+                                : `${document.pages.length} page${
+                                    document.pages.length === 1 ? "" : "s"
+                                  }`}
+                          </span>
+                        </span>
+                        {document.status === "importing" ? (
+                          <LoaderCircleIcon className="size-4 shrink-0 animate-spin text-muted-foreground" />
+                        ) : null}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Remove ${document.name}`}
+                          disabled={document.status === "importing"}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            usePresentationStore
+                              .getState()
+                              .removeDocument(document.id)
+                          }}
+                        >
+                          <TrashIcon className="size-4" />
+                        </Button>
+                      </article>
+                    )
+                  })}
+                </>
+              ) : null}
+              {presentationSlides.length > 0 &&
+              presentationDocuments.length > 0 ? (
+                <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
+                  <span>Media</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              ) : null}
               {pinnedPresentationSlides.length > 0 ? (
                 <motion.div
                   layout="position"
@@ -1905,6 +2020,10 @@ export function SearchPanel({
           )}
         </div>
       )}
+
+      {activeTab === "announcements" && <AnnouncementsTab />}
+
+      {activeTab === "on-display" && <OnDisplayOverview />}
 
       {/* Timer tab */}
       {activeTab === "timer" && <TimerTab />}

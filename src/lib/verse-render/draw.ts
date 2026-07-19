@@ -619,7 +619,13 @@ export function drawVerseText(
     }
   }
 
+  let hangingIndent = 0
   for (const [index, line] of wrappedLines.entries()) {
+    const startsWithNumber = line.tokens[0]?.kind === "number"
+    if (startsWithNumber) {
+      hangingIndent = (line.tokens[0]?.width ?? 0) + spaceWidth
+    }
+    const continuationIndent = startsWithNumber ? 0 : hangingIndent
     const isJustifiedLine =
       verseAlign === "justify" &&
       index < wrappedLines.length - 1 &&
@@ -629,7 +635,7 @@ export function drawVerseText(
         ? textRectX + (textRectWidth - line.width) / 2
         : verseAlign === "right"
           ? textRectX + textRectWidth - line.width
-          : textRectX
+          : textRectX + continuationIndent
 
     if (isJustifiedLine) {
       const tokensWidth = line.tokens.reduce(
@@ -637,7 +643,7 @@ export function drawVerseText(
         0
       )
       const gap = (textRectWidth - tokensWidth) / (line.tokens.length - 1)
-      let cursorX = textRectX
+      let cursorX = lineX
       for (const token of line.tokens) {
         drawStyledText(token.text, token.kind, cursorX, currentY)
         cursorX += token.width + gap

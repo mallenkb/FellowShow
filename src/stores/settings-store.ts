@@ -87,6 +87,10 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 }))
 
 const PERSISTED_KEYS = [
+  "deepgramApiKey",
+  "openaiApiKey",
+  "groqApiKey",
+  "claudeApiKey",
   "audioDeviceId",
   "gain",
   "autoMode",
@@ -98,13 +102,6 @@ const PERSISTED_KEYS = [
   "pinnedTranslationIds",
   "defaultPinnedTranslationsApplied",
 ] as const satisfies readonly (keyof SettingsState)[]
-
-const LEGACY_SECRET_KEYS = [
-  "deepgramApiKey",
-  "openaiApiKey",
-  "groqApiKey",
-  "claudeApiKey",
-] as const
 
 let tauriStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
@@ -124,14 +121,6 @@ export function hydrateSettings(): Promise<void> {
   hydrationPromise = (async () => {
     try {
       const store = await getStore()
-      try {
-        for (const key of LEGACY_SECRET_KEYS) {
-          await store.delete(key)
-        }
-        await store.save()
-      } catch {
-        console.warn("[settings] Failed to remove legacy persisted API keys")
-      }
       const patch: Partial<SettingsState> = {}
       for (const key of PERSISTED_KEYS) {
         const value = await store.get(key)
@@ -171,6 +160,10 @@ export function hydrateSettings(): Promise<void> {
         }, SAVE_DEBOUNCE_MS)
       })
     } catch {
+      // Store access can fail transiently while an updated app is starting.
+      // Allow the next caller (including transcription start) to retry instead
+      // of caching an empty/default settings state for the entire app session.
+      hydrationPromise = null
       console.warn("[settings] Failed to load persisted state, using defaults")
     }
   })()

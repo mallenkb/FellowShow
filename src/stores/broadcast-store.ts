@@ -4,12 +4,19 @@ import { load, type Store } from "@tauri-apps/plugin-store"
 import type {
   BroadcastTheme,
   BroadcastThemeSection,
+  ActiveOverlayState,
+  LogoOverlayConfig,
+  LowerThirdPreset,
   LowerThirdRenderData,
+  OverlayConfiguration,
   PresenterTimerRenderData,
+  TickerOverlayConfig,
+  TickerMessage,
   VerseRenderData,
 } from "@/types"
 import {
   BUILTIN_THEMES,
+  DEFAULT_ANNOUNCEMENT_THEME_ID,
   DEFAULT_SONG_THEME_ID,
   getBuiltinPresentationBackground,
 } from "@/lib/builtin-themes"
@@ -27,6 +34,13 @@ import {
   type OutputContent,
 } from "@/lib/broadcast-outputs"
 import type { OutputType } from "@/lib/broadcast-output-control"
+import {
+  clampLowerThirdDuration,
+  createDefaultOverlayConfiguration,
+  createInactiveOverlayState,
+  getOverlayPayloadForOutput,
+  sanitizeOverlayConfiguration,
+} from "@/lib/overlays"
 
 type SelectedElement = "verse" | "reference" | null
 const DEFAULT_BROADCAST_THEME_ID = "builtin-bible-verse-preview"
@@ -45,6 +59,8 @@ interface BroadcastState {
   liveVerse: VerseRenderData | null
   presenterTimer: PresenterTimerRenderData | null
   lowerThird: LowerThirdRenderData | null
+  overlayConfig: OverlayConfiguration
+  activeOverlays: ActiveOverlayState
   outputOpacity: number
 
   // Designer state
@@ -74,6 +90,7 @@ interface BroadcastState {
     outputType?: OutputType
   }) => BroadcastOutputConfig | null
   removeOutput: (id: string) => void
+  reorderOutputs: (orderedIds: string[]) => void
   updateOutput: (
     id: string,
     updates: Partial<Omit<BroadcastOutputConfig, "id">>
@@ -95,6 +112,33 @@ interface BroadcastState {
   setLowerThird: (lowerThird: LowerThirdRenderData | null) => void
   setOutputOpacity: (opacity: number) => void
   clearLowerThird: () => void
+  updateLogoOverlay: (updates: Partial<LogoOverlayConfig>) => void
+  updateTickerOverlay: (updates: Partial<TickerOverlayConfig>) => void
+  setLogoOverlayVisible: (visible: boolean) => void
+  saveTickerMessage: (
+    message: Omit<
+      TickerMessage,
+      "id" | "createdAt" | "updatedAt" | "targetOutputIds"
+    > & {
+      id?: string
+      targetOutputIds?: string[]
+    }
+  ) => string
+  deleteTickerMessage: (id: string) => void
+  showTickerMessage: (id: string) => void
+  stopTickerMessage: () => void
+  saveLowerThirdPreset: (
+    preset: Omit<
+      LowerThirdPreset,
+      "id" | "createdAt" | "updatedAt" | "targetOutputIds"
+    > & {
+      id?: string
+      targetOutputIds?: string[]
+    }
+  ) => string
+  deleteLowerThirdPreset: (id: string) => void
+  showLowerThirdOverlay: (id: string) => void
+  clearLowerThirdOverlay: () => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
 
@@ -116,6 +160,7 @@ interface BroadcastState {
 const DEFAULT_SECTION_THEME_IDS: Record<BroadcastThemeSection, string> = {
   bible: DEFAULT_BROADCAST_THEME_ID,
   songs: DEFAULT_SONG_THEME_ID,
+  announcements: DEFAULT_ANNOUNCEMENT_THEME_ID,
   presentation: DEFAULT_BROADCAST_THEME_ID,
 }
 
@@ -130,6 +175,7 @@ function sanitizeSectionThemeIds(
   return {
     bible: sectionThemeIds.bible,
     songs: sectionThemeIds.songs,
+    announcements: sectionThemeIds.announcements,
     presentation: sectionThemeIds.presentation,
   }
 }
@@ -141,6 +187,7 @@ const HISTORY_COALESCE_MS = 500
 const HISTORY_LIMIT = 100
 let lastEditPath: string | null = null
 let lastEditAt = 0
+let lowerThirdExpiryTimer: ReturnType<typeof setTimeout> | null = null
 
 function isThemeDirty(
   draft: BroadcastTheme | null,
@@ -172,6 +219,12 @@ function emitDraftToBroadcast(state: BroadcastState): void {
       verse,
       timer,
       lowerThird: output.content === "everything" ? state.lowerThird : null,
+      overlays: getOverlayPayloadForOutput(
+        state.overlayConfig,
+        state.activeOverlays,
+        output.id,
+        { verse, timer }
+      ),
       opacity: state.outputOpacity,
     }).catch(() => {})
   }
@@ -260,6 +313,8 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   liveVerse: null,
   presenterTimer: null,
   lowerThird: null,
+  overlayConfig: createDefaultOverlayConfiguration(),
+  activeOverlays: createInactiveOverlayState(),
   outputOpacity: 1,
   isDesignerOpen: false,
   editingThemeId: null,
@@ -460,6 +515,12 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       verse,
       timer,
       lowerThird: output.content === "everything" ? s.lowerThird : null,
+      overlays: getOverlayPayloadForOutput(
+        s.overlayConfig,
+        s.activeOverlays,
+        output.id,
+        { verse, timer }
+      ),
       opacity: s.outputOpacity,
     }).catch(() => {})
   },
@@ -492,14 +553,38 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   },
   removeOutput: (id) => {
     if (id === "main") return
-    set((s) => ({
-      outputs: s.outputs.filter((output) => output.id !== id),
-    }))
+    set((s) => {
+      const outputs = s.outputs.filter((output) => output.id !== id)
+      return {
+        outputs,
+        overlayConfig: sanitizeOverlayConfiguration(
+          s.overlayConfig,
+          outputs.map((output) => output.id)
+        ),
+      }
+    })
+    get().syncBroadcastOutput()
+  },
+  reorderOutputs: (orderedIds) => {
+    set((state) => {
+      const orderById = new Map(orderedIds.map((id, index) => [id, index]))
+      return {
+        outputs: [...state.outputs].sort(
+          (left, right) =>
+            (orderById.get(left.id) ?? Number.MAX_SAFE_INTEGER) -
+            (orderById.get(right.id) ?? Number.MAX_SAFE_INTEGER)
+        ),
+      }
+    })
   },
   updateOutput: (id, updates) => {
+    const safeUpdates =
+      id === "main" && updates.content !== undefined
+        ? { ...updates, content: "everything" as const }
+        : updates
     set((s) => ({
       outputs: s.outputs.map((output) =>
-        output.id === id ? { ...output, ...updates } : output
+        output.id === id ? { ...output, ...safeUpdates } : output
       ),
     }))
     get().syncBroadcastOutputFor(id)
@@ -587,6 +672,202 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   },
   clearLowerThird: () => {
     set({ lowerThird: null })
+    get().syncBroadcastOutput()
+  },
+  updateLogoOverlay: (updates) => {
+    set((s) => ({
+      overlayConfig: sanitizeOverlayConfiguration(
+        {
+          ...s.overlayConfig,
+          logo: { ...s.overlayConfig.logo, ...updates },
+        },
+        s.outputs.map((output) => output.id)
+      ),
+    }))
+    get().syncBroadcastOutput()
+  },
+  updateTickerOverlay: (updates) => {
+    set((s) => ({
+      overlayConfig: sanitizeOverlayConfiguration(
+        {
+          ...s.overlayConfig,
+          ticker: { ...s.overlayConfig.ticker, ...updates },
+        },
+        s.outputs.map((output) => output.id)
+      ),
+    }))
+    get().syncBroadcastOutput()
+  },
+  setLogoOverlayVisible: (logoVisible) => {
+    set((s) => ({
+      activeOverlays: { ...s.activeOverlays, logoVisible },
+    }))
+    get().syncBroadcastOutput()
+  },
+  saveTickerMessage: (message) => {
+    const now = Date.now()
+    const id = message.id?.trim() || crypto.randomUUID()
+    set((s) => {
+      const existing = s.overlayConfig.tickerMessages.find(
+        (item) => item.id === id
+      )
+      return {
+        overlayConfig: sanitizeOverlayConfiguration(
+          {
+            ...s.overlayConfig,
+            tickerMessages: [
+              ...s.overlayConfig.tickerMessages.filter(
+                (item) => item.id !== id
+              ),
+              {
+                ...message,
+                id,
+                createdAt: existing?.createdAt ?? now,
+                updatedAt: now,
+              },
+            ],
+          },
+          s.outputs.map((output) => output.id)
+        ),
+      }
+    })
+    get().syncBroadcastOutput()
+    return id
+  },
+  deleteTickerMessage: (id) => {
+    set((s) => ({
+      overlayConfig: {
+        ...s.overlayConfig,
+        tickerMessages: s.overlayConfig.tickerMessages.filter(
+          (message) => message.id !== id
+        ),
+      },
+      activeOverlays:
+        s.activeOverlays.tickerMessageId === id
+          ? {
+              ...s.activeOverlays,
+              tickerMessageId: null,
+              tickerStartedAt: null,
+            }
+          : s.activeOverlays,
+    }))
+    get().syncBroadcastOutput()
+  },
+  showTickerMessage: (id) => {
+    if (!get().overlayConfig.tickerMessages.some((item) => item.id === id)) {
+      return
+    }
+    set((s) => ({
+      activeOverlays: {
+        ...s.activeOverlays,
+        tickerMessageId: id,
+        tickerStartedAt: Date.now(),
+      },
+    }))
+    get().syncBroadcastOutput()
+  },
+  stopTickerMessage: () => {
+    set((s) => ({
+      activeOverlays: {
+        ...s.activeOverlays,
+        tickerMessageId: null,
+        tickerStartedAt: null,
+      },
+    }))
+    get().syncBroadcastOutput()
+  },
+  saveLowerThirdPreset: (preset) => {
+    const now = Date.now()
+    const id = preset.id?.trim() || crypto.randomUUID()
+    set((s) => {
+      const existing = s.overlayConfig.lowerThirdPresets.find(
+        (item) => item.id === id
+      )
+      const overlayConfig = sanitizeOverlayConfiguration(
+        {
+          ...s.overlayConfig,
+          lowerThirdPresets: [
+            ...s.overlayConfig.lowerThirdPresets.filter(
+              (item) => item.id !== id
+            ),
+            {
+              ...preset,
+              durationMs: clampLowerThirdDuration(preset.durationMs),
+              id,
+              createdAt: existing?.createdAt ?? now,
+              updatedAt: now,
+            },
+          ],
+        },
+        s.outputs.map((output) => output.id)
+      )
+      const savedPreset = overlayConfig.lowerThirdPresets.find(
+        (item) => item.id === id
+      )
+      return {
+        overlayConfig,
+        activeOverlays:
+          savedPreset && s.activeOverlays.lowerThird?.preset.id === id
+            ? {
+                ...s.activeOverlays,
+                lowerThird: {
+                  ...s.activeOverlays.lowerThird,
+                  preset: savedPreset,
+                },
+              }
+            : s.activeOverlays,
+      }
+    })
+    get().syncBroadcastOutput()
+    return id
+  },
+  deleteLowerThirdPreset: (id) => {
+    set((s) => ({
+      overlayConfig: {
+        ...s.overlayConfig,
+        lowerThirdPresets: s.overlayConfig.lowerThirdPresets.filter(
+          (preset) => preset.id !== id
+        ),
+      },
+      activeOverlays:
+        s.activeOverlays.lowerThird?.preset.id === id
+          ? { ...s.activeOverlays, lowerThird: null }
+          : s.activeOverlays,
+    }))
+    get().syncBroadcastOutput()
+  },
+  showLowerThirdOverlay: (id) => {
+    const preset = get().overlayConfig.lowerThirdPresets.find(
+      (item) => item.id === id
+    )
+    if (!preset) return
+    const startedAt = Date.now()
+    if (lowerThirdExpiryTimer) clearTimeout(lowerThirdExpiryTimer)
+    set((s) => ({
+      activeOverlays: {
+        ...s.activeOverlays,
+        lowerThird: { preset, startedAt },
+      },
+    }))
+    get().syncBroadcastOutput()
+    lowerThirdExpiryTimer = setTimeout(() => {
+      lowerThirdExpiryTimer = null
+      const current = get().activeOverlays.lowerThird
+      if (!current || current.startedAt !== startedAt) return
+      set((s) => ({
+        activeOverlays: { ...s.activeOverlays, lowerThird: null },
+      }))
+      get().syncBroadcastOutput()
+    }, preset.durationMs)
+  },
+  clearLowerThirdOverlay: () => {
+    if (lowerThirdExpiryTimer) {
+      clearTimeout(lowerThirdExpiryTimer)
+      lowerThirdExpiryTimer = null
+    }
+    set((s) => ({
+      activeOverlays: { ...s.activeOverlays, lowerThird: null },
+    }))
     get().syncBroadcastOutput()
   },
 
@@ -755,6 +1036,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
       const activeId = await store.get<string>("activeThemeId")
       const altActiveId = await store.get<string>("altActiveThemeId")
       const storedOutputs = await store.get<unknown>("outputs")
+      const storedOverlayConfig = await store.get<unknown>("overlayConfig")
       const themeSortOrder =
         await store.get<Record<string, number>>("themeSortOrder")
       const sectionThemeIds = sanitizeSectionThemeIds(
@@ -826,6 +1108,9 @@ export function hydrateBroadcastThemes(): Promise<void> {
         bible: resolveThemeId(activeId ?? DEFAULT_SECTION_THEME_IDS.bible),
         ...sectionThemeIds,
         songs: resolveThemeId(songThemeId),
+        announcements: resolveThemeId(
+          sectionThemeIds.announcements ?? DEFAULT_ANNOUNCEMENT_THEME_ID
+        ),
       }
       patch.sectionThemeIds = Object.fromEntries(
         Object.entries(patch.sectionThemeIds).map(([section, themeId]) => [
@@ -833,6 +1118,15 @@ export function hydrateBroadcastThemes(): Promise<void> {
           resolveThemeId(themeId),
         ])
       ) as Record<BroadcastThemeSection, string>
+      const overlayOutputs =
+        patch.outputs ?? useBroadcastStore.getState().outputs
+      patch.overlayConfig = sanitizeOverlayConfiguration(
+        storedOverlayConfig,
+        overlayOutputs.map((output) => output.id)
+      )
+      // Saved overlay content and targeting are restored, but nothing is
+      // allowed to return live after an app restart.
+      patch.activeOverlays = createInactiveOverlayState()
       if (Object.keys(patch).length > 0) {
         useBroadcastStore.setState(patch)
       }
@@ -844,7 +1138,8 @@ export function hydrateBroadcastThemes(): Promise<void> {
           state.deletedBuiltinThemeIds !== prevState.deletedBuiltinThemeIds ||
           state.activeThemeId !== prevState.activeThemeId ||
           state.outputs !== prevState.outputs ||
-          state.sectionThemeIds !== prevState.sectionThemeIds
+          state.sectionThemeIds !== prevState.sectionThemeIds ||
+          state.overlayConfig !== prevState.overlayConfig
         if (!changed) return
         if (saveTimer) clearTimeout(saveTimer)
         saveTimer = setTimeout(() => {
@@ -884,6 +1179,7 @@ async function persistBroadcastThemes(state: BroadcastState): Promise<void> {
     await store.set("activeThemeId", state.activeThemeId)
     await store.set("outputs", state.outputs)
     await store.set("sectionThemeIds", state.sectionThemeIds)
+    await store.set("overlayConfig", state.overlayConfig)
     await store.save()
   } catch {
     console.warn("[broadcast] Failed to persist themes")

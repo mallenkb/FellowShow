@@ -42,29 +42,6 @@ const FUZZY_OPTIONS = {
   keys: ["title"],
 }
 
-const NATURAL_QUERY_STOP_WORDS = new Set([
-  "a",
-  "an",
-  "and",
-  "about",
-  "by",
-  "for",
-  "find",
-  "hymn",
-  "hymns",
-  "in",
-  "like",
-  "lyric",
-  "lyrics",
-  "of",
-  "on",
-  "search",
-  "song",
-  "songs",
-  "the",
-  "to",
-])
-
 function normalizeSearchText(value: string) {
   return value
     .toLowerCase()
@@ -75,15 +52,7 @@ function normalizeSearchText(value: string) {
 }
 
 function normalizeSongSearchQuery(query: string) {
-  const normalized = normalizeSearchText(query)
-
-  if (!normalized) return ""
-
-  const meaningful = normalized
-    .split(" ")
-    .filter((token) => !NATURAL_QUERY_STOP_WORDS.has(token))
-
-  return meaningful.length > 0 ? meaningful.join(" ") : normalized
+  return normalizeSearchText(query)
 }
 
 function getTrigrams(value: string) {

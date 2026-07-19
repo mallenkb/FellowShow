@@ -86,7 +86,7 @@ function theme(
 }
 
 describe("sortThemesForSection", () => {
-  it("puts the active Bible image preview before other pinned themes", () => {
+  it("does not change order based on the active theme", () => {
     const themes = [
       theme("classic", "Classic Dark", "bible", true, "solid"),
       theme("overlay", "Broadcast Overlay", "songs", true, "image"),
@@ -94,9 +94,12 @@ describe("sortThemesForSection", () => {
       theme("custom", "Custom", "bible", false, "image", 10),
     ]
 
-    expect(
-      sortThemesForSection(themes, "bible", "bible-preview").map((t) => t.id)
-    ).toEqual(["bible-preview", "classic", "overlay", "custom"])
+    expect(sortThemesForSection(themes, "bible").map((t) => t.id)).toEqual([
+      "bible-preview",
+      "classic",
+      "overlay",
+      "custom",
+    ])
   })
 
   it("orders non-active themes by pinned state then section relevance", () => {
@@ -114,9 +117,7 @@ describe("sortThemesForSection", () => {
       theme("unpinned-bible-solid", "Bible Solid", "bible", false, "solid", 30),
     ]
 
-    expect(
-      sortThemesForSection(themes, "songs", "missing").map((t) => t.id)
-    ).toEqual([
+    expect(sortThemesForSection(themes, "songs").map((t) => t.id)).toEqual([
       "pinned-song-overlay",
       "unpinned-song-overlay",
       "custom-bible-image",

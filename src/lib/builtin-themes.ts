@@ -43,6 +43,7 @@ const SONG_THEME_IMAGE_DEFINITIONS = [
 ] as const
 const SONG_PAINT_SWEEPS_THEME_ID = "builtin-song-paint-sweeps"
 export const DEFAULT_SONG_THEME_ID = "builtin-song-ocean"
+export const DEFAULT_ANNOUNCEMENT_THEME_ID = "builtin-announcements"
 const THEME_STORAGE_KEY = "theme"
 const COLOR_SCHEME_QUERY = "(prefers-color-scheme: dark)"
 
@@ -521,6 +522,54 @@ const PRESENTATION_TICKER: BroadcastTheme = {
   },
 }
 
+const ANNOUNCEMENTS_THEME: BroadcastTheme = {
+  ...CLASSIC_DARK,
+  id: DEFAULT_ANNOUNCEMENT_THEME_ID,
+  name: "Announcements",
+  section: "announcements",
+  pinned: true,
+  background: {
+    type: "image",
+    color: "#03151b",
+    gradient: null,
+    image: {
+      url: "/broadcast-previews/song-ocean.jpg",
+      mediaType: "image",
+      fit: "cover",
+      blur: 0,
+      brightness: 82,
+      tint: "rgba(0, 0, 0, 0.22)",
+    },
+  },
+  verseNumbers: {
+    ...CLASSIC_DARK.verseNumbers,
+    visible: false,
+  },
+  verseText: {
+    ...CLASSIC_DARK.verseText,
+    fontSize: 72,
+    horizontalAlign: "left",
+    verticalAlign: "top",
+    lineHeight: 1.25,
+  },
+  reference: {
+    ...CLASSIC_DARK.reference,
+    fontSize: 84,
+    fontWeight: 700,
+    horizontalAlign: "center",
+    verticalAlign: "top",
+    position: "above",
+    color: "#F1E600",
+    uppercase: false,
+  },
+  layout: {
+    ...CLASSIC_DARK.layout,
+    textAlign: "left",
+    padding: { top: 88, right: 128, bottom: 88, left: 128 },
+    referenceGap: 42,
+  },
+}
+
 export const BUILTIN_THEMES: BroadcastTheme[] = [
   CLASSIC_DARK,
   MODERN_LIGHT,
@@ -528,5 +577,6 @@ export const BUILTIN_THEMES: BroadcastTheme[] = [
   BIBLE_VERSE_PREVIEW,
   SONG_PAINT_SWEEPS,
   ...SONG_IMAGE_THEMES,
+  ANNOUNCEMENTS_THEME,
   PRESENTATION_TICKER,
 ]

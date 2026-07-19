@@ -1,12 +1,16 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
+import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
+import { hasAnimatingOverlay } from "@/lib/overlays"
+import { drawVideoStreamPlaceholder } from "@/lib/video-stream-placeholder"
 import {
   shouldRenderLowerThirdLayer,
   shouldRenderTickerLayer,
 } from "@/lib/broadcast-output-mode"
 import type {
   BroadcastTheme,
+  BroadcastOverlayPayload,
   LowerThirdRenderData,
   PresenterTimerRenderData,
   VerseRenderData,
@@ -18,6 +22,7 @@ interface CanvasVerseProps {
   verse: VerseRenderData | null
   timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
+  overlays?: BroadcastOverlayPayload | null
   className?: string
   fillContainer?: boolean
   fit?: "width" | "contain" | "cover"
@@ -28,6 +33,7 @@ export const CanvasVerse = memo(function CanvasVerse({
   verse,
   timer,
   lowerThird,
+  overlays,
   className,
   fillContainer = false,
   fit = fillContainer ? "cover" : "width",
@@ -84,6 +90,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       timer?.backgroundMediaType !== "video"
         ? (timer?.backgroundUrl ?? null)
         : null,
+      overlays?.logo?.imageUrl ?? null,
     ].filter((url): url is string => Boolean(url))
     const videoUrls = [
       theme.background.type === "image" &&
@@ -141,6 +148,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     verse?.presentationImage,
     timer?.backgroundMediaType,
     timer?.backgroundUrl,
+    overlays?.logo?.imageUrl,
   ])
 
   useEffect(() => {
@@ -173,9 +181,10 @@ export const CanvasVerse = memo(function CanvasVerse({
     shouldRenderTickerLayer(theme) &&
     !!verse?.tickerText &&
     !verse.presentationImage
+  const hasOverlayAnimation = hasAnimatingOverlay(overlays)
 
   useEffect(() => {
-    if (!hasTicker) return
+    if (!hasTicker && !hasOverlayAnimation) return
 
     let frame = 0
     const tick = () => {
@@ -184,7 +193,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [hasTicker, theme.id, verse?.tickerText])
+  }, [hasTicker, hasOverlayAnimation, theme.id, verse?.tickerText])
 
   // Render to canvas at display size
   useEffect(() => {
@@ -205,8 +214,13 @@ export const CanvasVerse = memo(function CanvasVerse({
     const displayH = fit === "cover" ? availableHeight : displayW / aspectRatio
     if (displayH <= 0) return
 
-    const targetCanvasWidth = Math.max(1, Math.round(displayW * dpr))
-    const targetCanvasHeight = Math.max(1, Math.round(displayH * dpr))
+    const useNativeBackingStore = fit !== "cover"
+    const targetCanvasWidth = useNativeBackingStore
+      ? theme.resolution.width
+      : Math.max(1, Math.round(displayW * dpr))
+    const targetCanvasHeight = useNativeBackingStore
+      ? theme.resolution.height
+      : Math.max(1, Math.round(displayH * dpr))
     const sizeChanged =
       canvas.width !== targetCanvasWidth || canvas.height !== targetCanvasHeight
     canvas.style.width = `${displayW}px`
@@ -219,6 +233,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       verseReference: verse?.reference ?? null,
       verseText:
         verse?.segments.map((segment) => segment.text).join("\n") ?? null,
+      announcement: verse?.announcement ?? null,
       presentationImage: verse?.presentationImage?.url ?? null,
       timer: timer
         ? {
@@ -283,22 +298,48 @@ export const CanvasVerse = memo(function CanvasVerse({
       fit === "cover" ? (displayW - theme.resolution.width * scale) / 2 : 0
     const offsetY =
       fit === "cover" ? (displayH - theme.resolution.height * scale) / 2 : 0
-    const next = document.createElement("canvas")
-    next.width = canvas.width
-    next.height = canvas.height
-    const nextCtx = next.getContext("2d")
-    if (!nextCtx) return
-    nextCtx.scale(dpr, dpr)
-    renderVerse(nextCtx, theme, verse, {
-      scale,
-      offsetX,
-      offsetY,
+    // Lay out every editor preview at the theme's native resolution, exactly
+    // like the external broadcast window. Scaling the theme down before text
+    // fitting makes wrapping, auto-fit thresholds, and vertical spacing vary
+    // with the size of the panel.
+    const scene = document.createElement("canvas")
+    scene.width = theme.resolution.width
+    scene.height = theme.resolution.height
+    const sceneCtx = scene.getContext("2d")
+    if (!sceneCtx) return
+    renderVerse(sceneCtx, theme, verse, {
+      scale: 1,
       timer,
       lowerThird,
       imageCache: imageCacheRef.current,
       videoCache: videoCacheRef.current,
       now: hasTicker ? performance.now() : undefined,
     })
+    if (!verse && !timer) {
+      drawVideoStreamPlaceholder(sceneCtx, theme.resolution)
+    }
+    drawBroadcastOverlays(sceneCtx, theme.resolution, overlays, {
+      imageCache: imageCacheRef.current,
+      now: Date.now(),
+    })
+
+    const next = document.createElement("canvas")
+    next.width = canvas.width
+    next.height = canvas.height
+    const nextCtx = next.getContext("2d")
+    if (!nextCtx) return
+    if (useNativeBackingStore) {
+      nextCtx.drawImage(scene, 0, 0)
+    } else {
+      nextCtx.scale(dpr, dpr)
+      nextCtx.drawImage(
+        scene,
+        offsetX,
+        offsetY,
+        theme.resolution.width * scale,
+        theme.resolution.height * scale
+      )
+    }
 
     const previous = previousFrameRef.current
     if (!shouldAnimate || !previous) {
@@ -329,6 +370,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     verse,
     timer,
     lowerThird,
+    overlays,
     containerWidth,
     containerHeight,
     fit,
@@ -358,10 +400,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     >
       <canvas
         ref={canvasRef}
-        className={cn(
-          "block",
-          fit === "cover" ? "h-full w-full" : "rounded-md"
-        )}
+        className={cn("block", fit === "cover" && "h-full w-full")}
       />
     </div>
   )

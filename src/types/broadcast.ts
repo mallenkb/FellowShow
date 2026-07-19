@@ -1,3 +1,5 @@
+import type { AnnouncementRenderData } from "./announcements"
+
 interface VerseSegment {
   verseNumber?: number
   text: string
@@ -11,6 +13,8 @@ export interface VerseRenderData {
   themeSection?: BroadcastThemeSection
   tickerText?: string
   referenceMode?: "default" | "lyric-footer"
+  announcement?: AnnouncementRenderData
+  announcementSetName?: string
   presentationImage?: {
     url: string
     name: string
@@ -39,7 +43,8 @@ export interface LowerThirdRenderData {
   label?: string
 }
 
-export type BroadcastThemeSection = "bible" | "songs" | "presentation"
+export type BroadcastThemeSection =
+  "bible" | "songs" | "announcements" | "presentation"
 
 export interface RenderOptions {
   opacity?: number

@@ -9,6 +9,7 @@ import {
   useDetectionStore,
   useQueueStore,
   useBibleStore,
+  useSermonStore,
   useTranscriptStore,
 } from "@/stores"
 import { useTauriEvent } from "@/hooks/use-tauri-event"
@@ -20,6 +21,7 @@ import {
   type TranscriptVerseAnnotation,
 } from "@/lib/transcript-verse-highlights"
 import type { TranscriptSegment } from "@/types"
+import { endSermon } from "@/lib/sermon-actions"
 
 const MAX_TRANSCRIPT_ANNOTATIONS = 120
 const SEGMENT_ANNOTATION_GRACE_MS = 2_000
@@ -183,6 +185,9 @@ export function TranscriptPanel() {
     stopTranscription,
   } = useTranscription({ onMissingApiKey })
   const hasPartial = useTranscriptStore((s) => s.currentPartial.length > 0)
+  const hasActiveSermon = useSermonStore(
+    (state) => state.activeSessionId !== null
+  )
   const scrollRef = useRef<HTMLDivElement>(null)
   const [transcriptAnnotations, setTranscriptAnnotations] = useState<
     TranscriptVerseAnnotation[]
@@ -384,10 +389,12 @@ export function TranscriptPanel() {
             variant="secondary"
             size="sm"
             className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
-            onClick={() => void stopTranscription()}
+            onClick={() =>
+              void (hasActiveSermon ? endSermon() : stopTranscription())
+            }
           >
             <MicIcon className="size-3" />
-            Stop transcribing
+            {hasActiveSermon ? "Stop sermon" : "Stop transcribing"}
           </Button>
         ) : (
           <Button

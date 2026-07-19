@@ -11,5 +11,5 @@
     "data/**/*.ts",
     "scripts/**/*.ts"
   ],
-  "ignoreBinaries": ["optimum-cli", "python3", "powershell"]
+  "ignoreBinaries": ["optimum-cli", "powershell"]
 }

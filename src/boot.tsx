@@ -11,6 +11,9 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx"
 import { hydrateSettings } from "@/stores/settings-store"
 import { hydrateBibleStore, initBiblePersistence } from "@/stores/bible-store"
 import { hydrateBroadcastThemes } from "@/stores/broadcast-store"
+import { hydrateAnnouncements } from "@/stores/announcement-store"
+import { hydratePresentationDocuments } from "@/stores/presentation-store"
+import { hydrateSermonSessions } from "@/stores/sermon-store"
 import {
   initTranscriptPersistence,
   resetTranscriptSession,
@@ -44,6 +47,9 @@ if (isTauri()) {
         hydrateSettings(),
         hydrateBibleStore(),
         hydrateBroadcastThemes(),
+        hydrateAnnouncements(),
+        hydratePresentationDocuments(),
+        hydrateSermonSessions(),
         resetTranscriptSession(),
       ])
     )

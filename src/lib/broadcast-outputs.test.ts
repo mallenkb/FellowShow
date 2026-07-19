@@ -86,6 +86,7 @@ describe("resolveOutputThemeId", () => {
     sectionThemeIds: {
       bible: "bible-theme",
       songs: "songs-theme",
+      announcements: "announcements-theme",
       presentation: "slides-theme",
     },
   }
@@ -174,7 +175,7 @@ describe("sanitizeOutputConfigs", () => {
         {
           id: "main",
           name: "Sanctuary",
-          content: "nonsense",
+          content: "bible",
           themeId: "deleted-theme",
           outputType: "display",
           monitorIndex: -2,

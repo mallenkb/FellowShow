@@ -15,10 +15,16 @@ import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
 import { cn } from "@/lib/utils"
-import { ChevronDownIcon, ImagePlusIcon } from "lucide-react"
+import {
+  ArrowUpDownIcon,
+  ChevronDownIcon,
+  GripVerticalIcon,
+  ImagePlusIcon,
+} from "lucide-react"
 import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
 import { sortThemesForSection } from "@/lib/theme-order"
 import { DEFAULT_SONG_THEME_ID } from "@/lib/builtin-themes"
+import { getOverlayPayloadForOutput } from "@/lib/overlays"
 import { SliderField } from "@/components/ui/slider-field"
 import {
   Select,
@@ -28,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { RadioIcon } from "lucide-react"
+import { toast } from "sonner"
+import { cachePresentationMediaAsset } from "@/lib/presentation-media"
 
 const THEME_THUMBNAIL_VERSE: VerseRenderData = {
   reference: "John 3:16",
@@ -35,17 +43,26 @@ const THEME_THUMBNAIL_VERSE: VerseRenderData = {
   segments: [{ text: "Sample Verse" }],
 }
 
-type ThemeAwareMode = "book" | "context" | "songs" | "presentation" | "timer"
+type ThemeAwareMode =
+  | "book"
+  | "context"
+  | "songs"
+  | "announcements"
+  | "presentation"
+  | "timer"
+  | "on-display"
 
 const THEME_SECTION_LABELS: Record<BroadcastThemeSection, string> = {
   bible: "Scriptures",
   songs: "Songs",
+  announcements: "Announcements",
   presentation: "Presentation",
 }
 
 function sectionFromMode(mode: ThemeAwareMode): BroadcastThemeSection {
   if (mode === "presentation") return "presentation"
   if (mode === "songs") return "songs"
+  if (mode === "announcements") return "announcements"
   return "bible"
 }
 
@@ -59,6 +76,11 @@ const THEME_THUMBNAIL_BY_SECTION: Record<
     themeSection: "songs",
     referenceMode: "lyric-footer",
     segments: [{ text: "Sample song lyric" }],
+  },
+  announcements: {
+    reference: "Announcements",
+    themeSection: "announcements",
+    segments: [{ verseNumber: 1, text: "Sample announcement" }],
   },
   presentation: {
     reference: "Presentation Slide",
@@ -75,6 +97,7 @@ const THEME_THUMBNAIL_BY_SECTION: Record<
 export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const isPresentationMode = mode === "presentation"
   const isSongMode = mode === "songs"
+  const isAnnouncementMode = mode === "announcements"
   const selectedVerse = useBibleStore((s) => s.selectedVerse)
   const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
@@ -107,6 +130,8 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
   const previewTimer = useBroadcastStore((s) => s.previewTimer)
+  const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
+  const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
   const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
@@ -172,7 +197,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       return
     }
 
-    if (!isPresentationMode) {
+    if (!isPresentationMode && !isAnnouncementMode) {
       if (!selectedVerse) return
       setPreview(toVerseRenderData(selectedVerse, translation), null)
       return
@@ -205,6 +230,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     }
   }, [
     isPresentationMode,
+    isAnnouncementMode,
     isSongMode,
     selectedSlide,
     selectedSongVerse,
@@ -247,16 +273,16 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
           theme={activeTheme}
           verse={previewVerse}
           timer={previewTimer}
+          overlays={getOverlayPayloadForOutput(
+            overlayConfig,
+            activeOverlays,
+            "main",
+            { verse: previewVerse, timer: previewTimer }
+          )}
           className="h-full"
           fillContainer
+          fit="contain"
         />
-        {!previewVerse && !previewTimer && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
-            <span className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
-              Nothing staged
-            </span>
-          </div>
-        )}
       </div>
       <div className="relative z-10 border-t border-border bg-card px-3 py-2">
         <Button
@@ -277,6 +303,9 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 
 export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
   const [isOpen, setIsOpen] = useState(true)
+  const [isReordering, setIsReordering] = useState(false)
+  const [isUploadingTheme, setIsUploadingTheme] = useState(false)
+  const [draggedThemeId, setDraggedThemeId] = useState<string | null>(null)
   const themeImageInputRef = useRef<HTMLInputElement>(null)
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
@@ -289,60 +318,93 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
           (theme) =>
             theme.id === DEFAULT_SONG_THEME_ID || theme.section === "songs"
         )
-      : themes
-  const visibleThemes = sortThemesForSection(
-    themesForSection,
-    selectedSection,
-    activeThemeId
-  )
+      : selectedSection === "announcements"
+        ? themes.filter((theme) => theme.section === "announcements")
+        : themes
+  const visibleThemes = sortThemesForSection(themesForSection, selectedSection)
   const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
 
-  const uploadThemeImage = (file: File | undefined) => {
-    if (!file || !file.type.startsWith("image/")) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result !== "string") return
-      const currentTheme =
-        useBroadcastStore
-          .getState()
-          .themes.find((theme) => theme.id === activeThemeId) ?? themes[0]
-      if (!currentTheme) return
+  const uploadThemeMedia = (file: File | undefined) => {
+    if (!file || isUploadingTheme) return
+    const isVideo =
+      file.type.startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(file.name)
+    const isImage =
+      file.type.startsWith("image/") ||
+      /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name)
+    if (!isImage && !isVideo) {
+      toast.error("Choose an image or video file")
+      return
+    }
 
-      const now = Date.now()
-      const theme: BroadcastTheme = {
-        ...currentTheme,
-        id: crypto.randomUUID(),
-        name: file.name.replace(/\.[^.]+$/, "") || "Uploaded Theme",
-        builtin: false,
-        pinned: true,
-        section: selectedSection,
-        createdAt: now,
-        updatedAt: now,
-        background: {
-          type: "image",
-          color: currentTheme.background.color,
-          gradient: null,
-          image: {
-            url: reader.result,
-            mediaType: "image",
-            fit: "cover",
-            blur: 0,
-            brightness: 100,
-            tint: null,
+    const mediaType = isVideo ? "video" : "image"
+    setIsUploadingTheme(true)
+    void (async () => {
+      try {
+        const cachedMedia = await cachePresentationMediaAsset(file, file.name)
+        const currentTheme =
+          useBroadcastStore
+            .getState()
+            .themes.find((theme) => theme.id === activeThemeId) ?? themes[0]
+        if (!currentTheme) {
+          toast.error("No theme is available to customize")
+          return
+        }
+
+        const now = Date.now()
+        const theme: BroadcastTheme = {
+          ...currentTheme,
+          id: crypto.randomUUID(),
+          name: file.name.replace(/\.[^.]+$/, "") || "Uploaded Theme",
+          builtin: false,
+          pinned: true,
+          section: selectedSection,
+          createdAt: now,
+          updatedAt: now,
+          background: {
+            type: "image",
+            color: currentTheme.background.color,
+            gradient: null,
+            image: {
+              url: cachedMedia.url,
+              mediaType,
+              fit: "cover",
+              blur: 0,
+              brightness: 100,
+              tint: null,
+            },
           },
-        },
+        }
+        const store = useBroadcastStore.getState()
+        store.saveTheme(theme)
+        store.setActiveTheme(theme.id, selectedSection)
+        toast.success(
+          mediaType === "video"
+            ? "Video theme uploaded"
+            : "Image theme uploaded"
+        )
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Could not upload theme"
+        )
+      } finally {
+        setIsUploadingTheme(false)
       }
-      const store = useBroadcastStore.getState()
-      store.saveTheme(theme)
-      store.setActiveTheme(theme.id, selectedSection)
-    }
-    reader.onerror = () => {
-      console.error(
-        "[themes] Failed to read uploaded theme image",
-        reader.error
-      )
-    }
-    reader.readAsDataURL(file)
+    })()
+  }
+
+  const reorderTheme = (targetThemeId: string) => {
+    if (!draggedThemeId || draggedThemeId === targetThemeId) return
+
+    const orderedIds = visibleThemes.map((theme) => theme.id)
+    const fromIndex = orderedIds.indexOf(draggedThemeId)
+    const toIndex = orderedIds.indexOf(targetThemeId)
+    if (fromIndex === -1 || toIndex === -1) return
+
+    const nextIds = [...orderedIds]
+    const [movedId] = nextIds.splice(fromIndex, 1)
+    nextIds.splice(toIndex, 0, movedId)
+    useBroadcastStore.getState().reorderThemes(nextIds)
+    setDraggedThemeId(null)
   }
 
   return (
@@ -371,55 +433,105 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
           <input
             ref={themeImageInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*,.m4v"
             className="hidden"
             onChange={(event) => {
-              uploadThemeImage(event.target.files?.[0])
+              uploadThemeMedia(event.target.files?.[0])
               event.target.value = ""
             }}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mb-3 w-full justify-center"
-            onClick={() => themeImageInputRef.current?.click()}
-          >
-            <ImagePlusIcon className="size-3.5" />
-            Upload theme
-          </Button>
+          <div className="mb-3 flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-w-0 flex-1 justify-center"
+              onClick={() => themeImageInputRef.current?.click()}
+              title="Upload an image or looping video background"
+              disabled={isUploadingTheme}
+            >
+              <ImagePlusIcon className="size-3.5" />
+              {isUploadingTheme ? "Uploading…" : "Upload theme"}
+            </Button>
+            <Button
+              type="button"
+              variant={isReordering ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => {
+                setIsReordering((reordering) => !reordering)
+                setDraggedThemeId(null)
+              }}
+            >
+              <ArrowUpDownIcon className="size-3.5" />
+              {isReordering ? "Done" : "Reorder"}
+            </Button>
+          </div>
           {visibleThemes.length > 0 ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
               {visibleThemes.map((theme) => {
                 const isActive = theme.id === activeThemeId
                 return (
-                  <button
+                  <div
                     key={theme.id}
-                    type="button"
-                    onClick={() => {
-                      useBroadcastStore
-                        .getState()
-                        .setActiveTheme(theme.id, selectedSection)
+                    draggable={isReordering}
+                    onDragStart={(event) => {
+                      if (!isReordering) return
+                      event.dataTransfer.effectAllowed = "move"
+                      event.dataTransfer.setData("text/plain", theme.id)
+                      setDraggedThemeId(theme.id)
                     }}
+                    onDragOver={(event) => {
+                      if (!isReordering) return
+                      event.preventDefault()
+                      event.dataTransfer.dropEffect = "move"
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault()
+                      reorderTheme(theme.id)
+                    }}
+                    onDragEnd={() => setDraggedThemeId(null)}
                     className={cn(
-                      "group min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
+                      "group relative min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
+                      isReordering &&
+                        "cursor-grab ring-1 ring-border active:cursor-grabbing",
+                      draggedThemeId === theme.id && "opacity-50",
                       isActive &&
                         "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70"
                     )}
-                    title={`Use ${theme.name}`}
+                    title={
+                      isReordering
+                        ? `Drag to reorder ${theme.name}`
+                        : `Use ${theme.name}`
+                    }
                   >
-                    <div className="aspect-video overflow-hidden rounded-sm">
-                      <CanvasVerse theme={theme} verse={thumbnailVerse} />
-                    </div>
-                    <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-                      <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
-                        {theme.name}
-                      </span>
-                      {isActive && (
-                        <span className="size-2 shrink-0 rounded-full bg-[#101084] dark:bg-[#F1E600]" />
-                      )}
-                    </div>
-                  </button>
+                    <button
+                      type="button"
+                      disabled={isReordering}
+                      onClick={() =>
+                        useBroadcastStore
+                          .getState()
+                          .setActiveTheme(theme.id, selectedSection)
+                      }
+                      className="block w-full text-left disabled:pointer-events-none"
+                    >
+                      <div className="relative aspect-video overflow-hidden rounded-sm">
+                        <CanvasVerse theme={theme} verse={thumbnailVerse} />
+                        {isReordering && (
+                          <span className="absolute top-1 right-1 flex size-6 items-center justify-center rounded bg-background/85 text-foreground shadow-sm">
+                            <GripVerticalIcon className="size-4" />
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+                        <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
+                          {theme.name}
+                        </span>
+                        {isActive && (
+                          <span className="size-2 shrink-0 rounded-full bg-[#101084] dark:bg-[#F1E600]" />
+                        )}
+                      </div>
+                    </button>
+                  </div>
                 )
               })}
             </div>

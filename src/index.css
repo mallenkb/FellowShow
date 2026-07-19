@@ -157,7 +157,8 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
+  /* Gray-50 canvas keeps white cards and controls visually separated. */
+  --background: oklch(0.985 0.002 247.839);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
@@ -165,11 +166,11 @@
   --popover-foreground: oklch(0.141 0.005 285.823);
   --primary: oklch(0.532 0.157 131.589);
   --primary-foreground: oklch(0.986 0.031 120.757);
-  --secondary: oklch(0.967 0.001 286.375);
+  --secondary: oklch(0.967 0.003 264.542);
   --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
+  --muted: oklch(0.967 0.003 264.542);
   --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
+  --accent: oklch(0.967 0.003 264.542);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.92 0.004 286.32);
@@ -196,8 +197,8 @@
   --confidence-mid: oklch(76.9% 0.188 70.08);
   --confidence-low: oklch(63.7% 0.237 25.331);
   --live-pulse: oklch(0.65 0.25 25);
-  --surface-elevated: oklch(0.96 0 0);
-  --surface-sunken: oklch(0.92 0 0);
+  --surface-elevated: oklch(1 0 0);
+  --surface-sunken: oklch(0.967 0.003 264.542);
 }
 
 .dark {
@@ -262,4 +263,33 @@
     top 0.3s ease,
     width 0.3s ease,
     height 0.3s ease;
+}
+
+[data-slot="search-panel"] {
+  container-name: search-panel;
+  container-type: inline-size;
+}
+
+@container search-panel (max-width: 430px) {
+  .search-tab-label,
+  .responsive-action-label,
+  .song-filter-trigger > svg:last-child {
+    display: none;
+  }
+
+  .responsive-filter-icon {
+    display: block;
+  }
+
+  .responsive-secondary-action {
+    flex: 0 0 auto;
+  }
+
+  button.responsive-secondary-action,
+  .responsive-secondary-action .song-filter-trigger {
+    width: 2.5rem;
+    min-width: 2.5rem;
+    padding-inline: 0;
+    justify-content: center;
+  }
 }

@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react"
-import { PanelHeader } from "@/components/ui/panel-header"
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -8,16 +7,25 @@ import {
   XIcon,
   GripVerticalIcon,
   BookOpenIcon,
-  MusicIcon,
+  TextIcon,
 } from "lucide-react"
-import { useQueueStore, useBroadcastStore, useBibleStore } from "@/stores"
+import {
+  useQueueStore,
+  useBroadcastStore,
+  useBibleStore,
+  useSermonStore,
+  useTickerComposerStore,
+} from "@/stores"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { bibleActions } from "@/hooks/use-bible"
 import type { QueueItem } from "@/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PreachingSummaryPanel } from "@/components/panels/preaching-summary-panel"
+import { LiveNotesPanel } from "@/components/panels/live-notes-panel"
+import { RelatedScripturesPanel } from "@/components/panels/related-scriptures-panel"
+import { SongsQueuePanel } from "@/components/panels/songs-queue-panel"
 
-type QueuePanelTab = "queued" | "summary"
+type QueuePanelTab = "sermon" | "related" | "notes" | "summary"
 
 function QueueItemRow({
   item,
@@ -105,6 +113,20 @@ function QueueItemRow({
         <Button
           variant="ghost"
           size="icon-xs"
+          aria-label={`Send ${item.reference} to scroll`}
+          title="Send to scroll"
+          onClick={(event) => {
+            event.stopPropagation()
+            useTickerComposerStore
+              .getState()
+              .open(`${item.reference} — ${item.verse.text}`)
+          }}
+        >
+          <TextIcon className="size-2.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={(event) => {
             event.stopPropagation()
             handlePresent()
@@ -130,12 +152,25 @@ function QueueItemRow({
 type QueuePanelMode = "book" | "context" | "songs" | "presentation" | "timer"
 
 export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
-  const panelRef = useRef<HTMLDivElement>(null)
-  const lyricBlockRefs = useRef(new Map<number, HTMLElement>())
   const items = useQueueStore((s) => s.items)
   const activeIndex = useQueueStore((s) => s.activeIndex)
   const highlightedId = useQueueStore((s) => s.highlightedId)
-  const [activeTab, setActiveTab] = useState<QueuePanelTab>("queued")
+  const activeTickerMessageId = useBroadcastStore(
+    (state) => state.activeOverlays.tickerMessageId
+  )
+  const scrollingLiveNoteCount = useSermonStore((state) =>
+    state.sessions.reduce(
+      (count, session) =>
+        count +
+        session.notes.filter(
+          (note) =>
+            note.source === "live" &&
+            note.tickerMessageId === activeTickerMessageId
+        ).length,
+      0
+    )
+  )
+  const [activeTab, setActiveTab] = useState<QueuePanelTab>("sermon")
   const visibleQueueItems = items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => {
@@ -144,160 +179,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
       if (mode === "songs") return false
       return item.verse.book_number > 0
     })
-  const lyricKind = mode === "songs" ? "song" : null
-  const lyricItem = lyricKind
-    ? (items.find((item) => item.lyricKind === lyricKind) ?? null)
-    : null
-  const lyricBlocks = lyricItem?.lyricBlocks ?? []
-  const activeBlockIndex = Math.max(
-    0,
-    Math.min(
-      lyricItem?.activeBlockIndex ?? 0,
-      Math.max(lyricBlocks.length - 1, 0)
-    )
-  )
-  const panelTitle = mode === "songs" ? "Song" : "Queue"
-
-  useEffect(() => {
-    if (!lyricItem) return
-    panelRef.current?.focus({ preventScroll: true })
-  }, [lyricItem])
-
-  useEffect(() => {
-    if (!lyricItem || lyricBlocks.length === 0) return
-    lyricBlockRefs.current
-      .get(activeBlockIndex)
-      ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-  }, [activeBlockIndex, lyricBlocks.length, lyricItem])
-
-  const selectLyricBlock = (blockIndex: number) => {
-    if (!lyricItem || lyricBlocks.length === 0) return null
-    panelRef.current?.focus({ preventScroll: true })
-    const safeIndex = Math.max(0, Math.min(blockIndex, lyricBlocks.length - 1))
-    const block = lyricBlocks[safeIndex]
-    const verse = {
-      ...lyricItem.verse,
-      text: block?.text ?? lyricItem.verse.text,
-    }
-
-    useQueueStore.getState().setLyricBlock(lyricItem.id, safeIndex)
-    const renderData = toVerseRenderData(verse, "")
-    const broadcast = useBroadcastStore.getState()
-    const followsCurrentLiveSong =
-      broadcast.isLive &&
-      broadcast.liveVerse?.themeSection === "songs" &&
-      broadcast.liveVerse.sourceId === renderData.sourceId
-    if (followsCurrentLiveSong) {
-      broadcast.presentOnLive(renderData, null, "preview")
-    }
-    return verse
-  }
-
-  const presentLyricBlock = (blockIndex: number) => {
-    const verse = selectLyricBlock(blockIndex)
-    if (!verse) return
-    useBroadcastStore
-      .getState()
-      .presentOnLive(toVerseRenderData(verse, ""), null, "preview")
-  }
-
-  const handleLyricKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!lyricItem) return
-
-    if (event.key === "ArrowDown" || event.key === "ArrowRight") {
-      event.preventDefault()
-      selectLyricBlock(activeBlockIndex + 1)
-    } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
-      event.preventDefault()
-      selectLyricBlock(activeBlockIndex - 1)
-    }
-  }
-
-  if (lyricKind) {
-    return (
-      <div
-        ref={panelRef}
-        data-slot="queue-panel"
-        className="flex flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
-        tabIndex={0}
-        onKeyDown={handleLyricKeyDown}
-      >
-        <PanelHeader title={panelTitle} />
-
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {!lyricItem && (
-            <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
-              <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
-                <MusicIcon className="size-4" />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Select a {lyricKind} to prepare it here
-              </p>
-            </div>
-          )}
-
-          {lyricItem && (
-            <div className="flex min-h-full flex-col gap-2 p-2">
-              <div className="px-1 pb-1">
-                <h3 className="line-clamp-2 text-sm font-semibold text-foreground">
-                  {lyricItem.reference}
-                </h3>
-              </div>
-
-              {lyricBlocks.map((block, index) => {
-                const isActive = index === activeBlockIndex
-                const blockMarker =
-                  block.label.match(/\d+/)?.[0] ??
-                  block.label.charAt(0).toUpperCase() ??
-                  String(index + 1)
-
-                return (
-                  <article
-                    ref={(node) => {
-                      if (node) {
-                        lyricBlockRefs.current.set(index, node)
-                      } else {
-                        lyricBlockRefs.current.delete(index)
-                      }
-                    }}
-                    key={`${lyricItem.id}-${index}`}
-                    aria-current={isActive ? "true" : undefined}
-                    onClick={() => selectLyricBlock(index)}
-                    onDoubleClick={() => presentLyricBlock(index)}
-                    className={cn(
-                      "group flex w-full cursor-pointer items-start gap-4 rounded-lg border p-3 text-left transition-colors",
-                      isActive
-                        ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                        : "border-border hover:bg-muted/40"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "mt-0.5 w-6 shrink-0 text-center text-sm font-semibold",
-                        isActive
-                          ? "text-[#101084] dark:text-[#F1E600]"
-                          : "text-muted-foreground"
-                      )}
-                    >
-                      {blockMarker}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="mb-1 text-xs font-semibold text-muted-foreground">
-                        {block.label}
-                      </p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">
-                        {block.text}
-                      </p>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
+  if (mode === "songs") return <SongsQueuePanel />
 
   return (
     <Tabs
@@ -308,11 +190,14 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
     >
       <div className="relative z-20 flex min-h-11 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
         <TabsList
-          variant="line"
-          className="h-7 min-w-0 justify-start gap-3 rounded-none py-0"
+          variant="default"
+          className="h-7 min-w-0 justify-start gap-1 bg-transparent p-0"
         >
-          <TabsTrigger value="queued" className="h-full px-0 text-xs">
-            Queued scriptures
+          <TabsTrigger
+            value="sermon"
+            className="h-7 flex-none rounded-md border border-border bg-background px-2.5 text-xs text-muted-foreground after:hidden hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40 data-active:border-[#101084]/50 data-active:bg-[#101084]/15 data-active:text-[#101084] dark:data-active:border-[#F1E600]/50 dark:data-active:bg-[#F1E600]/15 dark:data-active:text-[#F1E600]"
+          >
+            Sermon
             <Badge
               variant="outline"
               className="h-5 min-w-5 px-1 text-[0.5625rem]"
@@ -320,23 +205,46 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
               {visibleQueueItems.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="summary" className="h-full px-0 text-xs">
+          <TabsTrigger
+            value="related"
+            className="h-7 flex-none rounded-md border border-border bg-background px-2.5 text-xs text-muted-foreground after:hidden hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40 data-active:border-[#101084]/50 data-active:bg-[#101084]/15 data-active:text-[#101084] dark:data-active:border-[#F1E600]/50 dark:data-active:bg-[#F1E600]/15 dark:data-active:text-[#F1E600]"
+          >
+            Related scriptures
+          </TabsTrigger>
+          <TabsTrigger
+            value="notes"
+            className="h-7 flex-none rounded-md border border-border bg-background px-2.5 text-xs text-muted-foreground after:hidden hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40 data-active:border-[#101084]/50 data-active:bg-[#101084]/15 data-active:text-[#101084] dark:data-active:border-[#F1E600]/50 dark:data-active:bg-[#F1E600]/15 dark:data-active:text-[#F1E600]"
+          >
+            Live notes
+            {scrollingLiveNoteCount > 0 ? (
+              <Badge className="ml-1 h-5 min-w-5 bg-red-500 px-1 text-[0.5625rem] text-white">
+                {scrollingLiveNoteCount} live
+              </Badge>
+            ) : null}
+          </TabsTrigger>
+          <TabsTrigger
+            value="summary"
+            className="h-7 flex-none rounded-md border border-border bg-background px-2.5 text-xs text-muted-foreground after:hidden hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40 data-active:border-[#101084]/50 data-active:bg-[#101084]/15 data-active:text-[#101084] dark:data-active:border-[#F1E600]/50 dark:data-active:bg-[#F1E600]/15 dark:data-active:text-[#F1E600]"
+          >
             Preaching summary
           </TabsTrigger>
         </TabsList>
 
-        {activeTab === "queued" ? (
+        {activeTab === "sermon" ? (
           <button
+            type="button"
+            aria-label="Clear sermon scriptures"
+            title="Clear sermon scriptures"
             onClick={() => useQueueStore.getState().clearQueue()}
-            className="flex h-7 items-center rounded-md px-1.5 text-[0.625rem] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
-            Clear all
+            <XIcon className="size-3" />
           </button>
         ) : null}
       </div>
 
       <TabsContent
-        value="queued"
+        value="sermon"
         forceMount
         className="min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden"
       >
@@ -367,6 +275,22 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
             />
           ))}
         </div>
+      </TabsContent>
+
+      <TabsContent
+        value="related"
+        forceMount
+        className="flex min-h-0 flex-1 data-[state=inactive]:hidden"
+      >
+        <RelatedScripturesPanel isActive={activeTab === "related"} />
+      </TabsContent>
+
+      <TabsContent
+        value="notes"
+        forceMount
+        className="flex min-h-0 flex-1 data-[state=inactive]:hidden"
+      >
+        <LiveNotesPanel />
       </TabsContent>
 
       <TabsContent

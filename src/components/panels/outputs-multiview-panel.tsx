@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
@@ -13,24 +14,39 @@ import {
 import {
   isOutputOn,
   setOutputEnabled,
+  stopOutput,
   useOutputRuntimeStore,
 } from "@/lib/broadcast-output-runtime"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
+import { getOverlayPayloadForOutput } from "@/lib/overlays"
 import { useBroadcastStore } from "@/stores"
 import {
+  ArrowUpDownIcon,
   ChevronDownIcon,
+  GripVerticalIcon,
   MonitorIcon,
+  MonitorOffIcon,
   PlusIcon,
   RadioIcon,
   Settings2Icon,
+  Trash2Icon,
 } from "lucide-react"
 
-type DisplaysPanelMode = "book" | "context" | "songs" | "presentation" | "timer"
+type DisplaysPanelMode =
+  | "book"
+  | "context"
+  | "songs"
+  | "announcements"
+  | "presentation"
+  | "timer"
+  | "on-display"
 
 function contentForMode(mode: DisplaysPanelMode): OutputContent | null {
   switch (mode) {
     case "songs":
       return "songs"
+    case "announcements":
+      return "announcements"
     case "presentation":
       return "presentation"
     case "timer":
@@ -68,14 +84,31 @@ export function OutputsMultiviewPanel({
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
   const presenterTimer = useBroadcastStore((s) => s.presenterTimer)
   const lowerThird = useBroadcastStore((s) => s.lowerThird)
+  const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
+  const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
   const runtimeById = useOutputRuntimeStore((s) => s.byId)
   const [isOpen, setIsOpen] = useState(true)
+  const [isReordering, setIsReordering] = useState(false)
+  const [draggedOutputId, setDraggedOutputId] = useState<string | null>(null)
+  const [removeOutputId, setRemoveOutputId] = useState<string | null>(null)
   const [pendingId, setPendingId] = useState<string | null>(null)
 
   const tabContent = contentForMode(mode)
   const onCount = outputs.filter((output) =>
     isOutputOn(runtimeById[output.id])
   ).length
+  const orderedOutputs = outputs
+    .map((output, configuredIndex) => ({
+      output,
+      configuredIndex,
+      active: isOutputOn(runtimeById[output.id]),
+    }))
+    .sort(
+      (left, right) =>
+        Number(right.active) - Number(left.active) ||
+        left.configuredIndex - right.configuredIndex
+    )
+    .map(({ output }) => output)
 
   // Keep runtime rows in sync with configured outputs.
   useEffect(() => {
@@ -113,6 +146,47 @@ export function OutputsMultiviewPanel({
     }
   }
 
+  const reorderOutput = (targetOutputId: string) => {
+    if (!draggedOutputId || draggedOutputId === targetOutputId) return
+
+    const draggedIsOn = isOutputOn(runtimeById[draggedOutputId])
+    const targetIsOn = isOutputOn(runtimeById[targetOutputId])
+    if (draggedIsOn !== targetIsOn) return
+
+    const orderedIds = orderedOutputs.map((output) => output.id)
+    const fromIndex = orderedIds.indexOf(draggedOutputId)
+    const toIndex = orderedIds.indexOf(targetOutputId)
+    if (fromIndex === -1 || toIndex === -1) return
+
+    const nextIds = [...orderedIds]
+    const [movedId] = nextIds.splice(fromIndex, 1)
+    nextIds.splice(toIndex, 0, movedId)
+    useBroadcastStore.getState().reorderOutputs(nextIds)
+    setDraggedOutputId(null)
+  }
+
+  const removeSelectedOutput = () => {
+    const output = outputs.find((item) => item.id === removeOutputId)
+    if (!output) return
+
+    setPendingId(output.id)
+    void stopOutput(output).finally(() => {
+      useOutputRuntimeStore.getState().removeRuntime(output.id)
+      if (output.id === "main") {
+        useBroadcastStore.getState().updateOutput(output.id, {
+          monitorIndex: null,
+        })
+      } else {
+        useBroadcastStore.getState().removeOutput(output.id)
+      }
+      setPendingId(null)
+      setRemoveOutputId(null)
+    })
+  }
+
+  const removeCandidate =
+    outputs.find((output) => output.id === removeOutputId) ?? null
+
   return (
     <div
       data-slot="outputs-multiview-panel"
@@ -135,6 +209,20 @@ export function OutputsMultiviewPanel({
             )}
           />
         </button>
+        {outputs.length > 1 && (
+          <Button
+            variant={isReordering ? "secondary" : "ghost"}
+            size="xs"
+            onClick={() => {
+              setIsReordering((reordering) => !reordering)
+              setDraggedOutputId(null)
+            }}
+            className="h-6 gap-1 px-1.5 text-[0.625rem] text-muted-foreground hover:text-foreground"
+          >
+            <ArrowUpDownIcon className="size-3" />
+            {isReordering ? "Done" : "Reorder"}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="xs"
@@ -148,7 +236,7 @@ export function OutputsMultiviewPanel({
 
       {isOpen && (
         <div className="grid grid-cols-3 gap-2 p-2">
-          {outputs.map((output, index) => {
+          {orderedOutputs.map((output, index) => {
             const mirrorsSongPreview = output.content === "songs"
             const outputVerse = mirrorsSongPreview ? previewVerse : liveVerse
             const outputTimer = mirrorsSongPreview
@@ -178,8 +266,32 @@ export function OutputsMultiviewPanel({
             return (
               <div
                 key={output.id}
+                draggable={isReordering}
+                onDragStart={(event) => {
+                  if (!isReordering) return
+                  event.dataTransfer.effectAllowed = "move"
+                  event.dataTransfer.setData("text/plain", output.id)
+                  setDraggedOutputId(output.id)
+                }}
+                onDragOver={(event) => {
+                  if (!isReordering) return
+                  const draggedIsOn = draggedOutputId
+                    ? isOutputOn(runtimeById[draggedOutputId])
+                    : active
+                  if (draggedIsOn !== active) return
+                  event.preventDefault()
+                  event.dataTransfer.dropEffect = "move"
+                }}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  reorderOutput(output.id)
+                }}
+                onDragEnd={() => setDraggedOutputId(null)}
                 className={cn(
-                  "overflow-hidden rounded-md border bg-background transition-shadow",
+                  "overflow-hidden rounded-md border bg-background transition-all",
+                  isReordering &&
+                    "cursor-grab ring-1 ring-border active:cursor-grabbing",
+                  draggedOutputId === output.id && "opacity-50",
                   matchesTab && active
                     ? "border-primary/70 shadow-[0_0_0_1px_hsl(var(--primary)/0.45)]"
                     : active
@@ -196,6 +308,19 @@ export function OutputsMultiviewPanel({
                       lowerThird={
                         active && output.content === "everything"
                           ? lowerThird
+                          : null
+                      }
+                      overlays={
+                        active
+                          ? getOverlayPayloadForOutput(
+                              overlayConfig,
+                              activeOverlays,
+                              output.id,
+                              {
+                                verse: active ? verse : null,
+                                timer: active ? timer : null,
+                              }
+                            )
                           : null
                       }
                       className={cn("h-full", !active && "opacity-40")}
@@ -231,10 +356,16 @@ export function OutputsMultiviewPanel({
                         : "bg-zinc-600"
                     )}
                   />
+                  {isReordering && (
+                    <span className="absolute top-1 right-4 flex size-5 items-center justify-center rounded bg-black/65 text-white">
+                      <GripVerticalIcon className="size-3.5" />
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between gap-1.5 border-t border-border bg-card px-1.5 py-1">
                   <button
                     type="button"
+                    disabled={isReordering}
                     className="min-w-0 flex-1 text-left"
                     onClick={() => openBroadcastSettings(output.id)}
                     title={`Manage ${output.name}`}
@@ -261,9 +392,37 @@ export function OutputsMultiviewPanel({
                       </span>
                     </div>
                   </button>
+                  {(output.id !== "main" ||
+                    (output.outputType === "display" &&
+                      output.monitorIndex !== null)) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      disabled={pending || isReordering}
+                      onClick={() => setRemoveOutputId(output.id)}
+                      className="shrink-0 text-muted-foreground hover:text-destructive"
+                      aria-label={
+                        output.id === "main"
+                          ? `Disconnect ${output.name} from its screen`
+                          : `Remove ${output.name}`
+                      }
+                      title={
+                        output.id === "main"
+                          ? "Disconnect screen"
+                          : `Remove ${output.name}`
+                      }
+                    >
+                      {output.id === "main" ? (
+                        <MonitorOffIcon className="size-3" />
+                      ) : (
+                        <Trash2Icon className="size-3" />
+                      )}
+                    </Button>
+                  )}
                   <Switch
                     checked={active}
-                    disabled={pending}
+                    disabled={pending || isReordering}
                     onCheckedChange={(checked) =>
                       void handleToggle(output.id, checked)
                     }
@@ -286,6 +445,27 @@ export function OutputsMultiviewPanel({
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={removeCandidate !== null}
+        onOpenChange={(open) => {
+          if (!open) setRemoveOutputId(null)
+        }}
+        title={
+          removeCandidate?.id === "main"
+            ? "Disconnect Program screen?"
+            : "Remove display?"
+        }
+        description={
+          removeCandidate
+            ? removeCandidate.id === "main"
+              ? "Program will be turned off on its external screen and the screen assignment will be cleared. The internal Program feed will remain available."
+              : `“${removeCandidate.name}” will be turned off and removed from Displays.`
+            : undefined
+        }
+        confirmLabel={removeCandidate?.id === "main" ? "Disconnect" : "Remove"}
+        destructive
+        onConfirm={removeSelectedOutput}
+      />
     </div>
   )
 }

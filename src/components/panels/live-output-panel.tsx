@@ -5,8 +5,16 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
+import { getOverlayPayloadForOutput } from "@/lib/overlays"
 
-type LiveOutputMode = "book" | "context" | "songs" | "presentation" | "timer"
+type LiveOutputMode =
+  | "book"
+  | "context"
+  | "songs"
+  | "announcements"
+  | "presentation"
+  | "timer"
+  | "on-display"
 
 export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   const isLive = useBroadcastStore((s) => s.isLive)
@@ -14,6 +22,8 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const lowerThird = useBroadcastStore((s) => s.lowerThird)
+  const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
+  const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
   const liveTimer = useBroadcastStore((s) => s.presenterTimer)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
@@ -34,9 +44,11 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
     liveVerse,
     mode === "songs"
       ? "songs"
-      : mode === "presentation"
-        ? "presentation"
-        : "bible"
+      : mode === "announcements"
+        ? "announcements"
+        : mode === "presentation"
+          ? "presentation"
+          : "bible"
   )
   const takePreviewLive = (checked: boolean) => {
     const store = useBroadcastStore.getState()
@@ -111,8 +123,15 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           verse={liveVerse}
           timer={liveTimer}
           lowerThird={lowerThird}
+          overlays={getOverlayPayloadForOutput(
+            overlayConfig,
+            activeOverlays,
+            "main",
+            { verse: liveVerse, timer: liveTimer }
+          )}
           className="h-full"
           fillContainer
+          fit="contain"
         />
         {!isLive && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">

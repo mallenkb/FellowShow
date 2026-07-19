@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import type { BroadcastTheme } from "@/types"
+import { toast } from "sonner"
 
 function useScopedDraftUpdater<T>(
   select: (draft: BroadcastTheme) => T,
@@ -283,16 +284,27 @@ function ImageSection() {
           className="w-full"
           onClick={() => {
             void (async () => {
-              const media = await pickThemeBackgroundMedia()
-              if (media) {
-                update((background) => {
-                  if (background.image) background.image.url = media.url
-                }, "image.url")
-                update((background) => {
-                  if (background.image) {
-                    background.image.mediaType = media.mediaType
-                  }
-                }, "image.mediaType")
+              try {
+                const media = await pickThemeBackgroundMedia()
+                if (media) {
+                  update((background) => {
+                    if (background.image) {
+                      background.image.url = media.url
+                      background.image.mediaType = media.mediaType
+                    }
+                  }, "image.media")
+                  toast.success(
+                    media.mediaType === "video"
+                      ? "Video background uploaded"
+                      : "Background uploaded"
+                  )
+                }
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Could not upload background"
+                )
               }
             })()
           }}

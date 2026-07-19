@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useState } from "react"
 import { LevelMeter } from "@/components/ui/level-meter"
 import { LiveIndicator } from "@/components/ui/live-indicator"
 import {
@@ -9,10 +9,16 @@ import {
   SettingsIcon,
   SunIcon,
   MoonIcon,
+  BookOpenIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ApiKeyPrompt } from "@/components/ui/api-key-prompt"
-import { useAudioStore, useTranscriptStore, useBroadcastStore } from "@/stores"
+import {
+  useAudioStore,
+  useTranscriptStore,
+  useBroadcastStore,
+  useSermonStore,
+} from "@/stores"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import {
   openBroadcastSettings,
@@ -20,6 +26,12 @@ import {
 } from "@/lib/broadcast-settings-dialog"
 import { useTheme } from "@/components/theme-provider"
 import { transcriptionActions } from "@/hooks/use-transcription"
+import {
+  endSermon,
+  generateLiveSermonNotes,
+  startSermon,
+} from "@/lib/sermon-actions"
+import { TickerComposerDialog } from "@/components/on-display/ticker-composer-dialog"
 
 const SettingsDialog = lazy(() =>
   import("@/components/settings-dialog").then((module) => ({
@@ -41,14 +53,54 @@ export function TransportBar() {
   const { theme, setTheme } = useTheme()
   const audioLevel = useAudioStore((s) => s.level)
   const isTranscribing = useTranscriptStore((s) => s.isTranscribing)
+  const segmentCount = useTranscriptStore((s) => s.segments.length)
+  const activeSession = useSermonStore((state) =>
+    state.sessions.find((session) => session.id === state.activeSessionId)
+  )
   const isDesignerOpen = useBroadcastStore((s) => s.isDesignerOpen)
   const isSettingsOpen = useSettingsDialogStore((s) => s.isOpen)
   const broadcastOpen = useBroadcastSettingsDialogStore((s) => s.isOpen)
   const [showKeyPrompt, setShowKeyPrompt] = useState(false)
+  const [isChangingSermon, setIsChangingSermon] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
 
   const startTranscription = useCallback(() => {
     void transcriptionActions.start(() => setShowKeyPrompt(true))
   }, [])
+
+  useEffect(() => {
+    if (!activeSession) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1_000)
+    return () => window.clearInterval(timer)
+  }, [activeSession])
+
+  useEffect(() => {
+    if (!activeSession || segmentCount <= activeSession.lastNoteSegmentIndex)
+      return
+    const timer = window.setTimeout(() => {
+      void generateLiveSermonNotes()
+    }, 1_500)
+    return () => window.clearTimeout(timer)
+  }, [activeSession, segmentCount])
+
+  const handleStartSermon = () => {
+    setIsChangingSermon(true)
+    void startSermon(() => setShowKeyPrompt(true)).finally(() =>
+      setIsChangingSermon(false)
+    )
+  }
+
+  const handleEndSermon = () => {
+    setIsChangingSermon(true)
+    void endSermon().finally(() => setIsChangingSermon(false))
+  }
+
+  const sermonElapsed = activeSession
+    ? Math.max(0, Math.floor((now - activeSession.startedAt) / 1_000))
+    : 0
+  const sermonTime = `${Math.floor(sermonElapsed / 60)}:${String(
+    sermonElapsed % 60
+  ).padStart(2, "0")}`
 
   return (
     <div
@@ -64,15 +116,43 @@ export function TransportBar() {
             variant="secondary"
             size="sm"
             className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
-            onClick={() => void transcriptionActions.stop()}
+            disabled={isChangingSermon}
+            onClick={
+              activeSession
+                ? handleEndSermon
+                : () => void transcriptionActions.stop()
+            }
           >
             <MicIcon className="size-3" />
-            Stop transcribing
+            {activeSession ? "Stop sermon" : "Stop transcribing"}
           </Button>
         ) : (
           <Button variant="secondary" size="sm" onClick={startTranscription}>
             <MicOffIcon className="size-3" />
             Start transcribing
+          </Button>
+        )}
+        {activeSession ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
+            disabled={isChangingSermon}
+            onClick={handleEndSermon}
+          >
+            <BookOpenIcon className="size-3" />
+            Sermon · {sermonTime}
+            <span className="text-[0.625rem] uppercase">End</span>
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isChangingSermon}
+            onClick={handleStartSermon}
+          >
+            <BookOpenIcon className="size-3" />
+            Start Sermon
           </Button>
         )}
       </div>
@@ -148,6 +228,7 @@ export function TransportBar() {
           service="Deepgram"
           description="Live transcription needs an API key. Add it in settings so the app can start listening."
         />
+        <TickerComposerDialog />
       </div>
     </div>
   )

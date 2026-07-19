@@ -135,6 +135,7 @@ pub fn run() {
             commands::detection::toggle_paraphrase_detection,
             commands::detection::reading_mode_status,
             commands::detection::stop_reading_mode,
+            commands::documents::prepare_presentation_document,
             commands::easyworship::import_easyworship_songs,
             commands::audio::get_audio_devices,
             commands::stt::test_deepgram_connection,

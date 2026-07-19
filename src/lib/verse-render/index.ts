@@ -4,6 +4,7 @@ import {
   shouldRenderTickerLayer,
 } from "@/lib/broadcast-output-mode"
 import { drawLowerThird } from "@/lib/lower-third-renderer"
+import { drawAnnouncement } from "@/lib/announcement-renderer"
 import type {
   BroadcastTheme,
   RenderOptions,
@@ -128,7 +129,30 @@ function renderVerseImpl(
 
   const referenceRect = metrics.referenceRect
   const verseRect = metrics.verseRect
-  if (verseRect) {
+  if (verseRect && verse.announcement) {
+    const titleY = metrics.textRect.y
+    const titleHeight = drawReference(
+      ctx,
+      scaledTheme,
+      verse.reference,
+      metrics.textRect.x,
+      metrics.textRect.width,
+      titleY
+    )
+    const announcementY =
+      titleY +
+      titleHeight +
+      (scaledTheme.layout.referenceGap ?? scaledTheme.reference.fontSize * 0.5)
+    drawAnnouncement(
+      ctx,
+      scaledTheme,
+      verse,
+      metrics.textRect.x,
+      metrics.textRect.width,
+      announcementY,
+      metrics.textRect.y + metrics.textRect.height - announcementY
+    )
+  } else if (verseRect) {
     drawVerseText(
       ctx,
       scaledTheme,
@@ -138,7 +162,7 @@ function renderVerseImpl(
       verseRect.y
     )
   }
-  if (referenceRect) {
+  if (referenceRect && !verse.announcement) {
     drawReference(
       ctx,
       verse.referenceMode === "lyric-footer"

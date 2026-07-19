@@ -11,13 +11,22 @@ import { OutputsMultiviewPanel } from "@/components/panels/outputs-multiview-pan
 import { QueuePanel } from "@/components/panels/queue-panel"
 import { SearchPanel } from "@/components/panels/search-panel"
 import { PresentationPanel } from "@/components/panels/presentation-panel"
+import { AnnouncementWorkspace } from "@/components/panels/announcement-workspace"
+import { OnDisplayPanel } from "@/components/panels/on-display-panel"
 import { useBroadcastStore } from "@/stores"
 
 const COLUMN_MIN_WIDTHS = [300, 340, 280]
 const HANDLE_WIDTH = 12
 const ROW_MIN_HEIGHTS = [160, 220]
 const HANDLE_HEIGHT = 12
-type SearchMode = "book" | "context" | "songs" | "presentation" | "timer"
+type SearchMode =
+  | "book"
+  | "context"
+  | "songs"
+  | "announcements"
+  | "presentation"
+  | "timer"
+  | "on-display"
 
 const DASHBOARD_LAYOUT_STORAGE_KEY = "fellowshow:dashboard-layout:v1"
 const DEFAULT_COLUMN_RATIOS = [1.15, 1.45, 1]
@@ -26,8 +35,10 @@ const SEARCH_MODES: SearchMode[] = [
   "book",
   "context",
   "songs",
+  "announcements",
   "presentation",
   "timer",
+  "on-display",
 ]
 
 interface DashboardLayoutSnapshot {
@@ -49,8 +60,10 @@ function getDefaultMiddleRowRatiosByMode(): MiddleRowRatiosByMode {
     book: [...DEFAULT_MIDDLE_ROW_RATIOS],
     context: [...DEFAULT_MIDDLE_ROW_RATIOS],
     songs: [...DEFAULT_MIDDLE_ROW_RATIOS],
+    announcements: [...DEFAULT_MIDDLE_ROW_RATIOS],
     presentation: [...DEFAULT_MIDDLE_ROW_RATIOS],
     timer: [...DEFAULT_MIDDLE_ROW_RATIOS],
+    "on-display": [...DEFAULT_MIDDLE_ROW_RATIOS],
   }
 }
 
@@ -341,9 +354,11 @@ export function Dashboard() {
     const section =
       mode === "songs"
         ? "songs"
-        : mode === "presentation"
-          ? "presentation"
-          : "bible"
+        : mode === "announcements"
+          ? "announcements"
+          : mode === "presentation"
+            ? "presentation"
+            : "bible"
     const broadcastStore = useBroadcastStore.getState()
     broadcastStore.setSelectedThemeSection(section)
   }, [])
@@ -380,6 +395,14 @@ export function Dashboard() {
           <div className="grid min-h-0 *:min-h-0">
             <PresentationPanel />
           </div>
+        ) : searchMode === "announcements" ? (
+          <div className="grid min-h-0 *:min-h-0">
+            <AnnouncementWorkspace />
+          </div>
+        ) : searchMode === "on-display" ? (
+          <div className="grid min-h-0 *:min-h-0">
+            <OnDisplayPanel />
+          </div>
         ) : (
           <div
             ref={middleColumnRef}
@@ -403,12 +426,14 @@ export function Dashboard() {
 
         <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch gap-3 overflow-y-auto overscroll-contain pr-1 *:min-h-0">
           <LiveOutputPanel mode={searchMode} />
-          <OutputsMultiviewPanel mode={searchMode} />
           <PreviewPanel mode={searchMode} />
-          {searchMode !== "timer" && searchMode !== "presentation" && (
-            <ThemesPanel mode={searchMode} />
+          <OutputsMultiviewPanel mode={searchMode} />
+          {searchMode !== "timer" &&
+            searchMode !== "presentation" &&
+            searchMode !== "on-display" && <ThemesPanel mode={searchMode} />}
+          {searchMode !== "timer" && searchMode !== "on-display" && (
+            <MotionPanel mode={searchMode} />
           )}
-          {searchMode !== "timer" && <MotionPanel mode={searchMode} />}
         </div>
       </div>
     </div>

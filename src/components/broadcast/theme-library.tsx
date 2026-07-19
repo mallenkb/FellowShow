@@ -35,6 +35,7 @@ import {
 import { cn } from "@/lib/utils"
 import { importTheme, exportTheme } from "@/lib/theme-designer-files"
 import { sortThemesForSection } from "@/lib/theme-order"
+import { toast } from "sonner"
 import type {
   BroadcastTheme,
   BroadcastThemeSection,
@@ -50,6 +51,7 @@ const PRESENTATION_HIDDEN_BUILTIN_THEME_IDS = new Set([
 const sectionLabels: Record<BroadcastThemeSection, string> = {
   bible: "Scriptures",
   songs: "Songs",
+  announcements: "Announcements",
   presentation: "Presentation",
 }
 
@@ -66,6 +68,11 @@ const THUMBNAIL_BY_SECTION: Record<BroadcastThemeSection, VerseRenderData> = {
     themeSection: "songs",
     referenceMode: "lyric-footer",
     segments: [{ text: "Sample song lyric" }],
+  },
+  announcements: {
+    reference: "Announcements",
+    themeSection: "announcements",
+    segments: [{ verseNumber: 1, text: "Sample announcement" }],
   },
   presentation: {
     reference: "Presentation Slide",
@@ -319,8 +326,8 @@ export function ThemeLibrary() {
       const q = search.toLowerCase()
       result = result.filter((t) => t.name.toLowerCase().includes(q))
     }
-    return sortThemesForSection(result, selectedThemeSection, activeThemeId)
-  }, [themes, search, selectedThemeSection, activeThemeId])
+    return sortThemesForSection(result, selectedThemeSection)
+  }, [themes, search, selectedThemeSection])
 
   const builtinThemes = filteredThemes.filter((t) => t.builtin)
   const customThemes = filteredThemes.filter((t) => !t.builtin)
@@ -347,16 +354,24 @@ export function ThemeLibrary() {
   const handleImportTheme = () => {
     void (async () => {
       try {
-        const theme = await importTheme()
+        const currentTheme =
+          themes.find((theme) => theme.id === activeThemeId) ?? themes[0]
+        const theme = await importTheme(currentTheme)
         if (theme) {
           useBroadcastStore.getState().saveTheme(theme)
           useBroadcastStore.getState().startEditing(theme.id)
           useBroadcastStore
             .getState()
             .setActiveTheme(theme.id, selectedThemeSection)
+          toast.success(
+            theme.background.image?.mediaType === "video"
+              ? "Video theme uploaded"
+              : "Theme uploaded"
+          )
         }
       } catch (err) {
-        console.error("[theme-library] import failed:", err)
+        const message = err instanceof Error ? err.message : "Import failed"
+        toast.error(message)
       }
     })()
   }
@@ -385,15 +400,16 @@ export function ThemeLibrary() {
         </div>
       </div>
 
-      {/* Import / Export */}
+      {/* Upload / Export */}
       <div className="flex gap-1.5 px-3 pb-3">
         <Button
           variant="outline"
           className="flex-1 border-border bg-transparent"
           onClick={handleImportTheme}
+          title="Upload a theme JSON, image, or video background"
         >
           <UploadIcon className="size-2.5" />
-          Import
+          Upload theme
         </Button>
         <Button
           variant="outline"

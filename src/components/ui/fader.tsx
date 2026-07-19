@@ -50,7 +50,7 @@ export function Fader({
   return (
     <div
       className={cn(
-        "group relative flex h-9 w-full items-center justify-between gap-3 overflow-hidden rounded-full border border-border bg-background/40 px-4 select-none",
+        "group relative flex h-9 w-full items-center justify-between gap-3 overflow-hidden rounded-full border border-border bg-background px-4 select-none dark:bg-background/40",
         "focus-within:outline focus-within:outline-1 focus-within:outline-offset-2 focus-within:outline-ring",
         disabled && "pointer-events-none opacity-50",
         className

@@ -113,6 +113,7 @@ export interface Commands {
     { segments: string[]; scriptures: string[] },
     PreachingSummary
   >
+  prepare_presentation_document: WithArgs<{ path: string }, ArrayBuffer>
   import_easyworship_songs: WithArgs<
     { songsDbPath: string; songWordsDbPath: string },
     EasyWorshipImportedSong[]

@@ -8,6 +8,10 @@ const DEFAULT_LIMIT = 15
 const MIN_SIMILARITY = 0.55
 
 const fuseByTranslation = new Map<number, Fuse<ContextSearchDoc>>()
+const fusePromiseByTranslation = new Map<
+  number,
+  Promise<Fuse<ContextSearchDoc>>
+>()
 
 function normalizeQuery(query: string) {
   return query.toLowerCase().replace(/\s+/g, " ").trim()
@@ -31,25 +35,37 @@ async function getFuseIndex(
   const existing = fuseByTranslation.get(translationId)
   if (existing) return existing
 
-  const rows = await invoke("get_translation_verses_for_search", {
-    translationId,
-  })
-  const docs = rows.map(rowToDoc)
+  const pending = fusePromiseByTranslation.get(translationId)
+  if (pending) return pending
 
-  const fuse = new Fuse(docs, {
-    includeScore: true,
-    shouldSort: true,
-    threshold: 0.35,
-    ignoreLocation: true,
-    minMatchCharLength: 2,
-    keys: [
-      { name: "verse_text", weight: 0.92 },
-      { name: "book_name", weight: 0.08 },
-    ],
-  })
+  const promise = (async () => {
+    const rows = await invoke("get_translation_verses_for_search", {
+      translationId,
+    })
+    const docs = rows.map(rowToDoc)
 
-  fuseByTranslation.set(translationId, fuse)
-  return fuse
+    const fuse = new Fuse(docs, {
+      includeScore: true,
+      shouldSort: true,
+      threshold: 0.35,
+      ignoreLocation: true,
+      minMatchCharLength: 2,
+      keys: [
+        { name: "verse_text", weight: 0.92 },
+        { name: "book_name", weight: 0.08 },
+      ],
+    })
+
+    fuseByTranslation.set(translationId, fuse)
+    return fuse
+  })()
+  fusePromiseByTranslation.set(translationId, promise)
+
+  try {
+    return await promise
+  } finally {
+    fusePromiseByTranslation.delete(translationId)
+  }
 }
 
 function fuseScoreToSimilarity(score: number | undefined) {

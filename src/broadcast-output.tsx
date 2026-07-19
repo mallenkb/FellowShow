@@ -6,6 +6,9 @@ import { invoke } from "@/lib/ipc"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
 import { drawTransitionFrame } from "@/lib/render-transition"
+import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
+import { hasAnimatingOverlay } from "@/lib/overlays"
+import { drawVideoStreamPlaceholder } from "@/lib/video-stream-placeholder"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import {
   shouldRenderLowerThirdLayer,
@@ -21,7 +24,11 @@ import type {
   PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types/broadcast"
-import type { NdiConfigEventPayload, NdiFrameRequest } from "@/types"
+import type {
+  BroadcastOverlayPayload,
+  NdiConfigEventPayload,
+  NdiFrameRequest,
+} from "@/types"
 
 /** Convert Uint8Array/Uint8ClampedArray to base64 using Function.apply (avoids spread stack overflow) */
 function uint8ToBase64(bytes: Uint8Array | Uint8ClampedArray): string {
@@ -52,6 +59,7 @@ interface BroadcastPayload {
   verse: VerseRenderData | null
   timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
+  overlays?: BroadcastOverlayPayload | null
 }
 
 type DirectVideo = NonNullable<VerseRenderData["presentationImage"]>
@@ -62,6 +70,9 @@ function directVideoFor(payload: BroadcastPayload): DirectVideo | null {
     video?.mediaType !== "video" ||
     payload.timer ||
     payload.verse?.tickerText ||
+    payload.overlays?.logo ||
+    payload.overlays?.lowerThird ||
+    payload.overlays?.ticker ||
     !shouldRenderStandardBroadcastContent(payload.theme)
   ) {
     return null
@@ -78,6 +89,7 @@ function transitionKey(data: BroadcastPayload | null): string {
     verseReference: data.verse?.reference ?? null,
     verseText:
       data.verse?.segments.map((segment) => segment.text).join("\n") ?? null,
+    announcement: data.verse?.announcement ?? null,
     presentationImage: data.verse?.presentationImage?.url ?? null,
     timerVisible: Boolean(data.timer),
     timerFinished: data.timer?.isFinished ?? false,
@@ -132,6 +144,9 @@ function BroadcastCanvas() {
     const syncTauriFullscreen = async () => {
       try {
         const fullscreen = await currentWindow.isFullscreen()
+        if (!fullscreen) {
+          await currentWindow.setDecorations(true)
+        }
         if (mounted) setIsFullscreen(fullscreen)
       } catch (error) {
         console.warn(
@@ -188,10 +203,24 @@ function BroadcastCanvas() {
     }
 
     try {
-      await currentWindow.setFullscreen(nextFullscreen)
+      if (nextFullscreen) {
+        await currentWindow.setDecorations(false)
+        await currentWindow.setFullscreen(true)
+      } else {
+        await currentWindow.setFullscreen(false)
+        await currentWindow.setDecorations(true)
+      }
       setIsFullscreen(nextFullscreen)
       setContextMenu(null)
     } catch (error) {
+      if (nextFullscreen) {
+        void currentWindow.setDecorations(true).catch((restoreError) => {
+          console.warn(
+            "[broadcast-output] failed to restore window decorations",
+            restoreError
+          )
+        })
+      }
       console.warn(
         "[broadcast-output] failed to change fullscreen state",
         error
@@ -232,7 +261,7 @@ function BroadcastCanvas() {
         return
       }
 
-      const { theme, verse, timer, lowerThird } = data
+      const { theme, verse, timer, lowerThird, overlays } = data
       // Assigning a canvas dimension clears its backing store and forces a
       // reallocation. This runs for every video frame, so only resize when
       // the output resolution actually changes.
@@ -255,6 +284,13 @@ function BroadcastCanvas() {
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         logDebug("renderVerse returned null; drew fallback frame")
       }
+      if (!verse && !timer) {
+        drawVideoStreamPlaceholder(ctx, theme.resolution)
+      }
+      drawBroadcastOverlays(ctx, theme.resolution, overlays, {
+        imageCache: imageCacheRef.current,
+        now: Date.now(),
+      })
     },
     [logDebug]
   )
@@ -365,6 +401,9 @@ function BroadcastCanvas() {
               mediaType: payload.verse.presentationImage.mediaType ?? "image",
             }
           : null,
+        payload.overlays?.logo?.imageUrl
+          ? { url: payload.overlays.logo.imageUrl, mediaType: "image" as const }
+          : null,
       ].filter((item): item is { url: string; mediaType: "image" | "video" } =>
         Boolean(item)
       )
@@ -374,8 +413,9 @@ function BroadcastCanvas() {
         stopAnimationLoop()
         return
       }
-      if (hasVideo) startAnimationLoop()
-      else stopAnimationLoop()
+      if (hasVideo || hasAnimatingOverlay(payload.overlays)) {
+        startAnimationLoop()
+      } else stopAnimationLoop()
 
       for (const item of media) {
         if (item.mediaType === "video") {

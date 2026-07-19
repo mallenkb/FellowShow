@@ -12,7 +12,7 @@ import { selectFreeMonitorIndex } from "@/lib/broadcast-output-control"
  * screens that stay on their theme background while other content is live.
  */
 export type OutputContent =
-  "everything" | "bible" | "songs" | "presentation" | "timer"
+  "everything" | "bible" | "songs" | "announcements" | "presentation" | "timer"
 
 export interface BroadcastOutputConfig {
   id: string
@@ -34,10 +34,16 @@ export const OUTPUT_CONTENT_OPTIONS: Array<{
   {
     value: "everything",
     label: "General",
-    description: "Full program — scripture, songs, presentations, timer",
+    description:
+      "Full program — scripture, songs, announcements, presentations, timer",
   },
   { value: "bible", label: "Scripture", description: "Bible verses only" },
   { value: "songs", label: "Songs", description: "Song lyrics only" },
+  {
+    value: "announcements",
+    label: "Announcements",
+    description: "Announcement pages only",
+  },
   {
     value: "presentation",
     label: "Presentation",
@@ -204,10 +210,12 @@ export function sanitizeOutputConfigs(
     if (!id || seenIds.has(id)) continue
     seenIds.add(id)
     const content =
-      typeof candidate.content === "string" &&
-      OUTPUT_CONTENT_VALUES.has(candidate.content)
-        ? (candidate.content as OutputContent)
-        : "everything"
+      id === "main"
+        ? "everything"
+        : typeof candidate.content === "string" &&
+            OUTPUT_CONTENT_VALUES.has(candidate.content)
+          ? (candidate.content as OutputContent)
+          : "everything"
     // Migrate the pre-routing default names to the role-based ones.
     const isLegacyDefaultName =
       candidate.name === "Main Output" || candidate.name === "Alternate Output"

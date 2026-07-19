@@ -50,9 +50,9 @@ describe("settings store", () => {
     const state = useSettingsStore.getState()
     expect(state.gain).toBe(2.5)
     expect(state.sttProvider).toBe("whisper")
-    expect(state.deepgramApiKey).toBeNull()
-    expect(mockGet).not.toHaveBeenCalledWith("deepgramApiKey")
-    expect(mockDelete).toHaveBeenCalledWith("deepgramApiKey")
+    expect(state.deepgramApiKey).toBe("dg-key")
+    expect(mockGet).toHaveBeenCalledWith("deepgramApiKey")
+    expect(mockDelete).not.toHaveBeenCalled()
     // Defaults remain for keys with null
     expect(state.autoMode).toBe(false)
     expect(state.confidenceThreshold).toBe(0.8)
@@ -129,7 +129,7 @@ describe("settings store", () => {
     expect(mockSet).toHaveBeenCalledWith("gain", 1.3)
   })
 
-  it("saveSettingsNow never persists API keys", async () => {
+  it("saveSettingsNow persists API keys", async () => {
     mockGet.mockResolvedValue(null)
 
     const { hydrateSettings, saveSettingsNow, useSettingsStore } =
@@ -141,7 +141,7 @@ describe("settings store", () => {
     useSettingsStore.getState().setDeepgramApiKey("dg-key")
     await saveSettingsNow()
 
-    expect(mockSet).not.toHaveBeenCalledWith("deepgramApiKey", "dg-key")
+    expect(mockSet).toHaveBeenCalledWith("deepgramApiKey", "dg-key")
     expect(mockSave).toHaveBeenCalledTimes(1)
   })
 
