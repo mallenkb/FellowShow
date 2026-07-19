@@ -28,7 +28,7 @@ missing_panics_doc = "allow"
 
 [package]
 name = "fellowshow"
-version = "0.1.27"
+version = "0.1.28"
 description = "Fellow Show - Real-Time AI Bible Verse Detection"
 authors = ["Faithful"]
 license = "MIT"
