@@ -110,7 +110,7 @@ export function TickerOverlaySection() {
   const showMessage = useBroadcastStore((state) => state.showTickerMessage)
   const stopMessage = useBroadcastStore((state) => state.stopTickerMessage)
   const defaultTargets = useBroadcastStore(
-    (state) => state.overlayConfig.logo.targetOutputIds
+    (state) => state.overlayConfig.logo.logos[0]?.targetOutputIds ?? ["main"]
   )
   const [text, setText] = useState("")
   const [targetOutputIds, setTargetOutputIds] = useState(defaultTargets)
@@ -181,7 +181,7 @@ export function TickerOverlaySection() {
           {activeMessageId ? (
             <Button
               type="button"
-              variant="outline"
+              variant="destructive"
               size="sm"
               onClick={stopMessage}
             >

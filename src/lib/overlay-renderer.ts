@@ -31,24 +31,25 @@ function drawLogo(
   overlays: BroadcastOverlayPayload,
   options: OverlayRenderOptions
 ): void {
-  const logo = overlays.logo
-  if (!logo) return
-  const image = options.imageCache?.get(logo.imageUrl)
-  if (!image || image.naturalWidth <= 0 || image.naturalHeight <= 0) return
-
   const offsetX = options.offsetX ?? 0
   const offsetY = options.offsetY ?? 0
-  const logoWidth = width * (logo.widthPercent / 100)
-  const logoHeight = logoWidth * (image.naturalHeight / image.naturalWidth)
-  const desiredX = offsetX + width * (logo.xPercent / 100) - logoWidth / 2
-  const desiredY = offsetY + height * (logo.yPercent / 100) - logoHeight / 2
-  const x = Math.min(offsetX + width - logoWidth, Math.max(offsetX, desiredX))
-  const y = Math.min(offsetY + height - logoHeight, Math.max(offsetY, desiredY))
-
-  ctx.save()
-  ctx.globalAlpha = 0.96
-  ctx.drawImage(image, x, y, logoWidth, logoHeight)
-  ctx.restore()
+  for (const logo of overlays.logos) {
+    const image = options.imageCache?.get(logo.imageUrl)
+    if (!image || image.naturalWidth <= 0 || image.naturalHeight <= 0) continue
+    const logoWidth = width * (logo.widthPercent / 100)
+    const logoHeight = logoWidth * (image.naturalHeight / image.naturalWidth)
+    const desiredX = offsetX + width * (logo.xPercent / 100) - logoWidth / 2
+    const desiredY = offsetY + height * (logo.yPercent / 100) - logoHeight / 2
+    const x = Math.min(offsetX + width - logoWidth, Math.max(offsetX, desiredX))
+    const y = Math.min(
+      offsetY + height - logoHeight,
+      Math.max(offsetY, desiredY)
+    )
+    ctx.save()
+    ctx.globalAlpha = 0.96
+    ctx.drawImage(image, x, y, logoWidth, logoHeight)
+    ctx.restore()
+  }
 }
 
 function lowerThirdColors(

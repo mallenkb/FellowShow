@@ -3,11 +3,12 @@ import {
   MessageSquareTextIcon,
   PanelsTopLeftIcon,
 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { useBroadcastStore } from "@/stores"
 
 export function OnDisplayOverview() {
-  const hasLogo = useBroadcastStore((state) =>
-    Boolean(state.overlayConfig.logo.imageUrl)
+  const hasLogo = useBroadcastStore(
+    (state) => state.overlayConfig.logo.logos.length > 0
   )
   const logoVisible = useBroadcastStore(
     (state) => state.activeOverlays.logoVisible
@@ -65,15 +66,16 @@ export function OnDisplayOverview() {
                 {item.detail}
               </span>
             </span>
-            <span
+            <Badge
+              variant="outline"
               className={
                 item.visible
-                  ? "text-[0.625rem] font-semibold tracking-wide text-red-500 uppercase"
+                  ? "border-red-500/50 bg-red-500/10 text-[0.625rem] font-semibold tracking-wide text-red-500 uppercase"
                   : "text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase"
               }
             >
               {item.visible ? "On" : "Off"}
-            </span>
+            </Badge>
           </div>
         ))}
       </div>

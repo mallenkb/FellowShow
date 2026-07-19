@@ -386,9 +386,8 @@ export function TranscriptPanel() {
       <div className="flex gap-2 px-3 py-2">
         {isTranscribing ? (
           <Button
-            variant="secondary"
+            variant="destructive"
             size="sm"
-            className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
             onClick={() =>
               void (hasActiveSermon ? endSermon() : stopTranscription())
             }

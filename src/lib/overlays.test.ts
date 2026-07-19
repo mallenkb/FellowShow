@@ -10,7 +10,19 @@ import {
 describe("master overlays", () => {
   it("filters each active overlay by output", () => {
     const config = createDefaultOverlayConfiguration()
-    config.logo.imageUrl = "asset://logo.png"
+    config.logo.logos = [
+      {
+        id: "logo-1",
+        name: "Logo",
+        imageUrl: "asset://logo.png",
+        visible: true,
+        position: "top-right",
+        xPercent: 90,
+        yPercent: 10,
+        widthPercent: 12,
+        targetOutputIds: ["main"],
+      },
+    ]
     config.tickerMessages = [
       {
         id: "ticker-1",
@@ -29,12 +41,12 @@ describe("master overlays", () => {
 
     expect(getOverlayPayloadForOutput(config, active, "main", 200)).toEqual(
       expect.objectContaining({
-        logo: expect.objectContaining({ imageUrl: "asset://logo.png" }),
+        logos: [expect.objectContaining({ imageUrl: "asset://logo.png" })],
         ticker: expect.objectContaining({ text: "Move your car" }),
       })
     )
     expect(getOverlayPayloadForOutput(config, active, "alt", 200)).toEqual({
-      logo: null,
+      logos: [],
       lowerThird: null,
       ticker: null,
     })
@@ -53,10 +65,21 @@ describe("master overlays", () => {
 
   it("removes missing targets and falls back to Program", () => {
     const config = createDefaultOverlayConfiguration()
-    config.logo.targetOutputIds = ["removed"]
+    config.logo.logos[0] = {
+      id: "logo-1",
+      name: "Logo",
+      imageUrl: "asset://logo.png",
+      visible: true,
+      position: "top-right",
+      xPercent: 90,
+      yPercent: 10,
+      widthPercent: 12,
+      targetOutputIds: ["removed"],
+    }
 
     expect(
-      sanitizeOverlayConfiguration(config, ["main", "alt"]).logo.targetOutputIds
+      sanitizeOverlayConfiguration(config, ["main", "alt"]).logo.logos[0]
+        .targetOutputIds
     ).toEqual(["main"])
   })
 })

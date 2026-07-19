@@ -25,7 +25,10 @@ import {
 } from "lucide-react"
 import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
 import { sortThemesForSection } from "@/lib/theme-order"
-import { DEFAULT_SONG_THEME_ID } from "@/lib/builtin-themes"
+import {
+  DEFAULT_ANNOUNCEMENT_THEME_ID,
+  DEFAULT_SONG_THEME_ID,
+} from "@/lib/builtin-themes"
 import { getOverlayPayloadForOutput } from "@/lib/overlays"
 import { SliderField } from "@/components/ui/slider-field"
 import {
@@ -323,7 +326,7 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
             theme.id === DEFAULT_SONG_THEME_ID || theme.section === "songs"
         )
       : selectedSection === "announcements"
-        ? themes.filter((theme) => theme.section === "announcements")
+        ? themes.filter((theme) => theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID)
         : themes
   const visibleThemes = sortThemesForSection(themesForSection, selectedSection)
   const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
@@ -444,32 +447,34 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
               event.target.value = ""
             }}
           />
-          <div className="mb-3 flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="min-w-0 flex-1 justify-center"
-              onClick={() => themeImageInputRef.current?.click()}
-              title="Upload an image or looping video background"
-              disabled={isUploadingTheme}
-            >
-              <ImagePlusIcon className="size-3.5" />
-              {isUploadingTheme ? "Uploading…" : "Upload theme"}
-            </Button>
-            <Button
-              type="button"
-              variant={isReordering ? "secondary" : "outline"}
-              size="sm"
-              onClick={() => {
-                setIsReordering((reordering) => !reordering)
-                setDraggedThemeId(null)
-              }}
-            >
-              <ArrowUpDownIcon className="size-3.5" />
-              {isReordering ? "Done" : "Reorder"}
-            </Button>
-          </div>
+          {selectedSection !== "announcements" && (
+            <div className="mb-3 flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="min-w-0 flex-1 justify-center"
+                onClick={() => themeImageInputRef.current?.click()}
+                title="Upload an image or looping video background"
+                disabled={isUploadingTheme}
+              >
+                <ImagePlusIcon className="size-3.5" />
+                {isUploadingTheme ? "Uploading…" : "Upload theme"}
+              </Button>
+              <Button
+                type="button"
+                variant={isReordering ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setIsReordering((reordering) => !reordering)
+                  setDraggedThemeId(null)
+                }}
+              >
+                <ArrowUpDownIcon className="size-3.5" />
+                {isReordering ? "Done" : "Reorder"}
+              </Button>
+            </div>
+          )}
           {visibleThemes.length > 0 ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
               {visibleThemes.map((theme) => {
@@ -535,19 +540,20 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
                         )}
                       </div>
                     </button>
-                    {!isReordering && (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="icon-xs"
-                        className="absolute top-2.5 right-2.5 bg-background/85 text-muted-foreground shadow-sm backdrop-blur-sm hover:text-destructive"
-                        aria-label={`Remove ${theme.name}`}
-                        title={`Remove ${theme.name}`}
-                        onClick={() => setThemePendingRemoval(theme)}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    )}
+                    {!isReordering &&
+                      theme.id !== DEFAULT_ANNOUNCEMENT_THEME_ID && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon-xs"
+                          className="absolute top-2.5 right-2.5 bg-background/85 text-muted-foreground shadow-sm backdrop-blur-sm hover:text-destructive"
+                          aria-label={`Remove ${theme.name}`}
+                          title={`Remove ${theme.name}`}
+                          onClick={() => setThemePendingRemoval(theme)}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      )}
                   </div>
                 )
               })}

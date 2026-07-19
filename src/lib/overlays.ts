@@ -3,6 +3,7 @@ import {
   type ActiveOverlayState,
   type BroadcastOverlayPayload,
   type LogoOverlayConfig,
+  type LogoOverlayItem,
   type LowerThirdPreset,
   type LowerThirdTheme,
   type OverlayConfiguration,
@@ -20,7 +21,8 @@ const DEFAULT_TICKER_LABEL_TEXT_COLOR = "#ffffff"
 const DEFAULT_LOWER_THIRD_DURATION_MS = 14_000
 const MIN_LOWER_THIRD_DURATION_MS = 10_000
 const MAX_LOWER_THIRD_DURATION_MS = 30_000
-const LOWER_THIRD_FADE_MS = 2_000
+// Keep lower thirds responsive on air while retaining a subtle fade.
+const LOWER_THIRD_FADE_MS = 600
 const DEFAULT_LOWER_THIRD_X_PERCENT = 30
 const DEFAULT_LOWER_THIRD_Y_PERCENT = 82
 const DEFAULT_LOWER_THIRD_WIDTH_PERCENT = 50
@@ -53,12 +55,7 @@ export function createDefaultOverlayConfiguration(): OverlayConfiguration {
   return {
     version: OVERLAY_CONFIGURATION_VERSION,
     logo: {
-      imageUrl: null,
-      position: "top-right",
-      xPercent: 90,
-      yPercent: 10,
-      widthPercent: 12,
-      targetOutputIds: [DEFAULT_OVERLAY_OUTPUT_ID],
+      logos: [],
     },
     ticker: {
       backgroundColor: DEFAULT_TICKER_BACKGROUND_COLOR,
@@ -156,37 +153,86 @@ function sanitizeLogo(
   value: unknown,
   validOutputIds: ReadonlySet<string>
 ): LogoOverlayConfig {
-  const defaults = createDefaultOverlayConfiguration().logo
   const record = asRecord(value)
-  if (!record) return defaults
+  if (!record) return { logos: [] }
+  const sanitizeItem = (
+    itemValue: unknown,
+    index: number
+  ): LogoOverlayItem | null => {
+    const item = asRecord(itemValue)
+    if (!item) return null
+    const imageUrl =
+      typeof item.imageUrl === "string" ? item.imageUrl.trim() : ""
+    if (!imageUrl) return null
+    const position =
+      typeof item.position === "string" && OVERLAY_POSITIONS.has(item.position)
+        ? (item.position as OverlayPosition)
+        : "top-right"
+    const positionPercentages = LOGO_POSITION_PERCENTAGES[position]
+    return {
+      id:
+        typeof item.id === "string" && item.id.trim()
+          ? item.id
+          : `logo-${index}`,
+      name:
+        typeof item.name === "string" && item.name.trim()
+          ? item.name.trim()
+          : "Logo",
+      imageUrl,
+      visible: item.visible !== false,
+      position,
+      xPercent: sanitizePositionPercent(
+        item.xPercent,
+        positionPercentages.xPercent
+      ),
+      yPercent: sanitizePositionPercent(
+        item.yPercent,
+        positionPercentages.yPercent
+      ),
+      widthPercent:
+        typeof item.widthPercent === "number" &&
+        Number.isFinite(item.widthPercent)
+          ? Math.min(30, Math.max(4, item.widthPercent))
+          : 12,
+      targetOutputIds: sanitizeTargets(item.targetOutputIds, validOutputIds),
+    }
+  }
+  const multiLogoItems = Array.isArray(record.logos)
+    ? record.logos
+        .map((item, index) => sanitizeItem(item, index))
+        .filter((item): item is LogoOverlayItem => item !== null)
+    : []
+  if (multiLogoItems.length > 0) return { logos: multiLogoItems }
   const position =
     typeof record.position === "string" &&
     OVERLAY_POSITIONS.has(record.position)
       ? (record.position as OverlayPosition)
-      : defaults.position
+      : "top-right"
   const widthPercent =
     typeof record.widthPercent === "number" &&
     Number.isFinite(record.widthPercent)
       ? Math.min(30, Math.max(4, record.widthPercent))
-      : defaults.widthPercent
+      : 12
   const positionPercentages = LOGO_POSITION_PERCENTAGES[position]
-  return {
-    imageUrl:
-      typeof record.imageUrl === "string" && record.imageUrl.trim()
-        ? record.imageUrl
-        : null,
-    position,
-    xPercent: sanitizePositionPercent(
-      record.xPercent,
-      positionPercentages.xPercent
-    ),
-    yPercent: sanitizePositionPercent(
-      record.yPercent,
-      positionPercentages.yPercent
-    ),
-    widthPercent,
-    targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
-  }
+  const legacyItem = sanitizeItem(
+    {
+      ...record,
+      id: "legacy-logo",
+      name: "Logo",
+      position,
+      xPercent: sanitizePositionPercent(
+        record.xPercent,
+        positionPercentages.xPercent
+      ),
+      yPercent: sanitizePositionPercent(
+        record.yPercent,
+        positionPercentages.yPercent
+      ),
+      widthPercent,
+    },
+    0
+  )
+  return { logos: legacyItem ? [legacyItem] : [] }
 }
 
 function sanitizeTickerMessage(
@@ -353,7 +399,7 @@ export function getOverlayPayloadForOutput(
     program?.verse?.themeSection === "songs" ||
     program?.verse?.themeSection === "announcements"
   if (hidesMasterOverlays) {
-    return { logo: null, lowerThird: null, ticker: null }
+    return { logos: [], lowerThird: null, ticker: null }
   }
   const ticker = config.tickerMessages.find(
     (message) =>
@@ -367,17 +413,19 @@ export function getOverlayPayloadForOutput(
     lowerThird.preset.targetOutputIds.includes(outputId)
 
   return {
-    logo:
-      active.logoVisible &&
-      config.logo.imageUrl &&
-      config.logo.targetOutputIds.includes(outputId)
-        ? {
-            imageUrl: config.logo.imageUrl,
-            xPercent: config.logo.xPercent,
-            yPercent: config.logo.yPercent,
-            widthPercent: config.logo.widthPercent,
-          }
-        : null,
+    logos: active.logoVisible
+      ? config.logo.logos
+          .filter(
+            (logo) => logo.visible && logo.targetOutputIds.includes(outputId)
+          )
+          .map((logo) => ({
+            id: logo.id,
+            imageUrl: logo.imageUrl,
+            xPercent: logo.xPercent,
+            yPercent: logo.yPercent,
+            widthPercent: logo.widthPercent,
+          }))
+      : [],
     lowerThird: isLowerThirdActive
       ? {
           id: lowerThird.preset.id,

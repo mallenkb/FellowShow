@@ -71,7 +71,8 @@ function TickerComposerContent({
     const id = broadcast.saveTickerMessage({
       text: trimmed,
       ...(isSermonScroll ? { showLabel, labelText: resolvedLabel } : {}),
-      targetOutputIds: broadcast.overlayConfig.logo.targetOutputIds,
+      targetOutputIds: broadcast.overlayConfig.logo.logos[0]
+        ?.targetOutputIds ?? ["main"],
     })
     if (sermonSource) {
       useSermonStore

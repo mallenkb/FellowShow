@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
@@ -348,14 +349,17 @@ export function OutputCard({
             {pending ? (
               <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
             ) : (
-              <span
+              <Badge
+                variant="outline"
                 className={cn(
-                  "text-xs",
-                  enabled ? "text-foreground" : "text-muted-foreground"
+                  "rounded-full px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide uppercase",
+                  enabled
+                    ? "border-red-500/40 bg-red-500/10 text-red-400"
+                    : "border-border bg-muted/30 text-muted-foreground"
                 )}
               >
                 {enabled ? "On" : "Off"}
-              </span>
+              </Badge>
             )}
             <Switch
               checked={enabled}
@@ -410,14 +414,17 @@ export function OutputCard({
           {pending ? (
             <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
           ) : (
-            <span
+            <Badge
+              variant="outline"
               className={cn(
-                "text-xs",
-                enabled ? "text-foreground" : "text-muted-foreground"
+                "rounded-full px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide uppercase",
+                enabled
+                  ? "border-red-500/40 bg-red-500/10 text-red-400"
+                  : "border-border bg-muted/30 text-muted-foreground"
               )}
             >
               {enabled ? "On" : "Off"}
-            </span>
+            </Badge>
           )}
           <Switch
             checked={enabled}

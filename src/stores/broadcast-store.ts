@@ -112,7 +112,12 @@ interface BroadcastState {
   setLowerThird: (lowerThird: LowerThirdRenderData | null) => void
   setOutputOpacity: (opacity: number) => void
   clearLowerThird: () => void
-  updateLogoOverlay: (updates: Partial<LogoOverlayConfig>) => void
+  addLogoOverlays: (logos: LogoOverlayConfig["logos"]) => void
+  updateLogoOverlay: (
+    id: string,
+    updates: Partial<Omit<LogoOverlayConfig["logos"][number], "id">>
+  ) => void
+  removeLogoOverlay: (id: string) => void
   updateTickerOverlay: (updates: Partial<TickerOverlayConfig>) => void
   setLogoOverlayVisible: (visible: boolean) => void
   saveTickerMessage: (
@@ -329,7 +334,8 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     set((s) => ({
       themes: BUILTIN_THEMES.filter(
         (theme) =>
-          !s.deletedBuiltinThemeIds.includes(theme.id) &&
+          (theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID ||
+            !s.deletedBuiltinThemeIds.includes(theme.id)) &&
           isSelectableTheme(theme)
       ),
     }))
@@ -340,7 +346,8 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         ? s.themes.map((t) => (t.id === theme.id ? theme : t))
         : [...s.themes, theme],
     })),
-  deleteTheme: (id) =>
+  deleteTheme: (id) => {
+    if (id === DEFAULT_ANNOUNCEMENT_THEME_ID) return
     set((s) => {
       const nextThemes = s.themes.filter((theme) => theme.id !== id)
       if (nextThemes.length === 0) return s
@@ -369,7 +376,8 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         editingThemeId: s.editingThemeId === id ? null : s.editingThemeId,
         draftTheme: s.editingThemeId === id ? null : s.draftTheme,
       }
-    }),
+    })
+  },
   duplicateTheme: (id) => {
     const s = get()
     const source = s.themes.find((t) => t.id === id)
@@ -531,12 +539,17 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   },
   setActiveTheme: (themeId, section) => {
     const targetSection = section ?? get().selectedThemeSection
+    const resolvedThemeId =
+      targetSection === "announcements"
+        ? DEFAULT_ANNOUNCEMENT_THEME_ID
+        : themeId
     set((s) => ({
-      activeThemeId: targetSection === "bible" ? themeId : s.activeThemeId,
+      activeThemeId:
+        targetSection === "bible" ? resolvedThemeId : s.activeThemeId,
       selectedThemeSection: targetSection,
       sectionThemeIds: {
         ...s.sectionThemeIds,
-        [targetSection]: themeId,
+        [targetSection]: resolvedThemeId,
       },
     }))
     // Section themes drive every output without a fixed theme.
@@ -674,15 +687,42 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     set({ lowerThird: null })
     get().syncBroadcastOutput()
   },
-  updateLogoOverlay: (updates) => {
+  addLogoOverlays: (logos) => {
     set((s) => ({
       overlayConfig: sanitizeOverlayConfiguration(
         {
           ...s.overlayConfig,
-          logo: { ...s.overlayConfig.logo, ...updates },
+          logo: { logos: [...s.overlayConfig.logo.logos, ...logos] },
         },
         s.outputs.map((output) => output.id)
       ),
+    }))
+    get().syncBroadcastOutput()
+  },
+  updateLogoOverlay: (id, updates) => {
+    set((s) => ({
+      overlayConfig: sanitizeOverlayConfiguration(
+        {
+          ...s.overlayConfig,
+          logo: {
+            logos: s.overlayConfig.logo.logos.map((logo) =>
+              logo.id === id ? { ...logo, ...updates } : logo
+            ),
+          },
+        },
+        s.outputs.map((output) => output.id)
+      ),
+    }))
+    get().syncBroadcastOutput()
+  },
+  removeLogoOverlay: (id) => {
+    set((s) => ({
+      overlayConfig: {
+        ...s.overlayConfig,
+        logo: {
+          logos: s.overlayConfig.logo.logos.filter((logo) => logo.id !== id),
+        },
+      },
     }))
     get().syncBroadcastOutput()
   },
@@ -1047,7 +1087,9 @@ export function hydrateBroadcastThemes(): Promise<void> {
 
       const patch: Partial<BroadcastState> = {}
       const deletedBuiltinIds = Array.isArray(deletedBuiltinThemeIds)
-        ? deletedBuiltinThemeIds
+        ? deletedBuiltinThemeIds.filter(
+            (id) => id !== DEFAULT_ANNOUNCEMENT_THEME_ID
+          )
         : []
       const builtinThemes = BUILTIN_THEMES.filter(
         (theme) => !deletedBuiltinIds.includes(theme.id)
@@ -1108,9 +1150,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
         bible: resolveThemeId(activeId ?? DEFAULT_SECTION_THEME_IDS.bible),
         ...sectionThemeIds,
         songs: resolveThemeId(songThemeId),
-        announcements: resolveThemeId(
-          sectionThemeIds.announcements ?? DEFAULT_ANNOUNCEMENT_THEME_ID
-        ),
+        announcements: resolveThemeId(DEFAULT_ANNOUNCEMENT_THEME_ID),
       }
       patch.sectionThemeIds = Object.fromEntries(
         Object.entries(patch.sectionThemeIds).map(([section, themeId]) => [

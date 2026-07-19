@@ -1,10 +1,13 @@
-export const OVERLAY_CONFIGURATION_VERSION = 7 as const
+export const OVERLAY_CONFIGURATION_VERSION = 8 as const
 
 export type OverlayPosition =
   "top-left" | "top-right" | "bottom-left" | "bottom-right"
 
-export interface LogoOverlayConfig {
-  imageUrl: string | null
+export interface LogoOverlayItem {
+  id: string
+  name: string
+  imageUrl: string
+  visible: boolean
   position: OverlayPosition
   /** Horizontal center position as a percentage of the output width. */
   xPercent: number
@@ -13,6 +16,10 @@ export interface LogoOverlayConfig {
   /** Logo width as a percentage of the output width. */
   widthPercent: number
   targetOutputIds: string[]
+}
+
+export interface LogoOverlayConfig {
+  logos: LogoOverlayItem[]
 }
 
 export interface TickerMessage {
@@ -80,6 +87,7 @@ export interface ActiveOverlayState {
 }
 
 interface LogoOverlayPayload {
+  id: string
   imageUrl: string
   xPercent: number
   yPercent: number
@@ -114,7 +122,7 @@ interface LowerThirdOverlayPayload {
 }
 
 export interface BroadcastOverlayPayload {
-  logo: LogoOverlayPayload | null
+  logos: LogoOverlayPayload[]
   lowerThird: LowerThirdOverlayPayload | null
   ticker: TickerOverlayPayload | null
 }

@@ -94,7 +94,7 @@ export function LowerThirdOverlaySection() {
   const overlayConfig = useBroadcastStore((state) => state.overlayConfig)
   const activeOverlays = useBroadcastStore((state) => state.activeOverlays)
   const defaultTargets = useBroadcastStore(
-    (state) => state.overlayConfig.logo.targetOutputIds
+    (state) => state.overlayConfig.logo.logos[0]?.targetOutputIds ?? ["main"]
   )
   const savePreset = useBroadcastStore((state) => state.saveLowerThirdPreset)
   const deletePreset = useBroadcastStore(

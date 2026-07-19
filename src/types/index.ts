@@ -30,6 +30,7 @@ export {
   type ActiveOverlayState,
   type BroadcastOverlayPayload,
   type LogoOverlayConfig,
+  type LogoOverlayItem,
   type LowerThirdPreset,
   type LowerThirdTheme,
   type OverlayConfiguration,

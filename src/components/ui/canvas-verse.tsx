@@ -90,7 +90,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       timer?.backgroundMediaType !== "video"
         ? (timer?.backgroundUrl ?? null)
         : null,
-      overlays?.logo?.imageUrl ?? null,
+      ...(overlays?.logos.map((logo) => logo.imageUrl) ?? []),
     ].filter((url): url is string => Boolean(url))
     const videoUrls = [
       theme.background.type === "image" &&
@@ -148,7 +148,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     verse?.presentationImage,
     timer?.backgroundMediaType,
     timer?.backgroundUrl,
-    overlays?.logo?.imageUrl,
+    overlays?.logos,
   ])
 
   useEffect(() => {
@@ -254,12 +254,18 @@ export const CanvasVerse = memo(function CanvasVerse({
       height: displayH,
     })
     const previousContentKey = previousContentKeyRef.current
+    // Presentations should always cross-fade between slides, even when an
+    // imported or older presentation theme was saved with no transition.
+    const transition =
+      theme.section === "presentation" && theme.transition.type === "none"
+        ? { ...theme.transition, type: "fade" as const, duration: 300 }
+        : theme.transition
     const shouldAnimate =
       previousContentKey !== null &&
       previousContentKey !== contentKey &&
       !sizeChanged &&
-      theme.transition.type !== "none" &&
-      theme.transition.duration > 0 &&
+      transition.type !== "none" &&
+      transition.duration > 0 &&
       canvas.width > 0 &&
       canvas.height > 0
 
@@ -350,12 +356,18 @@ export const CanvasVerse = memo(function CanvasVerse({
     }
 
     const startedAt = performance.now()
-    const duration = Math.max(1, theme.transition.duration)
+    const duration = Math.max(1, transition.duration)
     const tick = (now: number) => {
       const progress = Math.min(1, (now - startedAt) / duration)
       ctx.save()
       ctx.setTransform(1, 0, 0, 1, 0, 0)
-      drawTransitionFrame(ctx, previous, next, theme, progress)
+      drawTransitionFrame(
+        ctx,
+        previous,
+        next,
+        { ...theme, transition },
+        progress
+      )
       ctx.restore()
       if (progress < 1) {
         transitionFrameRef.current = window.requestAnimationFrame(tick)

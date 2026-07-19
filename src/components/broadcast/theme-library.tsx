@@ -35,6 +35,7 @@ import {
 import { cn } from "@/lib/utils"
 import { importTheme, exportTheme } from "@/lib/theme-designer-files"
 import { sortThemesForSection } from "@/lib/theme-order"
+import { DEFAULT_ANNOUNCEMENT_THEME_ID } from "@/lib/builtin-themes"
 import { toast } from "sonner"
 import type {
   BroadcastTheme,
@@ -240,16 +241,18 @@ function ThemeCard({
               <EditIcon className="mr-2 size-3.5" />
               Rename
             </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={(e) => {
-                e.stopPropagation()
-                setDeleteOpen(true)
-              }}
-            >
-              <Trash2Icon className="mr-2 size-3.5" />
-              {theme.builtin ? "Hide" : "Delete"}
-            </DropdownMenuItem>
+            {theme.id !== DEFAULT_ANNOUNCEMENT_THEME_ID && (
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDeleteOpen(true)
+                }}
+              >
+                <Trash2Icon className="mr-2 size-3.5" />
+                {theme.builtin ? "Hide" : "Delete"}
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -317,7 +320,11 @@ export function ThemeLibrary() {
   const [draggedThemeId, setDraggedThemeId] = useState<string | null>(null)
   const filteredThemes = useMemo(() => {
     let result = themes
-    if (selectedThemeSection === "presentation") {
+    if (selectedThemeSection === "announcements") {
+      result = result.filter(
+        (theme) => theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID
+      )
+    } else if (selectedThemeSection === "presentation") {
       result = result.filter(
         (theme) => !PRESENTATION_HIDDEN_BUILTIN_THEME_IDS.has(theme.id)
       )
@@ -381,10 +388,12 @@ export function ThemeLibrary() {
       {/* Header */}
       <div className="flex h-14 items-center justify-between border-b border-border px-3">
         <span className="text-lg font-semibold text-foreground">Themes</span>
-        <Button onClick={handleNewTheme}>
-          <PlusIcon className="size-4" />
-          New
-        </Button>
+        {selectedThemeSection !== "announcements" && (
+          <Button onClick={handleNewTheme}>
+            <PlusIcon className="size-4" />
+            New
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -401,39 +410,41 @@ export function ThemeLibrary() {
       </div>
 
       {/* Upload / Export */}
-      <div className="flex gap-1.5 px-3 pb-3">
-        <Button
-          variant="outline"
-          className="flex-1 border-border bg-transparent"
-          onClick={handleImportTheme}
-          title="Upload a theme JSON, image, or video background"
-        >
-          <UploadIcon className="size-2.5" />
-          Upload theme
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 border-border bg-transparent"
-          onClick={() => {
-            void (async () => {
-              const id = useBroadcastStore.getState().editingThemeId
-              const theme = id
-                ? useBroadcastStore.getState().themes.find((t) => t.id === id)
-                : null
-              if (theme) {
-                try {
-                  await exportTheme(theme)
-                } catch (err) {
-                  console.error("[theme-library] export failed:", err)
+      {selectedThemeSection !== "announcements" && (
+        <div className="flex gap-1.5 px-3 pb-3">
+          <Button
+            variant="outline"
+            className="flex-1 border-border bg-transparent"
+            onClick={handleImportTheme}
+            title="Upload a theme JSON, image, or video background"
+          >
+            <UploadIcon className="size-2.5" />
+            Upload theme
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 border-border bg-transparent"
+            onClick={() => {
+              void (async () => {
+                const id = useBroadcastStore.getState().editingThemeId
+                const theme = id
+                  ? useBroadcastStore.getState().themes.find((t) => t.id === id)
+                  : null
+                if (theme) {
+                  try {
+                    await exportTheme(theme)
+                  } catch (err) {
+                    console.error("[theme-library] export failed:", err)
+                  }
                 }
-              }
-            })()
-          }}
-        >
-          <DownloadIcon className="size-2.5" />
-          Export
-        </Button>
-      </div>
+              })()
+            }}
+          >
+            <DownloadIcon className="size-2.5" />
+            Export
+          </Button>
+        </div>
+      )}
 
       {/* Theme list */}
       <ScrollArea className="min-h-0 min-w-0 flex-1 overflow-x-hidden">

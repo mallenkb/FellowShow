@@ -525,7 +525,7 @@ const PRESENTATION_TICKER: BroadcastTheme = {
 const ANNOUNCEMENTS_THEME: BroadcastTheme = {
   ...CLASSIC_DARK,
   id: DEFAULT_ANNOUNCEMENT_THEME_ID,
-  name: "Announcements",
+  name: "Deep Ocean",
   section: "announcements",
   pinned: true,
   background: {

@@ -70,7 +70,7 @@ function directVideoFor(payload: BroadcastPayload): DirectVideo | null {
     video?.mediaType !== "video" ||
     payload.timer ||
     payload.verse?.tickerText ||
-    payload.overlays?.logo ||
+    (payload.overlays?.logos.length ?? 0) > 0 ||
     payload.overlays?.lowerThird ||
     payload.overlays?.ticker ||
     !shouldRenderStandardBroadcastContent(payload.theme)
@@ -401,9 +401,10 @@ function BroadcastCanvas() {
               mediaType: payload.verse.presentationImage.mediaType ?? "image",
             }
           : null,
-        payload.overlays?.logo?.imageUrl
-          ? { url: payload.overlays.logo.imageUrl, mediaType: "image" as const }
-          : null,
+        ...(payload.overlays?.logos.map((logo) => ({
+          url: logo.imageUrl,
+          mediaType: "image" as const,
+        })) ?? []),
       ].filter((item): item is { url: string; mediaType: "image" | "video" } =>
         Boolean(item)
       )

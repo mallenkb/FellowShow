@@ -1302,6 +1302,7 @@ export function SearchPanel({
             />
             <Button
               type="button"
+              variant="outline"
               className="h-10 flex-1 justify-center"
               disabled={isImportingDocuments}
               onClick={() => void importPresentationContent()}

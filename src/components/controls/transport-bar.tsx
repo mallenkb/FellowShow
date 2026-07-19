@@ -113,9 +113,8 @@ export function TransportBar() {
         </span>
         {isTranscribing ? (
           <Button
-            variant="secondary"
+            variant="destructive"
             size="sm"
-            className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
             disabled={isChangingSermon}
             onClick={
               activeSession
