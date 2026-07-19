@@ -15,7 +15,6 @@ interface SongSearchResult {
   songs: CopSong[]
   totalCount: number
   hiddenCount: number
-  resultCountIsCapped: boolean
   effectiveQuery: string
   isSearching: boolean
 }
@@ -122,7 +121,6 @@ export function useSongSearch({
         query: deferredQuery,
         source,
         letter,
-        limit: renderLimit + 1,
       })
     }, 25)
 
@@ -141,13 +139,25 @@ export function useSongSearch({
     () => (useSynchronousFallback ? createSongSearchIndex(orderedSongs) : null),
     [orderedSongs, useSynchronousFallback]
   )
+  // Keep this new hook after the established search hooks so Fast Refresh
+  // does not reinterpret an existing hook value while the app is running.
+  const alphabetizedSongs = useMemo(
+    () =>
+      [...songs].sort((left, right) =>
+        left.title.localeCompare(right.title, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
+      ),
+    [songs]
+  )
 
   return useMemo(() => {
     if (!isSearchActive) {
       const filtered =
         source === "all" && letter === "all"
-          ? orderedSongs
-          : orderedSongs.filter(
+          ? alphabetizedSongs
+          : alphabetizedSongs.filter(
               (song) =>
                 (source === "all" || song.source === source) &&
                 (letter === "all" ||
@@ -157,7 +167,6 @@ export function useSongSearch({
         songs: filtered.slice(0, renderLimit),
         totalCount: filtered.length,
         hiddenCount: Math.max(0, filtered.length - renderLimit),
-        resultCountIsCapped: false,
         effectiveQuery: "",
         isSearching: false,
       }
@@ -167,13 +176,11 @@ export function useSongSearch({
       const matches = searchSongs(fallbackIndex, deferredQuery, {
         source,
         letter,
-        limit: renderLimit + 1,
       })
       return {
         songs: matches.slice(0, renderLimit),
         totalCount: matches.length,
         hiddenCount: Math.max(0, matches.length - renderLimit),
-        resultCountIsCapped: matches.length > renderLimit,
         effectiveQuery: deferredQuery,
         isSearching: false,
       }
@@ -188,7 +195,6 @@ export function useSongSearch({
       songs: resultSongs.slice(0, renderLimit),
       totalCount: resultSongs.length,
       hiddenCount: Math.max(0, resultSongs.length - renderLimit),
-      resultCountIsCapped: resultSongs.length > renderLimit,
       effectiveQuery: workerResult?.query ?? deferredQuery,
       isSearching:
         !workerReady ||
@@ -197,11 +203,11 @@ export function useSongSearch({
     }
   }, [
     activeSearchKey,
+    alphabetizedSongs,
     deferredQuery,
     fallbackIndex,
     isSearchActive,
     letter,
-    orderedSongs,
     renderLimit,
     songById,
     source,

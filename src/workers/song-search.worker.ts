@@ -14,7 +14,6 @@ type WorkerRequest =
       query: string
       source: string
       letter: string
-      limit: number
     }
 
 type WorkerResponse =
@@ -43,7 +42,6 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const matches = searchSongs(searchIndex, request.query, {
     source: request.source,
     letter: request.letter,
-    limit: request.limit,
   })
   self.postMessage({
     type: "results",

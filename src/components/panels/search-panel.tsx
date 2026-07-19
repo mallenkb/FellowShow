@@ -145,9 +145,7 @@ const PRESENTATION_MEDIA_EXTENSION_SET = new Set<string>(
   PRESENTATION_MEDIA_EXTENSIONS
 )
 const PRESENTATION_VIDEO_EXTENSIONS = new Set(["mp4", "mov", "m4v", "webm"])
-// Song cards include lyric previews, so keep the initial DOM small. Search and
-// source/letter filters still expose the full catalog on demand.
-const SONG_RENDER_LIMIT = 40
+const SONG_PAGE_SIZE = 50
 
 import { TranslationOptions } from "@/components/panels/search/translation-options"
 import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
@@ -168,6 +166,14 @@ export function SearchPanel({
   const [songLetterFilter, setSongLetterFilter] = useState("all")
   const [songSourceFilter, setSongSourceFilter] =
     useState<SongSourceFilter>("all")
+  const [songRenderLimit, setSongRenderLimit] = useState(SONG_PAGE_SIZE)
+  const songSearchKey = `${songQuery}\u0000${songSourceFilter}\u0000${songLetterFilter}`
+  const [previousSongSearchKey, setPreviousSongSearchKey] =
+    useState(songSearchKey)
+  if (previousSongSearchKey !== songSearchKey) {
+    setPreviousSongSearchKey(songSearchKey)
+    setSongRenderLimit(SONG_PAGE_SIZE)
+  }
   const [allSongs, setAllSongs] = useState<CopSong[]>([])
   const [editingPresentationSlideId, setEditingPresentationSlideId] = useState<
     string | null
@@ -656,7 +662,6 @@ export function SearchPanel({
     songs: visibleSongs,
     totalCount: songResultCount,
     hiddenCount: hiddenSongCount,
-    resultCountIsCapped: songResultCountIsCapped,
     effectiveQuery: effectiveSongQuery,
     isSearching: isSongSearching,
   } = useSongSearch({
@@ -664,7 +669,7 @@ export function SearchPanel({
     query: songQuery,
     source: songSourceFilter,
     letter: songLetterFilter,
-    renderLimit: SONG_RENDER_LIMIT,
+    renderLimit: songRenderLimit,
   })
 
   const selectedBookNumber = selectedBook?.book_number
@@ -1252,32 +1257,30 @@ export function SearchPanel({
             {pinnedTranslationRow}
           </>
         ) : activeTab === "songs" ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <Input
               placeholder="Search song titles..."
               value={songQuery}
               onChange={(e) => setSongQuery(e.target.value)}
-              className="h-10 min-w-0 basis-full text-sm"
+              className="h-10 min-w-0 flex-1 text-sm"
             />
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <SongFilterDropdown
-                sourceValue={songSourceFilter}
-                letterValue={songLetterFilter}
-                onSourceChange={setSongSourceFilter}
-                onLetterChange={setSongLetterFilter}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="responsive-secondary-action h-10 min-w-0 flex-1"
-                onClick={() => void importEasyWorshipSongs()}
-                title="Import EasyWorship songs"
-                aria-label="Import EasyWorship songs"
-              >
-                <UploadIcon className="size-4" />
-                <span className="responsive-action-label">Import</span>
-              </Button>
-            </div>
+            <SongFilterDropdown
+              sourceValue={songSourceFilter}
+              letterValue={songLetterFilter}
+              onSourceChange={setSongSourceFilter}
+              onLetterChange={setSongLetterFilter}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-10 shrink-0"
+              onClick={() => void importEasyWorshipSongs()}
+              title="Import EasyWorship songs"
+              aria-label="Import EasyWorship songs"
+            >
+              <UploadIcon className="size-4" />
+            </Button>
           </div>
         ) : activeTab === "presentation" ? (
           <div
@@ -1631,13 +1634,15 @@ export function SearchPanel({
           songs={visibleSongs}
           totalCount={songResultCount}
           hiddenCount={hiddenSongCount}
-          resultCountIsCapped={songResultCountIsCapped}
           isSearching={isSongSearching}
           activeSongId={activeSongItem?.id ?? null}
           query={effectiveSongQuery}
           onOpenSong={prepareSong}
           onPresentSong={presentSong}
           formatReference={formatSongReference}
+          onLoadMore={() =>
+            setSongRenderLimit((limit) => limit + SONG_PAGE_SIZE)
+          }
         />
       )}
 

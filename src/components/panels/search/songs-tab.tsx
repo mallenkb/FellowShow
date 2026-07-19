@@ -7,26 +7,26 @@ interface SongsTabProps {
   songs: CopSong[]
   totalCount: number
   hiddenCount: number
-  resultCountIsCapped: boolean
   isSearching: boolean
   activeSongId: string | null
   query: string
   onOpenSong: (song: CopSong) => void
   onPresentSong: (song: CopSong) => void
   formatReference: (song: CopSong) => string
+  onLoadMore: () => void
 }
 
 export function SongsTab({
   songs,
   totalCount,
   hiddenCount,
-  resultCountIsCapped,
   isSearching,
   activeSongId,
   query,
   onOpenSong,
   onPresentSong,
   formatReference,
+  onLoadMore,
 }: SongsTabProps) {
   if (songs.length === 0) {
     return (
@@ -47,7 +47,14 @@ export function SongsTab({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+    <div
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+      onScroll={(event) => {
+        if (hiddenCount === 0) return
+        const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+        if (scrollHeight - scrollTop - clientHeight <= 160) onLoadMore()
+      }}
+    >
       <div className="flex flex-col gap-1 p-2">
         {songs.map((song) => {
           const isActive = activeSongId === `song:${song.id}`
@@ -79,22 +86,16 @@ export function SongsTab({
                     ) : null}
                   </div>
                   <p className="mt-1 line-clamp-3 text-xs leading-relaxed whitespace-pre-line text-muted-foreground">
-                    <HighlightedText text={song.lyrics} query={query} />
+                    {song.lyrics}
                   </p>
                 </div>
               </div>
             </article>
           )
         })}
-        {resultCountIsCapped ? (
+        {hiddenCount > 0 ? (
           <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-            Showing the first {songs.length} matches. Refine the search to
-            narrow the list.
-          </p>
-        ) : hiddenCount > 0 ? (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-            Showing first {songs.length} of {totalCount} songs. Refine the
-            search to narrow the list.
+            Showing {songs.length} of {totalCount} songs. Scroll for more.
           </p>
         ) : null}
       </div>

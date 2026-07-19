@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   useBibleStore,
   useBroadcastStore,
@@ -20,6 +21,7 @@ import {
   ChevronDownIcon,
   GripVerticalIcon,
   ImagePlusIcon,
+  Trash2Icon,
 } from "lucide-react"
 import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
 import { sortThemesForSection } from "@/lib/theme-order"
@@ -306,6 +308,8 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
   const [isReordering, setIsReordering] = useState(false)
   const [isUploadingTheme, setIsUploadingTheme] = useState(false)
   const [draggedThemeId, setDraggedThemeId] = useState<string | null>(null)
+  const [themePendingRemoval, setThemePendingRemoval] =
+    useState<BroadcastTheme | null>(null)
   const themeImageInputRef = useRef<HTMLInputElement>(null)
   const themes = useBroadcastStore((s) => s.themes)
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
@@ -531,6 +535,19 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
                         )}
                       </div>
                     </button>
+                    {!isReordering && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-xs"
+                        className="absolute top-2.5 right-2.5 bg-background/85 text-muted-foreground shadow-sm backdrop-blur-sm hover:text-destructive"
+                        aria-label={`Remove ${theme.name}`}
+                        title={`Remove ${theme.name}`}
+                        onClick={() => setThemePendingRemoval(theme)}
+                      >
+                        <Trash2Icon />
+                      </Button>
+                    )}
                   </div>
                 )
               })}
@@ -543,6 +560,32 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={themePendingRemoval !== null}
+        onOpenChange={(open) => {
+          if (!open) setThemePendingRemoval(null)
+        }}
+        title={
+          themePendingRemoval?.builtin
+            ? "Hide built-in theme?"
+            : "Delete theme?"
+        }
+        description={
+          themePendingRemoval
+            ? themePendingRemoval.builtin
+              ? `“${themePendingRemoval.name}” will be hidden from every tab where it appears.`
+              : `“${themePendingRemoval.name}” will be permanently deleted from every tab. This can’t be undone.`
+            : undefined
+        }
+        confirmLabel={themePendingRemoval?.builtin ? "Hide" : "Delete"}
+        destructive
+        onConfirm={() => {
+          if (!themePendingRemoval) return
+          useBroadcastStore.getState().deleteTheme(themePendingRemoval.id)
+          toast.success(`${themePendingRemoval.name} removed`)
+          setThemePendingRemoval(null)
+        }}
+      />
     </div>
   )
 }

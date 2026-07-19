@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
-import { CheckIcon, ChevronDownIcon, FunnelIcon } from "lucide-react"
+import { CheckIcon, FunnelIcon } from "lucide-react"
 import type { CopSongSource } from "@/lib/cop-songs"
 
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
@@ -104,25 +104,21 @@ export function SongFilterDropdown({
   }, [open, updateMenuPosition])
 
   return (
-    <div className="responsive-secondary-action shrink-0">
+    <div className="shrink-0">
       <button
         ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggleOpen}
-        className="song-filter-trigger flex h-10 w-44 items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-foreground shadow-xs transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:bg-input/30 dark:hover:bg-input/50"
+        className="flex size-10 items-center justify-center rounded-md border border-input bg-transparent text-foreground shadow-xs transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:bg-input/30 dark:hover:bg-input/50"
         title={`Filter songs: ${label}`}
         aria-label={`Filter songs: ${label}`}
       >
-        <FunnelIcon className="responsive-filter-icon hidden size-4 shrink-0" />
-        <span className="responsive-action-label min-w-0 truncate">
-          {label}
-        </span>
-        <ChevronDownIcon
+        <FunnelIcon
           className={cn(
-            "size-4 text-muted-foreground transition-transform",
-            open && "rotate-180"
+            "size-4 shrink-0 transition-colors",
+            open ? "text-primary" : "text-muted-foreground"
           )}
         />
       </button>
