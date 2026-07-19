@@ -137,7 +137,11 @@ describe("use-transcription", () => {
 
       const pending = transcriptionActions.start()
 
-      expect(useTranscriptStore.getState().connectionStatus).toBe("connecting")
+      await vi.waitFor(() => {
+        expect(useTranscriptStore.getState().connectionStatus).toBe(
+          "connecting"
+        )
+      })
       expect(useTranscriptStore.getState().isTranscribing).toBe(false)
 
       resolveInvoke()

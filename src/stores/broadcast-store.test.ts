@@ -413,6 +413,7 @@ describe("broadcast store sync", () => {
     expect(Object.keys(useBroadcastStore.getState().sectionThemeIds)).toEqual([
       "bible",
       "songs",
+      "announcements",
       "presentation",
     ])
     expect(useBroadcastStore.getState().sectionThemeIds.songs).toBe(
@@ -536,6 +537,7 @@ describe("broadcast store sync", () => {
     expect(next.sectionThemeIds).toEqual({
       bible: fallbackTheme!.id,
       songs: fallbackTheme!.id,
+      announcements: fallbackTheme!.id,
       presentation: fallbackTheme!.id,
     })
     expect(next.editingThemeId).toBeNull()
