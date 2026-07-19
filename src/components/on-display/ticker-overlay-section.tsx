@@ -29,6 +29,8 @@ import type { TickerMessage, TickerOverlayConfig } from "@/types"
 import { OutputTargetSelector } from "./output-target-selector"
 import { OverlaySection } from "./overlay-section"
 
+const DEFAULT_TARGET_OUTPUT_IDS = ["main"]
+
 function ColorField({
   label,
   value,
@@ -110,7 +112,9 @@ export function TickerOverlaySection() {
   const showMessage = useBroadcastStore((state) => state.showTickerMessage)
   const stopMessage = useBroadcastStore((state) => state.stopTickerMessage)
   const defaultTargets = useBroadcastStore(
-    (state) => state.overlayConfig.logo.logos[0]?.targetOutputIds ?? ["main"]
+    (state) =>
+      state.overlayConfig.logo.logos[0]?.targetOutputIds ??
+      DEFAULT_TARGET_OUTPUT_IDS
   )
   const [text, setText] = useState("")
   const [targetOutputIds, setTargetOutputIds] = useState(defaultTargets)

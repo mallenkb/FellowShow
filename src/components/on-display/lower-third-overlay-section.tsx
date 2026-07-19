@@ -34,6 +34,8 @@ import type {
 import { OutputTargetSelector } from "./output-target-selector"
 import { OverlaySection } from "./overlay-section"
 
+const DEFAULT_TARGET_OUTPUT_IDS = ["main"]
+
 const FIELD_LABELS: Record<
   LowerThirdTheme,
   { title: string; subtitle: string; label: string }
@@ -94,7 +96,9 @@ export function LowerThirdOverlaySection() {
   const overlayConfig = useBroadcastStore((state) => state.overlayConfig)
   const activeOverlays = useBroadcastStore((state) => state.activeOverlays)
   const defaultTargets = useBroadcastStore(
-    (state) => state.overlayConfig.logo.logos[0]?.targetOutputIds ?? ["main"]
+    (state) =>
+      state.overlayConfig.logo.logos[0]?.targetOutputIds ??
+      DEFAULT_TARGET_OUTPUT_IDS
   )
   const savePreset = useBroadcastStore((state) => state.saveLowerThirdPreset)
   const deletePreset = useBroadcastStore(
