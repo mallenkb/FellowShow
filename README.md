@@ -32,6 +32,7 @@ Generated and third-party runtime assets are not part of the MIT-licensed source
 - **NDI broadcast output** for live production integration
 - **Theme designer** — visual canvas editor for verse overlays with backgrounds (solid, gradient, image), text styling, positioning, shadows, and outlines
 - **Verse queue** with drag-and-drop ordering and duplicate prevention (flash-highlight on duplicates)
+- **Preaching summaries** with a concise transcript outline, key points, and highlighted scriptures
 - **Quick navigation** — keyboard-driven verse entry with autocomplete (e.g., type "J" → Joshua, Tab through book → chapter → verse)
 - **Fuzzy contextual search** (Fuse.js client-side)
 - **Audio level metering**, live indicator, and session timer
@@ -64,7 +65,7 @@ Generated and third-party runtime assets are not part of the MIT-licensed source
 | `fellowshow-broadcast` | NDI video frame output via FFI |
 | `fellowshow-api` | Tauri command API layer |
 
-> **Roadmap:** sermon-notes generation and PDF/Markdown export (with optional Claude API assistance) are planned but not yet implemented.
+> **Roadmap:** PDF/Markdown sermon-note export and optional Claude-assisted summaries are planned but not yet implemented.
 
 ## Prerequisites
 

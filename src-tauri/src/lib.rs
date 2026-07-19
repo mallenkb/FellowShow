@@ -142,6 +142,7 @@ pub fn run() {
             commands::stt::test_groq_connection,
             commands::stt::start_transcription,
             commands::stt::stop_transcription,
+            commands::summary::summarize_preaching,
             commands::broadcast::list_monitors,
             commands::broadcast::ensure_broadcast_window,
             commands::broadcast::open_broadcast_window,

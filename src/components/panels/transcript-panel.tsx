@@ -55,6 +55,16 @@ function annotationFromAdvance(
   }
 }
 
+function isHighlightedDetection(detection: DetectionResult): boolean {
+  return (
+    detection.source === "direct" &&
+    detection.book_number > 0 &&
+    detection.chapter > 0 &&
+    detection.verse > 0 &&
+    !detection.is_chapter_only
+  )
+}
+
 function annotationsForSegment(
   segment: TranscriptSegment,
   annotations: TranscriptVerseAnnotation[]
@@ -181,6 +191,11 @@ export function TranscriptPanel() {
   const addTranscriptAnnotations = useCallback(
     (annotations: TranscriptVerseAnnotation[]) => {
       if (annotations.length === 0) return
+      useTranscriptStore
+        .getState()
+        .addHighlightedScriptures(
+          annotations.map((annotation) => annotation.reference)
+        )
       setTranscriptAnnotations((current) =>
         [...annotations, ...current].slice(0, MAX_TRANSCRIPT_ANNOTATIONS)
       )
@@ -204,19 +219,11 @@ export function TranscriptPanel() {
   // Listen for detection results from the backend (batch replaces previous detections)
   useTauriEvent<DetectionResult[]>("verse_detections", (detections) => {
     useDetectionStore.getState().addDetections(detections)
-    addTranscriptAnnotations(
-      detections
-        .filter(
-          (d) =>
-            d.source === "direct" && d.book_number > 0 && !d.is_chapter_only
-        )
-        .map(annotationFromDetection)
-    )
+    const highlightedDetections = detections.filter(isHighlightedDetection)
+    addTranscriptAnnotations(highlightedDetections.map(annotationFromDetection))
 
     // Auto-navigate book search + select verse for preview/live
-    const directHit = detections.find(
-      (d) => d.source === "direct" && !d.is_chapter_only
-    )
+    const directHit = highlightedDetections[0]
     if (directHit && directHit.book_number > 0) {
       // Select verse immediately so preview/live panels update
       bibleActions.selectVerse({
@@ -237,48 +244,24 @@ export function TranscriptPanel() {
       })
     }
 
-    // Auto-queue high-confidence detections
-    for (const d of detections) {
-      // Check if this detection refines an existing chapter-only queue item
-      if (
-        !d.is_chapter_only &&
-        d.source === "direct" &&
-        useQueueStore
-          .getState()
-          .updateEarlyRef(
-            d.book_number,
-            d.chapter,
-            d.verse,
-            d.verse_ref,
-            d.verse_text
-          )
-      ) {
-        continue
-      }
-
+    // Automatic queue entries must come from the exact set rendered as
+    // transcript highlights. Semantic matches remain available as detections,
+    // but cannot guess their way into the operator's queue.
+    for (const d of highlightedDetections) {
       if (d.auto_queued) {
         const queue = useQueueStore.getState()
-        // For chapter-only detections, match by book+chapter (any verse) to
-        // avoid re-adding "Mark 1:1" when "Mark 1:2" already exists from a
-        // previous chapter-only → refinement cycle.
-        const dupIdx = d.is_chapter_only
-          ? queue.items.findIndex(
-              (i) =>
-                i.verse.book_number === d.book_number &&
-                i.verse.chapter === d.chapter
-            )
-          : queue.findDuplicate(d.book_number, d.chapter, d.verse)
+        const dupIdx = queue.findDuplicate(d.book_number, d.chapter, d.verse)
         if (dupIdx !== -1) {
           const existing = queue.items[dupIdx]
           queue.flashItem(existing.id)
-          if (!d.is_chapter_only) queue.setActive(dupIdx)
+          queue.setActive(dupIdx)
           continue
         }
         queue.addItem({
           id: crypto.randomUUID(),
           verse: {
             id: 0,
-            translation_id: 1,
+            translation_id: useBibleStore.getState().activeTranslationId,
             book_number: d.book_number,
             book_name: d.book_name,
             book_abbreviation: "",
@@ -288,9 +271,8 @@ export function TranscriptPanel() {
           },
           reference: d.verse_ref,
           confidence: d.confidence,
-          source: d.source === "direct" ? "ai-direct" : "ai-semantic",
+          source: "ai-direct",
           added_at: Date.now(),
-          is_chapter_only: d.is_chapter_only,
         })
       }
     }
@@ -298,7 +280,7 @@ export function TranscriptPanel() {
 
   // Reading mode navigation: auto-navigate book panel when reading mode
   // advances to a new verse (chapter commands, verse commands, text matching).
-  // Does NOT add to queue — only direct/semantic feed the queue.
+  // Does NOT add to queue — only highlighted direct references feed the queue.
   useTauriEvent<ReadingAdvance>("reading_mode_verse", (advance) => {
     if (advance.book_number > 0) {
       addTranscriptAnnotations([annotationFromAdvance(advance)])

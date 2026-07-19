@@ -16,14 +16,6 @@ interface QueueState {
   flashItem: (id: string) => void
   /** Find an existing item by book+chapter+verse. Returns its index or -1. */
   findDuplicate: (bookNumber: number, chapter: number, verse: number) => number
-  /** Update a chapter-only queue item in place when the verse is refined. */
-  updateEarlyRef: (
-    bookNumber: number,
-    chapter: number,
-    verse: number,
-    reference: string,
-    verseText: string
-  ) => boolean
   replaceLyricItem: (item: QueueItem, kind: "song") => void
   setLyricBlock: (id: string, blockIndex: number) => void
 }
@@ -71,34 +63,6 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         i.verse.chapter === chapter &&
         i.verse.verse === verse
     ),
-  updateEarlyRef: (bookNumber, chapter, verse, reference, verseText) => {
-    let found = false
-    set((state) => {
-      // First try exact match: same book + same chapter
-      let idx = state.items.findIndex(
-        (i) =>
-          i.is_chapter_only &&
-          i.verse.book_number === bookNumber &&
-          i.verse.chapter === chapter
-      )
-      // Fallback: same book, any chapter (book-only detection guessed chapter 1)
-      if (idx === -1) {
-        idx = state.items.findIndex(
-          (i) => i.is_chapter_only && i.verse.book_number === bookNumber
-        )
-      }
-      if (idx === -1) return state
-      found = true
-      const items = [...state.items]
-      const item = { ...items[idx] }
-      item.verse = { ...item.verse, verse, text: verseText }
-      item.reference = reference
-      item.is_chapter_only = false
-      items[idx] = item
-      return { items }
-    })
-    return found
-  },
   replaceLyricItem: (item, kind) =>
     set((state) => {
       const items = [

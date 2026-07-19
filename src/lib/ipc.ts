@@ -7,6 +7,7 @@ import type {
   NdiSessionInfo,
   NdiStartRequest,
   SemanticSearchResult,
+  PreachingSummary,
   Translation,
   Verse,
 } from "@/types"
@@ -108,6 +109,10 @@ export interface Commands {
   toggle_paraphrase_detection: WithArgs<{ enabled: boolean }, boolean>
   reading_mode_status: NoArgs<ReadingModeStatus>
   stop_reading_mode: NoArgs<void>
+  summarize_preaching: WithArgs<
+    { segments: string[]; scriptures: string[] },
+    PreachingSummary
+  >
   import_easyworship_songs: WithArgs<
     { songsDbPath: string; songWordsDbPath: string },
     EasyWorshipImportedSong[]

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,10 @@ import { useQueueStore, useBroadcastStore, useBibleStore } from "@/stores"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { bibleActions } from "@/hooks/use-bible"
 import type { QueueItem } from "@/types"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PreachingSummaryPanel } from "@/components/panels/preaching-summary-panel"
+
+type QueuePanelTab = "queued" | "summary"
 
 function QueueItemRow({
   item,
@@ -131,6 +135,7 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
   const items = useQueueStore((s) => s.items)
   const activeIndex = useQueueStore((s) => s.activeIndex)
   const highlightedId = useQueueStore((s) => s.highlightedId)
+  const [activeTab, setActiveTab] = useState<QueuePanelTab>("queued")
   const visibleQueueItems = items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => {
@@ -295,23 +300,46 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
   }
 
   return (
-    <div
+    <Tabs
       data-slot="queue-panel"
-      className="flex flex-col overflow-hidden rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+      value={activeTab}
+      onValueChange={(value) => setActiveTab(value as QueuePanelTab)}
+      className="flex min-h-0 flex-col gap-0 overflow-hidden rounded-lg border border-border bg-card outline-none focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
     >
-      <PanelHeader title="Queue">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">{visibleQueueItems.length}</Badge>
+      <div className="relative z-20 flex min-h-11 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
+        <TabsList
+          variant="line"
+          className="h-7 min-w-0 justify-start gap-3 rounded-none py-0"
+        >
+          <TabsTrigger value="queued" className="h-full px-0 text-xs">
+            Queued scriptures
+            <Badge
+              variant="outline"
+              className="h-5 min-w-5 px-1 text-[0.5625rem]"
+            >
+              {visibleQueueItems.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="summary" className="h-full px-0 text-xs">
+            Preaching summary
+          </TabsTrigger>
+        </TabsList>
+
+        {activeTab === "queued" ? (
           <button
             onClick={() => useQueueStore.getState().clearQueue()}
             className="flex h-7 items-center rounded-md px-1.5 text-[0.625rem] text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
           >
             Clear all
           </button>
-        </div>
-      </PanelHeader>
+        ) : null}
+      </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <TabsContent
+        value="queued"
+        forceMount
+        className="min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden"
+      >
         <div
           className={cn(
             "flex min-h-full flex-col gap-0.5 p-1.5",
@@ -324,7 +352,8 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
                 <BookOpenIcon className="size-4" />
               </div>
               <p className="text-xs text-muted-foreground">
-                Verses will appear here when detected or queued
+                Highlighted transcript verses and manually queued verses appear
+                here
               </p>
             </div>
           )}
@@ -338,7 +367,15 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
             />
           ))}
         </div>
-      </div>
-    </div>
+      </TabsContent>
+
+      <TabsContent
+        value="summary"
+        forceMount
+        className="flex min-h-0 flex-1 data-[state=inactive]:hidden"
+      >
+        <PreachingSummaryPanel />
+      </TabsContent>
+    </Tabs>
   )
 }

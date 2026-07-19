@@ -1,5 +1,6 @@
 export type { DeviceInfo, AudioLevel } from "./audio"
 export type { TranscriptSegment } from "./transcript"
+export type { PreachingSummary } from "./summary"
 export type { Translation, Book, Verse, CrossReference } from "./bible"
 export type { QueueItem } from "./queue"
 export type {

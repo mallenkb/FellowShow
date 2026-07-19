@@ -6,11 +6,13 @@ type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error"
 
 interface TranscriptState {
   segments: TranscriptSegment[]
+  highlightedScriptures: string[]
   currentPartial: string
   isTranscribing: boolean
   connectionStatus: ConnectionStatus
 
   addSegment: (segment: TranscriptSegment) => void
+  addHighlightedScriptures: (references: string[]) => void
   setPartial: (text: string) => void
   setTranscribing: (transcribing: boolean) => void
   setConnectionStatus: (status: ConnectionStatus) => void
@@ -55,6 +57,7 @@ export async function resetTranscriptSession(): Promise<void> {
 
   useTranscriptStore.setState({
     segments: [],
+    highlightedScriptures: [],
     currentPartial: "",
     isTranscribing: false,
     connectionStatus: "disconnected",
@@ -87,6 +90,7 @@ export async function initTranscriptPersistence(): Promise<void> {
 
 export const useTranscriptStore = create<TranscriptState>((set) => ({
   segments: [],
+  highlightedScriptures: [],
   currentPartial: "",
   isTranscribing: false,
   connectionStatus: "disconnected",
@@ -96,12 +100,18 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
       segments: [...state.segments, segment],
       currentPartial: "",
     })),
+  addHighlightedScriptures: (references) =>
+    set((state) => ({
+      highlightedScriptures: [
+        ...new Set([...state.highlightedScriptures, ...references]),
+      ].slice(-120),
+    })),
   setPartial: (currentPartial) => set({ currentPartial }),
   setTranscribing: (isTranscribing) => set({ isTranscribing }),
   setConnectionStatus: (connectionStatus) => set({ connectionStatus }),
   replaceSegments: (segments) => set({ segments }),
   clearTranscript: () => {
-    set({ segments: [], currentPartial: "" })
+    set({ segments: [], highlightedScriptures: [], currentPartial: "" })
     void persistSegments([])
   },
 }))

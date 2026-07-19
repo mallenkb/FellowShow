@@ -5,3 +5,4 @@ pub mod detection;
 pub mod easyworship;
 pub mod remote;
 pub mod stt;
+pub mod summary;
