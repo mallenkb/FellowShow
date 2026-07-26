@@ -24,6 +24,7 @@ enum DocumentImportError {
     Workspace(#[source] io::Error),
     #[error("FellowShow's bundled document converter is missing. Reinstall FellowShow, then try again. PDFs can still be imported directly.")]
     LibreOfficeUnavailable,
+    #[cfg(target_os = "windows")]
     #[error("Microsoft Office could not convert the document to PDF: {0}")]
     MicrosoftOfficeConversionFailed(String),
     #[error("Could not start LibreOffice: {0}")]
@@ -268,78 +269,7 @@ fn file_url(path: &Path) -> String {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{libreoffice_candidates, microsoft_office_application, prepare_document};
-    use std::fs;
-    use std::path::{Path, PathBuf};
-
-    #[test]
-    fn bundled_converter_is_the_first_candidate() {
-        let resources = Path::new("/fellowshow/resources");
-        let candidates = libreoffice_candidates(Some(resources));
-
-        #[cfg(target_os = "macos")]
-        let expected = PathBuf::from(
-            "/fellowshow/resources/document-converter/LibreOffice.app/Contents/MacOS/soffice",
-        );
-        #[cfg(target_os = "windows")]
-        let expected = PathBuf::from(
-            "/fellowshow/resources/document-converter/LibreOffice/program/soffice.exe",
-        );
-        #[cfg(target_os = "linux")]
-        let expected =
-            PathBuf::from("/fellowshow/resources/document-converter/libreoffice/program/soffice");
-
-        assert_eq!(candidates.first(), Some(&expected));
-    }
-
-    #[test]
-    fn windows_office_formats_map_to_their_native_converter() {
-        assert_eq!(
-            microsoft_office_application("docx"),
-            Some("Word.Application")
-        );
-        assert_eq!(
-            microsoft_office_application("pptx"),
-            Some("PowerPoint.Application")
-        );
-        assert_eq!(
-            microsoft_office_application("xlsx"),
-            Some("Excel.Application")
-        );
-        assert_eq!(microsoft_office_application("pdf"), None);
-    }
-
-    #[test]
-    fn pdf_documents_are_returned_without_conversion() {
-        let path =
-            std::env::temp_dir().join(format!("fellowshow-pdf-test-{}.pdf", std::process::id()));
-        let bytes = b"%PDF-1.4\n%%EOF\n";
-        fs::write(&path, bytes).expect("write PDF fixture");
-
-        let result = prepare_document(&path, None).expect("read PDF");
-        let _ = fs::remove_file(&path);
-
-        assert_eq!(result, bytes);
-    }
-
-    #[cfg(target_os = "windows")]
-    #[test]
-    #[ignore = "requires Microsoft Office and FELLOWSHOW_DOCUMENT_TEST_DIR fixtures"]
-    fn microsoft_office_fixtures_convert_to_pdf() {
-        let fixture_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_TEST_DIR")
-            .map(PathBuf::from)
-            .expect("set FELLOWSHOW_DOCUMENT_TEST_DIR");
-        let resource_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_RESOURCE_DIR").map(PathBuf::from);
-        for name in ["sample.docx", "sample.pptx", "sample.xlsx"] {
-            let pdf = prepare_document(&fixture_dir.join(name), resource_dir.as_deref())
-                .unwrap_or_else(|error| panic!("convert {name}: {error}"));
-            assert!(pdf.starts_with(b"%PDF-"), "{name} did not produce a PDF");
-        }
-    }
-}
-
+#[cfg(any(target_os = "windows", test))]
 fn microsoft_office_application(extension: &str) -> Option<&'static str> {
     match extension {
         "doc" | "docx" | "docm" | "dot" | "dotx" | "odt" | "rtf" => Some("Word.Application"),
@@ -430,10 +360,74 @@ try {
     fs::read(output_path).map_err(DocumentImportError::Read)
 }
 
-#[cfg(not(target_os = "windows"))]
-fn convert_with_microsoft_office(
-    _path: &Path,
-    _extension: &str,
-) -> Result<Vec<u8>, DocumentImportError> {
-    Err(DocumentImportError::LibreOfficeUnavailable)
+#[cfg(test)]
+mod tests {
+    use super::{libreoffice_candidates, microsoft_office_application, prepare_document};
+    use std::fs;
+    use std::path::{Path, PathBuf};
+
+    #[test]
+    fn bundled_converter_is_the_first_candidate() {
+        let resources = Path::new("/fellowshow/resources");
+        let candidates = libreoffice_candidates(Some(resources));
+
+        #[cfg(target_os = "macos")]
+        let expected = PathBuf::from(
+            "/fellowshow/resources/document-converter/LibreOffice.app/Contents/MacOS/soffice",
+        );
+        #[cfg(target_os = "windows")]
+        let expected = PathBuf::from(
+            "/fellowshow/resources/document-converter/LibreOffice/program/soffice.exe",
+        );
+        #[cfg(target_os = "linux")]
+        let expected =
+            PathBuf::from("/fellowshow/resources/document-converter/libreoffice/program/soffice");
+
+        assert_eq!(candidates.first(), Some(&expected));
+    }
+
+    #[test]
+    fn windows_office_formats_map_to_their_native_converter() {
+        assert_eq!(
+            microsoft_office_application("docx"),
+            Some("Word.Application")
+        );
+        assert_eq!(
+            microsoft_office_application("pptx"),
+            Some("PowerPoint.Application")
+        );
+        assert_eq!(
+            microsoft_office_application("xlsx"),
+            Some("Excel.Application")
+        );
+        assert_eq!(microsoft_office_application("pdf"), None);
+    }
+
+    #[test]
+    fn pdf_documents_are_returned_without_conversion() {
+        let path =
+            std::env::temp_dir().join(format!("fellowshow-pdf-test-{}.pdf", std::process::id()));
+        let bytes = b"%PDF-1.4\n%%EOF\n";
+        fs::write(&path, bytes).expect("write PDF fixture");
+
+        let result = prepare_document(&path, None).expect("read PDF");
+        let _ = fs::remove_file(&path);
+
+        assert_eq!(result, bytes);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    #[ignore = "requires Microsoft Office and FELLOWSHOW_DOCUMENT_TEST_DIR fixtures"]
+    fn microsoft_office_fixtures_convert_to_pdf() {
+        let fixture_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_TEST_DIR")
+            .map(PathBuf::from)
+            .expect("set FELLOWSHOW_DOCUMENT_TEST_DIR");
+        let resource_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_RESOURCE_DIR").map(PathBuf::from);
+        for name in ["sample.docx", "sample.pptx", "sample.xlsx"] {
+            let pdf = prepare_document(&fixture_dir.join(name), resource_dir.as_deref())
+                .unwrap_or_else(|error| panic!("convert {name}: {error}"));
+            assert!(pdf.starts_with(b"%PDF-"), "{name} did not produce a PDF");
+        }
+    }
 }
