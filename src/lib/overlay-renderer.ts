@@ -113,7 +113,6 @@ function wrapText(
 
       if (line) {
         lines.push(line)
-        line = ""
       }
 
       let remainder = word

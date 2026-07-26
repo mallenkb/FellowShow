@@ -455,7 +455,7 @@ export function SearchPanel({
         scale: number
         offsetX: number
         offsetY: number
-      }> = []
+      }>
       try {
         slides = await Promise.all(
           mediaFiles.map(async (file) => ({

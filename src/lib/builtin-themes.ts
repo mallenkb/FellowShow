@@ -52,7 +52,7 @@ export function getBuiltinPresentationBackground(): string {
     return BUILTIN_PRESENTATION_BACKGROUND_LIGHT
   }
 
-  let preferredTheme: string | null = null
+  let preferredTheme: string | null
   try {
     preferredTheme = window.localStorage?.getItem(THEME_STORAGE_KEY) ?? null
   } catch {
