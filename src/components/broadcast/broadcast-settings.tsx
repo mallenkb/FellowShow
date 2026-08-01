@@ -16,6 +16,7 @@ import {
   type OutputContent,
 } from "@/lib/broadcast-outputs"
 import { OutputCard } from "@/components/broadcast/output-card"
+import { userFacingOutputLabel } from "@/components/broadcast/output-content-label"
 import type { TakenMonitor } from "@/components/broadcast/monitor-select-field"
 import {
   reemitActiveNdiConfigs,
@@ -247,7 +248,7 @@ export function BroadcastSettings({
                 onClick={() => handleAddOutput(option.value)}
               >
                 <PlusIcon className="size-3" />
-                {option.label}
+                {userFacingOutputLabel(option.value)}
               </Button>
             ))}
           </div>

@@ -22,10 +22,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores"
-import type { TickerMessage, TickerOverlayConfig } from "@/types"
+import {
+  TICKER_SPEED_OPTIONS,
+  type TickerMessage,
+  type TickerOverlayConfig,
+} from "@/types"
 import { OutputTargetSelector } from "./output-target-selector"
 import { OverlaySection } from "./overlay-section"
 
@@ -128,7 +139,11 @@ export function TickerOverlaySection() {
   const saveNewMessage = () => {
     const trimmedText = text.trim()
     if (!trimmedText) return
-    saveMessage({ text: trimmedText, targetOutputIds })
+    saveMessage({
+      text: trimmedText,
+      speed: tickerConfig.speed,
+      targetOutputIds,
+    })
     setText("")
   }
 
@@ -150,6 +165,7 @@ export function TickerOverlaySection() {
       text: trimmedText,
       labelText: existing?.labelText,
       showLabel: existing?.showLabel,
+      speed: existing?.speed ?? tickerConfig.speed,
       targetOutputIds: editTargetOutputIds,
     })
     if (wasActive) showMessage(editingId)
@@ -157,12 +173,31 @@ export function TickerOverlaySection() {
   }
 
   const openAppearance = () => {
-    setAppearance(tickerConfig)
+    const activeMessage = messages.find(
+      (message) => message.id === activeMessageId
+    )
+    setAppearance({
+      ...tickerConfig,
+      speed: activeMessage?.speed ?? tickerConfig.speed,
+    })
     setAppearanceOpen(true)
   }
 
   const saveAppearance = () => {
     updateTicker(appearance)
+    const activeMessage = messages.find(
+      (message) => message.id === activeMessageId
+    )
+    if (activeMessage) {
+      saveMessage({
+        id: activeMessage.id,
+        text: activeMessage.text,
+        labelText: activeMessage.labelText,
+        showLabel: activeMessage.showLabel,
+        speed: appearance.speed,
+        targetOutputIds: activeMessage.targetOutputIds,
+      })
+    }
     setAppearanceOpen(false)
   }
 
@@ -171,14 +206,14 @@ export function TickerOverlaySection() {
       title="Scrolling text"
       description="Loops until you stop it. Double-click a saved message to show it."
       action={
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <Button
             type="button"
             variant="outline"
             size="icon-sm"
             onClick={openAppearance}
             aria-label="Scrolling text appearance"
-            title="Appearance"
+            title="Scrolling text appearance"
           >
             <Settings2Icon />
           </Button>
@@ -338,6 +373,39 @@ export function TickerOverlaySection() {
               message="Your scrolling message"
               config={appearance}
             />
+            <div className="grid gap-1.5">
+              <label className="text-xs font-medium" htmlFor="ticker-speed">
+                Scroll speed
+              </label>
+              <Select
+                value={appearance.speed}
+                onValueChange={(value) => {
+                  const option = TICKER_SPEED_OPTIONS.find(
+                    (candidate) => candidate.value === value
+                  )
+                  if (!option) return
+                  setAppearance((current) => ({
+                    ...current,
+                    speed: option.value,
+                  }))
+                }}
+              >
+                <SelectTrigger id="ticker-speed" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TICKER_SPEED_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Used by the active message in preview and live output; when no
+                message is active, this becomes the default for new messages.
+              </p>
+            </div>
             <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Show label</p>

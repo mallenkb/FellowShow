@@ -14,10 +14,10 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
   OUTPUT_CONTENT_OPTIONS,
-  outputContentLabel,
   type BroadcastOutputConfig,
   type OutputContent,
 } from "@/lib/broadcast-outputs"
+import { userFacingOutputLabel } from "@/components/broadcast/output-content-label"
 import {
   MonitorSelectField,
   type TakenMonitor,
@@ -153,7 +153,7 @@ export function OutputCard({
           <SelectContent>
             {OUTPUT_CONTENT_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                {userFacingOutputLabel(option.value)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -312,7 +312,7 @@ export function OutputCard({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="auto">
-                Auto — match {outputContentLabel(output.content).toLowerCase()}
+                Auto — match {userFacingOutputLabel(output.content).toLowerCase()}
               </SelectItem>
               {themes.map((t) => (
                 <SelectItem key={t.id} value={t.id}>
@@ -341,7 +341,7 @@ export function OutputCard({
               aria-label="Display name"
             />
             <p className="px-1 text-[0.625rem] text-muted-foreground">
-              {outputContentLabel(output.content)}
+              {userFacingOutputLabel(output.content)}
               {output.outputType === "ndi" ? " · NDI" : " · Display"}
             </p>
           </div>

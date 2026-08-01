@@ -4,6 +4,7 @@ import { getAllWindows } from "@tauri-apps/api/window"
 import { toast } from "sonner"
 import { invoke } from "@/lib/ipc"
 import {
+  outputWindowTitle,
   windowLabelForOutput,
   type BroadcastOutputConfig,
 } from "@/lib/broadcast-outputs"
@@ -193,6 +194,7 @@ export async function openDisplayOutput(
     await invoke("open_broadcast_window", {
       outputId: output.id,
       monitorIndex: output.monitorIndex ?? 0,
+      title: outputWindowTitle(output),
     })
     store.updateRuntime(output.id, { isDisplayOpen: true })
     useBroadcastStore.getState().syncBroadcastOutputFor(output.id)
@@ -218,7 +220,10 @@ async function startNdiOutput(output: BroadcastOutputConfig): Promise<void> {
   store.ensureRuntime(output)
   const runtime = runtimeFor(output.id) ?? createOutputRuntime(output)
   try {
-    await invoke("ensure_broadcast_window", { outputId: output.id })
+    await invoke("ensure_broadcast_window", {
+      outputId: output.id,
+      title: outputWindowTitle(output),
+    })
     const request: NdiStartRequest = {
       sourceName: runtime.ndiSourceName,
       resolution: runtime.ndiResolution,
@@ -262,6 +267,9 @@ export async function stopOutput(output: BroadcastOutputConfig): Promise<void> {
     () => {}
   )
   store.updateRuntime(output.id, { ndiActive: false, isDisplayOpen: false })
+  if (output.content === "overlays") {
+    useBroadcastStore.getState().setOverlayOutputLive(output.id, false)
+  }
 }
 
 /**

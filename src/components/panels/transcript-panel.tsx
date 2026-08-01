@@ -149,18 +149,20 @@ function AudioLevelMeter() {
  */
 function LivePartialLine({
   scrollRef,
+  shouldFollowRef,
   annotations,
 }: {
   scrollRef: RefObject<HTMLDivElement | null>
+  shouldFollowRef: RefObject<boolean>
   annotations: TranscriptVerseAnnotation[]
 }) {
   const currentPartial = useTranscriptStore((s) => s.currentPartial)
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (shouldFollowRef.current && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [currentPartial, scrollRef])
+  }, [currentPartial, scrollRef, shouldFollowRef])
 
   if (!currentPartial) return null
 
@@ -189,6 +191,8 @@ export function TranscriptPanel() {
     (state) => state.activeSessionId !== null
   )
   const scrollRef = useRef<HTMLDivElement>(null)
+  const shouldFollowTranscriptRef = useRef(true)
+  const [isFollowingTranscript, setIsFollowingTranscript] = useState(true)
   const [transcriptAnnotations, setTranscriptAnnotations] = useState<
     TranscriptVerseAnnotation[]
   >([])
@@ -310,10 +314,27 @@ export function TranscriptPanel() {
   // Auto-scroll on segment additions. Partial-driven scrolling lives in
   // LivePartialLine so the panel doesn't re-render per audio tick.
   useEffect(() => {
-    if (scrollRef.current) {
+    if (shouldFollowTranscriptRef.current && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [segments])
+
+  const handleTranscriptScroll = useCallback(() => {
+    const element = scrollRef.current
+    if (!element) return
+    const isAtBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight <= 24
+    shouldFollowTranscriptRef.current = isAtBottom
+    setIsFollowingTranscript(isAtBottom)
+  }, [])
+
+  const jumpToLatest = useCallback(() => {
+    const element = scrollRef.current
+    if (!element) return
+    shouldFollowTranscriptRef.current = true
+    setIsFollowingTranscript(true)
+    element.scrollTop = element.scrollHeight
+  }, [])
 
   return (
     <div
@@ -343,7 +364,22 @@ export function TranscriptPanel() {
         </div>
       </PanelHeader>
 
-      <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto">
+      <div
+        ref={scrollRef}
+        onScroll={handleTranscriptScroll}
+        className="relative min-h-0 flex-1 overflow-y-auto"
+      >
+        {!isFollowingTranscript && segments.length > 0 ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="xs"
+            className="absolute top-2 right-2 z-20 shadow-sm"
+            onClick={jumpToLatest}
+          >
+            Jump to latest
+          </Button>
+        ) : null}
         <div className="flex flex-col gap-2 p-3">
           {/* Faded top gradient */}
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-linear-to-b from-card to-transparent" />
@@ -378,6 +414,7 @@ export function TranscriptPanel() {
           {/* Partial (in-progress) text rendered by leaf subscriber */}
           <LivePartialLine
             scrollRef={scrollRef}
+            shouldFollowRef={shouldFollowTranscriptRef}
             annotations={transcriptAnnotations}
           />
         </div>

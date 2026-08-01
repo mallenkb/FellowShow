@@ -6,7 +6,20 @@ export interface SermonNote {
   text: string
   createdAt: number
   source: "live" | "final"
+  kind?: "ai" | "manual"
+  sourceContext?: string
+  sourceSegmentIds?: string[]
+  sourceSegmentStartIndex?: number
+  sourceSegmentEndIndex?: number
   tickerMessageId?: string
+}
+
+export interface SermonNoteDraft {
+  text: string
+  sourceContext: string
+  sourceSegmentIds: string[]
+  sourceSegmentStartIndex: number
+  sourceSegmentEndIndex: number
 }
 
 export interface SermonSession {
@@ -17,6 +30,7 @@ export interface SermonSession {
   transcriptStartIndex: number
   transcript: string[]
   lastNoteSegmentIndex: number
+  aiNoteSegmentIndex?: number
   notes: SermonNote[]
   queuedNoteIds: string[]
   finalSummary: PreachingSummary | null

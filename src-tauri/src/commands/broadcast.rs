@@ -28,6 +28,22 @@ fn window_url(output_id: &str) -> String {
     format!("broadcast-output.html?output={output_id}")
 }
 
+fn default_output_window_title(output_id: &str) -> String {
+    match output_id {
+        "alt" => "Scripture".to_owned(),
+        "main" => "Program".to_owned(),
+        other => format!("FellowShow Output {other}"),
+    }
+}
+
+fn default_ndi_window_title(output_id: &str) -> String {
+    match output_id {
+        "alt" => "FellowShow NDI · Scripture".to_owned(),
+        "main" => "FellowShow NDI · Program".to_owned(),
+        other => format!("FellowShow NDI · {other}"),
+    }
+}
+
 trait ProjectorWindowOps {
     fn set_decorations(&self, decorations: bool) -> Result<(), String>;
     fn set_fullscreen(&self, fullscreen: bool) -> Result<(), String>;
@@ -143,17 +159,21 @@ pub fn list_monitors(app: tauri::AppHandle) -> Result<Vec<MonitorInfo>, String> 
 
 /// Ensure the broadcast window for a given output exists (creates hidden if not).
 #[tauri::command]
-pub fn ensure_broadcast_window(app: tauri::AppHandle, output_id: String) -> Result<(), String> {
+pub fn ensure_broadcast_window(
+    app: tauri::AppHandle,
+    output_id: String,
+    title: Option<String>,
+) -> Result<(), String> {
     let label = window_label(&output_id);
-    if app.get_webview_window(&label).is_some() {
+    if let Some(window) = app.get_webview_window(&label) {
+        if let Some(title) = title.as_deref() {
+            window.set_title(title).map_err(|e| e.to_string())?;
+        }
         return Ok(());
     }
+    let window_title = title.unwrap_or_else(|| default_ndi_window_title(&output_id));
     WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(window_url(&output_id).into()))
-        .title(match output_id.as_str() {
-            "alt" => "FellowShow NDI Alt".to_owned(),
-            "main" => "FellowShow NDI".to_owned(),
-            other => format!("FellowShow NDI {other}"),
-        })
+        .title(window_title)
         .inner_size(1920.0, 1080.0)
         .decorations(true)
         .visible(false)
@@ -169,6 +189,7 @@ pub async fn open_broadcast_window(
     app: tauri::AppHandle,
     output_id: String,
     monitor_index: usize,
+    title: Option<String>,
 ) -> Result<(), String> {
     let label = window_label(&output_id);
     let monitors = app.available_monitors().map_err(|e| e.to_string())?;
@@ -190,16 +211,15 @@ pub async fn open_broadcast_window(
             "Reusing existing {output_id} broadcast window at {:?}",
             window.url()
         );
+        if let Some(title) = title.as_deref() {
+            window.set_title(title).map_err(|e| e.to_string())?;
+        }
         show_projector_window_on_monitor(&window, monitor)?;
         refocus_operator_window(&app);
         return Ok(());
     }
 
-    let title = match output_id.as_str() {
-        "alt" => "Projector - Alt".to_owned(),
-        "main" => "Projector - Program".to_owned(),
-        other => format!("Projector - {other}"),
-    };
+    let title = title.unwrap_or_else(|| default_output_window_title(&output_id));
 
     let window =
         WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(window_url(&output_id).into()))

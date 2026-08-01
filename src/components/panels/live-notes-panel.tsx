@@ -1,10 +1,12 @@
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import {
   CheckIcon,
   ListPlusIcon,
   LoaderCircleIcon,
+  LocateFixedIcon,
   NotebookTextIcon,
+  PlusIcon,
   RefreshCwIcon,
   SendIcon,
   SquareIcon,
@@ -19,14 +21,14 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select"
-import {
-  generateLiveSermonNotes,
-  sermonQueueToPreview,
-} from "@/lib/sermon-actions"
+import { sermonQueueToPreview } from "@/lib/sermon-actions"
+import { generateLiveSermonNotesFromTranscript } from "@/lib/sermon-ai-notes"
 import { cn } from "@/lib/utils"
 import {
   useBroadcastStore,
+  useSettingsStore,
   useSermonStore,
+  useTranscriptStore,
   useTickerComposerStore,
 } from "@/stores"
 import type { SermonNote, SermonSession } from "@/types"
@@ -51,12 +53,88 @@ function stageQueue(session: SermonSession) {
     .setPreviewOutput(sermonQueueToPreview(session), null)
 }
 
+let sourceHighlightTimer: ReturnType<typeof setTimeout> | null = null
+let highlightedSourceTargets: HTMLElement[] = []
+
+function clearSourceHighlight() {
+  for (const target of highlightedSourceTargets) {
+    target.classList.remove(
+      "rounded-md",
+      "bg-amber-500/15",
+      "px-2",
+      "py-1",
+      "ring-2",
+      "ring-amber-400/70"
+    )
+  }
+  highlightedSourceTargets = []
+}
+
+function viewNoteSource(
+  note: SermonNote,
+  transcriptSegments: { id: string; text: string }[]
+) {
+  const transcriptPanel = document.querySelector<HTMLElement>(
+    '[data-slot="transcript-panel"]'
+  )
+  if (!transcriptPanel || !note.sourceContext) {
+    toast.info("Source transcript is not available for this note")
+    return
+  }
+
+  const paragraphs = Array.from(
+    transcriptPanel.querySelectorAll<HTMLElement>("p")
+  )
+  const start = note.sourceSegmentStartIndex
+  const end = note.sourceSegmentEndIndex ?? start
+  const indexedTargets =
+    typeof start === "number" && start >= 0
+      ? paragraphs.slice(start, Math.max(start + 1, (end ?? start) + 1))
+      : []
+  const sourceTexts = (note.sourceSegmentIds ?? [])
+    .map((id) => transcriptSegments.find((segment) => segment.id === id)?.text)
+    .filter((text): text is string => Boolean(text?.trim()))
+    .map((text) => text.trim())
+  const targets =
+    indexedTargets.length > 0
+      ? indexedTargets
+      : paragraphs.filter((paragraph) =>
+          sourceTexts.includes(paragraph.textContent?.trim() ?? "")
+        )
+
+  if (targets.length === 0) {
+    toast.info("The source transcript segment is no longer visible")
+    return
+  }
+
+  if (sourceHighlightTimer) clearTimeout(sourceHighlightTimer)
+  clearSourceHighlight()
+  highlightedSourceTargets = targets
+  targets[0]?.scrollIntoView({ behavior: "smooth", block: "center" })
+  for (const target of targets) {
+    target.classList.add(
+      "rounded-md",
+      "bg-amber-500/15",
+      "px-2",
+      "py-1",
+      "ring-2",
+      "ring-amber-400/70"
+    )
+  }
+  sourceHighlightTimer = setTimeout(() => {
+    clearSourceHighlight()
+    sourceHighlightTimer = null
+  }, 2_000)
+}
+
 function NoteCard({
   session,
   note,
+  transcriptSegments,
 }: {
   session: SermonSession
   note: SermonNote
+  transcriptSegments: { id: string; text: string }[]
 }) {
   const queued = session.queuedNoteIds.includes(note.id)
   const activeTickerMessageId = useBroadcastStore(
@@ -94,10 +172,38 @@ function NoteCard({
         className="w-full resize-none bg-transparent text-sm leading-relaxed outline-none"
         aria-label="Live sermon note"
       />
+      {note.sourceContext ? (
+        <div className="mt-2 rounded-sm border border-border/70 bg-muted/20 px-2 py-1.5">
+          <p className="text-[0.625rem] font-medium text-muted-foreground">
+            Source transcript
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {note.sourceContext}
+          </p>
+        </div>
+      ) : (
+        <p className="mt-2 text-[0.625rem] text-muted-foreground">
+          Source transcript unavailable for this older note.
+        </p>
+      )}
       <div className="mt-2 flex items-center gap-1.5">
         <span className="mr-auto text-[0.625rem] text-muted-foreground">
           {formatTime(note.createdAt)}
         </span>
+        <Badge variant="outline" className="text-[0.5625rem]">
+          {note.kind === "manual" ? "Manual" : "AI"}
+        </Badge>
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          disabled={!note.sourceContext}
+          title="View source transcript"
+          aria-label="View source transcript"
+          onClick={() => viewNoteSource(note, transcriptSegments)}
+        >
+          <LocateFixedIcon className="size-3" /> View Source
+        </Button>
         <Button
           type="button"
           variant="ghost"
@@ -243,16 +349,134 @@ export function LiveNotesPanel() {
   const sessions = useSermonStore((state) => state.sessions)
   const selectedSessionId = useSermonStore((state) => state.selectedSessionId)
   const activeSessionId = useSermonStore((state) => state.activeSessionId)
+  const transcriptSegments = useTranscriptStore((state) => state.segments)
+  const aiConfigured = useSettingsStore((state) =>
+    Boolean(state.openRouterApiKey?.trim())
+  )
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generationNotice, setGenerationNotice] = useState<string | null>(null)
+  const [showManualComposer, setShowManualComposer] = useState(false)
+  const [manualDraft, setManualDraft] = useState("")
+  const generationRef = useRef<Promise<void> | null>(null)
   const session =
     sessions.find((candidate) => candidate.id === selectedSessionId) ??
     sessions.at(-1) ??
     null
   const notes = session?.notes.filter((note) => note.source === "live") ?? []
 
-  const refreshNotes = () => {
+  const runGeneration = useCallback(async (force: boolean) => {
+    const currentState = useSermonStore.getState()
+    const currentSession = currentState.sessions.find(
+      (candidate) => candidate.id === currentState.activeSessionId
+    )
+    if (!currentSession) return
+
     setIsGenerating(true)
-    void generateLiveSermonNotes(true).finally(() => setIsGenerating(false))
+    setGenerationNotice(null)
+    try {
+      const currentSegments = useTranscriptStore.getState().segments
+      const result = await generateLiveSermonNotesFromTranscript({
+        segments: currentSegments,
+        startSegmentIndex: Math.max(
+          currentSession.aiNoteSegmentIndex ??
+            currentSession.lastNoteSegmentIndex,
+          currentSession.transcriptStartIndex
+        ),
+        force,
+      })
+
+      if (result.status === "not-configured") {
+        setGenerationNotice(
+          "Automatic notes are paused. Add an OpenRouter key in Settings, or add notes manually."
+        )
+        return
+      }
+      if (result.status === "insufficient-context") {
+        if (force) {
+          setGenerationNotice("Keep transcribing to give the AI more source context.")
+        }
+        return
+      }
+
+      const store = useSermonStore.getState()
+      if (result.notes.length > 0) {
+        store.addGeneratedNotes(
+          currentSession.id,
+          result.notes,
+          result.throughSegmentIndex
+        )
+        setGenerationNotice(
+          `${result.notes.length} source-linked note${result.notes.length === 1 ? "" : "s"} added.`
+        )
+      } else {
+        store.markNotesProcessed(
+          currentSession.id,
+          result.throughSegmentIndex
+        )
+        if (force) setGenerationNotice("No meaningful new moment found yet.")
+      }
+    } catch (error) {
+      setGenerationNotice(
+        error instanceof Error
+          ? error.message
+          : "Automatic notes could not be generated."
+      )
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [])
+
+  const startGeneration = useCallback(
+    (force: boolean) => {
+      if (generationRef.current) return
+      const request = runGeneration(force)
+      generationRef.current = request
+      void request.then(
+        () => {
+          if (generationRef.current === request) generationRef.current = null
+        },
+        () => {
+          if (generationRef.current === request) generationRef.current = null
+        }
+      )
+    },
+    [runGeneration]
+  )
+
+  useEffect(() => {
+    if (
+      !aiConfigured ||
+      !session ||
+      session.id !== activeSessionId ||
+      generationRef.current
+    ) {
+      return
+    }
+    const startSegmentIndex = Math.max(
+      session.aiNoteSegmentIndex ?? session.lastNoteSegmentIndex,
+      session.transcriptStartIndex
+    )
+    if (transcriptSegments.length - startSegmentIndex < 4) return
+
+    const timer = window.setTimeout(() => {
+      startGeneration(false)
+    }, 1_200)
+
+    return () => window.clearTimeout(timer)
+  }, [
+    activeSessionId,
+    aiConfigured,
+    startGeneration,
+    session,
+    transcriptSegments.length,
+  ])
+
+  const addManualNote = () => {
+    if (!session || !manualDraft.trim()) return
+    useSermonStore.getState().addManualNote(session.id, manualDraft)
+    setManualDraft("")
+    setShowManualComposer(false)
+    toast.success("Manual note added")
   }
 
   return (
@@ -287,13 +511,29 @@ export function LiveNotesPanel() {
             ))}
           </SelectContent>
         </Select>
+        {session ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            title="Add a manual note"
+            onClick={() => setShowManualComposer((visible) => !visible)}
+          >
+            <PlusIcon className="size-3" /> Note
+          </Button>
+        ) : null}
         {session?.id === activeSessionId ? (
           <Button
             type="button"
             variant="outline"
             size="xs"
-            disabled={isGenerating}
-            onClick={refreshNotes}
+            disabled={isGenerating || !aiConfigured}
+            title={
+              aiConfigured
+                ? "Generate source-linked AI notes"
+                : "Configure an OpenRouter API key to generate AI notes"
+            }
+            onClick={() => startGeneration(true)}
           >
             {isGenerating ? (
               <LoaderCircleIcon className="size-3 animate-spin" />
@@ -315,20 +555,71 @@ export function LiveNotesPanel() {
           </div>
         ) : (
           <div className="space-y-3">
+            {showManualComposer ? (
+              <section className="space-y-2 rounded-md border border-border bg-background p-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-xs font-semibold">Add a manual note</h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Close manual note editor"
+                    onClick={() => setShowManualComposer(false)}
+                  >
+                    <XIcon className="size-3" />
+                  </Button>
+                </div>
+                <textarea
+                  value={manualDraft}
+                  rows={3}
+                  autoFocus
+                  placeholder="Write a note from the live sermon…"
+                  aria-label="Manual sermon note"
+                  onChange={(event) => setManualDraft(event.target.value)}
+                  className="w-full resize-y rounded-sm border border-border bg-transparent px-2 py-1.5 text-sm leading-relaxed outline-none focus:border-ring"
+                />
+                <Button
+                  type="button"
+                  size="xs"
+                  disabled={!manualDraft.trim()}
+                  onClick={addManualNote}
+                >
+                  <CheckIcon className="size-3" /> Add note
+                </Button>
+              </section>
+            ) : null}
+            {session.id === activeSessionId && !aiConfigured ? (
+              <div className="rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 p-2.5 text-xs text-muted-foreground">
+                Automatic source-linked notes need an OpenRouter API key in
+                Settings. You can keep adding notes manually.
+              </div>
+            ) : null}
+            {generationNotice ? (
+              <p className="text-[0.6875rem] text-muted-foreground">
+                {generationNotice}
+              </p>
+            ) : null}
             <NotesQueue session={session} />
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold">Live notes</h3>
               <span className="text-[0.625rem] text-muted-foreground">
-                {notes.length} generated
+                {notes.length} note{notes.length === 1 ? "" : "s"}
               </span>
             </div>
             {notes.length > 0 ? (
               notes.map((note) => (
-                <NoteCard key={note.id} session={session} note={note} />
+                <NoteCard
+                  key={note.id}
+                  session={session}
+                  note={note}
+                  transcriptSegments={transcriptSegments}
+                />
               ))
             ) : (
               <div className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
-                Notes will appear as the sermon is transcribed.
+                {aiConfigured
+                  ? "Source-linked notes will appear as meaningful moments are transcribed."
+                  : "Add a manual note, or configure OpenRouter for automatic notes."}
               </div>
             )}
           </div>

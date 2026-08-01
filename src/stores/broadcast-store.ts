@@ -6,6 +6,7 @@ import type {
   BroadcastThemeSection,
   ActiveOverlayState,
   LogoOverlayConfig,
+  LowerThirdAppearanceSettings,
   LowerThirdPreset,
   LowerThirdRenderData,
   OverlayConfiguration,
@@ -23,9 +24,12 @@ import {
 import {
   createDefaultOutputs,
   createOutputConfig,
+  DEFAULT_OVERLAY_OUTPUT_MODE,
+  getOverlayOutputMode,
   getOutputProgramPayload,
   getSectionThemeId,
   inferThemeSection,
+  isOverlayOutputMode,
   MAX_BROADCAST_OUTPUTS,
   resolveOutputThemeId,
   sanitizeOutputConfigs,
@@ -39,6 +43,7 @@ import {
   createDefaultOverlayConfiguration,
   createInactiveOverlayState,
   getOverlayPayloadForOutput,
+  getOverlayPreviewPayload,
   sanitizeOverlayConfiguration,
 } from "@/lib/overlays"
 
@@ -62,6 +67,9 @@ interface BroadcastState {
   overlayConfig: OverlayConfiguration
   activeOverlays: ActiveOverlayState
   outputOpacity: number
+  selectedOverlayOutputId: string | null
+  /** Video Overlays outputs explicitly sent live from the overlay workflow. */
+  liveOverlayOutputIds: string[]
 
   // Designer state
   isDesignerOpen: boolean
@@ -107,6 +115,7 @@ interface BroadcastState {
   ) => void
   showPreviewOnLive: (source?: "manual" | "preview") => void
   takePreviewLive: (source?: "manual" | "preview") => void
+  setOverlayOutputLive: (outputId: string, live: boolean) => void
   setLiveVerse: (verse: VerseRenderData | null) => void
   setPresenterTimer: (timer: PresenterTimerRenderData | null) => void
   setLowerThird: (lowerThird: LowerThirdRenderData | null) => void
@@ -141,11 +150,13 @@ interface BroadcastState {
       targetOutputIds?: string[]
     }
   ) => string
+  saveLowerThirdAppearance: (appearance: LowerThirdAppearanceSettings) => void
   deleteLowerThirdPreset: (id: string) => void
   showLowerThirdOverlay: (id: string) => void
   clearLowerThirdOverlay: () => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
+  setSelectedOverlayOutputId: (outputId: string | null) => void
 
   // Designer actions
   setDesignerOpen: (open: boolean) => void
@@ -193,6 +204,30 @@ const HISTORY_LIMIT = 100
 let lastEditPath: string | null = null
 let lastEditAt = 0
 let lowerThirdExpiryTimer: ReturnType<typeof setTimeout> | null = null
+let suspendedFullWidthTicker: {
+  id: string
+  startedAt: number | null
+} | null = null
+
+function isFullWidthLowerThird(preset: LowerThirdPreset | undefined): boolean {
+  return preset?.style === "full-width-banner"
+}
+
+function restoreSuspendedTicker(
+  active: ActiveOverlayState,
+  messages: readonly TickerMessage[]
+): ActiveOverlayState {
+  const suspended = suspendedFullWidthTicker
+  suspendedFullWidthTicker = null
+  if (!suspended || !messages.some((message) => message.id === suspended.id)) {
+    return active
+  }
+  return {
+    ...active,
+    tickerMessageId: suspended.id,
+    tickerStartedAt: suspended.startedAt ?? Date.now(),
+  }
+}
 
 function isThemeDirty(
   draft: BroadcastTheme | null,
@@ -200,6 +235,79 @@ function isThemeDirty(
 ): boolean {
   if (!draft || !baseline) return false
   return JSON.stringify(draft) !== JSON.stringify(baseline)
+}
+
+function selectOverlayOutputId(
+  currentId: string | null,
+  outputs: BroadcastOutputConfig[]
+): string | null {
+  if (
+    currentId &&
+    outputs.some(
+      (output) => output.id === currentId && output.content === "overlays"
+    )
+  ) {
+    return currentId
+  }
+  return outputs.find((output) => output.content === "overlays")?.id ?? null
+}
+
+function normalizeLiveOverlayOutputIds(
+  outputIds: readonly string[],
+  outputs: readonly BroadcastOutputConfig[]
+): string[] {
+  const overlayOutputIds = new Set(
+    outputs
+      .filter((output) => output.content === "overlays")
+      .map((output) => output.id)
+  )
+  return outputIds.filter((outputId) => overlayOutputIds.has(outputId))
+}
+
+function normalizeOutputUpdate(
+  output: BroadcastOutputConfig,
+  updates: Partial<Omit<BroadcastOutputConfig, "id">>
+): BroadcastOutputConfig {
+  const next = { ...output, ...updates }
+  if (next.content !== "overlays") {
+    const { overlayMode: _overlayMode, ...normalOutput } = next
+    return normalOutput
+  }
+  return {
+    ...next,
+    overlayMode: isOverlayOutputMode(next.overlayMode)
+      ? next.overlayMode
+      : DEFAULT_OVERLAY_OUTPUT_MODE,
+  }
+}
+
+function getOutputOverlayPayload(
+  state: BroadcastState,
+  output: BroadcastOutputConfig,
+  verse: VerseRenderData | null,
+  timer: PresenterTimerRenderData | null
+): ReturnType<typeof getOverlayPayloadForOutput> | null {
+  // Normal outputs follow the global Program on-air state. Graphics outputs
+  // have their own explicit Show on Live state so they can go on air without
+  // sending their master overlays into the staged Program preview.
+  if (
+    output.content === "overlays"
+      ? !state.liveOverlayOutputIds.includes(output.id)
+      : !state.isLive
+  ) {
+    return null
+  }
+  // Video Overlays is the master graphics bus: its preview and live output
+  // intentionally share the same all-active overlay payload. Per-output
+  // targeting remains in effect for normal program outputs.
+  return output.content === "overlays"
+    ? getOverlayPreviewPayload(state.overlayConfig, state.activeOverlays)
+    : getOverlayPayloadForOutput(
+        state.overlayConfig,
+        state.activeOverlays,
+        output.id,
+        { verse, timer }
+      )
 }
 
 function emitDraftToBroadcast(state: BroadcastState): void {
@@ -223,14 +331,15 @@ function emitDraftToBroadcast(state: BroadcastState): void {
       theme: state.draftTheme,
       verse,
       timer,
-      lowerThird: output.content === "everything" ? state.lowerThird : null,
-      overlays: getOverlayPayloadForOutput(
-        state.overlayConfig,
-        state.activeOverlays,
-        output.id,
-        { verse, timer }
-      ),
+      lowerThird:
+        output.content === "everything" && state.isLive
+          ? state.lowerThird
+          : null,
+      overlays: getOutputOverlayPayload(state, output, verse, timer),
       opacity: state.outputOpacity,
+      ...(getOverlayOutputMode(output)
+        ? { overlayMode: getOverlayOutputMode(output) }
+        : {}),
     }).catch(() => {})
   }
 }
@@ -321,6 +430,8 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   overlayConfig: createDefaultOverlayConfiguration(),
   activeOverlays: createInactiveOverlayState(),
   outputOpacity: 1,
+  selectedOverlayOutputId: null,
+  liveOverlayOutputIds: [],
   isDesignerOpen: false,
   editingThemeId: null,
   draftTheme: null,
@@ -522,14 +633,13 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       theme,
       verse,
       timer,
-      lowerThird: output.content === "everything" ? s.lowerThird : null,
-      overlays: getOverlayPayloadForOutput(
-        s.overlayConfig,
-        s.activeOverlays,
-        output.id,
-        { verse, timer }
-      ),
+      lowerThird:
+        output.content === "everything" && s.isLive ? s.lowerThird : null,
+      overlays: getOutputOverlayPayload(s, output, verse, timer),
       opacity: s.outputOpacity,
+      ...(getOverlayOutputMode(output)
+        ? { overlayMode: getOverlayOutputMode(output) }
+        : {}),
     }).catch(() => {})
   },
   syncBroadcastOutput: () => {
@@ -561,7 +671,14 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     const s = get()
     if (s.outputs.length >= MAX_BROADCAST_OUTPUTS) return null
     const output = createOutputConfig(s.outputs, options)
-    set({ outputs: [...s.outputs, output] })
+    const outputs = [...s.outputs, output]
+    set({
+      outputs,
+      selectedOverlayOutputId: selectOverlayOutputId(
+        s.selectedOverlayOutputId,
+        outputs
+      ),
+    })
     return output
   },
   removeOutput: (id) => {
@@ -570,6 +687,13 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       const outputs = s.outputs.filter((output) => output.id !== id)
       return {
         outputs,
+        liveOverlayOutputIds: s.liveOverlayOutputIds.filter(
+          (outputId) => outputId !== id
+        ),
+        selectedOverlayOutputId: selectOverlayOutputId(
+          s.selectedOverlayOutputId === id ? null : s.selectedOverlayOutputId,
+          outputs
+        ),
         overlayConfig: sanitizeOverlayConfiguration(
           s.overlayConfig,
           outputs.map((output) => output.id)
@@ -595,11 +719,24 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       id === "main" && updates.content !== undefined
         ? { ...updates, content: "everything" as const }
         : updates
-    set((s) => ({
-      outputs: s.outputs.map((output) =>
-        output.id === id ? { ...output, ...safeUpdates } : output
-      ),
-    }))
+    set((s) => {
+      const outputs = s.outputs.map((output) =>
+        output.id === id
+          ? normalizeOutputUpdate(output, safeUpdates)
+          : output
+      )
+      return {
+        outputs,
+        liveOverlayOutputIds: normalizeLiveOverlayOutputIds(
+          s.liveOverlayOutputIds,
+          outputs
+        ),
+        selectedOverlayOutputId: selectOverlayOutputId(
+          s.selectedOverlayOutputId,
+          outputs
+        ),
+      }
+    })
     get().syncBroadcastOutputFor(id)
   },
   setPreviewOutput: (previewVerse, previewTimer) => {
@@ -667,6 +804,18 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     }))
     get().syncBroadcastOutput()
   },
+  setOverlayOutputLive: (outputId, live) => {
+    const output = get().outputs.find((candidate) => candidate.id === outputId)
+    if (!output || output.content !== "overlays") return
+    set((s) => ({
+      liveOverlayOutputIds: live
+        ? s.liveOverlayOutputIds.includes(outputId)
+          ? s.liveOverlayOutputIds
+          : [...s.liveOverlayOutputIds, outputId]
+        : s.liveOverlayOutputIds.filter((id) => id !== outputId),
+    }))
+    get().syncBroadcastOutputFor(outputId)
+  },
   setLiveVerse: (liveVerse) => {
     set({ liveVerse })
     get().syncBroadcastOutput()
@@ -686,6 +835,14 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   clearLowerThird: () => {
     set({ lowerThird: null })
     get().syncBroadcastOutput()
+  },
+  setSelectedOverlayOutputId: (outputId) => {
+    set((s) => ({
+      selectedOverlayOutputId: selectOverlayOutputId(
+        outputId,
+        s.outputs
+      ),
+    }))
   },
   addLogoOverlays: (logos) => {
     set((s) => ({
@@ -762,6 +919,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
               {
                 ...message,
                 id,
+                speed: message.speed ?? s.overlayConfig.ticker.speed,
                 createdAt: existing?.createdAt ?? now,
                 updatedAt: now,
               },
@@ -775,6 +933,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     return id
   },
   deleteTickerMessage: (id) => {
+    if (suspendedFullWidthTicker?.id === id) {
+      suspendedFullWidthTicker = null
+    }
     set((s) => ({
       overlayConfig: {
         ...s.overlayConfig,
@@ -797,6 +958,11 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     if (!get().overlayConfig.tickerMessages.some((item) => item.id === id)) {
       return
     }
+    const currentLowerThird = get().activeOverlays.lowerThird
+    if (isFullWidthLowerThird(currentLowerThird?.preset)) {
+      suspendedFullWidthTicker = { id, startedAt: Date.now() }
+      return
+    }
     set((s) => ({
       activeOverlays: {
         ...s.activeOverlays,
@@ -807,6 +973,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutput()
   },
   stopTickerMessage: () => {
+    suspendedFullWidthTicker = null
     set((s) => ({
       activeOverlays: {
         ...s.activeOverlays,
@@ -844,36 +1011,84 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       const savedPreset = overlayConfig.lowerThirdPresets.find(
         (item) => item.id === id
       )
+      const activeLowerThird = s.activeOverlays.lowerThird
+      let activeOverlays = s.activeOverlays
+      if (savedPreset && activeLowerThird?.preset.id === id) {
+        const wasFullWidth = isFullWidthLowerThird(activeLowerThird.preset)
+        const isNowFullWidth = isFullWidthLowerThird(savedPreset)
+        activeOverlays = {
+          ...activeOverlays,
+          lowerThird: { ...activeLowerThird, preset: savedPreset },
+        }
+        if (isNowFullWidth) {
+          if (
+            !suspendedFullWidthTicker &&
+            activeOverlays.tickerMessageId
+          ) {
+            suspendedFullWidthTicker = {
+              id: activeOverlays.tickerMessageId,
+              startedAt: activeOverlays.tickerStartedAt,
+            }
+          }
+          activeOverlays = {
+            ...activeOverlays,
+            tickerMessageId: null,
+            tickerStartedAt: null,
+          }
+        } else if (wasFullWidth) {
+          activeOverlays = restoreSuspendedTicker(
+            activeOverlays,
+            s.overlayConfig.tickerMessages
+          )
+        }
+      }
       return {
         overlayConfig,
-        activeOverlays:
-          savedPreset && s.activeOverlays.lowerThird?.preset.id === id
-            ? {
-                ...s.activeOverlays,
-                lowerThird: {
-                  ...s.activeOverlays.lowerThird,
-                  preset: savedPreset,
-                },
-              }
-            : s.activeOverlays,
+        activeOverlays,
       }
     })
     get().syncBroadcastOutput()
     return id
   },
-  deleteLowerThirdPreset: (id) => {
+  saveLowerThirdAppearance: (appearance) => {
     set((s) => ({
-      overlayConfig: {
-        ...s.overlayConfig,
-        lowerThirdPresets: s.overlayConfig.lowerThirdPresets.filter(
-          (preset) => preset.id !== id
-        ),
-      },
-      activeOverlays:
-        s.activeOverlays.lowerThird?.preset.id === id
-          ? { ...s.activeOverlays, lowerThird: null }
-          : s.activeOverlays,
+      overlayConfig: sanitizeOverlayConfiguration(
+        {
+          ...s.overlayConfig,
+          lastLowerThirdAppearance: appearance,
+        },
+        s.outputs.map((output) => output.id)
+      ),
     }))
+  },
+  deleteLowerThirdPreset: (id) => {
+    const activeLowerThird = get().activeOverlays.lowerThird
+    const deletingActive = activeLowerThird?.preset.id === id
+    const deletingFullWidth = isFullWidthLowerThird(activeLowerThird?.preset)
+    if (deletingActive && lowerThirdExpiryTimer) {
+      clearTimeout(lowerThirdExpiryTimer)
+      lowerThirdExpiryTimer = null
+    }
+    set((s) => {
+      const activeOverlays = deletingActive
+        ? { ...s.activeOverlays, lowerThird: null }
+        : s.activeOverlays
+      return {
+        overlayConfig: {
+          ...s.overlayConfig,
+          lowerThirdPresets: s.overlayConfig.lowerThirdPresets.filter(
+            (preset) => preset.id !== id
+          ),
+        },
+        activeOverlays:
+          deletingActive && deletingFullWidth
+            ? restoreSuspendedTicker(
+                activeOverlays,
+                s.overlayConfig.tickerMessages
+              )
+            : activeOverlays,
+      }
+    })
     get().syncBroadcastOutput()
   },
   showLowerThirdOverlay: (id) => {
@@ -882,32 +1097,74 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     )
     if (!preset) return
     const startedAt = Date.now()
+    const previousLowerThird = get().activeOverlays.lowerThird
+    const previousWasFullWidth = isFullWidthLowerThird(
+      previousLowerThird?.preset
+    )
+    const nextIsFullWidth = isFullWidthLowerThird(preset)
     if (lowerThirdExpiryTimer) clearTimeout(lowerThirdExpiryTimer)
-    set((s) => ({
-      activeOverlays: {
+    set((s) => {
+      if (
+        nextIsFullWidth &&
+        !suspendedFullWidthTicker &&
+        s.activeOverlays.tickerMessageId
+      ) {
+        suspendedFullWidthTicker = {
+          id: s.activeOverlays.tickerMessageId,
+          startedAt: s.activeOverlays.tickerStartedAt,
+        }
+      }
+      let activeOverlays: ActiveOverlayState = {
         ...s.activeOverlays,
         lowerThird: { preset, startedAt },
-      },
-    }))
+      }
+      if (nextIsFullWidth) {
+        activeOverlays = {
+          ...activeOverlays,
+          tickerMessageId: null,
+          tickerStartedAt: null,
+        }
+      } else if (previousWasFullWidth) {
+        activeOverlays = restoreSuspendedTicker(
+          activeOverlays,
+          s.overlayConfig.tickerMessages
+        )
+      }
+      return { activeOverlays }
+    })
     get().syncBroadcastOutput()
     lowerThirdExpiryTimer = setTimeout(() => {
       lowerThirdExpiryTimer = null
       const current = get().activeOverlays.lowerThird
       if (!current || current.startedAt !== startedAt) return
-      set((s) => ({
-        activeOverlays: { ...s.activeOverlays, lowerThird: null },
-      }))
+      const currentWasFullWidth = isFullWidthLowerThird(current.preset)
+      set((s) => {
+        const activeOverlays = { ...s.activeOverlays, lowerThird: null }
+        return {
+          activeOverlays: currentWasFullWidth
+            ? restoreSuspendedTicker(activeOverlays, s.overlayConfig.tickerMessages)
+            : activeOverlays,
+        }
+      })
       get().syncBroadcastOutput()
     }, preset.durationMs)
   },
   clearLowerThirdOverlay: () => {
+    const currentWasFullWidth = isFullWidthLowerThird(
+      get().activeOverlays.lowerThird?.preset
+    )
     if (lowerThirdExpiryTimer) {
       clearTimeout(lowerThirdExpiryTimer)
       lowerThirdExpiryTimer = null
     }
-    set((s) => ({
-      activeOverlays: { ...s.activeOverlays, lowerThird: null },
-    }))
+    set((s) => {
+      const activeOverlays = { ...s.activeOverlays, lowerThird: null }
+      return {
+        activeOverlays: currentWasFullWidth
+          ? restoreSuspendedTicker(activeOverlays, s.overlayConfig.tickerMessages)
+          : activeOverlays,
+      }
+    })
     get().syncBroadcastOutput()
   },
 
@@ -1076,6 +1333,9 @@ export function hydrateBroadcastThemes(): Promise<void> {
       const activeId = await store.get<string>("activeThemeId")
       const altActiveId = await store.get<string>("altActiveThemeId")
       const storedOutputs = await store.get<unknown>("outputs")
+      const storedSelectedOverlayOutputId = await store.get<unknown>(
+        "selectedOverlayOutputId"
+      )
       const storedOverlayConfig = await store.get<unknown>("overlayConfig")
       const themeSortOrder =
         await store.get<Record<string, number>>("themeSortOrder")
@@ -1160,6 +1420,12 @@ export function hydrateBroadcastThemes(): Promise<void> {
       ) as Record<BroadcastThemeSection, string>
       const overlayOutputs =
         patch.outputs ?? useBroadcastStore.getState().outputs
+      patch.selectedOverlayOutputId = selectOverlayOutputId(
+        typeof storedSelectedOverlayOutputId === "string"
+          ? storedSelectedOverlayOutputId
+          : null,
+        overlayOutputs
+      )
       patch.overlayConfig = sanitizeOverlayConfiguration(
         storedOverlayConfig,
         overlayOutputs.map((output) => output.id)
@@ -1178,6 +1444,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
           state.deletedBuiltinThemeIds !== prevState.deletedBuiltinThemeIds ||
           state.activeThemeId !== prevState.activeThemeId ||
           state.outputs !== prevState.outputs ||
+          state.selectedOverlayOutputId !== prevState.selectedOverlayOutputId ||
           state.sectionThemeIds !== prevState.sectionThemeIds ||
           state.overlayConfig !== prevState.overlayConfig
         if (!changed) return
@@ -1218,6 +1485,7 @@ async function persistBroadcastThemes(state: BroadcastState): Promise<void> {
     await store.set("deletedBuiltinThemeIds", state.deletedBuiltinThemeIds)
     await store.set("activeThemeId", state.activeThemeId)
     await store.set("outputs", state.outputs)
+    await store.set("selectedOverlayOutputId", state.selectedOverlayOutputId)
     await store.set("sectionThemeIds", state.sectionThemeIds)
     await store.set("overlayConfig", state.overlayConfig)
     await store.save()

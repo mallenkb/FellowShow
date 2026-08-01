@@ -122,13 +122,17 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           theme={activeTheme}
           verse={liveVerse}
           timer={liveTimer}
-          lowerThird={lowerThird}
-          overlays={getOverlayPayloadForOutput(
-            overlayConfig,
-            activeOverlays,
-            "main",
-            { verse: liveVerse, timer: liveTimer }
-          )}
+          lowerThird={isLive ? lowerThird : null}
+          overlays={
+            isLive
+              ? getOverlayPayloadForOutput(
+                  overlayConfig,
+                  activeOverlays,
+                  "main",
+                  { verse: liveVerse, timer: liveTimer }
+                )
+              : null
+          }
           className="h-full"
           fillContainer
           fit="contain"

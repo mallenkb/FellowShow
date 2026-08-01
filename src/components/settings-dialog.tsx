@@ -17,11 +17,13 @@ import {
   RadioIcon,
   RefreshCwIcon,
   SettingsIcon,
+  SparklesIcon,
   TvIcon,
   XIcon,
 } from "lucide-react"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import { AudioSection } from "@/components/settings/audio-section"
+import { AiModelSection } from "@/components/settings/ai-model-section"
 import { BibleSection } from "@/components/settings/bible-section"
 import { DisplayModeSection } from "@/components/settings/display-mode-section"
 import { HelpSection } from "@/components/settings/help-section"
@@ -30,7 +32,14 @@ import { SpeechSection } from "@/components/settings/speech-section"
 import { UpdatesSection } from "@/components/settings/updates-section"
 
 type NavSection =
-  "audio" | "speech" | "bible" | "display" | "remote" | "updates" | "help"
+  | "audio"
+  | "speech"
+  | "ai-model"
+  | "bible"
+  | "display"
+  | "remote"
+  | "updates"
+  | "help"
 
 const navItems: { name: string; id: NavSection; icon: React.ReactNode }[] = [
   {
@@ -42,6 +51,11 @@ const navItems: { name: string; id: NavSection; icon: React.ReactNode }[] = [
     name: "Speech Recognition",
     id: "speech",
     icon: <BrainCircuitIcon strokeWidth={2} />,
+  },
+  {
+    name: "AI Model",
+    id: "ai-model",
+    icon: <SparklesIcon strokeWidth={2} />,
   },
   {
     name: "Scriptures",
@@ -73,6 +87,7 @@ const navItems: { name: string; id: NavSection; icon: React.ReactNode }[] = [
 const sectionTitles: Record<NavSection, string> = {
   audio: "Audio",
   speech: "Speech Recognition",
+  "ai-model": "AI Model / OpenRouter",
   bible: "Scripture Translation",
   display: "Display Mode",
   remote: "Remote Control",
@@ -83,6 +98,7 @@ const sectionTitles: Record<NavSection, string> = {
 const sectionComponents: Record<NavSection, React.FC> = {
   audio: AudioSection,
   speech: SpeechSection,
+  "ai-model": AiModelSection,
   bible: BibleSection,
   display: DisplayModeSection,
   remote: RemoteControlSection,

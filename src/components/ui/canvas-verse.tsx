@@ -8,6 +8,10 @@ import {
   shouldRenderLowerThirdLayer,
   shouldRenderTickerLayer,
 } from "@/lib/broadcast-output-mode"
+import {
+  getOverlayBackgroundColor,
+  type OverlayOutputMode,
+} from "@/lib/broadcast-outputs"
 import type {
   BroadcastTheme,
   BroadcastOverlayPayload,
@@ -23,6 +27,7 @@ interface CanvasVerseProps {
   timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
   overlays?: BroadcastOverlayPayload | null
+  overlayMode?: OverlayOutputMode
   className?: string
   fillContainer?: boolean
   fit?: "width" | "contain" | "cover"
@@ -34,6 +39,7 @@ export const CanvasVerse = memo(function CanvasVerse({
   timer,
   lowerThird,
   overlays,
+  overlayMode,
   className,
   fillContainer = false,
   fit = fillContainer ? "cover" : "width",
@@ -250,6 +256,7 @@ export const CanvasVerse = memo(function CanvasVerse({
               label: lowerThird.label,
             }
           : null,
+      overlayMode: overlayMode ?? null,
       width: displayW,
       height: displayH,
     })
@@ -263,6 +270,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     const shouldAnimate =
       previousContentKey !== null &&
       previousContentKey !== contentKey &&
+      !overlayMode &&
       !sizeChanged &&
       transition.type !== "none" &&
       transition.duration > 0 &&
@@ -313,16 +321,21 @@ export const CanvasVerse = memo(function CanvasVerse({
     scene.height = theme.resolution.height
     const sceneCtx = scene.getContext("2d")
     if (!sceneCtx) return
-    renderVerse(sceneCtx, theme, verse, {
-      scale: 1,
-      timer,
-      lowerThird,
-      imageCache: imageCacheRef.current,
-      videoCache: videoCacheRef.current,
-      now: hasTicker ? performance.now() : undefined,
-    })
-    if (!verse && !timer) {
-      drawVideoStreamPlaceholder(sceneCtx, theme.resolution)
+    if (overlayMode) {
+      sceneCtx.fillStyle = getOverlayBackgroundColor(overlayMode)
+      sceneCtx.fillRect(0, 0, scene.width, scene.height)
+    } else {
+      renderVerse(sceneCtx, theme, verse, {
+        scale: 1,
+        timer,
+        lowerThird,
+        imageCache: imageCacheRef.current,
+        videoCache: videoCacheRef.current,
+        now: hasTicker ? performance.now() : undefined,
+      })
+      if (!verse && !timer) {
+        drawVideoStreamPlaceholder(sceneCtx, theme.resolution)
+      }
     }
     drawBroadcastOverlays(sceneCtx, theme.resolution, overlays, {
       imageCache: imageCacheRef.current,
@@ -391,6 +404,7 @@ export const CanvasVerse = memo(function CanvasVerse({
     tickerVersion,
     fontVersion,
     hasTicker,
+    overlayMode,
   ])
 
   useEffect(() => {
@@ -409,6 +423,11 @@ export const CanvasVerse = memo(function CanvasVerse({
         (fillContainer || fit === "contain" || fit === "cover") && "h-full",
         className
       )}
+      style={
+        overlayMode
+          ? { backgroundColor: getOverlayBackgroundColor(overlayMode) }
+          : undefined
+      }
     >
       <canvas
         ref={canvasRef}

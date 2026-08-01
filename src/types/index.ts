@@ -1,7 +1,7 @@
 export type { DeviceInfo, AudioLevel } from "./audio"
 export type { TranscriptSegment } from "./transcript"
 export type { PreachingSummary } from "./summary"
-export type { SermonNote, SermonSession } from "./sermon"
+export type { SermonNote, SermonNoteDraft, SermonSession } from "./sermon"
 export type { Translation, Book, Verse, CrossReference } from "./bible"
 export type { QueueItem } from "./queue"
 export type {
@@ -32,11 +32,19 @@ export {
   type LogoOverlayConfig,
   type LogoOverlayItem,
   type LowerThirdPreset,
+  type LowerThirdAppearanceSettings,
+  type LowerThirdStyle,
   type LowerThirdTheme,
   type OverlayConfiguration,
   type OverlayPosition,
   type TickerMessage,
+  type TickerSpeed,
   type TickerOverlayConfig,
+  DEFAULT_LOWER_THIRD_STYLE,
+  DEFAULT_TICKER_SPEED,
+  getDefaultLowerThirdStyleForTheme,
+  LOWER_THIRD_STYLE_OPTIONS,
+  TICKER_SPEED_OPTIONS,
 } from "./overlays"
 export type {
   NdiAlphaMode,

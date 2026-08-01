@@ -7,6 +7,7 @@ import type {
   SermonNote,
   SermonSession,
 } from "@/types"
+import type { SermonNoteDraft } from "@/types/sermon"
 
 interface SermonState {
   sessions: SermonSession[]
@@ -37,6 +38,23 @@ interface SermonState {
     throughSegmentIndex: number,
     source?: SermonNote["source"]
   ) => void
+  addGeneratedNotes: (
+    id: string,
+    drafts: SermonNoteDraft[],
+    throughSegmentIndex: number
+  ) => void
+  addManualNote: (
+    id: string,
+    text: string,
+    source?: Pick<
+      SermonNoteDraft,
+      | "sourceContext"
+      | "sourceSegmentIds"
+      | "sourceSegmentStartIndex"
+      | "sourceSegmentEndIndex"
+    >
+  ) => void
+  markNotesProcessed: (id: string, throughSegmentIndex: number) => void
   updateNote: (sessionId: string, noteId: string, text: string) => void
   toggleQueuedNote: (sessionId: string, noteId: string) => void
   clearQueue: (sessionId: string) => void
@@ -111,6 +129,38 @@ function sanitizeSessions(value: unknown): SermonSession[] {
                 note.source === "final"
                   ? ("final" as const)
                   : ("live" as const),
+              ...(note.kind === "manual"
+                ? { kind: "manual" as const }
+                : note.kind === "ai"
+                  ? { kind: "ai" as const }
+                  : {}),
+              ...(typeof note.sourceContext === "string" &&
+              note.sourceContext.trim()
+                ? { sourceContext: note.sourceContext.trim() }
+                : {}),
+              ...(Array.isArray(note.sourceSegmentIds)
+                ? {
+                    sourceSegmentIds: note.sourceSegmentIds.filter(
+                      (id): id is string => typeof id === "string" && Boolean(id)
+                    ),
+                  }
+                : {}),
+              ...(typeof note.sourceSegmentStartIndex === "number"
+                ? {
+                    sourceSegmentStartIndex: Math.max(
+                      0,
+                      Math.floor(note.sourceSegmentStartIndex)
+                    ),
+                  }
+                : {}),
+              ...(typeof note.sourceSegmentEndIndex === "number"
+                ? {
+                    sourceSegmentEndIndex: Math.max(
+                      0,
+                      Math.floor(note.sourceSegmentEndIndex)
+                    ),
+                  }
+                : {}),
               ...(typeof note.tickerMessageId === "string"
                 ? { tickerMessageId: note.tickerMessageId }
                 : {}),
@@ -136,6 +186,12 @@ function sanitizeSessions(value: unknown): SermonSession[] {
           typeof item.lastNoteSegmentIndex === "number"
             ? Math.max(0, item.lastNoteSegmentIndex)
             : 0,
+        aiNoteSegmentIndex:
+          typeof item.aiNoteSegmentIndex === "number"
+            ? Math.max(0, item.aiNoteSegmentIndex)
+            : typeof item.lastNoteSegmentIndex === "number"
+              ? Math.max(0, item.lastNoteSegmentIndex)
+              : 0,
         notes,
         queuedNoteIds: Array.isArray(item.queuedNoteIds)
           ? item.queuedNoteIds.filter(
@@ -193,6 +249,7 @@ export const useSermonStore = create<SermonState>((set) => ({
       transcriptStartIndex,
       transcript: [],
       lastNoteSegmentIndex: transcriptStartIndex,
+      aiNoteSegmentIndex: transcriptStartIndex,
       notes: [],
       queuedNoteIds: [],
       finalSummary: null,
@@ -271,6 +328,7 @@ export const useSermonStore = create<SermonState>((set) => ({
             text,
             createdAt: Date.now(),
             source,
+            kind: "ai",
           }))
         return {
           ...session,
@@ -281,6 +339,92 @@ export const useSermonStore = create<SermonState>((set) => ({
           ),
         }
       }),
+    })),
+  addGeneratedNotes: (id, drafts, throughSegmentIndex) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) => {
+        if (session.id !== id) return session
+        const existing = new Set(
+          session.notes.map((note) => note.text.trim().toLowerCase())
+        )
+        const notes = drafts
+          .map((draft) => ({
+            ...draft,
+            text: draft.text.trim(),
+            sourceContext: draft.sourceContext.trim(),
+          }))
+          .filter(
+            (draft) =>
+              draft.text &&
+              draft.sourceContext &&
+              !existing.has(draft.text.toLowerCase())
+          )
+          .map(
+            (draft): SermonNote => ({
+              id: crypto.randomUUID(),
+              text: draft.text,
+              createdAt: Date.now(),
+              source: "live",
+              kind: "ai",
+              sourceContext: draft.sourceContext,
+              sourceSegmentIds: draft.sourceSegmentIds,
+              sourceSegmentStartIndex: draft.sourceSegmentStartIndex,
+              sourceSegmentEndIndex: draft.sourceSegmentEndIndex,
+            })
+          )
+        return {
+          ...session,
+          notes: [...session.notes, ...notes],
+          lastNoteSegmentIndex: Math.max(
+            session.lastNoteSegmentIndex,
+            throughSegmentIndex
+          ),
+          aiNoteSegmentIndex: Math.max(
+            session.aiNoteSegmentIndex ?? session.lastNoteSegmentIndex,
+            throughSegmentIndex
+          ),
+        }
+      }),
+    })),
+  addManualNote: (id, text, source) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) => {
+        if (session.id !== id || !text.trim()) return session
+        const note: SermonNote = {
+          id: crypto.randomUUID(),
+          text: text.trim(),
+          createdAt: Date.now(),
+          source: "live",
+          kind: "manual",
+          ...(source
+            ? {
+                sourceContext: source.sourceContext.trim(),
+                sourceSegmentIds: source.sourceSegmentIds,
+                sourceSegmentStartIndex: source.sourceSegmentStartIndex,
+                sourceSegmentEndIndex: source.sourceSegmentEndIndex,
+              }
+            : {}),
+        }
+        return { ...session, notes: [...session.notes, note] }
+      }),
+    })),
+  markNotesProcessed: (id, throughSegmentIndex) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === id
+          ? {
+              ...session,
+              lastNoteSegmentIndex: Math.max(
+                session.lastNoteSegmentIndex,
+                throughSegmentIndex
+              ),
+              aiNoteSegmentIndex: Math.max(
+                session.aiNoteSegmentIndex ?? session.lastNoteSegmentIndex,
+                throughSegmentIndex
+              ),
+            }
+          : session
+      ),
     })),
   updateNote: (sessionId, noteId, text) =>
     set((state) => ({

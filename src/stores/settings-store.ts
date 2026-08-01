@@ -10,6 +10,8 @@ interface SettingsState {
   openaiApiKey: string | null
   groqApiKey: string | null
   claudeApiKey: string | null
+  openRouterApiKey: string | null
+  openRouterModel: string
   audioDeviceId: string | null
   gain: number
   autoMode: boolean
@@ -25,6 +27,8 @@ interface SettingsState {
   setOpenaiApiKey: (key: string | null) => void
   setGroqApiKey: (key: string | null) => void
   setClaudeApiKey: (key: string | null) => void
+  setOpenRouterApiKey: (key: string | null) => void
+  setOpenRouterModel: (model: string) => void
   setAudioDeviceId: (id: string | null) => void
   setGain: (gain: number) => void
   setAutoMode: (auto: boolean) => void
@@ -43,6 +47,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   openaiApiKey: null,
   groqApiKey: null,
   claudeApiKey: null,
+  openRouterApiKey: null,
+  openRouterModel: "inclusionai/ling-3.0-flash:free",
   audioDeviceId: null,
   gain: 1.0,
   autoMode: false,
@@ -58,6 +64,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
   setGroqApiKey: (groqApiKey) => set({ groqApiKey }),
   setClaudeApiKey: (claudeApiKey) => set({ claudeApiKey }),
+  setOpenRouterApiKey: (openRouterApiKey) => set({ openRouterApiKey }),
+  setOpenRouterModel: (openRouterModel) => set({ openRouterModel }),
   setAudioDeviceId: (audioDeviceId) => set({ audioDeviceId }),
   setGain: (gain) => set({ gain }),
   setAutoMode: (autoMode) => set({ autoMode }),
@@ -91,6 +99,8 @@ const PERSISTED_KEYS = [
   "openaiApiKey",
   "groqApiKey",
   "claudeApiKey",
+  "openRouterApiKey",
+  "openRouterModel",
   "audioDeviceId",
   "gain",
   "autoMode",

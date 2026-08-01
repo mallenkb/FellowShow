@@ -1,9 +1,15 @@
 import {
   OVERLAY_CONFIGURATION_VERSION,
+  DEFAULT_TICKER_SPEED,
+  DEFAULT_LOWER_THIRD_STYLE,
+  getDefaultLowerThirdStyleForTheme,
+  isTickerSpeed,
+  isLowerThirdStyle,
   type ActiveOverlayState,
   type BroadcastOverlayPayload,
   type LogoOverlayConfig,
   type LogoOverlayItem,
+  type LowerThirdAppearanceSettings,
   type LowerThirdPreset,
   type LowerThirdTheme,
   type OverlayConfiguration,
@@ -20,10 +26,10 @@ const DEFAULT_TICKER_LABEL_BACKGROUND_COLOR = "#b91c1c"
 const DEFAULT_TICKER_LABEL_TEXT_COLOR = "#ffffff"
 const DEFAULT_LOWER_THIRD_DURATION_MS = 14_000
 const MIN_LOWER_THIRD_DURATION_MS = 10_000
-const MAX_LOWER_THIRD_DURATION_MS = 30_000
+const MAX_LOWER_THIRD_DURATION_MS = 90_000
 // Keep lower thirds responsive on air while retaining a subtle fade.
 const LOWER_THIRD_FADE_MS = 600
-const DEFAULT_LOWER_THIRD_X_PERCENT = 30
+const DEFAULT_LOWER_THIRD_X_PERCENT = 14
 const DEFAULT_LOWER_THIRD_Y_PERCENT = 82
 const DEFAULT_LOWER_THIRD_WIDTH_PERCENT = 50
 export const DEFAULT_LOWER_THIRD_BACKGROUND_COLOR = "#0a101a"
@@ -64,6 +70,7 @@ export function createDefaultOverlayConfiguration(): OverlayConfiguration {
       labelTextColor: DEFAULT_TICKER_LABEL_TEXT_COLOR,
       labelText: "NOTICE",
       showLabel: true,
+      speed: DEFAULT_TICKER_SPEED,
     },
     tickerMessages: [],
     lowerThirdPresets: [],
@@ -253,6 +260,7 @@ function sanitizeTickerMessage(
     ...(typeof record.showLabel === "boolean"
       ? { showLabel: record.showLabel }
       : {}),
+    speed: isTickerSpeed(record.speed) ? record.speed : DEFAULT_TICKER_SPEED,
     targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
     createdAt: typeof record.createdAt === "number" ? record.createdAt : now,
     updatedAt: typeof record.updatedAt === "number" ? record.updatedAt : now,
@@ -287,6 +295,11 @@ function sanitizeTickerConfig(
         ? record.labelText.trim().slice(0, 32)
         : "NOTICE",
     showLabel: typeof record?.showLabel === "boolean" ? record.showLabel : true,
+    speed: isTickerSpeed(record?.speed)
+      ? record.speed
+      : isTickerSpeed(legacy?.speed)
+        ? legacy.speed
+        : DEFAULT_TICKER_SPEED,
   }
 }
 
@@ -303,6 +316,9 @@ function sanitizeLowerThirdPreset(
     typeof record.theme === "string" && LOWER_THIRD_THEMES.has(record.theme)
       ? (record.theme as LowerThirdTheme)
       : "preacher"
+  const style = isLowerThirdStyle(record.style)
+    ? record.style
+    : getDefaultLowerThirdStyleForTheme(theme)
   return {
     id: record.id,
     name:
@@ -310,6 +326,7 @@ function sanitizeLowerThirdPreset(
         ? record.name.trim()
         : record.title.trim(),
     theme,
+    style,
     title: record.title.trim(),
     subtitle:
       typeof record.subtitle === "string" && record.subtitle.trim()
@@ -329,6 +346,7 @@ function sanitizeLowerThirdPreset(
       Number.isFinite(record.widthPercent)
         ? Math.min(90, Math.max(25, Math.round(record.widthPercent)))
         : DEFAULT_LOWER_THIRD_WIDTH_PERCENT,
+    maxWidthEnabled: record.maxWidthEnabled !== false,
     xPercent: sanitizePositionPercent(
       record.xPercent,
       DEFAULT_LOWER_THIRD_X_PERCENT
@@ -345,6 +363,43 @@ function sanitizeLowerThirdPreset(
     targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
     createdAt: typeof record.createdAt === "number" ? record.createdAt : now,
     updatedAt: typeof record.updatedAt === "number" ? record.updatedAt : now,
+  }
+}
+
+function sanitizeLowerThirdAppearance(
+  value: unknown
+): LowerThirdAppearanceSettings | undefined {
+  const record = asRecord(value)
+  if (!record) return undefined
+  const style = isLowerThirdStyle(record.style)
+    ? record.style
+    : DEFAULT_LOWER_THIRD_STYLE
+  return {
+    backgroundColor: sanitizeColor(
+      record.backgroundColor,
+      DEFAULT_LOWER_THIRD_BACKGROUND_COLOR
+    ),
+    textColor: sanitizeColor(record.textColor, DEFAULT_LOWER_THIRD_TEXT_COLOR),
+    widthPercent:
+      typeof record.widthPercent === "number" &&
+      Number.isFinite(record.widthPercent)
+        ? Math.min(90, Math.max(25, Math.round(record.widthPercent)))
+        : DEFAULT_LOWER_THIRD_WIDTH_PERCENT,
+    xPercent: sanitizePositionPercent(
+      record.xPercent,
+      DEFAULT_LOWER_THIRD_X_PERCENT
+    ),
+    yPercent: sanitizePositionPercent(
+      record.yPercent,
+      DEFAULT_LOWER_THIRD_Y_PERCENT
+    ),
+    style,
+    maxWidthEnabled: record.maxWidthEnabled !== false,
+    durationMs: clampLowerThirdDuration(
+      typeof record.durationMs === "number"
+        ? record.durationMs
+        : DEFAULT_LOWER_THIRD_DURATION_MS
+    ),
   }
 }
 
@@ -376,13 +431,16 @@ export function sanitizeOverlayConfiguration(
     ),
     tickerMessages,
     lowerThirdPresets,
+    lastLowerThirdAppearance: sanitizeLowerThirdAppearance(
+      record.lastLowerThirdAppearance
+    ),
   }
 }
 
-export function getOverlayPayloadForOutput(
+function buildOverlayPayload(
   config: OverlayConfiguration,
   active: ActiveOverlayState,
-  outputId: string,
+  outputId: string | null,
   programOrNow?:
     | {
         verse: VerseRenderData | null
@@ -404,19 +462,21 @@ export function getOverlayPayloadForOutput(
   const ticker = config.tickerMessages.find(
     (message) =>
       message.id === active.tickerMessageId &&
-      message.targetOutputIds.includes(outputId)
+      (outputId === null || message.targetOutputIds.includes(outputId))
   )
   const lowerThird = active.lowerThird
   const isLowerThirdActive =
     lowerThird !== null &&
     now < lowerThird.startedAt + lowerThird.preset.durationMs &&
-    lowerThird.preset.targetOutputIds.includes(outputId)
+    (outputId === null || lowerThird.preset.targetOutputIds.includes(outputId))
 
   return {
     logos: active.logoVisible
       ? config.logo.logos
           .filter(
-            (logo) => logo.visible && logo.targetOutputIds.includes(outputId)
+            (logo) =>
+              logo.visible &&
+              (outputId === null || logo.targetOutputIds.includes(outputId))
           )
           .map((logo) => ({
             id: logo.id,
@@ -430,12 +490,16 @@ export function getOverlayPayloadForOutput(
       ? {
           id: lowerThird.preset.id,
           theme: lowerThird.preset.theme,
+          style:
+            lowerThird.preset.style ??
+            getDefaultLowerThirdStyleForTheme(lowerThird.preset.theme),
           title: lowerThird.preset.title,
           subtitle: lowerThird.preset.subtitle,
           label: lowerThird.preset.label,
           backgroundColor: lowerThird.preset.backgroundColor,
           textColor: lowerThird.preset.textColor,
           widthPercent: lowerThird.preset.widthPercent,
+          maxWidthEnabled: lowerThird.preset.maxWidthEnabled !== false,
           xPercent: lowerThird.preset.xPercent,
           yPercent: lowerThird.preset.yPercent,
           durationMs: lowerThird.preset.durationMs,
@@ -452,8 +516,39 @@ export function getOverlayPayloadForOutput(
           labelTextColor: config.ticker.labelTextColor,
           labelText: ticker.labelText ?? config.ticker.labelText,
           showLabel: ticker.showLabel ?? config.ticker.showLabel,
+          speed: ticker.speed ?? config.ticker.speed ?? DEFAULT_TICKER_SPEED,
           startedAt: active.tickerStartedAt ?? now,
         }
       : null,
   }
+}
+
+export function getOverlayPayloadForOutput(
+  config: OverlayConfiguration,
+  active: ActiveOverlayState,
+  outputId: string,
+  programOrNow?:
+    | {
+        verse: VerseRenderData | null
+        timer: PresenterTimerRenderData | null
+      }
+    | number,
+  requestedNow = Date.now()
+): BroadcastOverlayPayload {
+  return buildOverlayPayload(
+    config,
+    active,
+    outputId,
+    programOrNow,
+    requestedNow
+  )
+}
+
+/** Preview all currently active master overlays in the dedicated graphics canvas. */
+export function getOverlayPreviewPayload(
+  config: OverlayConfiguration,
+  active: ActiveOverlayState,
+  requestedNow = Date.now()
+): BroadcastOverlayPayload {
+  return buildOverlayPayload(config, active, null, undefined, requestedNow)
 }

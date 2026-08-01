@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
   getOutputProgramPayload,
+  getOverlayOutputMode,
   MAX_BROADCAST_OUTPUTS,
   outputContentLabel,
   resolveOutputThemeId,
@@ -18,7 +19,10 @@ import {
   useOutputRuntimeStore,
 } from "@/lib/broadcast-output-runtime"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
-import { getOverlayPayloadForOutput } from "@/lib/overlays"
+import {
+  getOverlayPayloadForOutput,
+  getOverlayPreviewPayload,
+} from "@/lib/overlays"
 import { useBroadcastStore } from "@/stores"
 import {
   ArrowUpDownIcon,
@@ -79,6 +83,9 @@ export function OutputsMultiviewPanel({
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const selectedThemeSection = useBroadcastStore((s) => s.selectedThemeSection)
   const isLive = useBroadcastStore((s) => s.isLive)
+  const liveOverlayOutputIds = useBroadcastStore(
+    (s) => s.liveOverlayOutputIds
+  )
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
   const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
@@ -257,10 +264,38 @@ export function OutputsMultiviewPanel({
             )
             const runtime = runtimeById[output.id]
             const active = isOutputOn(runtime)
+            const overlayMode = getOverlayOutputMode(output)
+            const outputIsLive =
+              output.content === "overlays"
+                ? liveOverlayOutputIds.includes(output.id)
+                : isLive
+            const overlayOutputIsOffAir =
+              output.content === "overlays" && active && !outputIsLive
+            const overlays =
+              active && outputIsLive
+                ? output.content === "overlays"
+                  ? getOverlayPreviewPayload(overlayConfig, activeOverlays)
+                  : getOverlayPayloadForOutput(
+                      overlayConfig,
+                      activeOverlays,
+                      output.id,
+                      {
+                        verse: active ? verse : null,
+                        timer: active ? timer : null,
+                      }
+                    )
+                : null
             // Highlight the dedicated screen for the current search tab.
             const matchesTab =
               tabContent !== null && output.content === tabContent
-            const showingContent = Boolean(verse || timer)
+            const showingContent =
+              output.content === "overlays"
+                ? Boolean(
+                    overlays?.logos.length ||
+                      overlays?.lowerThird ||
+                      overlays?.ticker
+                  )
+                : Boolean(verse || timer)
             const pending = pendingId === output.id
 
             return (
@@ -306,23 +341,14 @@ export function OutputsMultiviewPanel({
                       verse={active ? verse : null}
                       timer={active ? timer : null}
                       lowerThird={
-                        active && output.content === "everything"
+                        active &&
+                        isLive &&
+                        output.content === "everything"
                           ? lowerThird
                           : null
                       }
-                      overlays={
-                        active
-                          ? getOverlayPayloadForOutput(
-                              overlayConfig,
-                              activeOverlays,
-                              output.id,
-                              {
-                                verse: active ? verse : null,
-                                timer: active ? timer : null,
-                              }
-                            )
-                          : null
-                      }
+                      overlays={overlays}
+                      overlayMode={overlayMode ?? undefined}
                       className={cn("h-full", !active && "opacity-40")}
                       fillContainer
                     />
@@ -337,7 +363,7 @@ export function OutputsMultiviewPanel({
                   {active && !showingContent && (
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1">
                       <span className="text-[0.625rem] text-white/80">
-                        Waiting
+                        {overlayOutputIsOffAir ? "Ready · off air" : "Waiting"}
                       </span>
                     </div>
                   )}
@@ -383,7 +409,9 @@ export function OutputsMultiviewPanel({
                         {active
                           ? showingContent
                             ? "Live"
-                            : "On · waiting"
+                            : overlayOutputIsOffAir
+                              ? "Ready · Show on Live"
+                              : "On · waiting"
                           : output.outputType === "ndi"
                             ? "NDI"
                             : output.monitorIndex !== null

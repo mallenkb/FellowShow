@@ -5,6 +5,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useBroadcastStore } from "@/stores"
+import { DskOutputControls } from "@/components/on-display/dsk-output-controls"
 
 export function OnDisplayOverview() {
   const hasLogo = useBroadcastStore(
@@ -50,9 +51,10 @@ export function OnDisplayOverview() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto p-3">
       <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-        Use the controls in the middle panel. Active overlays stay visible while
-        you change the program underneath.
+        Use the Video Overlays controls in the middle panel. Active overlays
+        stay visible while you change the program underneath.
       </p>
+      <DskOutputControls />
       <div className="grid gap-2">
         {items.map((item) => (
           <div

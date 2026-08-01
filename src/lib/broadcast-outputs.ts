@@ -12,7 +12,60 @@ import { selectFreeMonitorIndex } from "@/lib/broadcast-output-control"
  * screens that stay on their theme background while other content is live.
  */
 export type OutputContent =
-  "everything" | "bible" | "songs" | "announcements" | "presentation" | "timer"
+  | "everything"
+  | "bible"
+  | "songs"
+  | "announcements"
+  | "presentation"
+  | "timer"
+  | "overlays"
+
+/** Background/keyer mode for a graphics-only output. */
+export type OverlayOutputMode = "dsk-luma" | "chroma-key"
+
+export const DEFAULT_OVERLAY_OUTPUT_MODE: OverlayOutputMode = "dsk-luma"
+
+export const OVERLAY_OUTPUT_MODE_OPTIONS: Array<{
+  value: OverlayOutputMode
+  label: string
+  shortLabel: "DSK" | "CMK"
+  description: string
+  backgroundColor: "#000000" | "#00ff00"
+}> = [
+  {
+    value: "dsk-luma",
+    label: "DSK / Luma Key",
+    shortLabel: "DSK",
+    description: "Black background for a luma-keyed downstream graphics layer.",
+    backgroundColor: "#000000",
+  },
+  {
+    value: "chroma-key",
+    label: "Chroma Key",
+    shortLabel: "CMK",
+    description: "Pure green background for a chroma-keyed graphics layer.",
+    backgroundColor: "#00ff00",
+  },
+]
+
+export function isOverlayOutputMode(value: unknown): value is OverlayOutputMode {
+  return value === "dsk-luma" || value === "chroma-key"
+}
+
+export function getOverlayOutputMode(
+  output: Pick<BroadcastOutputConfig, "content" | "overlayMode">
+): OverlayOutputMode | null {
+  if (output.content !== "overlays") return null
+  return isOverlayOutputMode(output.overlayMode)
+    ? output.overlayMode
+    : DEFAULT_OVERLAY_OUTPUT_MODE
+}
+
+export function getOverlayBackgroundColor(
+  mode: OverlayOutputMode
+): "#000000" | "#00ff00" {
+  return mode === "chroma-key" ? "#00ff00" : "#000000"
+}
 
 export interface BroadcastOutputConfig {
   id: string
@@ -22,6 +75,8 @@ export interface BroadcastOutputConfig {
   themeId: string | null
   outputType: OutputType
   monitorIndex: number | null
+  /** Keyer background for the graphics-only output role. */
+  overlayMode?: OverlayOutputMode
 }
 
 export const MAX_BROADCAST_OUTPUTS = 6
@@ -50,6 +105,12 @@ export const OUTPUT_CONTENT_OPTIONS: Array<{
     description: "Presentation slides only",
   },
   { value: "timer", label: "Timer", description: "Presenter timer only" },
+  {
+    value: "overlays",
+    label: "Video Overlays",
+    description:
+      "Master overlays only — no scripture, songs, slides, timers, or program content",
+  },
 ]
 
 export function outputContentLabel(content: OutputContent): string {
@@ -57,6 +118,15 @@ export function outputContentLabel(content: OutputContent): string {
     OUTPUT_CONTENT_OPTIONS.find((option) => option.value === content)?.label ??
     "General"
   )
+}
+
+/** Native external-window title for an output's user-facing role. */
+export function outputWindowTitle(
+  output: Pick<BroadcastOutputConfig, "content" | "outputType">
+): string {
+  if (output.content === "overlays") return "Video Overlays"
+  const role = outputContentLabel(output.content)
+  return output.outputType === "ndi" ? `${role} · NDI` : role
 }
 
 /** Default display name for a content role (Program for general, else the role). */
@@ -110,11 +180,13 @@ export function resolveOutputThemeId(
 ): string {
   if (output.themeId) return output.themeId
   const section =
-    output.content === "everything" || output.content === "timer"
-      ? liveVerse
-        ? inferThemeSection(liveVerse)
-        : fallbackSection
-      : output.content
+    output.content === "overlays"
+      ? fallbackSection
+      : output.content === "everything" || output.content === "timer"
+        ? liveVerse
+          ? inferThemeSection(liveVerse)
+          : fallbackSection
+        : output.content
   return getSectionThemeId(state, section)
 }
 
@@ -133,6 +205,7 @@ export function getOutputProgramPayload(
 } {
   if (!isLive) return { verse: null, timer: null }
   if (content === "everything") return { verse, timer }
+  if (content === "overlays") return { verse: null, timer: null }
   if (content === "timer") return { verse: null, timer }
   return {
     verse: verse && inferThemeSection(verse) === content ? verse : null,
@@ -180,6 +253,9 @@ export function createOutputConfig(
     themeId: null,
     outputType: options?.outputType ?? "display",
     monitorIndex: null,
+    ...(content === "overlays"
+      ? { overlayMode: DEFAULT_OVERLAY_OUTPUT_MODE }
+      : {}),
   }
 }
 
@@ -219,7 +295,7 @@ export function sanitizeOutputConfigs(
     // Migrate the pre-routing default names to the role-based ones.
     const isLegacyDefaultName =
       candidate.name === "Main Output" || candidate.name === "Alternate Output"
-    outputs.push({
+    const output = {
       id,
       name:
         typeof candidate.name === "string" &&
@@ -240,7 +316,15 @@ export function sanitizeOutputConfigs(
         candidate.monitorIndex >= 0
           ? candidate.monitorIndex
           : null,
-    })
+      ...(content === "overlays"
+        ? {
+            overlayMode: isOverlayOutputMode(candidate.overlayMode)
+              ? candidate.overlayMode
+              : DEFAULT_OVERLAY_OUTPUT_MODE,
+          }
+        : {}),
+    } satisfies BroadcastOutputConfig
+    outputs.push(output)
   }
   if (outputs.length === 0) return null
   if (!outputs.some((output) => output.id === "main")) {

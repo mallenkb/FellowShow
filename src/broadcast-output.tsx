@@ -11,6 +11,10 @@ import { hasAnimatingOverlay } from "@/lib/overlays"
 import { drawVideoStreamPlaceholder } from "@/lib/video-stream-placeholder"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import {
+  getOverlayBackgroundColor,
+  type OverlayOutputMode,
+} from "@/lib/broadcast-outputs"
+import {
   shouldRenderLowerThirdLayer,
   shouldRenderStandardBroadcastContent,
 } from "@/lib/broadcast-output-mode"
@@ -49,9 +53,14 @@ function uint8ToBase64(bytes: Uint8Array | Uint8ClampedArray): string {
 const OUTPUT_ID =
   new URLSearchParams(window.location.search).get("output") ?? "main"
 const currentWindow = getCurrentWebviewWindow()
+const VIDEO_OVERLAYS_WINDOW_TITLE = "Video Overlays"
 
 function isTauriRuntime(): boolean {
   return "__TAURI_INTERNALS__" in window
+}
+
+function setVideoOverlaysWindowTitle(): void {
+  document.title = VIDEO_OVERLAYS_WINDOW_TITLE
 }
 
 interface BroadcastPayload {
@@ -60,6 +69,7 @@ interface BroadcastPayload {
   timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
   overlays?: BroadcastOverlayPayload | null
+  overlayMode?: OverlayOutputMode
 }
 
 type DirectVideo = NonNullable<VerseRenderData["presentationImage"]>
@@ -67,6 +77,7 @@ type DirectVideo = NonNullable<VerseRenderData["presentationImage"]>
 function directVideoFor(payload: BroadcastPayload): DirectVideo | null {
   const video = payload.verse?.presentationImage
   if (
+    payload.overlayMode ||
     video?.mediaType !== "video" ||
     payload.timer ||
     payload.verse?.tickerText ||
@@ -93,6 +104,7 @@ function transitionKey(data: BroadcastPayload | null): string {
     presentationImage: data.verse?.presentationImage?.url ?? null,
     timerVisible: Boolean(data.timer),
     timerFinished: data.timer?.isFinished ?? false,
+    overlayMode: data.overlayMode ?? null,
     lowerThirdVisible: includeLowerThird
       ? (data.lowerThird?.visible ?? false)
       : null,
@@ -251,6 +263,12 @@ function BroadcastCanvas() {
 
   const renderPayloadToCanvas = useCallback(
     (canvas: HTMLCanvasElement, data: BroadcastPayload | null) => {
+      const root = rootRef.current
+      if (root) {
+        root.style.backgroundColor = data?.overlayMode
+          ? getOverlayBackgroundColor(data.overlayMode)
+          : "#000000"
+      }
       const ctx = canvas.getContext("2d")
       if (!ctx) return
 
@@ -261,7 +279,7 @@ function BroadcastCanvas() {
         return
       }
 
-      const { theme, verse, timer, lowerThird, overlays } = data
+      const { theme, verse, timer, lowerThird, overlays, overlayMode } = data
       // Assigning a canvas dimension clears its backing store and forces a
       // reallocation. This runs for every video frame, so only resize when
       // the output resolution actually changes.
@@ -271,6 +289,15 @@ function BroadcastCanvas() {
       ) {
         canvas.width = theme.resolution.width
         canvas.height = theme.resolution.height
+      }
+      if (overlayMode) {
+        ctx.fillStyle = getOverlayBackgroundColor(overlayMode)
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        drawBroadcastOverlays(ctx, theme.resolution, overlays, {
+          imageCache: imageCacheRef.current,
+          now: Date.now(),
+        })
+        return
       }
       const result = renderVerse(ctx, theme, verse, {
         scale: 1,
@@ -327,6 +354,8 @@ function BroadcastCanvas() {
       const shouldTransition =
         previousData &&
         transitionKey(previousData) !== transitionKey(nextData) &&
+        !previousData.overlayMode &&
+        !nextData.overlayMode &&
         transition.type !== "none" &&
         transition.duration > 0
 
@@ -538,6 +567,7 @@ function BroadcastCanvas() {
       (event) => {
         const previousData = latestData.current
         latestData.current = event.payload
+        if (event.payload.overlayMode) setVideoOverlaysWindowTitle()
         setDirectVideo(directVideoFor(event.payload))
         preloadMedia(event.payload)
         logDebug("Received broadcast:verse-update", {
@@ -629,6 +659,7 @@ function BroadcastCanvas() {
         width: "100vw",
         height: "100vh",
         overflow: "hidden",
+        backgroundColor: "#000000",
       }}
     >
       {directVideo && !isNdiActive ? (
@@ -668,7 +699,11 @@ function BroadcastCanvas() {
       {contextMenu ? (
         <div
           role="menu"
-          aria-label="Projector display options"
+          aria-label={
+            latestData.current?.overlayMode
+              ? "Video Overlays display options"
+              : "Video output options"
+          }
           onContextMenu={(event) => event.preventDefault()}
           onPointerDown={(event) => event.stopPropagation()}
           style={{
