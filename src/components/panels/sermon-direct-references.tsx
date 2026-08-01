@@ -162,6 +162,8 @@ export function SermonDirectReferences() {
     [currentPartial, detections, highlightedReferences, transcriptSegments]
   )
 
+  if (references.length === 0) return null
+
   return (
     <section className="mb-2 rounded-lg border border-ai-direct/25 bg-ai-direct/5 p-2.5">
       <div className="mb-2 flex items-center gap-1.5">
@@ -171,18 +173,11 @@ export function SermonDirectReferences() {
           {references.length}
         </Badge>
       </div>
-      {references.length === 0 ? (
-        <p className="text-[0.6875rem] leading-relaxed text-muted-foreground">
-          Explicit references from the live transcript will appear here. AI
-          contextual suggestions stay in Related scriptures.
-        </p>
-      ) : (
-        <div className="space-y-1.5">
-          {references.map((reference) => (
-            <DirectReferenceRow key={reference.key} reference={reference} />
-          ))}
-        </div>
-      )}
+      <div className="space-y-1.5">
+        {references.map((reference) => (
+          <DirectReferenceRow key={reference.key} reference={reference} />
+        ))}
+      </div>
     </section>
   )
 }

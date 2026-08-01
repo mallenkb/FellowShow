@@ -293,6 +293,8 @@ function DirectSermonReferencesSection({
   onFocusQueue,
   onScroll,
 }: DirectSermonReferencesSectionProps) {
+  if (references.length === 0) return null
+
   return (
     <section className="rounded-lg border border-ai-direct/25 bg-ai-direct/5 p-2.5">
       <div className="mb-2 flex items-start justify-between gap-2">
@@ -308,29 +310,23 @@ function DirectSermonReferencesSection({
           {references.length}
         </span>
       </div>
-      {references.length === 0 ? (
-        <p className="rounded-md border border-dashed border-border/80 px-2.5 py-2 text-xs text-muted-foreground">
-          No direct scripture references detected yet.
-        </p>
-      ) : (
-        <div className="space-y-1.5">
-          {references.map((reference) => {
-            const key = directReferenceKey(reference)
-            return (
-              <DirectSermonReferenceRow
-                key={key}
-                reference={reference}
-                isQueued={queuedReferenceKeys.has(key)}
-                onSelect={() => onSelect(reference)}
-                onPresent={() => onPresent(reference)}
-                onQueue={() => onQueue(reference)}
-                onFocusQueue={() => onFocusQueue(reference)}
-                onScroll={() => onScroll(reference)}
-              />
-            )
-          })}
-        </div>
-      )}
+      <div className="space-y-1.5">
+        {references.map((reference) => {
+          const key = directReferenceKey(reference)
+          return (
+            <DirectSermonReferenceRow
+              key={key}
+              reference={reference}
+              isQueued={queuedReferenceKeys.has(key)}
+              onSelect={() => onSelect(reference)}
+              onPresent={() => onPresent(reference)}
+              onQueue={() => onQueue(reference)}
+              onFocusQueue={() => onFocusQueue(reference)}
+              onScroll={() => onScroll(reference)}
+            />
+          )
+        })}
+      </div>
     </section>
   )
 }

@@ -21,6 +21,10 @@ export interface OpenRouterRequestOptions {
   signal?: AbortSignal
 }
 
+type OpenRouterConfigOverrides = Partial<
+  Pick<OpenRouterConfig, "apiKey" | "model">
+>
+
 export class OpenRouterNotConfiguredError extends Error {
   constructor() {
     super("OpenRouter is not configured")
@@ -35,11 +39,19 @@ export class OpenRouterRequestError extends Error {
   }
 }
 
-export function getOpenRouterConfig(): OpenRouterConfig {
+export function getOpenRouterConfig(
+  overrides: OpenRouterConfigOverrides = {}
+): OpenRouterConfig {
   const state = useSettingsStore.getState()
   return {
-    apiKey: state.openRouterApiKey?.trim() || null,
-    model: state.openRouterModel.trim() || DEFAULT_OPENROUTER_MODEL,
+    apiKey:
+      overrides.apiKey === undefined
+        ? state.openRouterApiKey?.trim() || null
+        : overrides.apiKey?.trim() || null,
+    model:
+      overrides.model?.trim() ||
+      state.openRouterModel.trim() ||
+      DEFAULT_OPENROUTER_MODEL,
   }
 }
 
@@ -58,10 +70,10 @@ function extractContent(value: unknown): string {
   return typeof content === "string" ? content.trim() : ""
 }
 
-export async function requestOpenRouterText(
+async function requestOpenRouterTextWithConfig(
+  config: OpenRouterConfig,
   options: OpenRouterRequestOptions
 ): Promise<string> {
-  const config = getOpenRouterConfig()
   if (!config.apiKey) throw new OpenRouterNotConfiguredError()
 
   let response: Response
@@ -99,6 +111,34 @@ export async function requestOpenRouterText(
   const content = extractContent(await response.json().catch(() => null))
   if (!content) throw new OpenRouterRequestError("The AI model returned no text")
   return content
+}
+
+export async function requestOpenRouterText(
+  options: OpenRouterRequestOptions
+): Promise<string> {
+  return requestOpenRouterTextWithConfig(getOpenRouterConfig(), options)
+}
+
+/**
+ * Sends a minimal request through the configured OpenRouter model without
+ * returning or logging the model response. Optional overrides let the
+ * settings editor test unsaved form values without persisting them first.
+ */
+export async function testOpenRouterConnection(
+  overrides: OpenRouterConfigOverrides = {},
+  signal?: AbortSignal
+): Promise<void> {
+  await requestOpenRouterTextWithConfig(getOpenRouterConfig(overrides), {
+    messages: [
+      {
+        role: "user",
+        content: "Reply with the single word OK to confirm this connection.",
+      },
+    ],
+    temperature: 0,
+    maxTokens: 8,
+    signal,
+  })
 }
 
 export async function requestOpenRouterJson<T>(

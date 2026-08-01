@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react"
-import { CheckIcon, KeyRoundIcon, SparklesIcon } from "lucide-react"
+import {
+  CheckIcon,
+  EyeIcon,
+  EyeOffIcon,
+  KeyRoundIcon,
+  LoaderCircleIcon,
+  SparklesIcon,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DEFAULT_OPENROUTER_MODEL } from "@/lib/openrouter"
+import {
+  DEFAULT_OPENROUTER_MODEL,
+  OpenRouterRequestError,
+  testOpenRouterConnection,
+} from "@/lib/openrouter"
 import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
 
 export function AiModelSection() {
@@ -15,6 +26,11 @@ export function AiModelSection() {
   const [apiKey, setApiKeyValue] = useState(configuredKey ?? "")
   const [model, setModelValue] = useState(configuredModel)
   const [saved, setSaved] = useState(false)
+  const [showApiKey, setShowApiKey] = useState(false)
+  const [connectionState, setConnectionState] = useState<
+    "idle" | "testing" | "success" | "error"
+  >("idle")
+  const [connectionMessage, setConnectionMessage] = useState("")
 
   useEffect(() => {
     setApiKeyValue(configuredKey ?? "")
@@ -30,6 +46,38 @@ export function AiModelSection() {
     await saveSettingsNow()
     setSaved(true)
     window.setTimeout(() => setSaved(false), 2_000)
+  }
+
+  const testConnection = async () => {
+    const trimmedKey = apiKey.trim()
+    const trimmedModel = model.trim() || DEFAULT_OPENROUTER_MODEL
+    if (!trimmedKey) {
+      setConnectionState("error")
+      setConnectionMessage("Enter an OpenRouter API key before testing.")
+      return
+    }
+
+    setConnectionState("testing")
+    setConnectionMessage("")
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 15_000)
+    try {
+      await testOpenRouterConnection(
+        { apiKey: trimmedKey, model: trimmedModel },
+        controller.signal
+      )
+      setConnectionState("success")
+      setConnectionMessage("Connection successful.")
+    } catch (error) {
+      setConnectionState("error")
+      setConnectionMessage(
+        error instanceof OpenRouterRequestError
+          ? error.message
+          : "Could not test the OpenRouter connection"
+      )
+    } finally {
+      window.clearTimeout(timeoutId)
+    }
   }
 
   return (
@@ -55,14 +103,31 @@ export function AiModelSection() {
             </Badge>
           ) : null}
         </span>
-        <Input
-          type="password"
-          value={apiKey}
-          onChange={(event) => setApiKeyValue(event.target.value)}
-          placeholder="Paste your OpenRouter API key"
-          autoComplete="off"
-          className="text-xs"
-        />
+        <div className="relative">
+          <Input
+            type={showApiKey ? "text" : "password"}
+            value={apiKey}
+            onChange={(event) => setApiKeyValue(event.target.value)}
+            placeholder="Paste your OpenRouter API key"
+            autoComplete="off"
+            className="pr-9 text-xs"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="absolute top-1/2 right-1 -translate-y-1/2"
+            aria-label={showApiKey ? "Hide OpenRouter API key" : "Show OpenRouter API key"}
+            title={showApiKey ? "Hide API key" : "Show API key"}
+            onClick={() => setShowApiKey((visible) => !visible)}
+          >
+            {showApiKey ? (
+              <EyeOffIcon className="size-3.5" />
+            ) : (
+              <EyeIcon className="size-3.5" />
+            )}
+          </Button>
+        </div>
         <span className="text-[0.625rem] leading-relaxed text-muted-foreground">
           Stored through FellowShow’s existing settings store. It is never
           shown in logs or sent anywhere except OpenRouter requests.
@@ -92,7 +157,7 @@ export function AiModelSection() {
         </span>
       </label>
 
-      <div>
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
           onClick={() =>
@@ -109,6 +174,33 @@ export function AiModelSection() {
             "Save AI model settings"
           )}
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={connectionState === "testing"}
+          onClick={() => void testConnection()}
+        >
+          {connectionState === "testing" ? (
+            <>
+              <LoaderCircleIcon className="size-3 animate-spin" /> Testing…
+            </>
+          ) : (
+            "Test connection"
+          )}
+        </Button>
+        {connectionMessage ? (
+          <span
+            className={`text-[0.625rem] ${
+              connectionState === "success"
+                ? "text-emerald-500"
+                : "text-destructive"
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            {connectionMessage}
+          </span>
+        ) : null}
       </div>
     </div>
   )

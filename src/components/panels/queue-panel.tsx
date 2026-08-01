@@ -24,7 +24,6 @@ import { PreachingSummaryPanel } from "@/components/panels/preaching-summary-pan
 import { LiveNotesPanel } from "@/components/panels/live-notes-panel"
 import { RelatedScripturesPanel } from "@/components/panels/related-scriptures-panel"
 import { SongsQueuePanel } from "@/components/panels/songs-queue-panel"
-import { SermonDirectReferences } from "@/components/panels/sermon-direct-references"
 
 type QueuePanelTab = "sermon" | "related" | "notes" | "summary"
 
@@ -255,15 +254,14 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
             visibleQueueItems.length === 0 && "justify-center"
           )}
         >
-          <SermonDirectReferences />
           {visibleQueueItems.length === 0 && (
             <div className="flex flex-col items-center justify-center gap-2 p-6 text-center">
               <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
                 <BookOpenIcon className="size-4" />
               </div>
               <p className="text-xs text-muted-foreground">
-                Highlighted transcript verses and manually queued verses appear
-                here
+                Explicit references from the live transcript will appear here.
+                AI contextual suggestions stay in Related scriptures.
               </p>
             </div>
           )}
