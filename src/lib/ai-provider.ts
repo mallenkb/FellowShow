@@ -12,13 +12,13 @@ const OPENAI_MODELS_ENDPOINT = "https://api.openai.com/v1/models"
 const MAX_TRANSIENT_RETRIES = 2
 const MAX_AUTOMATIC_RETRY_DELAY_MS = 10_000
 
-export interface AiProviderConfig {
+interface AiProviderConfig {
   provider: AiProvider
   apiKey: string | null
   model: string
 }
 
-export interface AiMessage {
+interface AiMessage {
   role: "system" | "user" | "assistant"
   content: string
 }
@@ -41,14 +41,14 @@ export interface AiProviderConfigOverrides {
   model?: string
 }
 
-export class AiProviderNotConfiguredError extends Error {
+class AiProviderNotConfiguredError extends Error {
   constructor(provider: AiProvider) {
     super(`${getAiProviderName(provider)} is not configured`)
     this.name = "AiProviderNotConfiguredError"
   }
 }
 
-export class AiProviderRequestError extends Error {
+class AiProviderRequestError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "AiProviderRequestError"
@@ -65,7 +65,7 @@ export function getAiProviderName(provider: AiProvider): string {
   return provider === "openai" ? "OpenAI" : "OpenRouter"
 }
 
-export function getAiProviderConfig(
+function getAiProviderConfig(
   overrides: AiProviderConfigOverrides = {}
 ): AiProviderConfig {
   const state = useSettingsStore.getState()
@@ -113,9 +113,7 @@ async function readProviderErrorDetails(
   }
 }
 
-function openAiLimitMessage(
-  details: ProviderErrorDetails
-): string | null {
+function openAiLimitMessage(details: ProviderErrorDetails): string | null {
   const fingerprint = [details.code, details.type, details.message]
     .filter((value): value is string => Boolean(value))
     .join(" ")
@@ -394,9 +392,7 @@ async function requestAiTextWithConfig(
     : requestOpenRouterText(config, options)
 }
 
-export async function requestAiText(
-  options: AiRequestOptions
-): Promise<string> {
+async function requestAiText(options: AiRequestOptions): Promise<string> {
   return requestAiTextWithConfig(getAiProviderConfig(), options)
 }
 

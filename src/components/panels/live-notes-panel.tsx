@@ -413,10 +413,7 @@ export function LiveNotesPanel() {
           `${result.notes.length} source-linked note${result.notes.length === 1 ? "" : "s"} added.`
         )
       } else {
-        store.markNotesProcessed(
-          currentSession.id,
-          result.throughSegmentIndex
-        )
+        store.markNotesProcessed(currentSession.id, result.throughSegmentIndex)
         if (force) setGenerationNotice("No meaningful new moment found yet.")
       }
     } catch (error) {

@@ -48,7 +48,9 @@ export const OVERLAY_OUTPUT_MODE_OPTIONS: Array<{
   },
 ]
 
-export function isOverlayOutputMode(value: unknown): value is OverlayOutputMode {
+export function isOverlayOutputMode(
+  value: unknown
+): value is OverlayOutputMode {
   return value === "dsk-luma" || value === "chroma-key"
 }
 

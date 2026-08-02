@@ -59,7 +59,9 @@ export function DskOutputControls() {
   const setSelectedOverlayOutputId = useBroadcastStore(
     (state) => state.setSelectedOverlayOutputId
   )
-  const overlayOutputs = outputs.filter((output) => output.content === "overlays")
+  const overlayOutputs = outputs.filter(
+    (output) => output.content === "overlays"
+  )
   const selectedOutput =
     overlayOutputs.find((output) => output.id === selectedOverlayOutputId) ??
     overlayOutputs[0] ??

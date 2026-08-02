@@ -141,7 +141,8 @@ function sanitizeSessions(value: unknown): SermonSession[] {
               ...(Array.isArray(note.sourceSegmentIds)
                 ? {
                     sourceSegmentIds: note.sourceSegmentIds.filter(
-                      (id): id is string => typeof id === "string" && Boolean(id)
+                      (id): id is string =>
+                        typeof id === "string" && Boolean(id)
                     ),
                   }
                 : {}),
@@ -359,19 +360,17 @@ export const useSermonStore = create<SermonState>((set) => ({
               draft.sourceContext &&
               !existing.has(draft.text.toLowerCase())
           )
-          .map(
-            (draft): SermonNote => ({
-              id: crypto.randomUUID(),
-              text: draft.text,
-              createdAt: Date.now(),
-              source: "live",
-              kind: "ai",
-              sourceContext: draft.sourceContext,
-              sourceSegmentIds: draft.sourceSegmentIds,
-              sourceSegmentStartIndex: draft.sourceSegmentStartIndex,
-              sourceSegmentEndIndex: draft.sourceSegmentEndIndex,
-            })
-          )
+          .map((draft): SermonNote => ({
+            id: crypto.randomUUID(),
+            text: draft.text,
+            createdAt: Date.now(),
+            source: "live",
+            kind: "ai",
+            sourceContext: draft.sourceContext,
+            sourceSegmentIds: draft.sourceSegmentIds,
+            sourceSegmentStartIndex: draft.sourceSegmentStartIndex,
+            sourceSegmentEndIndex: draft.sourceSegmentEndIndex,
+          }))
         return {
           ...session,
           notes: [...session.notes, ...notes],

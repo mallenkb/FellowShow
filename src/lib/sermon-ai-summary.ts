@@ -51,9 +51,7 @@ function parseSummary(
 
   const title = cleanText(record.title, 100) || FALLBACK_TITLE
   const modelBullets = Array.isArray(record.bullets)
-    ? record.bullets
-        .map((bullet) => cleanText(bullet, 220))
-        .filter(Boolean)
+    ? record.bullets.map((bullet) => cleanText(bullet, 220)).filter(Boolean)
     : []
   const bullets = [
     ...new Set([...modelBullets, ...sourceFallbackBullets(transcript)]),
@@ -74,9 +72,7 @@ export async function generateSermonSummary(
   transcript: string,
   signal?: AbortSignal
 ): Promise<SermonAiSummary> {
-  const normalizedTranscript = transcript
-    .replace(/\s+/g, " ")
-    .trim()
+  const normalizedTranscript = transcript.replace(/\s+/g, " ").trim()
   const modelTranscript = transcriptForModel(normalizedTranscript)
 
   return requestAiJson<SermonAiSummary>(

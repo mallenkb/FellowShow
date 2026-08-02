@@ -1,4 +1,12 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import {
   AlertCircleIcon,
   BookOpenTextIcon,
@@ -20,7 +28,10 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select"
-import { announcementDocumentToVerse, announcementPlainText } from "@/lib/announcements"
+import {
+  announcementDocumentToVerse,
+  announcementPlainText,
+} from "@/lib/announcements"
 import {
   generateSermonSummary,
   MIN_SUMMARY_TRANSCRIPT_CHARACTERS,
@@ -35,10 +46,7 @@ import {
   useSermonStore,
   useTranscriptStore,
 } from "@/stores"
-import type {
-  AnnouncementDocument,
-  PreachingSummary,
-} from "@/types"
+import type { AnnouncementDocument, PreachingSummary } from "@/types"
 
 const AnnouncementEditor = lazy(
   () => import("@/components/announcements/announcement-editor")
@@ -178,10 +186,6 @@ export function PreachingSummaryPanel() {
   const generationIdRef = useRef(0)
   const isGeneratingRef = useRef(false)
   const activeControllerRef = useRef<AbortController | null>(null)
-  const currentSourceRef = useRef(sourceText)
-  const currentSessionIdRef = useRef(session?.id ?? null)
-  currentSourceRef.current = sourceText
-  currentSessionIdRef.current = session?.id ?? null
 
   const storedDocument = useMemo(() => {
     if (!session) return EMPTY_SUMMARY_DOCUMENT
@@ -191,6 +195,7 @@ export function PreachingSummaryPanel() {
     if (session.finalSummary) return summaryToDocument(session.finalSummary)
     return EMPTY_SUMMARY_DOCUMENT
   }, [session])
+  const storedTitle = session?.summaryTitle.trim() || "Preaching Summary"
 
   useEffect(() => {
     const sessionId = session?.id ?? null
@@ -204,19 +209,19 @@ export function PreachingSummaryPanel() {
     }
 
     if (!session) {
-      setEditorDocument(EMPTY_SUMMARY_DOCUMENT)
-      setEditorTitle("")
+      // The empty editor state is already the render-time fallback.
+      // Persisted editor state is synchronized when a session is present.
       return
     }
 
+    // This effect synchronizes the local editor buffer with the selected
+    // persisted session. The values are intentionally stateful because users
+    // can edit them without immediately saving the session.
     setEditorDocument(
       editorDocumentsRef.current.get(session.id) ?? storedDocument
     )
-    const storedTitle = session.summaryTitle.trim() || "Preaching Summary"
-    setEditorTitle(
-      editorTitlesRef.current.get(session.id) ?? storedTitle
-    )
-  }, [session, storedDocument])
+    setEditorTitle(editorTitlesRef.current.get(session.id) ?? storedTitle)
+  }, [session, storedDocument, storedTitle])
 
   const refreshSummary = useCallback(
     async (force = false): Promise<void> => {
@@ -246,9 +251,7 @@ export function PreachingSummaryPanel() {
         )
         if (
           controller.signal.aborted ||
-          generationId !== generationIdRef.current ||
-          currentSourceRef.current !== sourceText ||
-          currentSessionIdRef.current !== session.id
+          generationId !== generationIdRef.current
         ) {
           return
         }
@@ -269,7 +272,10 @@ export function PreachingSummaryPanel() {
           setEditorTitle(nextDraft.title)
         }
       } catch (error: unknown) {
-        if (controller.signal.aborted || generationId !== generationIdRef.current) {
+        if (
+          controller.signal.aborted ||
+          generationId !== generationIdRef.current
+        ) {
           return
         }
         setGenerationError(
@@ -345,15 +351,19 @@ export function PreachingSummaryPanel() {
     const plainText = announcementPlainText(document)
     if (!plainText && !draft) return
 
-    const summary = draft && !hasManualEdits
-      ? summaryFromAiDraft(draft)
-      : session.finalSummary ?? {
-          overview: plainText,
-          key_points: [],
-          scriptures: [],
-        }
+    const summary =
+      draft && !hasManualEdits
+        ? summaryFromAiDraft(draft)
+        : (session.finalSummary ?? {
+            overview: plainText,
+            key_points: [],
+            scriptures: [],
+          })
     const title =
-      editorTitle.trim() || draft?.title.trim() || session.summaryTitle || "Preaching Summary"
+      editorTitle.trim() ||
+      draft?.title.trim() ||
+      session.summaryTitle ||
+      "Preaching Summary"
     const store = useSermonStore.getState()
     store.setSummaryTitle(session.id, title)
     store.setFinalSummary(session.id, summary, document)
@@ -369,7 +379,10 @@ export function PreachingSummaryPanel() {
     const document = normalizeSummaryDocument(editorDocument)
     if (!announcementPlainText(document)) return
     const heading =
-      editorTitle.trim() || draft?.title.trim() || session.summaryTitle || "Preaching Summary"
+      editorTitle.trim() ||
+      draft?.title.trim() ||
+      session.summaryTitle ||
+      "Preaching Summary"
     useBroadcastStore
       .getState()
       .presentOnLive(announcementDocumentToVerse(document, heading), null)
@@ -482,7 +495,10 @@ export function PreachingSummaryPanel() {
                     Live notes
                   </p>
                   <p className="mt-0.5 text-sm font-semibold tabular-nums">
-                    {session.notes.filter((note) => note.source === "live").length}
+                    {
+                      session.notes.filter((note) => note.source === "live")
+                        .length
+                    }
                   </p>
                 </div>
               </div>
@@ -502,8 +518,12 @@ export function PreachingSummaryPanel() {
                     type="button"
                     variant="outline"
                     size="xs"
-                    disabled={!aiConfigured || !hasEnoughTranscript || isGenerating}
-                    onClick={() => void refreshSummary(true).catch(() => undefined)}
+                    disabled={
+                      !aiConfigured || !hasEnoughTranscript || isGenerating
+                    }
+                    onClick={() =>
+                      void refreshSummary(true).catch(() => undefined)
+                    }
                   >
                     {isGenerating ? (
                       <LoaderCircleIcon className="size-3 animate-spin" />
@@ -545,8 +565,8 @@ export function PreachingSummaryPanel() {
                 </div>
               ) : !hasEnoughTranscript ? (
                 <p className="text-xs text-muted-foreground">
-                  Keep transcribing to build an AI summary. It will refresh after
-                  enough transcript is available without changing the live
+                  Keep transcribing to build an AI summary. It will refresh
+                  after enough transcript is available without changing the live
                   transcript view.
                 </p>
               ) : null}

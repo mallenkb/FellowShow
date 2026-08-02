@@ -167,9 +167,7 @@ export function LowerThirdOverlaySection() {
   const clearPreset = useBroadcastStore((state) => state.clearLowerThirdOverlay)
   const [editingId, setEditingId] = useState<string | undefined>()
   const [theme, setTheme] = useState<LowerThirdTheme>("preacher")
-  const [style, setStyle] = useState<LowerThirdStyle>(
-    DEFAULT_LOWER_THIRD_STYLE
-  )
+  const [style, setStyle] = useState<LowerThirdStyle>(DEFAULT_LOWER_THIRD_STYLE)
   const [title, setTitle] = useState("")
   const [subtitle, setSubtitle] = useState("")
   const [label, setLabel] = useState("")
@@ -243,7 +241,9 @@ export function LowerThirdOverlaySection() {
   const appearancePreviewOverlays: BroadcastOverlayPayload = {
     ...basePreviewOverlays,
     ticker:
-      appearance.style === "full-width-banner" ? null : basePreviewOverlays.ticker,
+      appearance.style === "full-width-banner"
+        ? null
+        : basePreviewOverlays.ticker,
     lowerThird: {
       id: appearanceTargetId ?? "lower-third-appearance-preview",
       theme: appearanceTheme,
@@ -311,8 +311,7 @@ export function LowerThirdOverlaySection() {
     const nextWidthPercent = colorOverrides?.widthPercent ?? widthPercent
     const nextXPercent = colorOverrides?.xPercent ?? xPercent
     const nextYPercent = colorOverrides?.yPercent ?? yPercent
-    const nextDurationMs =
-      colorOverrides?.durationMs ?? durationSeconds * 1000
+    const nextDurationMs = colorOverrides?.durationMs ?? durationSeconds * 1000
     const id = savePreset({
       id: editingId,
       name: trimmedTitle,
@@ -363,16 +362,16 @@ export function LowerThirdOverlaySection() {
           }
         : !editingId && lastSavedAppearance
           ? { ...lastSavedAppearance }
-        : {
-            backgroundColor,
-            textColor,
-            widthPercent,
-            style,
-            maxWidthEnabled,
-            xPercent,
-            yPercent,
-            durationMs: durationSeconds * 1000,
-          }
+          : {
+              backgroundColor,
+              textColor,
+              widthPercent,
+              style,
+              maxWidthEnabled,
+              xPercent,
+              yPercent,
+              durationMs: durationSeconds * 1000,
+            }
     appearanceRef.current = nextAppearance
     setAppearance(nextAppearance)
     setAppearanceTargetId(targetId ?? null)
@@ -494,7 +493,9 @@ export function LowerThirdOverlaySection() {
             <SelectContent>
               {[10, 14, 20, 30, 90].map((seconds) => (
                 <SelectItem key={seconds} value={String(seconds)}>
-                  {seconds === 90 ? "1 minute 30 seconds" : `${seconds} seconds`}
+                  {seconds === 90
+                    ? "1 minute 30 seconds"
+                    : `${seconds} seconds`}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -580,10 +581,13 @@ export function LowerThirdOverlaySection() {
                     {preset.title}
                   </span>
                   <span className="block truncate text-xs text-muted-foreground capitalize">
-                    {getStyleOption(
-                      preset.style ??
-                        getDefaultLowerThirdStyleForTheme(preset.theme)
-                    ).label} · {preset.durationMs / 1000}s
+                    {
+                      getStyleOption(
+                        preset.style ??
+                          getDefaultLowerThirdStyleForTheme(preset.theme)
+                      ).label
+                    }{" "}
+                    · {preset.durationMs / 1000}s
                   </span>
                 </span>
                 <Button

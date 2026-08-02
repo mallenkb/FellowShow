@@ -133,10 +133,7 @@ export interface Commands {
   >
   stop_transcription: NoArgs<void>
   list_monitors: NoArgs<MonitorInfo[]>
-  ensure_broadcast_window: WithArgs<
-    { outputId: string; title: string },
-    void
-  >
+  ensure_broadcast_window: WithArgs<{ outputId: string; title: string }, void>
   open_broadcast_window: WithArgs<
     { outputId: string; monitorIndex: number; title: string },
     void

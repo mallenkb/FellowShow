@@ -2,16 +2,13 @@ import { invoke } from "@/lib/ipc"
 import { requestAiJson } from "@/lib/ai-provider"
 import type { Book, SemanticSearchResult } from "@/types"
 
-export const MAX_RELATED_SCRIPTURES = 6
+const MAX_RELATED_SCRIPTURES = 6
 export const MIN_RELATED_CONTEXT_CHARACTERS = 24
-export const MIN_AI_CONFIDENCE = 0.55
-export const REVIEW_CONFIDENCE_THRESHOLD = 0.75
-export const HIGH_CONFIDENCE_THRESHOLD = 0.88
+const MIN_AI_CONFIDENCE = 0.55
+const REVIEW_CONFIDENCE_THRESHOLD = 0.75
+const HIGH_CONFIDENCE_THRESHOLD = 0.88
 
-export type RelatedScriptureConfidenceTier =
-  | "high"
-  | "review"
-  | "uncertain"
+export type RelatedScriptureConfidenceTier = "high" | "review" | "uncertain"
 
 export interface RelatedScriptureSuggestion extends SemanticSearchResult {
   confidence: number
@@ -155,9 +152,7 @@ function normalizeTranscriptText(value: string) {
   return value.toLowerCase().replace(/\s+/g, " ").trim()
 }
 
-function confidenceTier(
-  confidence: number
-): RelatedScriptureConfidenceTier {
+function confidenceTier(confidence: number): RelatedScriptureConfidenceTier {
   if (confidence >= HIGH_CONFIDENCE_THRESHOLD) return "high"
   if (confidence >= REVIEW_CONFIDENCE_THRESHOLD) return "review"
   return "uncertain"

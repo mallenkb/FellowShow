@@ -901,10 +901,7 @@ export function SearchPanel({
       useBroadcastStore
         .getState()
         .presentOnLive(
-          toVerseRenderData(
-            verse,
-            activeTranslationAbbreviation || "KJV"
-          ),
+          toVerseRenderData(verse, activeTranslationAbbreviation || "KJV"),
           null
         )
     },

@@ -2,10 +2,7 @@ import { toast } from "sonner"
 import { transcriptionActions } from "@/hooks/use-transcription"
 import { invoke } from "@/lib/ipc"
 import { announcementDocumentToVerse } from "@/lib/announcements"
-import {
-  normalizePreachingSummary,
-  normalizeSummaryDocument,
-} from "@/lib/scripture-format"
+import { normalizePreachingSummary } from "@/lib/scripture-format"
 import { flushSermonSessions, useSermonStore } from "@/stores/sermon-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
 import type {
@@ -207,17 +204,5 @@ export function sermonQueueToPreview(
       ],
     },
     "Sermon Notes"
-  )
-}
-
-export function sermonSummaryToRenderData(
-  session: SermonSession
-): VerseRenderData | null {
-  if (!session.finalSummary) return null
-  return announcementDocumentToVerse(
-    normalizeSummaryDocument(
-      session.summaryDocument ?? summaryToDocument(session.finalSummary)
-    ),
-    session.summaryTitle.trim() || "Preaching Summary"
   )
 }

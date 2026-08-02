@@ -296,7 +296,10 @@ function drawLowerThird(
       ? 4 * scale + subtitleLines.length * subtitleLineHeight
       : 0) +
     (fullWidth ? 26 : 20) * scale
-  const boxHeight = Math.max(fullWidth ? 174 * scale : 112 * scale, contentHeight)
+  const boxHeight = Math.max(
+    fullWidth ? 174 * scale : 112 * scale,
+    contentHeight
+  )
   const desiredX = fullWidth
     ? offsetX
     : offsetX + width * (lowerThird.xPercent / 100) - boxWidth / 2
@@ -354,7 +357,13 @@ function drawLowerThird(
 
     ctx.fillStyle = "rgba(37, 99, 235, 0.26)"
     ctx.beginPath()
-    ctx.arc(x + boxWidth * 0.72, y + boxHeight * 0.44, boxHeight * 0.92, 0, Math.PI * 2)
+    ctx.arc(
+      x + boxWidth * 0.72,
+      y + boxHeight * 0.44,
+      boxHeight * 0.92,
+      0,
+      Math.PI * 2
+    )
     ctx.fill()
     ctx.fillStyle = "rgba(96, 165, 250, 0.18)"
     ctx.beginPath()
@@ -367,11 +376,23 @@ function drawLowerThird(
     ctx.strokeStyle = "rgba(147, 197, 253, 0.4)"
     ctx.lineWidth = 2 * scale
     ctx.beginPath()
-    ctx.arc(x + boxWidth - 90 * scale, y + boxHeight / 2, 48 * scale, 0, Math.PI * 2)
+    ctx.arc(
+      x + boxWidth - 90 * scale,
+      y + boxHeight / 2,
+      48 * scale,
+      0,
+      Math.PI * 2
+    )
     ctx.stroke()
     ctx.fillStyle = "rgba(96, 165, 250, 0.32)"
     ctx.beginPath()
-    ctx.arc(x + boxWidth - 90 * scale, y + boxHeight / 2, 31 * scale, 0, Math.PI * 2)
+    ctx.arc(
+      x + boxWidth - 90 * scale,
+      y + boxHeight / 2,
+      31 * scale,
+      0,
+      Math.PI * 2
+    )
     ctx.fill()
   } else {
     switch (style) {
@@ -391,13 +412,23 @@ function drawLowerThird(
         ctx.fillRect(x + avatarWidth - 5 * scale, y, 5 * scale, boxHeight)
         ctx.fillStyle = "rgba(255, 255, 255, 0.16)"
         ctx.beginPath()
-        ctx.arc(x + avatarWidth / 2, y + boxHeight / 2, 28 * scale, 0, Math.PI * 2)
+        ctx.arc(
+          x + avatarWidth / 2,
+          y + boxHeight / 2,
+          28 * scale,
+          0,
+          Math.PI * 2
+        )
         ctx.fill()
         ctx.fillStyle = "#ffffff"
         ctx.font = `700 ${19 * scale}px "Inter Variable", sans-serif`
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
-        ctx.fillText(getInitials(lowerThird.title), x + avatarWidth / 2, y + boxHeight / 2)
+        ctx.fillText(
+          getInitials(lowerThird.title),
+          x + avatarWidth / 2,
+          y + boxHeight / 2
+        )
         break
       }
       case "white-amber":
@@ -407,7 +438,13 @@ function drawLowerThird(
         ctx.fillRect(x + 9 * scale, y, 3 * scale, boxHeight)
         ctx.fillStyle = "#fbbf24"
         ctx.beginPath()
-        ctx.arc(x + boxWidth - 28 * scale, y + 24 * scale, 7 * scale, 0, Math.PI * 2)
+        ctx.arc(
+          x + boxWidth - 28 * scale,
+          y + 24 * scale,
+          7 * scale,
+          0,
+          Math.PI * 2
+        )
         ctx.fill()
         break
       case "dark-green-dots":

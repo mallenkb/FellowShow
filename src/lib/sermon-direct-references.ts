@@ -168,28 +168,3 @@ export function directReferenceToVerse(
     text: reference.verse_text,
   }
 }
-
-/**
- * Compatibility-shaped results for existing operator actions in the search
- * panel. The returned objects are still the original direct detections, not
- * semantic matches or synthesized scripture guesses.
- */
-export function getDirectSermonReferences(
-  detections: readonly DetectionResult[],
-  evidence?: Omit<SermonDirectReferenceInput, "detections">
-): DetectionResult[] {
-  const directReferences = getSermonDirectReferences({
-    detections,
-    ...evidence,
-  })
-  const acceptedKeys = new Set(directReferences.map((reference) => reference.key))
-  const seenKeys = new Set<string>()
-
-  return detections.filter((detection) => {
-    if (!isDirectDetection(detection)) return false
-    const key = directReferenceKey(detection)
-    if (!acceptedKeys.has(key) || seenKeys.has(key)) return false
-    seenKeys.add(key)
-    return true
-  })
-}

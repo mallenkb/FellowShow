@@ -140,6 +140,9 @@ function BroadcastCanvas() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isNdiActive, setIsNdiActive] = useState(false)
   const [directVideo, setDirectVideo] = useState<DirectVideo | null>(null)
+  const [latestOverlayMode, setLatestOverlayMode] = useState<
+    OverlayOutputMode | undefined
+  >(undefined)
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
@@ -567,6 +570,7 @@ function BroadcastCanvas() {
       (event) => {
         const previousData = latestData.current
         latestData.current = event.payload
+        setLatestOverlayMode(event.payload.overlayMode)
         if (event.payload.overlayMode) setVideoOverlaysWindowTitle()
         setDirectVideo(directVideoFor(event.payload))
         preloadMedia(event.payload)
@@ -700,7 +704,7 @@ function BroadcastCanvas() {
         <div
           role="menu"
           aria-label={
-            latestData.current?.overlayMode
+            latestOverlayMode
               ? "Video Overlays display options"
               : "Video output options"
           }

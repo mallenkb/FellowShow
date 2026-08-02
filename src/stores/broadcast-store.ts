@@ -270,7 +270,8 @@ function normalizeOutputUpdate(
 ): BroadcastOutputConfig {
   const next = { ...output, ...updates }
   if (next.content !== "overlays") {
-    const { overlayMode: _overlayMode, ...normalOutput } = next
+    const normalOutput = { ...next }
+    delete normalOutput.overlayMode
     return normalOutput
   }
   return {
@@ -721,9 +722,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         : updates
     set((s) => {
       const outputs = s.outputs.map((output) =>
-        output.id === id
-          ? normalizeOutputUpdate(output, safeUpdates)
-          : output
+        output.id === id ? normalizeOutputUpdate(output, safeUpdates) : output
       )
       return {
         outputs,
@@ -838,10 +837,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   },
   setSelectedOverlayOutputId: (outputId) => {
     set((s) => ({
-      selectedOverlayOutputId: selectOverlayOutputId(
-        outputId,
-        s.outputs
-      ),
+      selectedOverlayOutputId: selectOverlayOutputId(outputId, s.outputs),
     }))
   },
   addLogoOverlays: (logos) => {
@@ -1021,10 +1017,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
           lowerThird: { ...activeLowerThird, preset: savedPreset },
         }
         if (isNowFullWidth) {
-          if (
-            !suspendedFullWidthTicker &&
-            activeOverlays.tickerMessageId
-          ) {
+          if (!suspendedFullWidthTicker && activeOverlays.tickerMessageId) {
             suspendedFullWidthTicker = {
               id: activeOverlays.tickerMessageId,
               startedAt: activeOverlays.tickerStartedAt,
@@ -1142,7 +1135,10 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         const activeOverlays = { ...s.activeOverlays, lowerThird: null }
         return {
           activeOverlays: currentWasFullWidth
-            ? restoreSuspendedTicker(activeOverlays, s.overlayConfig.tickerMessages)
+            ? restoreSuspendedTicker(
+                activeOverlays,
+                s.overlayConfig.tickerMessages
+              )
             : activeOverlays,
         }
       })
@@ -1161,7 +1157,10 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       const activeOverlays = { ...s.activeOverlays, lowerThird: null }
       return {
         activeOverlays: currentWasFullWidth
-          ? restoreSuspendedTicker(activeOverlays, s.overlayConfig.tickerMessages)
+          ? restoreSuspendedTicker(
+              activeOverlays,
+              s.overlayConfig.tickerMessages
+            )
           : activeOverlays,
       }
     })

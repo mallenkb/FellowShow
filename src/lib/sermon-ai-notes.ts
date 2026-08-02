@@ -6,11 +6,8 @@ const MIN_SEGMENTS_FOR_NOTE = 4
 const MAX_SEGMENTS_PER_REQUEST = 16
 const MAX_NOTES_PER_REQUEST = 4
 
-export type LiveNotesGenerationStatus =
-  | "generated"
-  | "no-notes"
-  | "not-configured"
-  | "insufficient-context"
+type LiveNotesGenerationStatus =
+  "generated" | "no-notes" | "not-configured" | "insufficient-context"
 
 export interface LiveNotesGenerationResult {
   status: LiveNotesGenerationStatus
@@ -106,7 +103,9 @@ function draftsFromRawNotes(
     seen.add(text.toLowerCase())
     drafts.push({
       text,
-      sourceContext: sourceSegments.map((segment) => segment.text.trim()).join(" "),
+      sourceContext: sourceSegments
+        .map((segment) => segment.text.trim())
+        .join(" "),
       sourceSegmentIds: sourceSegments.map((segment) => segment.id),
       sourceSegmentStartIndex: globalStartIndex + start,
       sourceSegmentEndIndex: globalStartIndex + end,

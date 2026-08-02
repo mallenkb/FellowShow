@@ -83,9 +83,7 @@ export function OutputsMultiviewPanel({
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const selectedThemeSection = useBroadcastStore((s) => s.selectedThemeSection)
   const isLive = useBroadcastStore((s) => s.isLive)
-  const liveOverlayOutputIds = useBroadcastStore(
-    (s) => s.liveOverlayOutputIds
-  )
+  const liveOverlayOutputIds = useBroadcastStore((s) => s.liveOverlayOutputIds)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
   const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
@@ -292,8 +290,8 @@ export function OutputsMultiviewPanel({
               output.content === "overlays"
                 ? Boolean(
                     overlays?.logos.length ||
-                      overlays?.lowerThird ||
-                      overlays?.ticker
+                    overlays?.lowerThird ||
+                    overlays?.ticker
                   )
                 : Boolean(verse || timer)
             const pending = pendingId === output.id
@@ -341,9 +339,7 @@ export function OutputsMultiviewPanel({
                       verse={active ? verse : null}
                       timer={active ? timer : null}
                       lowerThird={
-                        active &&
-                        isLive &&
-                        output.content === "everything"
+                        active && isLive && output.content === "everything"
                           ? lowerThird
                           : null
                       }

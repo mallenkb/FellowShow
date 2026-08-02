@@ -449,7 +449,7 @@ mod tests {
 
     fn assert_async_projector_command<F, Fut>(_: F)
     where
-        F: Fn(tauri::AppHandle, String, usize) -> Fut,
+        F: Fn(tauri::AppHandle, String, usize, Option<String>) -> Fut,
         Fut: Future<Output = Result<(), String>>,
     {
     }

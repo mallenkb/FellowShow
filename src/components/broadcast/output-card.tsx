@@ -312,7 +312,8 @@ export function OutputCard({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="auto">
-                Auto — match {userFacingOutputLabel(output.content).toLowerCase()}
+                Auto — match{" "}
+                {userFacingOutputLabel(output.content).toLowerCase()}
               </SelectItem>
               {themes.map((t) => (
                 <SelectItem key={t.id} value={t.id}>

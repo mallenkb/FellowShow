@@ -156,9 +156,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const isProgramLive = useBroadcastStore((s) => s.isLive)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
-  const liveOverlayOutputIds = useBroadcastStore(
-    (s) => s.liveOverlayOutputIds
-  )
+  const liveOverlayOutputIds = useBroadcastStore((s) => s.liveOverlayOutputIds)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
   const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
@@ -210,9 +208,10 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     return (
       outputs.find(
         (output) =>
-          output.id === selectedOverlayOutputId &&
-          output.content === "overlays"
-      ) ?? outputs.find((output) => output.content === "overlays") ?? null
+          output.id === selectedOverlayOutputId && output.content === "overlays"
+      ) ??
+      outputs.find((output) => output.content === "overlays") ??
+      null
     )
   }, [isOverlayPreview, outputs, selectedOverlayOutputId])
   const overlayPreviewTheme = useMemo(() => {
@@ -228,9 +227,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     )
     return themes.find((theme) => theme.id === themeId) ?? activeTheme
   }, [activeTheme, overlayOutput, sectionThemeIds, themes])
-  const overlayMode = overlayOutput
-    ? getOverlayOutputMode(overlayOutput)
-    : null
+  const overlayMode = overlayOutput ? getOverlayOutputMode(overlayOutput) : null
   const overlayOutputIsLive = overlayOutput
     ? liveOverlayOutputIds.includes(overlayOutput.id)
     : false
@@ -246,9 +243,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     ) {
       return
     }
-    useBroadcastStore
-      .getState()
-      .setSelectedOverlayOutputId(overlayOutput.id)
+    useBroadcastStore.getState().setSelectedOverlayOutputId(overlayOutput.id)
   }, [isOverlayPreview, overlayOutput, selectedOverlayOutputId])
 
   const setPreview = useCallback(
@@ -354,9 +349,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
         const enabled = await setOutputEnabled(output, true)
         if (!enabled) return
       }
-      useBroadcastStore
-        .getState()
-        .setOverlayOutputLive(output.id, true)
+      useBroadcastStore.getState().setOverlayOutputLive(output.id, true)
     } catch {
       // The output runtime already reports an actionable toast.
     } finally {
@@ -405,7 +398,9 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
                     )
                   : null
             }
-            overlayMode={isOverlayPreview ? (overlayMode ?? undefined) : undefined}
+            overlayMode={
+              isOverlayPreview ? (overlayMode ?? undefined) : undefined
+            }
             className="h-full"
             fillContainer
             fit="contain"

@@ -5,7 +5,7 @@ type SttProvider = "deepgram" | "openai" | "groq" | "whisper"
 
 export type AiProvider = "openrouter" | "openai"
 
-export const DEFAULT_AI_PROVIDER: AiProvider = "openrouter"
+const DEFAULT_AI_PROVIDER: AiProvider = "openrouter"
 export const DEFAULT_OPENROUTER_MODEL = "inclusionai/ling-3.0-flash:free"
 export const DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
 

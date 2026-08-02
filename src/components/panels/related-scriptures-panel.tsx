@@ -180,8 +180,8 @@ function RelatedScriptureRow({
           ) : null}
           {result.evidenceVerified ? (
             <p className="mt-1 line-clamp-2 text-[0.625rem] leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">Transcript:</span>{" "}
-              “{result.transcriptEvidence}”
+              <span className="font-medium text-foreground">Transcript:</span> “
+              {result.transcriptEvidence}”
             </p>
           ) : (
             <p className="mt-1 text-[0.625rem] leading-relaxed text-amber-700 dark:text-amber-300">
@@ -223,16 +223,12 @@ function RelatedScriptureRow({
             size="icon-xs"
             title={
               reviewRequired
-                ? "Review then send " +
-                  result.verse_ref +
-                  " to scrolling text"
+                ? "Review then send " + result.verse_ref + " to scrolling text"
                 : "Send " + result.verse_ref + " to scrolling text"
             }
             aria-label={
               reviewRequired
-                ? "Review then send " +
-                  result.verse_ref +
-                  " to scrolling text"
+                ? "Review then send " + result.verse_ref + " to scrolling text"
                 : "Send " + result.verse_ref + " to scrolling text"
             }
             onClick={(event) => {
@@ -279,13 +275,14 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
   const [error, setError] = useState<string | null>(null)
 
   const hasEnoughContext = context.length >= MIN_RELATED_CONTEXT_CHARACTERS
+  const canSearch = isActive && aiConfigured && hasEnoughContext
+  const visibleResults = canSearch ? results : []
+  const visibleIsSearching = canSearch && isSearching
+  const visibleError = canSearch ? error : null
 
   useEffect(() => {
     if (!isActive || !aiConfigured || !hasEnoughContext) {
       requestIdRef.current += 1
-      setIsSearching(false)
-      setError(null)
-      setResults([])
       return
     }
 
@@ -348,10 +345,10 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
           type="button"
           variant="outline"
           size="xs"
-          disabled={!aiConfigured || !hasEnoughContext || isSearching}
+          disabled={!aiConfigured || !hasEnoughContext || visibleIsSearching}
           onClick={() => setRefreshKey((current) => current + 1)}
         >
-          {isSearching ? (
+          {visibleIsSearching ? (
             <LoaderCircleIcon className="size-3 animate-spin" />
           ) : (
             <RefreshCwIcon className="size-3" />
@@ -385,26 +382,26 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
               transcript is available.
             </p>
           </div>
-        ) : isSearching && results.length === 0 ? (
+        ) : visibleIsSearching && visibleResults.length === 0 ? (
           <div className="flex min-h-full items-center justify-center gap-2 text-xs text-muted-foreground">
             <LoaderCircleIcon className="size-4 animate-spin" />
             Asking the configured AI model…
           </div>
-        ) : error ? (
+        ) : visibleError ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
-            <p className="text-xs text-destructive">{error}</p>
+            <p className="text-xs text-destructive">{visibleError}</p>
             <p className="text-[0.625rem] text-muted-foreground">
               Check the selected AI provider or use manual Bible search. No AI
               suggestion was queued automatically.
             </p>
           </div>
-        ) : results.length === 0 ? (
+        ) : visibleResults.length === 0 ? (
           <div className="flex min-h-full items-center justify-center p-6 text-center text-xs text-muted-foreground">
             No uncited AI suggestions found in the recent transcript.
           </div>
         ) : (
           <div className="space-y-1.5">
-            {results.map((result) => (
+            {visibleResults.map((result) => (
               <RelatedScriptureRow
                 key={
                   result.book_number + ":" + result.chapter + ":" + result.verse

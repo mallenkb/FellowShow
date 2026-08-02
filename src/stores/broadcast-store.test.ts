@@ -147,6 +147,7 @@ describe("broadcast store sync", () => {
     const theme = useBroadcastStore.getState().themes[0]
     useBroadcastStore.setState({
       activeThemeId: theme.id,
+      isLive: true,
       liveVerse: null,
       lowerThird: null,
     })
