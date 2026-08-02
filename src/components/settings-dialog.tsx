@@ -87,7 +87,7 @@ const navItems: { name: string; id: NavSection; icon: React.ReactNode }[] = [
 const sectionTitles: Record<NavSection, string> = {
   audio: "Audio",
   speech: "Speech Recognition",
-  "ai-model": "AI Model / OpenRouter",
+  "ai-model": "AI Model Provider",
   bible: "Scripture Translation",
   display: "Display Mode",
   remote: "Remote Control",

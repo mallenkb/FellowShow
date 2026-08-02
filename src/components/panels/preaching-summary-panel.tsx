@@ -8,6 +8,7 @@ import {
   RefreshCwIcon,
   SaveIcon,
   SparklesIcon,
+  XIcon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -126,10 +127,18 @@ export function PreachingSummaryPanel() {
   const selectedSessionId = useSermonStore((state) => state.selectedSessionId)
   const activeSessionId = useSermonStore((state) => state.activeSessionId)
   const transcriptSegments = useTranscriptStore((state) => state.segments)
-  const hasOpenRouterKey = useSettingsStore((state) =>
-    Boolean(state.openRouterApiKey?.trim())
+  const aiProvider = useSettingsStore((state) => state.aiProvider)
+  const aiConfigured = useSettingsStore((state) =>
+    state.aiProvider === "openai"
+      ? Boolean(state.sermonOpenAiApiKey?.trim())
+      : Boolean(state.openRouterApiKey?.trim())
   )
-  const openRouterModel = useSettingsStore((state) => state.openRouterModel)
+  const aiModel = useSettingsStore((state) =>
+    state.aiProvider === "openai"
+      ? state.sermonOpenAiModel
+      : state.openRouterModel
+  )
+  const aiProviderName = aiProvider === "openai" ? "OpenAI" : "OpenRouter"
   const session =
     sessions.find((candidate) => candidate.id === selectedSessionId) ??
     sessions.at(-1) ??
@@ -211,7 +220,7 @@ export function PreachingSummaryPanel() {
 
   const refreshSummary = useCallback(
     async (force = false): Promise<void> => {
-      if (!session || !hasOpenRouterKey || !hasEnoughTranscript) return
+      if (!session || !aiConfigured || !hasEnoughTranscript) return
       const now = Date.now()
       if (
         !force &&
@@ -276,7 +285,7 @@ export function PreachingSummaryPanel() {
         }
       }
     },
-    [hasEnoughTranscript, hasOpenRouterKey, session, sourceText]
+    [aiConfigured, hasEnoughTranscript, session, sourceText]
   )
 
   useEffect(() => {
@@ -493,7 +502,7 @@ export function PreachingSummaryPanel() {
                     type="button"
                     variant="outline"
                     size="xs"
-                    disabled={!hasOpenRouterKey || !hasEnoughTranscript || isGenerating}
+                    disabled={!aiConfigured || !hasEnoughTranscript || isGenerating}
                     onClick={() => void refreshSummary(true).catch(() => undefined)}
                   >
                     {isGenerating ? (
@@ -516,8 +525,8 @@ export function PreachingSummaryPanel() {
 
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.625rem] text-muted-foreground">
                 <span>
-                  {hasOpenRouterKey
-                    ? `AI model: ${openRouterModel || "OpenRouter default"}`
+                  {aiConfigured
+                    ? `AI model (${aiProviderName}): ${aiModel}`
                     : "AI model not configured"}
                 </span>
                 {lastGeneratedAt ? (
@@ -525,12 +534,12 @@ export function PreachingSummaryPanel() {
                 ) : null}
               </div>
 
-              {!hasOpenRouterKey ? (
+              {!aiConfigured ? (
                 <div className="flex items-start gap-2 rounded-md border border-dashed border-border p-2.5 text-xs text-muted-foreground">
                   <AlertCircleIcon className="mt-0.5 size-3.5 shrink-0" />
                   <p>
-                    Add an OpenRouter API key in Settings → AI Model / OpenRouter
-                    to generate summaries. You can still write and save this
+                    Configure the selected provider in Settings → AI Model to
+                    generate summaries. You can still write and save this
                     summary manually.
                   </p>
                 </div>
@@ -543,9 +552,20 @@ export function PreachingSummaryPanel() {
               ) : null}
 
               {generationError ? (
-                <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive">
+                <div className="flex items-start justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive">
                   <AlertCircleIcon className="mt-0.5 size-3.5 shrink-0" />
-                  <p>{generationError}</p>
+                  <p className="min-w-0 flex-1">{generationError}</p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    className="-mt-1 -mr-1 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Dismiss summary error"
+                    title="Dismiss error"
+                    onClick={() => setGenerationError(null)}
+                  >
+                    <XIcon className="size-3" />
+                  </Button>
                 </div>
               ) : null}
 

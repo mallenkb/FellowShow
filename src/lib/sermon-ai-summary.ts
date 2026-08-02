@@ -1,4 +1,4 @@
-import { requestOpenRouterJson } from "@/lib/openrouter"
+import { requestAiJson } from "@/lib/ai-provider"
 
 export const MIN_SUMMARY_TRANSCRIPT_CHARACTERS = 180
 export const SUMMARY_REFRESH_INTERVAL_MS = 45_000
@@ -79,7 +79,7 @@ export async function generateSermonSummary(
     .trim()
   const modelTranscript = transcriptForModel(normalizedTranscript)
 
-  return requestOpenRouterJson<SermonAiSummary>(
+  return requestAiJson<SermonAiSummary>(
     {
       signal,
       temperature: 0.2,

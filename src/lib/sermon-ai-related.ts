@@ -1,5 +1,5 @@
 import { invoke } from "@/lib/ipc"
-import { requestOpenRouterJson } from "@/lib/openrouter"
+import { requestAiJson } from "@/lib/ai-provider"
 import type { Book, SemanticSearchResult } from "@/types"
 
 export const MAX_RELATED_SCRIPTURES = 6
@@ -256,7 +256,7 @@ export async function requestRelatedScriptureSuggestions(
   const excludedReferenceKeys = new Set(
     excludedReferences.map(normalizeReferenceKey)
   )
-  const modelSuggestions = await requestOpenRouterJson(
+  const modelSuggestions = await requestAiJson(
     {
       messages: [
         {

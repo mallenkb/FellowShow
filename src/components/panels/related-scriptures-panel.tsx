@@ -254,8 +254,10 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
   const activeTranslationId = useBibleStore(
     (state) => state.activeTranslationId
   )
-  const hasOpenRouterKey = useSettingsStore((state) =>
-    Boolean(state.openRouterApiKey?.trim())
+  const aiConfigured = useSettingsStore((state) =>
+    state.aiProvider === "openai"
+      ? Boolean(state.sermonOpenAiApiKey?.trim())
+      : Boolean(state.openRouterApiKey?.trim())
   )
   const context = useMemo(() => recentSermonContext(segments), [segments])
   const directReferences = useMemo(
@@ -279,7 +281,7 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
   const hasEnoughContext = context.length >= MIN_RELATED_CONTEXT_CHARACTERS
 
   useEffect(() => {
-    if (!isActive || !hasOpenRouterKey || !hasEnoughContext) {
+    if (!isActive || !aiConfigured || !hasEnoughContext) {
       requestIdRef.current += 1
       setIsSearching(false)
       setError(null)
@@ -326,7 +328,7 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
     directReferences,
     directReferencesKey,
     hasEnoughContext,
-    hasOpenRouterKey,
+    aiConfigured,
     isActive,
     refreshKey,
   ])
@@ -346,7 +348,7 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
           type="button"
           variant="outline"
           size="xs"
-          disabled={!hasOpenRouterKey || !hasEnoughContext || isSearching}
+          disabled={!aiConfigured || !hasEnoughContext || isSearching}
           onClick={() => setRefreshKey((current) => current + 1)}
         >
           {isSearching ? (
@@ -359,14 +361,14 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {!hasOpenRouterKey ? (
+        {!aiConfigured ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
             <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
               <SparklesIcon className="size-4" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Add an OpenRouter API key in Settings → AI Model / OpenRouter to
-              enable uncited scripture suggestions.
+              Configure the selected provider in Settings → AI Model to enable
+              uncited scripture suggestions.
             </p>
             <p className="text-[0.625rem] text-muted-foreground/75">
               Directly spoken references and manual Bible search remain
@@ -392,7 +394,7 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
           <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
             <p className="text-xs text-destructive">{error}</p>
             <p className="text-[0.625rem] text-muted-foreground">
-              Check the OpenRouter settings or use manual Bible search. No AI
+              Check the selected AI provider or use manual Bible search. No AI
               suggestion was queued automatically.
             </p>
           </div>
@@ -405,11 +407,7 @@ export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
             {results.map((result) => (
               <RelatedScriptureRow
                 key={
-                  result.book_number +
-                  ":" +
-                  result.chapter +
-                  ":" +
-                  result.verse
+                  result.book_number + ":" + result.chapter + ":" + result.verse
                 }
                 result={result}
               />

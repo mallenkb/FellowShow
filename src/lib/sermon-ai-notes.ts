@@ -1,7 +1,4 @@
-import {
-  isOpenRouterConfigured,
-  requestOpenRouterJson,
-} from "@/lib/openrouter"
+import { isAiProviderConfigured, requestAiJson } from "@/lib/ai-provider"
 import type { SermonNoteDraft } from "@/types/sermon"
 import type { TranscriptSegment } from "@/types/transcript"
 
@@ -142,7 +139,7 @@ export async function generateLiveSermonNotesFromTranscript({
       throughSegmentIndex,
     }
   }
-  if (!isOpenRouterConfigured()) {
+  if (!isAiProviderConfigured()) {
     return {
       status: "not-configured",
       notes: [],
@@ -152,7 +149,7 @@ export async function generateLiveSermonNotesFromTranscript({
 
   const excerpt = pending.slice(0, MAX_SEGMENTS_PER_REQUEST)
   const excerptStartIndex = safeStart
-  const rawNotes = await requestOpenRouterJson(
+  const rawNotes = await requestAiJson(
     {
       messages: [
         {
