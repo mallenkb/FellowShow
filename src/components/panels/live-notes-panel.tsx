@@ -351,7 +351,9 @@ export function LiveNotesPanel() {
   const activeSessionId = useSermonStore((state) => state.activeSessionId)
   const transcriptSegments = useTranscriptStore((state) => state.segments)
   const aiConfigured = useSettingsStore((state) =>
-    Boolean(state.openRouterApiKey?.trim())
+    state.aiProvider === "openai"
+      ? Boolean(state.sermonOpenAiApiKey?.trim())
+      : Boolean(state.openRouterApiKey?.trim())
   )
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationNotice, setGenerationNotice] = useState<string | null>(null)
@@ -387,13 +389,15 @@ export function LiveNotesPanel() {
 
       if (result.status === "not-configured") {
         setGenerationNotice(
-          "Automatic notes are paused. Add an OpenRouter key in Settings, or add notes manually."
+          "Automatic notes are paused. Configure the selected AI provider in Settings, or add notes manually."
         )
         return
       }
       if (result.status === "insufficient-context") {
         if (force) {
-          setGenerationNotice("Keep transcribing to give the AI more source context.")
+          setGenerationNotice(
+            "Keep transcribing to give the AI more source context."
+          )
         }
         return
       }
@@ -531,7 +535,7 @@ export function LiveNotesPanel() {
             title={
               aiConfigured
                 ? "Generate source-linked AI notes"
-                : "Configure an OpenRouter API key to generate AI notes"
+                : "Configure the selected AI provider to generate AI notes"
             }
             onClick={() => startGeneration(true)}
           >
@@ -590,7 +594,7 @@ export function LiveNotesPanel() {
             ) : null}
             {session.id === activeSessionId && !aiConfigured ? (
               <div className="rounded-md border border-dashed border-amber-500/40 bg-amber-500/5 p-2.5 text-xs text-muted-foreground">
-                Automatic source-linked notes need an OpenRouter API key in
+                Automatic source-linked notes need a configured AI provider in
                 Settings. You can keep adding notes manually.
               </div>
             ) : null}
@@ -619,7 +623,7 @@ export function LiveNotesPanel() {
               <div className="rounded-md border border-dashed p-4 text-center text-xs text-muted-foreground">
                 {aiConfigured
                   ? "Source-linked notes will appear as meaningful moments are transcribed."
-                  : "Add a manual note, or configure OpenRouter for automatic notes."}
+                  : "Add a manual note, or configure an AI provider for automatic notes."}
               </div>
             )}
           </div>

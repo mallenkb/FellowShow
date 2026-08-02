@@ -3,6 +3,16 @@ import { load, type Store } from "@tauri-apps/plugin-store"
 
 type SttProvider = "deepgram" | "openai" | "groq" | "whisper"
 
+export type AiProvider = "openrouter" | "openai"
+
+export const DEFAULT_AI_PROVIDER: AiProvider = "openrouter"
+export const DEFAULT_OPENROUTER_MODEL = "inclusionai/ling-3.0-flash:free"
+export const DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
+
+export function isAiProvider(value: unknown): value is AiProvider {
+  return value === "openrouter" || value === "openai"
+}
+
 export const DEFAULT_PINNED_TRANSLATION_IDS = [6, 2]
 
 interface SettingsState {
@@ -10,8 +20,11 @@ interface SettingsState {
   openaiApiKey: string | null
   groqApiKey: string | null
   claudeApiKey: string | null
+  aiProvider: AiProvider
   openRouterApiKey: string | null
   openRouterModel: string
+  sermonOpenAiApiKey: string | null
+  sermonOpenAiModel: string
   audioDeviceId: string | null
   gain: number
   autoMode: boolean
@@ -27,8 +40,11 @@ interface SettingsState {
   setOpenaiApiKey: (key: string | null) => void
   setGroqApiKey: (key: string | null) => void
   setClaudeApiKey: (key: string | null) => void
+  setAiProvider: (provider: AiProvider) => void
   setOpenRouterApiKey: (key: string | null) => void
   setOpenRouterModel: (model: string) => void
+  setSermonOpenAiApiKey: (key: string | null) => void
+  setSermonOpenAiModel: (model: string) => void
   setAudioDeviceId: (id: string | null) => void
   setGain: (gain: number) => void
   setAutoMode: (auto: boolean) => void
@@ -47,8 +63,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   openaiApiKey: null,
   groqApiKey: null,
   claudeApiKey: null,
+  aiProvider: DEFAULT_AI_PROVIDER,
   openRouterApiKey: null,
-  openRouterModel: "inclusionai/ling-3.0-flash:free",
+  openRouterModel: DEFAULT_OPENROUTER_MODEL,
+  sermonOpenAiApiKey: null,
+  sermonOpenAiModel: DEFAULT_OPENAI_MODEL,
   audioDeviceId: null,
   gain: 1.0,
   autoMode: false,
@@ -64,8 +83,11 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
   setGroqApiKey: (groqApiKey) => set({ groqApiKey }),
   setClaudeApiKey: (claudeApiKey) => set({ claudeApiKey }),
+  setAiProvider: (aiProvider) => set({ aiProvider }),
   setOpenRouterApiKey: (openRouterApiKey) => set({ openRouterApiKey }),
   setOpenRouterModel: (openRouterModel) => set({ openRouterModel }),
+  setSermonOpenAiApiKey: (sermonOpenAiApiKey) => set({ sermonOpenAiApiKey }),
+  setSermonOpenAiModel: (sermonOpenAiModel) => set({ sermonOpenAiModel }),
   setAudioDeviceId: (audioDeviceId) => set({ audioDeviceId }),
   setGain: (gain) => set({ gain }),
   setAutoMode: (autoMode) => set({ autoMode }),
@@ -99,8 +121,11 @@ const PERSISTED_KEYS = [
   "openaiApiKey",
   "groqApiKey",
   "claudeApiKey",
+  "aiProvider",
   "openRouterApiKey",
   "openRouterModel",
+  "sermonOpenAiApiKey",
+  "sermonOpenAiModel",
   "audioDeviceId",
   "gain",
   "autoMode",
@@ -135,6 +160,16 @@ export function hydrateSettings(): Promise<void> {
       for (const key of PERSISTED_KEYS) {
         const value = await store.get(key)
         if (value !== undefined && value !== null) {
+          if (key === "aiProvider") {
+            if (isAiProvider(value)) patch.aiProvider = value
+            continue
+          }
+          if (key === "openRouterModel" || key === "sermonOpenAiModel") {
+            if (typeof value === "string" && value.trim()) {
+              patch[key] = value.trim()
+            }
+            continue
+          }
           ;(patch as Record<string, unknown>)[key] = value
         }
       }
