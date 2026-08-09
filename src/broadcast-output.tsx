@@ -433,6 +433,18 @@ function BroadcastCanvas() {
               mediaType: payload.verse.presentationImage.mediaType ?? "image",
             }
           : null,
+        payload.overlays?.lowerThird?.avatarImageUrl
+          ? {
+              url: payload.overlays.lowerThird.avatarImageUrl,
+              mediaType: "image" as const,
+            }
+          : null,
+        payload.overlays?.lowerThird?.logoImageUrl
+          ? {
+              url: payload.overlays.lowerThird.logoImageUrl,
+              mediaType: "image" as const,
+            }
+          : null,
         ...(payload.overlays?.logos.map((logo) => ({
           url: logo.imageUrl,
           mediaType: "image" as const,

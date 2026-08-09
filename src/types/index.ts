@@ -33,6 +33,7 @@ export {
   type LogoOverlayItem,
   type LowerThirdPreset,
   type LowerThirdAppearanceSettings,
+  type LowerThirdLogoPosition,
   type LowerThirdStyle,
   type LowerThirdTheme,
   type OverlayConfiguration,

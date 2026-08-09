@@ -1,11 +1,14 @@
-import { useRef, useState } from "react"
+import { useRef, useState, type ChangeEvent, type ReactNode } from "react"
 import {
+  ImagePlusIcon,
   PencilIcon,
   PlayIcon,
+  RotateCcwIcon,
   Settings2Icon,
   SquareIcon,
   Trash2Icon,
 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import {
@@ -20,6 +23,7 @@ import { SliderField } from "@/components/ui/slider-field"
 import { Switch } from "@/components/ui/switch"
 import { getOverlayPreviewPayload } from "@/lib/overlays"
 import { getOverlayOutputMode } from "@/lib/broadcast-outputs"
+import { cachePresentationMedia } from "@/lib/presentation-media"
 import {
   Select,
   SelectContent,
@@ -33,11 +37,13 @@ import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import type {
   BroadcastOverlayPayload,
   LowerThirdAppearanceSettings,
+  LowerThirdLogoPosition,
   LowerThirdPreset,
   LowerThirdStyle,
   LowerThirdTheme,
 } from "@/types"
 import {
+  DEFAULT_LOWER_THIRD_LOGO_POSITION,
   DEFAULT_LOWER_THIRD_STYLE,
   getDefaultLowerThirdStyleForTheme,
   LOWER_THIRD_STYLE_OPTIONS,
@@ -70,6 +76,16 @@ const DEFAULT_WIDTH_PERCENT = 50
 const DEFAULT_STYLE_OPTION = LOWER_THIRD_STYLE_OPTIONS[0]
 
 type LowerThirdAppearance = LowerThirdAppearanceSettings
+
+function overrideOrFallback<K extends keyof LowerThirdAppearance>(
+  overrides: Partial<LowerThirdAppearance> | undefined,
+  key: K,
+  fallback: LowerThirdAppearance[K]
+): LowerThirdAppearance[K] {
+  return overrides && key in overrides
+    ? (overrides[key] as LowerThirdAppearance[K])
+    : fallback
+}
 
 function getStyleOption(style: LowerThirdStyle) {
   return (
@@ -134,6 +150,62 @@ function ColorInput({
   )
 }
 
+function AppearanceSection({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title: string
+  description?: string
+  action?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card/40 p-3.5">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase">
+            {title}
+          </p>
+          {description ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+        </div>
+        {action}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  )
+}
+
+function LogoPositionToggle({
+  value,
+  onChange,
+}: {
+  value: LowerThirdLogoPosition
+  onChange: (value: LowerThirdLogoPosition) => void
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {(["left", "right"] as const).map((position) => (
+        <Button
+          key={position}
+          type="button"
+          variant={value === position ? "default" : "outline"}
+          size="sm"
+          className="capitalize"
+          onClick={() => onChange(position)}
+        >
+          {position} corner
+        </Button>
+      ))}
+    </div>
+  )
+}
+
 export function LowerThirdOverlaySection() {
   const presets = useBroadcastStore(
     (state) => state.overlayConfig.lowerThirdPresets
@@ -177,11 +249,29 @@ export function LowerThirdOverlaySection() {
   const [textColor, setTextColor] = useState<string>(
     DEFAULT_STYLE_OPTION.defaultTextColor
   )
+  const [avatarImageUrl, setAvatarImageUrl] = useState<string | undefined>(
+    undefined
+  )
+  const [accentColor, setAccentColor] = useState<string | undefined>(undefined)
+  const [logoImageUrl, setLogoImageUrl] = useState<string | undefined>(
+    undefined
+  )
+  const [logoPosition, setLogoPosition] = useState<LowerThirdLogoPosition>(
+    DEFAULT_LOWER_THIRD_LOGO_POSITION
+  )
+  const [logoSizePercent, setLogoSizePercent] = useState(100)
+  const [sizePercent, setSizePercent] = useState(100)
   const [maxWidthEnabled, setMaxWidthEnabled] = useState(true)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const [appearance, setAppearance] = useState<LowerThirdAppearance>({
     backgroundColor: DEFAULT_STYLE_OPTION.defaultBackgroundColor,
     textColor: DEFAULT_STYLE_OPTION.defaultTextColor,
+    accentColor: undefined,
+    avatarImageUrl: undefined,
+    logoImageUrl: undefined,
+    logoPosition: DEFAULT_LOWER_THIRD_LOGO_POSITION,
+    logoSizePercent: 100,
+    sizePercent: 100,
     widthPercent: DEFAULT_WIDTH_PERCENT,
     xPercent: DEFAULT_X_PERCENT,
     yPercent: DEFAULT_Y_PERCENT,
@@ -190,6 +280,10 @@ export function LowerThirdOverlaySection() {
     durationMs: 14_000,
   })
   const appearanceRef = useRef(appearance)
+  const avatarFileInputRef = useRef<HTMLInputElement>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const logoFileInputRef = useRef<HTMLInputElement>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
   const [appearanceTargetId, setAppearanceTargetId] = useState<string | null>(
     null
   )
@@ -252,6 +346,12 @@ export function LowerThirdOverlaySection() {
       label: appearanceLabel,
       backgroundColor: appearance.backgroundColor,
       textColor: appearance.textColor,
+      accentColor: appearance.accentColor,
+      avatarImageUrl: appearance.avatarImageUrl,
+      logoImageUrl: appearance.logoImageUrl,
+      logoPosition: appearance.logoPosition,
+      logoSizePercent: appearance.logoSizePercent,
+      sizePercent: appearance.sizePercent,
       widthPercent: appearance.widthPercent,
       style: appearance.style,
       maxWidthEnabled: appearance.maxWidthEnabled,
@@ -271,6 +371,12 @@ export function LowerThirdOverlaySection() {
     setLabel(preset.label ?? "")
     setBackgroundColor(preset.backgroundColor)
     setTextColor(preset.textColor)
+    setAvatarImageUrl(preset.avatarImageUrl)
+    setAccentColor(preset.accentColor)
+    setLogoImageUrl(preset.logoImageUrl)
+    setLogoPosition(preset.logoPosition ?? DEFAULT_LOWER_THIRD_LOGO_POSITION)
+    setLogoSizePercent(preset.logoSizePercent ?? 100)
+    setSizePercent(preset.sizePercent ?? 100)
     setMaxWidthEnabled(preset.maxWidthEnabled !== false)
     setDurationSeconds(preset.durationMs / 1000)
     setWidthPercent(preset.widthPercent)
@@ -287,6 +393,12 @@ export function LowerThirdOverlaySection() {
     setStyle(DEFAULT_LOWER_THIRD_STYLE)
     setBackgroundColor(DEFAULT_STYLE_OPTION.defaultBackgroundColor)
     setTextColor(DEFAULT_STYLE_OPTION.defaultTextColor)
+    setAvatarImageUrl(undefined)
+    setAccentColor(undefined)
+    setLogoImageUrl(undefined)
+    setLogoPosition(DEFAULT_LOWER_THIRD_LOGO_POSITION)
+    setLogoSizePercent(100)
+    setSizePercent(100)
     setMaxWidthEnabled(true)
     setDurationSeconds(14)
     setWidthPercent(DEFAULT_WIDTH_PERCENT)
@@ -305,6 +417,25 @@ export function LowerThirdOverlaySection() {
     const nextBackgroundColor =
       colorOverrides?.backgroundColor ?? backgroundColor
     const nextTextColor = colorOverrides?.textColor ?? textColor
+    const nextAvatarImageUrl = overrideOrFallback(
+      colorOverrides,
+      "avatarImageUrl",
+      avatarImageUrl
+    )
+    const nextAccentColor = overrideOrFallback(
+      colorOverrides,
+      "accentColor",
+      accentColor
+    )
+    const nextLogoImageUrl = overrideOrFallback(
+      colorOverrides,
+      "logoImageUrl",
+      logoImageUrl
+    )
+    const nextLogoPosition = colorOverrides?.logoPosition ?? logoPosition
+    const nextLogoSizePercent =
+      colorOverrides?.logoSizePercent ?? logoSizePercent
+    const nextSizePercent = colorOverrides?.sizePercent ?? sizePercent
     const nextStyle = colorOverrides?.style ?? style
     const nextMaxWidthEnabled =
       colorOverrides?.maxWidthEnabled ?? maxWidthEnabled
@@ -322,6 +453,12 @@ export function LowerThirdOverlaySection() {
       label: label.trim() || undefined,
       backgroundColor: nextBackgroundColor,
       textColor: nextTextColor,
+      accentColor: nextAccentColor,
+      avatarImageUrl: nextAvatarImageUrl,
+      logoImageUrl: nextLogoImageUrl,
+      logoPosition: nextLogoPosition,
+      logoSizePercent: nextLogoSizePercent,
+      sizePercent: nextSizePercent,
       widthPercent: nextWidthPercent,
       maxWidthEnabled: nextMaxWidthEnabled,
       xPercent: nextXPercent,
@@ -332,6 +469,12 @@ export function LowerThirdOverlaySection() {
     saveAppearanceSettings({
       backgroundColor: nextBackgroundColor,
       textColor: nextTextColor,
+      accentColor: nextAccentColor,
+      avatarImageUrl: nextAvatarImageUrl,
+      logoImageUrl: nextLogoImageUrl,
+      logoPosition: nextLogoPosition,
+      logoSizePercent: nextLogoSizePercent,
+      sizePercent: nextSizePercent,
       widthPercent: nextWidthPercent,
       xPercent: nextXPercent,
       yPercent: nextYPercent,
@@ -351,6 +494,13 @@ export function LowerThirdOverlaySection() {
         ? {
             backgroundColor: activePreset.backgroundColor,
             textColor: activePreset.textColor,
+            accentColor: activePreset.accentColor,
+            avatarImageUrl: activePreset.avatarImageUrl,
+            logoImageUrl: activePreset.logoImageUrl,
+            logoPosition:
+              activePreset.logoPosition ?? DEFAULT_LOWER_THIRD_LOGO_POSITION,
+            logoSizePercent: activePreset.logoSizePercent ?? 100,
+            sizePercent: activePreset.sizePercent ?? 100,
             widthPercent: activePreset.widthPercent,
             style:
               activePreset.style ??
@@ -365,6 +515,12 @@ export function LowerThirdOverlaySection() {
           : {
               backgroundColor,
               textColor,
+              accentColor,
+              avatarImageUrl,
+              logoImageUrl,
+              logoPosition,
+              logoSizePercent,
+              sizePercent,
               widthPercent,
               style,
               maxWidthEnabled,
@@ -389,6 +545,40 @@ export function LowerThirdOverlaySection() {
     updateAppearance({ style: nextStyle })
   }
 
+  const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+    setAvatarUploading(true)
+    try {
+      const url = await cachePresentationMedia(file, file.name)
+      updateAppearance({ avatarImageUrl: url })
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not load photo."
+      )
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+    setLogoUploading(true)
+    try {
+      const url = await cachePresentationMedia(file, file.name)
+      updateAppearance({ logoImageUrl: url })
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not load logo."
+      )
+    } finally {
+      setLogoUploading(false)
+    }
+  }
+
   const cancelAppearance = () => {
     setAppearanceOpen(false)
   }
@@ -396,6 +586,14 @@ export function LowerThirdOverlaySection() {
   const saveAppearance = () => {
     setBackgroundColor(appearance.backgroundColor)
     setTextColor(appearance.textColor)
+    setAvatarImageUrl(appearance.avatarImageUrl)
+    setAccentColor(appearance.accentColor)
+    setLogoImageUrl(appearance.logoImageUrl)
+    setLogoPosition(
+      appearance.logoPosition ?? DEFAULT_LOWER_THIRD_LOGO_POSITION
+    )
+    setLogoSizePercent(appearance.logoSizePercent ?? 100)
+    setSizePercent(appearance.sizePercent ?? 100)
     setStyle(appearance.style)
     setMaxWidthEnabled(appearance.maxWidthEnabled)
     setWidthPercent(appearance.widthPercent)
@@ -414,6 +612,12 @@ export function LowerThirdOverlaySection() {
           ...activePreset,
           backgroundColor: appearance.backgroundColor,
           textColor: appearance.textColor,
+          accentColor: appearance.accentColor,
+          avatarImageUrl: appearance.avatarImageUrl,
+          logoImageUrl: appearance.logoImageUrl,
+          logoPosition: appearance.logoPosition,
+          logoSizePercent: appearance.logoSizePercent,
+          sizePercent: appearance.sizePercent,
           widthPercent: appearance.widthPercent,
           style: appearance.style,
           maxWidthEnabled: appearance.maxWidthEnabled,
@@ -642,19 +846,12 @@ export function LowerThirdOverlaySection() {
           if (!open) cancelAppearance()
         }}
       >
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Lower third appearance</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4">
-            <label className="grid gap-1 text-xs font-medium">
-              Layout style
-              <LowerThirdStyleSelect
-                value={appearance.style}
-                onChange={handleAppearanceStyleChange}
-              />
-            </label>
-            <div className="overflow-hidden rounded-md border border-border bg-card">
+          <div className="grid gap-3">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
               <div className="border-b border-border px-3 py-2 text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
                 Preview
               </div>
@@ -670,71 +867,252 @@ export function LowerThirdOverlaySection() {
                 />
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ColorInput
-                label="Background color"
-                value={appearance.backgroundColor}
-                onChange={(backgroundColor) =>
-                  updateAppearance({ backgroundColor })
-                }
+
+            <AppearanceSection title="Style">
+              <LowerThirdStyleSelect
+                value={appearance.style}
+                onChange={handleAppearanceStyleChange}
               />
-              <ColorInput
-                label="Text color"
-                value={appearance.textColor}
-                onChange={(textColor) => updateAppearance({ textColor })}
-              />
-            </div>
-            <div className="flex items-start justify-between gap-4 rounded-md border border-border px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-sm font-medium">No maximum width</p>
-                <p className="text-xs text-muted-foreground">
-                  Size to content until the safe output boundary, then wrap.
-                </p>
+            </AppearanceSection>
+
+            <AppearanceSection title="Colors">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <ColorInput
+                  label="Background"
+                  value={appearance.backgroundColor}
+                  onChange={(backgroundColor) =>
+                    updateAppearance({ backgroundColor })
+                  }
+                />
+                <ColorInput
+                  label="Text"
+                  value={appearance.textColor}
+                  onChange={(textColor) => updateAppearance({ textColor })}
+                />
+                <div className="grid gap-1">
+                  <ColorInput
+                    label="Accent"
+                    value={appearance.accentColor ?? "#2563eb"}
+                    onChange={(accentColor) =>
+                      updateAppearance({ accentColor })
+                    }
+                  />
+                  {appearance.accentColor ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 justify-self-start text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() =>
+                        updateAppearance({ accentColor: undefined })
+                      }
+                    >
+                      <RotateCcwIcon className="size-3" /> Style default
+                    </button>
+                  ) : null}
+                </div>
               </div>
-              <Switch
-                aria-label="No maximum width"
-                checked={!appearance.maxWidthEnabled}
-                onCheckedChange={(noMaximumWidth) =>
-                  updateAppearance({ maxWidthEnabled: !noMaximumWidth })
-                }
-              />
-            </div>
-            {appearance.maxWidthEnabled ? (
+            </AppearanceSection>
+
+            {appearance.style === "dark-avatar-blue" ? (
+              <AppearanceSection
+                title="Avatar photo"
+                description="Shown in the avatar block. Falls back to a generic icon when empty."
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
+                    {appearance.avatarImageUrl ? (
+                      <img
+                        src={appearance.avatarImageUrl}
+                        alt="Avatar preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-[0.625rem] text-muted-foreground">
+                        No photo
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    ref={avatarFileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    onChange={(event) => void handleAvatarUpload(event)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={avatarUploading}
+                    onClick={() => avatarFileInputRef.current?.click()}
+                  >
+                    <ImagePlusIcon />
+                    {appearance.avatarImageUrl ? "Replace" : "Upload"}
+                  </Button>
+                  {appearance.avatarImageUrl ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Remove avatar photo"
+                      onClick={() =>
+                        updateAppearance({ avatarImageUrl: undefined })
+                      }
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  ) : null}
+                </div>
+              </AppearanceSection>
+            ) : null}
+
+            <AppearanceSection
+              title="Logo badge"
+              description="Optional badge pinned to a corner of the lower third, e.g. a sponsor or organization mark."
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded bg-muted">
+                  {appearance.logoImageUrl ? (
+                    <img
+                      src={appearance.logoImageUrl}
+                      alt="Logo preview"
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-[0.625rem] text-muted-foreground">
+                      No logo
+                    </span>
+                  )}
+                </div>
+                <input
+                  ref={logoFileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml,.svg"
+                  className="hidden"
+                  onChange={(event) => void handleLogoUpload(event)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={logoUploading}
+                  onClick={() => logoFileInputRef.current?.click()}
+                >
+                  <ImagePlusIcon />
+                  {appearance.logoImageUrl ? "Replace" : "Upload"}
+                </Button>
+                {appearance.logoImageUrl ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Remove logo"
+                    onClick={() =>
+                      updateAppearance({ logoImageUrl: undefined })
+                    }
+                  >
+                    <Trash2Icon />
+                  </Button>
+                ) : null}
+              </div>
+              {appearance.logoImageUrl ? (
+                <>
+                  <LogoPositionToggle
+                    value={
+                      appearance.logoPosition ??
+                      DEFAULT_LOWER_THIRD_LOGO_POSITION
+                    }
+                    onChange={(logoPosition) =>
+                      updateAppearance({ logoPosition })
+                    }
+                  />
+                  <SliderField
+                    label="Logo size"
+                    min={50}
+                    max={160}
+                    value={appearance.logoSizePercent ?? 100}
+                    unit="%"
+                    defaultValue={100}
+                    onChange={(logoSizePercent) =>
+                      updateAppearance({ logoSizePercent })
+                    }
+                  />
+                </>
+              ) : null}
+            </AppearanceSection>
+
+            <AppearanceSection
+              title="Size"
+              description="Scales the entire graphic up or down."
+            >
               <SliderField
-                label="Maximum width"
-                min={25}
-                max={90}
-                value={appearance.widthPercent}
+                label="Overall size"
+                min={70}
+                max={130}
+                value={appearance.sizePercent ?? 100}
                 unit="%"
-                defaultValue={DEFAULT_WIDTH_PERCENT}
-                onChange={(widthPercent) => updateAppearance({ widthPercent })}
+                defaultValue={100}
+                onChange={(sizePercent) => updateAppearance({ sizePercent })}
               />
-            ) : (
-              <p className="rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-                Natural width is active. The renderer still keeps a safe margin
-                and wraps long text.
-              </p>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <SliderField
-                label="Horizontal position"
-                min={0}
-                max={100}
-                value={appearance.xPercent}
-                unit="%"
-                defaultValue={DEFAULT_X_PERCENT}
-                onChange={(xPercent) => updateAppearance({ xPercent })}
-              />
-              <SliderField
-                label="Vertical position"
-                min={0}
-                max={100}
-                value={appearance.yPercent}
-                unit="%"
-                defaultValue={DEFAULT_Y_PERCENT}
-                onChange={(yPercent) => updateAppearance({ yPercent })}
-              />
-            </div>
+            </AppearanceSection>
+
+            <AppearanceSection title="Width">
+              <div className="flex items-start justify-between gap-4 rounded-md border border-border px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">No maximum width</p>
+                  <p className="text-xs text-muted-foreground">
+                    Size to content until the safe output boundary, then wrap.
+                  </p>
+                </div>
+                <Switch
+                  aria-label="No maximum width"
+                  checked={!appearance.maxWidthEnabled}
+                  onCheckedChange={(noMaximumWidth) =>
+                    updateAppearance({ maxWidthEnabled: !noMaximumWidth })
+                  }
+                />
+              </div>
+              {appearance.maxWidthEnabled ? (
+                <SliderField
+                  label="Maximum width"
+                  min={25}
+                  max={90}
+                  value={appearance.widthPercent}
+                  unit="%"
+                  defaultValue={DEFAULT_WIDTH_PERCENT}
+                  onChange={(widthPercent) =>
+                    updateAppearance({ widthPercent })
+                  }
+                />
+              ) : (
+                <p className="rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  Natural width is active. The renderer still keeps a safe
+                  margin and wraps long text.
+                </p>
+              )}
+            </AppearanceSection>
+
+            <AppearanceSection title="Position">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SliderField
+                  label="Horizontal position"
+                  min={0}
+                  max={100}
+                  value={appearance.xPercent}
+                  unit="%"
+                  defaultValue={DEFAULT_X_PERCENT}
+                  onChange={(xPercent) => updateAppearance({ xPercent })}
+                />
+                <SliderField
+                  label="Vertical position"
+                  min={0}
+                  max={100}
+                  value={appearance.yPercent}
+                  unit="%"
+                  defaultValue={DEFAULT_Y_PERCENT}
+                  onChange={(yPercent) => updateAppearance({ yPercent })}
+                />
+              </div>
+            </AppearanceSection>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={cancelAppearance}>

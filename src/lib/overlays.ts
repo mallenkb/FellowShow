@@ -2,9 +2,11 @@ import {
   OVERLAY_CONFIGURATION_VERSION,
   DEFAULT_TICKER_SPEED,
   DEFAULT_LOWER_THIRD_STYLE,
+  DEFAULT_LOWER_THIRD_LOGO_POSITION,
   getDefaultLowerThirdStyleForTheme,
   isTickerSpeed,
   isLowerThirdStyle,
+  isLowerThirdLogoPosition,
   type ActiveOverlayState,
   type BroadcastOverlayPayload,
   type LogoOverlayConfig,
@@ -129,6 +131,27 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 function sanitizeColor(value: unknown, fallback: string): string {
   return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value.trim())
     ? value.trim()
+    : fallback
+}
+
+function sanitizeOptionalColor(value: unknown): string | undefined {
+  return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value.trim())
+    ? value.trim()
+    : undefined
+}
+
+function sanitizeOptionalImageUrl(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined
+}
+
+function sanitizeSizePercent(
+  value: unknown,
+  min: number,
+  max: number,
+  fallback: number
+): number {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, Math.round(value)))
     : fallback
 }
 
@@ -341,6 +364,14 @@ function sanitizeLowerThirdPreset(
       DEFAULT_LOWER_THIRD_BACKGROUND_COLOR
     ),
     textColor: sanitizeColor(record.textColor, DEFAULT_LOWER_THIRD_TEXT_COLOR),
+    accentColor: sanitizeOptionalColor(record.accentColor),
+    avatarImageUrl: sanitizeOptionalImageUrl(record.avatarImageUrl),
+    logoImageUrl: sanitizeOptionalImageUrl(record.logoImageUrl),
+    logoPosition: isLowerThirdLogoPosition(record.logoPosition)
+      ? record.logoPosition
+      : DEFAULT_LOWER_THIRD_LOGO_POSITION,
+    logoSizePercent: sanitizeSizePercent(record.logoSizePercent, 50, 160, 100),
+    sizePercent: sanitizeSizePercent(record.sizePercent, 60, 150, 100),
     widthPercent:
       typeof record.widthPercent === "number" &&
       Number.isFinite(record.widthPercent)
@@ -380,6 +411,14 @@ function sanitizeLowerThirdAppearance(
       DEFAULT_LOWER_THIRD_BACKGROUND_COLOR
     ),
     textColor: sanitizeColor(record.textColor, DEFAULT_LOWER_THIRD_TEXT_COLOR),
+    accentColor: sanitizeOptionalColor(record.accentColor),
+    avatarImageUrl: sanitizeOptionalImageUrl(record.avatarImageUrl),
+    logoImageUrl: sanitizeOptionalImageUrl(record.logoImageUrl),
+    logoPosition: isLowerThirdLogoPosition(record.logoPosition)
+      ? record.logoPosition
+      : DEFAULT_LOWER_THIRD_LOGO_POSITION,
+    logoSizePercent: sanitizeSizePercent(record.logoSizePercent, 50, 160, 100),
+    sizePercent: sanitizeSizePercent(record.sizePercent, 60, 150, 100),
     widthPercent:
       typeof record.widthPercent === "number" &&
       Number.isFinite(record.widthPercent)
@@ -498,6 +537,12 @@ function buildOverlayPayload(
           label: lowerThird.preset.label,
           backgroundColor: lowerThird.preset.backgroundColor,
           textColor: lowerThird.preset.textColor,
+          accentColor: lowerThird.preset.accentColor,
+          avatarImageUrl: lowerThird.preset.avatarImageUrl,
+          logoImageUrl: lowerThird.preset.logoImageUrl,
+          logoPosition: lowerThird.preset.logoPosition,
+          logoSizePercent: lowerThird.preset.logoSizePercent,
+          sizePercent: lowerThird.preset.sizePercent,
           widthPercent: lowerThird.preset.widthPercent,
           maxWidthEnabled: lowerThird.preset.maxWidthEnabled !== false,
           xPercent: lowerThird.preset.xPercent,

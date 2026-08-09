@@ -85,31 +85,127 @@ function lowerThirdInsets(
 ): { leading: number; trailing: number } {
   switch (style) {
     case "dark-avatar-blue":
-      return { leading: 104 * scale, trailing: 0 }
+      return { leading: 112 * scale, trailing: 0 }
+    case "white-amber":
+      return { leading: 0, trailing: 64 * scale }
+    case "dark-green-dots":
+      return { leading: 0, trailing: 120 * scale }
     case "white-purple-angles":
-      return { leading: 0, trailing: 78 * scale }
+      return { leading: 108 * scale, trailing: 0 }
     case "dark-blue-diagonal":
       return { leading: 28 * scale, trailing: 100 * scale }
     case "full-width-banner":
       return { leading: 58 * scale, trailing: 178 * scale }
     case "white-blue":
-    case "white-amber":
-    case "dark-green-dots":
     default:
       return { leading: 0, trailing: 0 }
   }
 }
 
-function getInitials(value: string): string {
-  const initials = value
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase()
-  return initials || "•"
+function drawCoverImage(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): void {
+  const naturalWidth = image.naturalWidth || 1
+  const naturalHeight = image.naturalHeight || 1
+  const imageRatio = naturalWidth / naturalHeight
+  const rectRatio = width / height
+  let sx = 0
+  let sy = 0
+  let sWidth = naturalWidth
+  let sHeight = naturalHeight
+  if (imageRatio > rectRatio) {
+    sWidth = naturalHeight * rectRatio
+    sx = (naturalWidth - sWidth) / 2
+  } else {
+    sHeight = naturalWidth / rectRatio
+    sy = (naturalHeight - sHeight) / 2
+  }
+  ctx.drawImage(image, sx, sy, sWidth, sHeight, x, y, width, height)
+}
+
+function drawContainImage(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  size: number
+): void {
+  const naturalWidth = image.naturalWidth || 1
+  const naturalHeight = image.naturalHeight || 1
+  const imageRatio = naturalWidth / naturalHeight
+  const drawWidth = imageRatio >= 1 ? size : size * imageRatio
+  const drawHeight = imageRatio >= 1 ? size / imageRatio : size
+  ctx.drawImage(
+    image,
+    x + (size - drawWidth) / 2,
+    y + (size - drawHeight) / 2,
+    drawWidth,
+    drawHeight
+  )
+}
+
+function drawLowerThirdLogoBadge(
+  ctx: CanvasRenderingContext2D,
+  lowerThird: NonNullable<BroadcastOverlayPayload["lowerThird"]>,
+  boxX: number,
+  boxY: number,
+  boxWidth: number,
+  scale: number,
+  imageCache: Map<string, HTMLImageElement> | undefined
+): void {
+  const logoUrl = lowerThird.logoImageUrl
+  if (!logoUrl) return
+  const image = imageCache?.get(logoUrl)
+  if (!image || image.naturalWidth <= 0 || image.naturalHeight <= 0) return
+
+  const logoSizeMultiplier = (lowerThird.logoSizePercent ?? 100) / 100
+  const badgeSize = Math.max(20 * scale, 64 * scale * logoSizeMultiplier)
+  const badgeGap = 10 * scale
+  const isLeft = lowerThird.logoPosition === "left"
+  const badgeX = isLeft
+    ? boxX + badgeGap
+    : boxX + boxWidth - badgeSize - badgeGap
+  const badgeY = boxY - badgeSize - badgeGap * 0.6
+
+  ctx.save()
+  ctx.shadowColor = "rgba(0, 0, 0, 0.35)"
+  ctx.shadowBlur = 10 * scale
+  ctx.shadowOffsetY = 3 * scale
+  ctx.fillStyle = "rgba(255, 255, 255, 0.97)"
+  roundedRect(ctx, badgeX, badgeY, badgeSize, badgeSize, 10 * scale)
+  ctx.fill()
+  ctx.shadowColor = "transparent"
+  const innerPad = badgeSize * 0.14
+  drawContainImage(
+    ctx,
+    image,
+    badgeX + innerPad,
+    badgeY + innerPad,
+    badgeSize - innerPad * 2
+  )
+  ctx.restore()
+}
+
+function drawAvatarSilhouette(
+  ctx: CanvasRenderingContext2D,
+  centerX: number,
+  centerY: number,
+  scale: number
+): void {
+  ctx.save()
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)"
+  ctx.beginPath()
+  ctx.arc(centerX, centerY - 15 * scale, 15 * scale, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(centerX, centerY + 48 * scale, 30 * scale, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
 }
 
 function clippedText(
@@ -221,7 +317,8 @@ function drawLowerThird(
   const opacity = getLowerThirdOpacity(lowerThird, options.now ?? Date.now())
   if (opacity <= 0) return
 
-  const scale = options.scale ?? 1
+  const sizeMultiplier = (lowerThird.sizePercent ?? 100) / 100
+  const scale = (options.scale ?? 1) * sizeMultiplier
   const offsetX = options.offsetX ?? 0
   const offsetY = options.offsetY ?? 0
   const style = lowerThird.style ?? DEFAULT_LOWER_THIRD_STYLE
@@ -313,18 +410,19 @@ function drawLowerThird(
     ? Math.max(offsetY, desiredY)
     : Math.min(offsetY + height - boxHeight, Math.max(offsetY, desiredY))
   const themeAccent = lowerThirdThemeAccent(lowerThird.theme)
-  const accent =
+  const styleDefaultAccent =
     style === "white-amber"
       ? "#f59e0b"
       : style === "dark-green-dots"
         ? "#22c55e"
         : style === "white-purple-angles"
-          ? "#8b5cf6"
+          ? "#7c3aed"
           : style === "dark-blue-diagonal" || style === "full-width-banner"
             ? "#2563eb"
             : style === "dark-avatar-blue"
-              ? "#38bdf8"
+              ? "#1d4ed8"
               : themeAccent
+  const accent = lowerThird.accentColor || styleDefaultAccent
 
   ctx.save()
   ctx.globalAlpha = opacity
@@ -396,94 +494,109 @@ function drawLowerThird(
     ctx.fill()
   } else {
     switch (style) {
-      case "white-blue":
+      case "white-blue": {
         ctx.fillStyle = accent
-        ctx.fillRect(x, y, 8 * scale, boxHeight)
-        ctx.fillStyle = "#bfdbfe"
-        ctx.fillRect(x + 8 * scale, y, 3 * scale, boxHeight)
-        ctx.fillStyle = "#93c5fd"
-        ctx.fillRect(x + boxWidth - 44 * scale, y, 44 * scale, 5 * scale)
-        break
-      case "dark-avatar-blue": {
-        const avatarWidth = 88 * scale
-        ctx.fillStyle = "#1d4ed8"
-        ctx.fillRect(x, y, avatarWidth, boxHeight)
-        ctx.fillStyle = "#38bdf8"
-        ctx.fillRect(x + avatarWidth - 5 * scale, y, 5 * scale, boxHeight)
-        ctx.fillStyle = "rgba(255, 255, 255, 0.16)"
+        ctx.fillRect(x, y, 9 * scale, boxHeight)
+        const cut = Math.min(46 * scale, boxHeight * 0.4)
         ctx.beginPath()
-        ctx.arc(
-          x + avatarWidth / 2,
-          y + boxHeight / 2,
-          28 * scale,
-          0,
-          Math.PI * 2
-        )
+        ctx.moveTo(x + boxWidth, y + boxHeight - cut)
+        ctx.lineTo(x + boxWidth, y + boxHeight)
+        ctx.lineTo(x + boxWidth - cut, y + boxHeight)
+        ctx.closePath()
         ctx.fill()
-        ctx.fillStyle = "#ffffff"
-        ctx.font = `700 ${19 * scale}px "Inter Variable", sans-serif`
-        ctx.textAlign = "center"
-        ctx.textBaseline = "middle"
-        ctx.fillText(
-          getInitials(lowerThird.title),
-          x + avatarWidth / 2,
-          y + boxHeight / 2
-        )
         break
       }
-      case "white-amber":
-        ctx.fillStyle = "#f59e0b"
-        ctx.fillRect(x, y, 9 * scale, boxHeight)
-        ctx.fillStyle = "#fde68a"
-        ctx.fillRect(x + 9 * scale, y, 3 * scale, boxHeight)
-        ctx.fillStyle = "#fbbf24"
+      case "dark-avatar-blue": {
+        const avatarWidth = 96 * scale
+        ctx.fillStyle = accent
+        ctx.fillRect(x, y, avatarWidth, boxHeight)
+        ctx.fillStyle = "#38bdf8"
+        ctx.fillRect(x + avatarWidth - 4 * scale, y, 4 * scale, boxHeight)
+        const avatarImage = lowerThird.avatarImageUrl
+          ? options.imageCache?.get(lowerThird.avatarImageUrl)
+          : undefined
+        if (
+          avatarImage &&
+          avatarImage.naturalWidth > 0 &&
+          avatarImage.naturalHeight > 0
+        ) {
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(x, y, avatarWidth, boxHeight)
+          ctx.clip()
+          drawCoverImage(ctx, avatarImage, x, y, avatarWidth, boxHeight)
+          ctx.restore()
+        } else {
+          drawAvatarSilhouette(
+            ctx,
+            x + avatarWidth / 2,
+            y + boxHeight / 2,
+            scale
+          )
+        }
+        const cut = Math.min(30 * scale, boxHeight * 0.28)
+        ctx.strokeStyle = "rgba(96, 165, 250, 0.55)"
+        ctx.lineWidth = 2.5 * scale
         ctx.beginPath()
-        ctx.arc(
-          x + boxWidth - 28 * scale,
-          y + 24 * scale,
-          7 * scale,
-          0,
-          Math.PI * 2
-        )
+        ctx.moveTo(x + boxWidth - cut * 1.6, y + boxHeight)
+        ctx.lineTo(x + boxWidth - cut * 0.4, y + boxHeight - cut)
+        ctx.stroke()
+        break
+      }
+      case "white-amber": {
+        ctx.fillStyle = accent
+        ctx.fillRect(x, y, 9 * scale, boxHeight)
+        ctx.beginPath()
+        ctx.moveTo(x + boxWidth * 0.74, y)
+        ctx.lineTo(x + boxWidth, y)
+        ctx.lineTo(x + boxWidth, y + boxHeight)
+        ctx.lineTo(x + boxWidth * 0.64, y + boxHeight)
+        ctx.closePath()
         ctx.fill()
         break
-      case "dark-green-dots":
-        ctx.fillStyle = "#22c55e"
+      }
+      case "dark-green-dots": {
+        ctx.fillStyle = accent
         ctx.fillRect(x, y, 9 * scale, boxHeight)
-        ctx.fillStyle = "#86efac"
-        for (let index = 0; index < 4; index += 1) {
-          ctx.beginPath()
-          ctx.arc(
-            x + 25 * scale,
-            y + (28 + index * 23) * scale,
-            3.5 * scale,
-            0,
-            Math.PI * 2
-          )
-          ctx.fill()
+        const dotAreaX = x + boxWidth * 0.58
+        const dotAreaWidth = Math.max(0, x + boxWidth - 12 * scale - dotAreaX)
+        const spacing = 15 * scale
+        const cols = Math.max(1, Math.floor(dotAreaWidth / spacing))
+        const rows = Math.max(1, Math.floor(boxHeight / spacing))
+        for (let row = 0; row < rows; row += 1) {
+          for (let col = 0; col < cols; col += 1) {
+            const fraction = cols > 1 ? col / (cols - 1) : 1
+            const px =
+              dotAreaX + col * spacing + (row % 2 === 0 ? 0 : spacing / 2)
+            const py = y + spacing * 0.6 + row * spacing
+            if (px > x + boxWidth - 6 * scale || py > y + boxHeight - 4 * scale)
+              continue
+            const radius = (1 + fraction * 2.2) * scale
+            ctx.fillStyle = `rgba(134, 239, 172, ${(0.12 + fraction * 0.58).toFixed(3)})`
+            ctx.beginPath()
+            ctx.arc(px, py, radius, 0, Math.PI * 2)
+            ctx.fill()
+          }
         }
         break
-      case "white-purple-angles":
-        ctx.fillStyle = "#7c3aed"
+      }
+      case "white-purple-angles": {
+        ctx.fillStyle = accent
         ctx.beginPath()
-        ctx.moveTo(x + boxWidth - 98 * scale, y)
-        ctx.lineTo(x + boxWidth - 42 * scale, y)
-        ctx.lineTo(x + boxWidth - 90 * scale, y + boxHeight)
-        ctx.lineTo(x + boxWidth - 146 * scale, y + boxHeight)
+        ctx.moveTo(x, y)
+        ctx.lineTo(x + boxWidth * 0.2, y)
+        ctx.lineTo(x + boxWidth * 0.12, y + boxHeight)
+        ctx.lineTo(x, y + boxHeight)
         ctx.closePath()
         ctx.fill()
-        ctx.fillStyle = "#c4b5fd"
-        ctx.beginPath()
-        ctx.moveTo(x + boxWidth - 48 * scale, y)
-        ctx.lineTo(x + boxWidth, y)
-        ctx.lineTo(x + boxWidth - 48 * scale, y + boxHeight)
-        ctx.closePath()
-        ctx.fill()
+        ctx.fillStyle = "#8b5cf6"
+        ctx.fillRect(x, y + boxHeight - 5 * scale, boxWidth, 5 * scale)
         break
+      }
       case "dark-blue-diagonal":
         ctx.fillStyle = "#ffffff"
         ctx.fillRect(x + 12 * scale, y, 4 * scale, boxHeight)
-        ctx.fillStyle = "#2563eb"
+        ctx.fillStyle = accent
         ctx.beginPath()
         ctx.moveTo(x + boxWidth - 124 * scale, y + boxHeight)
         ctx.lineTo(x + boxWidth - 62 * scale, y)
@@ -530,6 +643,15 @@ function drawLowerThird(
     ctx.font = `500 ${24 * scale}px "Inter Variable", sans-serif`
     drawTextLines(ctx, subtitleLines, textX, textY, subtitleLineHeight)
   }
+  drawLowerThirdLogoBadge(
+    ctx,
+    lowerThird,
+    x,
+    y,
+    boxWidth,
+    scale,
+    options.imageCache
+  )
   ctx.restore()
 }
 

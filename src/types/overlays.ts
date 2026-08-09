@@ -139,6 +139,17 @@ export function isLowerThirdStyle(value: unknown): value is LowerThirdStyle {
   return LOWER_THIRD_STYLE_OPTIONS.some((option) => option.value === value)
 }
 
+/** Which corner of the lower third the logo badge is pinned to. */
+export type LowerThirdLogoPosition = "left" | "right"
+
+export const DEFAULT_LOWER_THIRD_LOGO_POSITION: LowerThirdLogoPosition = "right"
+
+export function isLowerThirdLogoPosition(
+  value: unknown
+): value is LowerThirdLogoPosition {
+  return value === "left" || value === "right"
+}
+
 export function getDefaultLowerThirdStyleForTheme(
   theme: LowerThirdTheme
 ): LowerThirdStyle {
@@ -164,6 +175,17 @@ export interface LowerThirdPreset {
   label?: string
   backgroundColor: string
   textColor: string
+  /** Overrides the style's default decorative accent color when set. */
+  accentColor?: string
+  /** Photo shown in the avatar block for the "dark-avatar-blue" style. */
+  avatarImageUrl?: string
+  /** Badge image pinned to a corner of the lower third. */
+  logoImageUrl?: string
+  logoPosition?: LowerThirdLogoPosition
+  /** Logo badge size as a percentage of its default size. */
+  logoSizePercent?: number
+  /** Overall lower third scale as a percentage of its default size. */
+  sizePercent?: number
   /** Width as a percentage of the output width. */
   widthPercent: number
   /** False removes the user cap while retaining the renderer's safe boundary. */
@@ -183,6 +205,12 @@ export interface LowerThirdPreset {
 export interface LowerThirdAppearanceSettings {
   backgroundColor: string
   textColor: string
+  accentColor?: string
+  avatarImageUrl?: string
+  logoImageUrl?: string
+  logoPosition?: LowerThirdLogoPosition
+  logoSizePercent?: number
+  sizePercent?: number
   widthPercent: number
   xPercent: number
   yPercent: number
@@ -243,6 +271,12 @@ interface LowerThirdOverlayPayload {
   label?: string
   backgroundColor: string
   textColor: string
+  accentColor?: string
+  avatarImageUrl?: string
+  logoImageUrl?: string
+  logoPosition?: LowerThirdLogoPosition
+  logoSizePercent?: number
+  sizePercent?: number
   widthPercent: number
   /** False uses a safe output boundary instead of widthPercent as the cap. */
   maxWidthEnabled?: boolean

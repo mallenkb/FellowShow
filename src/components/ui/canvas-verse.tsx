@@ -96,6 +96,8 @@ export const CanvasVerse = memo(function CanvasVerse({
       timer?.backgroundMediaType !== "video"
         ? (timer?.backgroundUrl ?? null)
         : null,
+      overlays?.lowerThird?.avatarImageUrl ?? null,
+      overlays?.lowerThird?.logoImageUrl ?? null,
       ...(overlays?.logos.map((logo) => logo.imageUrl) ?? []),
     ].filter((url): url is string => Boolean(url))
     const videoUrls = [
@@ -155,6 +157,8 @@ export const CanvasVerse = memo(function CanvasVerse({
     timer?.backgroundMediaType,
     timer?.backgroundUrl,
     overlays?.logos,
+    overlays?.lowerThird?.avatarImageUrl,
+    overlays?.lowerThird?.logoImageUrl,
   ])
 
   useEffect(() => {
