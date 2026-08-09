@@ -53,7 +53,10 @@ function reportScriptureActionFailure(
   reference: SermonDirectReference,
   error: unknown
 ) {
-  console.error(`[sermon-scriptures] Failed to load ${reference.reference}`, error)
+  console.error(
+    `[sermon-scriptures] Failed to load ${reference.reference}`,
+    error
+  )
   toast.error(`Could not load ${reference.reference}`)
 }
 
@@ -83,7 +86,10 @@ async function presentScripture(reference: SermonDirectReference) {
   )
   useBroadcastStore
     .getState()
-    .presentOnLive(toVerseRenderData(verse, activeTranslationAbbreviation()), null)
+    .presentOnLive(
+      toVerseRenderData(verse, activeTranslationAbbreviation()),
+      null
+    )
 }
 
 async function queueScripture(reference: SermonDirectReference) {
