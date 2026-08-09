@@ -220,9 +220,10 @@ export function AiModelSection() {
         <div className="min-w-0">
           <p className="text-xs font-medium">Sermon intelligence provider</p>
           <p className="mt-1 text-[0.6875rem] leading-relaxed text-muted-foreground">
-            Related Scriptures, Live Notes, and Preaching Summary use the
-            selected provider. Direct transcript references and manual workflows
-            remain available without an AI key.
+            Live Notes and Preaching Summary use the selected provider. Related
+            Scriptures use the Deepgram transcript and local Bible matching;
+            direct transcript references and manual workflows remain available
+            without an AI key.
           </p>
         </div>
       </div>

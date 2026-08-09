@@ -48,12 +48,10 @@ import {
   CrosshairIcon,
   CheckIcon,
   PlusIcon,
-  PlayIcon,
   RotateCcwIcon,
   TimerIcon,
   MegaphoneIcon,
   LayersIcon,
-  TextIcon,
 } from "lucide-react"
 import {
   Tooltip,
@@ -80,20 +78,12 @@ import { formatBibleBookName } from "@/lib/bible-book-names"
 import {
   useBibleStore,
   useBroadcastStore,
-  useDetectionStore,
   useQueueStore,
   useSettingsStore,
   usePresentationStore,
-  useTranscriptStore,
 } from "@/stores"
 import type { Book, Verse } from "@/types"
 import { searchContextWithFuse } from "@/lib/context-search"
-import {
-  directReferenceKey,
-  directReferenceToVerse,
-  getSermonDirectReferences,
-  type SermonDirectReference,
-} from "@/lib/sermon-direct-references"
 import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
 import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
 import { prepareSong, presentSong } from "@/lib/song-presentation"
@@ -156,180 +146,6 @@ const PRESENTATION_MEDIA_EXTENSION_SET = new Set<string>(
 )
 const PRESENTATION_VIDEO_EXTENSIONS = new Set(["mp4", "mov", "m4v", "webm"])
 const SONG_PAGE_SIZE = 50
-
-type DirectSermonReferenceRowProps = {
-  reference: SermonDirectReference
-  isQueued: boolean
-  onSelect: () => void
-  onPresent: () => void
-  onQueue: () => void
-  onFocusQueue: () => void
-  onScroll: () => void
-}
-
-function DirectSermonReferenceRow({
-  reference,
-  isQueued,
-  onSelect,
-  onPresent,
-  onQueue,
-  onFocusQueue,
-  onScroll,
-}: DirectSermonReferenceRowProps) {
-  return (
-    <article
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onDoubleClick={onPresent}
-      onKeyDown={(event) => {
-        if (event.target !== event.currentTarget) return
-        if (event.key !== "Enter" && event.key !== " ") return
-        event.preventDefault()
-        onSelect()
-      }}
-      className="group cursor-pointer rounded-lg border border-border p-2.5 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-xs font-semibold text-foreground">
-              {reference.reference}
-            </h3>
-            <span className="shrink-0 rounded-full bg-ai-direct/10 px-1.5 py-0.5 text-[0.5625rem] font-medium text-ai-direct">
-              Direct
-            </span>
-          </div>
-          {reference.transcriptSnippet.trim() && (
-            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/75">
-              “{reference.transcriptSnippet}”
-            </p>
-          )}
-          {reference.verseText.trim() && (
-            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-              {reference.verseText}
-            </p>
-          )}
-        </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={`Show ${reference.reference} full screen`}
-            aria-label={`Show ${reference.reference} full screen`}
-            onClick={(event) => {
-              event.stopPropagation()
-              onPresent()
-            }}
-          >
-            <PlayIcon className="size-3" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={`Send ${reference.reference} to scrolling text`}
-            aria-label={`Send ${reference.reference} to scrolling text`}
-            onClick={(event) => {
-              event.stopPropagation()
-              onScroll()
-            }}
-          >
-            <TextIcon className="size-3" />
-          </Button>
-          {isQueued ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              title={`${reference.reference} is already in the queue`}
-              aria-label={`${reference.reference} is already in the queue`}
-              onClick={(event) => {
-                event.stopPropagation()
-                onFocusQueue()
-              }}
-            >
-              <CheckIcon className="size-3.5 text-ai-direct" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              className="!bg-[#101084] text-white hover:!bg-[#101084]/80 dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
-              title={`Add ${reference.reference} to queue`}
-              aria-label={`Add ${reference.reference} to queue`}
-              onClick={(event) => {
-                event.stopPropagation()
-                onQueue()
-              }}
-            >
-              <PlusIcon className="size-3" />
-            </Button>
-          )}
-        </div>
-      </div>
-    </article>
-  )
-}
-
-type DirectSermonReferencesSectionProps = {
-  references: SermonDirectReference[]
-  queuedReferenceKeys: Set<string>
-  onSelect: (reference: SermonDirectReference) => void
-  onPresent: (reference: SermonDirectReference) => void
-  onQueue: (reference: SermonDirectReference) => void
-  onFocusQueue: (reference: SermonDirectReference) => void
-  onScroll: (reference: SermonDirectReference) => void
-}
-
-function DirectSermonReferencesSection({
-  references,
-  queuedReferenceKeys,
-  onSelect,
-  onPresent,
-  onQueue,
-  onFocusQueue,
-  onScroll,
-}: DirectSermonReferencesSectionProps) {
-  if (references.length === 0) return null
-
-  return (
-    <section className="rounded-lg border border-ai-direct/25 bg-ai-direct/5 p-2.5">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="text-xs font-semibold text-foreground">
-            Direct references from live transcript
-          </h2>
-          <p className="mt-0.5 text-[0.6875rem] text-muted-foreground">
-            Explicitly spoken references only — not AI suggestions.
-          </p>
-        </div>
-        <span className="shrink-0 text-[0.625rem] font-medium text-ai-direct">
-          {references.length}
-        </span>
-      </div>
-      <div className="space-y-1.5">
-        {references.map((reference) => {
-          const key = directReferenceKey(reference)
-          return (
-            <DirectSermonReferenceRow
-              key={key}
-              reference={reference}
-              isQueued={queuedReferenceKeys.has(key)}
-              onSelect={() => onSelect(reference)}
-              onPresent={() => onPresent(reference)}
-              onQueue={() => onQueue(reference)}
-              onFocusQueue={() => onFocusQueue(reference)}
-              onScroll={() => onScroll(reference)}
-            />
-          )
-        })}
-      </div>
-    </section>
-  )
-}
 
 import { TranslationOptions } from "@/components/panels/search/translation-options"
 import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
@@ -427,11 +243,6 @@ export function SearchPanel({
   const pinnedTranslationIds = useSettingsStore((s) => s.pinnedTranslationIds)
 
   const queueItems = useQueueStore((s) => s.items)
-  const detections = useDetectionStore((s) => s.detections)
-  const transcriptSegments = useTranscriptStore((s) => s.segments)
-  const highlightedScriptures = useTranscriptStore(
-    (s) => s.highlightedScriptures
-  )
   const presentationSlides = usePresentationStore((s) => s.slides)
   const presentationDocuments = usePresentationStore((s) => s.documents)
   const selectedPresentationSlideId = usePresentationStore(
@@ -615,16 +426,6 @@ export function SearchPanel({
       )
     )
   }, [queueItems])
-  const directSermonReferences = useMemo(
-    () =>
-      getSermonDirectReferences({
-        detections,
-        highlightedReferences: highlightedScriptures,
-        transcriptSegments,
-      }),
-    [detections, highlightedScriptures, transcriptSegments]
-  )
-
   const formatSongReference = useCallback((song: CopSong) => {
     return song.title
   }, [])
@@ -881,92 +682,6 @@ export function SearchPanel({
         activeTranslationAbbreviation
       )
     : null
-
-  const selectDirectReference = useCallback(
-    (reference: SermonDirectReference) => {
-      const verse = directReferenceToVerse(reference, activeTranslationId)
-      bibleActions.selectVerse(verse)
-      bibleActions.navigateToVerse(
-        reference.bookNumber,
-        reference.chapter,
-        reference.verse
-      )
-    },
-    [activeTranslationId]
-  )
-
-  const presentDirectReference = useCallback(
-    (reference: SermonDirectReference) => {
-      const verse = directReferenceToVerse(reference, activeTranslationId)
-      useBroadcastStore
-        .getState()
-        .presentOnLive(
-          toVerseRenderData(verse, activeTranslationAbbreviation || "KJV"),
-          null
-        )
-    },
-    [activeTranslationAbbreviation, activeTranslationId]
-  )
-
-  const queueDirectReference = useCallback(
-    (reference: SermonDirectReference) => {
-      const verse = directReferenceToVerse(reference, activeTranslationId)
-      const queue = useQueueStore.getState()
-      const duplicateIndex = queue.findDuplicate(
-        reference.bookNumber,
-        reference.chapter,
-        reference.verse
-      )
-      if (duplicateIndex !== -1) {
-        queue.flashItem(queue.items[duplicateIndex].id)
-        queue.setActive(duplicateIndex)
-        return
-      }
-      queue.addItem({
-        id: crypto.randomUUID(),
-        verse,
-        reference: reference.reference,
-        confidence: reference.confidence,
-        source: "ai-direct",
-        added_at: Date.now(),
-      })
-    },
-    [activeTranslationId]
-  )
-
-  const focusQueuedDirectReference = useCallback(
-    (reference: SermonDirectReference) => {
-      const queue = useQueueStore.getState()
-      const duplicateIndex = queue.findDuplicate(
-        reference.bookNumber,
-        reference.chapter,
-        reference.verse
-      )
-      if (duplicateIndex === -1) return
-      queue.flashItem(queue.items[duplicateIndex].id)
-      queue.setActive(duplicateIndex)
-      document
-        .querySelector(
-          `[data-slot="queue-panel"] [data-queue-idx="${duplicateIndex}"]`
-        )
-        ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-    },
-    []
-  )
-
-  const scrollDirectReference = useCallback(
-    (reference: SermonDirectReference) => {
-      const broadcast = useBroadcastStore.getState()
-      const id = broadcast.saveTickerMessage({
-        text: `${reference.reference}: ${reference.verseText}`,
-        targetOutputIds: broadcast.overlayConfig.logo.logos[0]
-          ?.targetOutputIds ?? ["main"],
-      })
-      broadcast.showTickerMessage(id)
-      toast.success(`${reference.reference} is scrolling live`)
-    },
-    []
-  )
 
   // Load initial data and default to Genesis 1:1
   useEffect(() => {
@@ -1626,17 +1341,6 @@ export function SearchPanel({
       {/* Book search tab */}
       {activeTab === "book" && (
         <>
-          <div className="shrink-0 px-3 pt-3">
-            <DirectSermonReferencesSection
-              references={directSermonReferences}
-              queuedReferenceKeys={queuedVerseKeys}
-              onSelect={selectDirectReference}
-              onPresent={presentDirectReference}
-              onQueue={queueDirectReference}
-              onFocusQueue={focusQueuedDirectReference}
-              onScroll={scrollDirectReference}
-            />
-          </div>
           {/* STICKY: Chapter header */}
 
           <div className="flex min-h-9 shrink-0 items-center justify-between px-3 py-2">

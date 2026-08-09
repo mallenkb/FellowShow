@@ -6,7 +6,7 @@ export interface QueueItem {
   verse: Verse
   reference: string
   confidence: number
-  source: "manual" | "ai-direct" | "ai-cloud"
+  source: "manual" | "direct" | "ai-direct" | "ai-cloud" | "deepgram"
   added_at: number
   lyricKind?: "song"
   fullText?: string

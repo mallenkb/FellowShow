@@ -419,6 +419,12 @@ pub async fn start_transcription(
     // Background detection channel — direct + reading mode, non-blocking
     let (detect_tx, mut detect_rx) = tokio::sync::mpsc::channel::<String>(16);
 
+    // Deepgram can split one spoken reference or quote across several finalized
+    // chunks. Keep sentence-sized buffers so both direct parsing and FTS5 see
+    // the complete utterance.
+    let mut direct_sentence_buffer = fellowshow_detection::SentenceBuffer::new();
+    let mut semantic_sentence_buffer = fellowshow_detection::SentenceBuffer::new();
+
     // Spawn semantic detection worker (runs ONNX inference without blocking transcript).
     // Uses spawn_blocking so ONNX doesn't starve the tokio async runtime
     // (WebSocket readers, event emitters, etc.).
@@ -478,6 +484,7 @@ pub async fn start_transcription(
                 TranscriptEvent::Final {
                     transcript,
                     confidence,
+                    speech_final,
                     ..
                 } => {
                     if !transcript.is_empty() {
@@ -507,15 +514,76 @@ pub async fn start_transcription(
                             }
                         }
 
-                        // Send every is_final fragment to FTS5 immediately.
-                        // No sentence buffer — FTS5 is fast enough (~20-50ms)
-                        // to run on every fragment without waiting for pauses.
+                        // Also inspect the completed utterance. This recovers
+                        // references split across chunks such as "John
+                        // chapter" followed by "1:14".
+                        if let Some(sentence) = direct_sentence_buffer.append(&transcript) {
+                            if sentence.trim() != transcript.trim()
+                                && detect_tx.try_send(sentence).is_err()
+                            {
+                                dropped_direct_jobs += 1;
+                                if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                                    log::warn!(
+                                        "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
+                                    );
+                                }
+                            }
+                        }
+
+                        if speech_final {
+                            if let Some(sentence) = direct_sentence_buffer.force_flush() {
+                                if sentence.trim() != transcript.trim()
+                                    && detect_tx.try_send(sentence).is_err()
+                                {
+                                    dropped_direct_jobs += 1;
+                                    if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                                        log::warn!(
+                                            "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
+                                        );
+                                    }
+                                }
+                            }
+                        }
+
+                        // Send every is_final fragment to FTS5 immediately so
+                        // short exact quotes appear without waiting for a pause.
                         if semantic_tx.try_send(transcript.clone()).is_err() {
                             dropped_semantic_jobs += 1;
                             if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0 {
                                 log::warn!(
                                     "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
                                 );
+                            }
+                        }
+
+                        // Also search the completed utterance. This recovers
+                        // quotes split across multiple Deepgram final chunks.
+                        if let Some(sentence) = semantic_sentence_buffer.append(&transcript) {
+                            if sentence.trim() != transcript.trim()
+                                && semantic_tx.try_send(sentence).is_err()
+                            {
+                                dropped_semantic_jobs += 1;
+                                if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0 {
+                                    log::warn!(
+                                        "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
+                                    );
+                                }
+                            }
+                        }
+
+                        if speech_final {
+                            if let Some(sentence) = semantic_sentence_buffer.force_flush() {
+                                if sentence.trim() != transcript.trim()
+                                    && semantic_tx.try_send(sentence).is_err()
+                                {
+                                    dropped_semantic_jobs += 1;
+                                    if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0
+                                    {
+                                        log::warn!(
+                                            "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
+                                        );
+                                    }
+                                }
                             }
                         }
 
@@ -526,7 +594,28 @@ pub async fn start_transcription(
                         );
                     }
                 }
-                TranscriptEvent::UtteranceEnd => {}
+                TranscriptEvent::UtteranceEnd => {
+                    if let Some(sentence) = direct_sentence_buffer.force_flush() {
+                        if detect_tx.try_send(sentence).is_err() {
+                            dropped_direct_jobs += 1;
+                            if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                                log::warn!(
+                                    "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
+                                );
+                            }
+                        }
+                    }
+                    if let Some(sentence) = semantic_sentence_buffer.force_flush() {
+                        if semantic_tx.try_send(sentence).is_err() {
+                            dropped_semantic_jobs += 1;
+                            if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0 {
+                                log::warn!(
+                                    "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
+                                );
+                            }
+                        }
+                    }
+                }
                 TranscriptEvent::SpeechStarted => {
                     let _ = event_app.emit("stt_speech_started", ());
                 }

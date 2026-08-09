@@ -133,13 +133,6 @@ export function getSermonDirectReferences({
   return [...references.values()]
 }
 
-export function directReferenceKey(
-  reference: SermonDirectReference | DetectionResult
-): string {
-  if ("bookNumber" in reference) return reference.key
-  return `${reference.book_number}:${reference.chapter}:${reference.verse}`
-}
-
 export function directReferenceToVerse(
   reference: SermonDirectReference | DetectionResult,
   translationId: number

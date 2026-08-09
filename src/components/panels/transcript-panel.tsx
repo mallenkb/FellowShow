@@ -15,7 +15,7 @@ import {
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { useTranscription } from "@/hooks/use-transcription"
 import { bibleActions } from "@/hooks/use-bible"
-import type { DetectionResult, ReadingAdvance } from "@/types"
+import type { DetectionResult, ReadingAdvance, Verse } from "@/types"
 import {
   buildTranscriptHighlightParts,
   type TranscriptVerseAnnotation,
@@ -78,8 +78,8 @@ function annotationsForSegment(
   )
 }
 
-function selectAnnotation(annotation: TranscriptVerseAnnotation) {
-  bibleActions.selectVerse({
+function fallbackVerse(annotation: TranscriptVerseAnnotation): Verse {
+  return {
     id: 0,
     translation_id: useBibleStore.getState().activeTranslationId,
     book_number: annotation.bookNumber,
@@ -88,12 +88,38 @@ function selectAnnotation(annotation: TranscriptVerseAnnotation) {
     chapter: annotation.chapter,
     verse: annotation.verse,
     text: annotation.verseText,
-  })
+  }
+}
+
+async function loadAnnotationVerse(annotation: TranscriptVerseAnnotation) {
+  const translationId = useBibleStore.getState().activeTranslationId
+  return (
+    (await bibleActions.fetchVerse(
+      annotation.bookNumber,
+      annotation.chapter,
+      annotation.verse,
+      translationId
+    )) ?? fallbackVerse(annotation)
+  )
+}
+
+function selectAnnotation(annotation: TranscriptVerseAnnotation) {
   bibleActions.navigateToVerse(
     annotation.bookNumber,
     annotation.chapter,
     annotation.verse
   )
+  void loadAnnotationVerse(annotation)
+    .then((verse) => {
+      bibleActions.selectVerse(verse)
+    })
+    .catch((error: unknown) => {
+      console.error(
+        `[transcript] Failed to load ${annotation.reference}`,
+        error
+      )
+      bibleActions.selectVerse(fallbackVerse(annotation))
+    })
 }
 
 function HighlightedTranscriptText({
@@ -234,23 +260,7 @@ export function TranscriptPanel() {
     // Auto-navigate book search + select verse for preview/live
     const directHit = highlightedDetections[0]
     if (directHit && directHit.book_number > 0) {
-      // Select verse immediately so preview/live panels update
-      bibleActions.selectVerse({
-        id: 0,
-        translation_id: useBibleStore.getState().activeTranslationId,
-        book_number: directHit.book_number,
-        book_name: directHit.book_name,
-        book_abbreviation: "",
-        chapter: directHit.chapter,
-        verse: directHit.verse,
-        text: directHit.verse_text,
-      })
-      // Navigate book search panel to this verse
-      useBibleStore.getState().setPendingNavigation({
-        bookNumber: directHit.book_number,
-        chapter: directHit.chapter,
-        verse: directHit.verse,
-      })
+      selectAnnotation(annotationFromDetection(directHit))
     }
 
     // Automatic queue entries must come from the exact set rendered as
@@ -280,7 +290,7 @@ export function TranscriptPanel() {
           },
           reference: d.verse_ref,
           confidence: d.confidence,
-          source: "ai-direct",
+          source: "direct",
           added_at: Date.now(),
         })
       }

@@ -4,7 +4,7 @@ use crate::types::VerseRef;
 /// Result of attempting to extract a continuation from text for an incomplete reference.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Continuation {
-    /// Found both chapter and verse: "chapter 3 verse 22"
+    /// Found both chapter and verse: "chapter 3 verse 22" or "3:22"
     ChapterAndVerse(i32, i32),
     /// Found chapter only: "chapter 3" (still waiting for verse)
     ChapterOnly(i32),
@@ -182,6 +182,33 @@ fn try_colon_pattern(tokens: &[Token], book_match: &BookMatch) -> Option<VerseRe
     None
 }
 
+/// Parse colon notation from a continuation after a book/chapter was already
+/// detected. Handles "1:14", "chapter 1:14", and a leading ":14" after the
+/// chapter arrived in an earlier STT chunk.
+fn try_colon_continuation(tokens: &[Token]) -> Option<Continuation> {
+    for i in 0..tokens.len() {
+        if let Some((chapter, chapter_end)) = consume_number_at(tokens, i) {
+            if chapter_end < tokens.len() && matches!(&tokens[chapter_end], Token::Colon) {
+                if let Some((verse, _)) = consume_number(tokens, chapter_end + 1) {
+                    if chapter > 0 && (1..=176).contains(&verse) {
+                        return Some(Continuation::ChapterAndVerse(chapter, verse));
+                    }
+                }
+            }
+        }
+
+        if matches!(&tokens[i], Token::Colon) {
+            if let Some((verse, _)) = consume_number(tokens, i + 1) {
+                if (1..=176).contains(&verse) {
+                    return Some(Continuation::VerseOnly(verse));
+                }
+            }
+        }
+    }
+
+    None
+}
+
 /// Try to parse correction patterns where user corrects themselves mid-speech.
 /// Examples:
 /// - "verse 5 sorry chapter 3" → chapter 3, verse 5
@@ -273,6 +300,19 @@ fn try_chapter_verse_spoken(tokens: &[Token], book_match: &BookMatch) -> Option<
             if w == "chapter" {
                 // Next token(s) should be a number (digit or spoken)
                 if let Some((chapter, next_idx)) = consume_number(tokens, i + 1) {
+                    // Some STT results omit both punctuation and the word
+                    // "verse": "John chapter one fourteen".
+                    if let Some((verse, verse_next)) = consume_number(tokens, next_idx) {
+                        if verse > 0 {
+                            return Some(VerseRef {
+                                book_number: book_match.book_number,
+                                book_name: book_match.book_name.clone(),
+                                chapter,
+                                verse_start: verse,
+                                verse_end: scan_verse_end(tokens, verse_next),
+                            });
+                        }
+                    }
                     // Scan forward (up to 15 tokens) looking for "verse" keyword.
                     // Extended from 12 to 15 to handle longer phrases like:
                     // "let's go to chapter 3 verse 2 to verse 3"
@@ -659,6 +699,14 @@ pub fn try_extract_continuation(text: &str, is_book_only: bool) -> Option<Contin
         return None;
     }
 
+    // Deepgram can split a numeric reference across final chunks. For example,
+    // the book/chapter may arrive as "John chapter" and the next chunk as
+    // "1:14". Check colon notation before the keyword scans so the complete
+    // direct reference is emitted instead of being held as chapter-only.
+    if let Some(continuation) = try_colon_continuation(&tokens) {
+        return Some(continuation);
+    }
+
     // Pattern 1: "chapter N [... verse M]"
     for i in 0..tokens.len() {
         if let Token::Word(w) = &tokens[i] {
@@ -666,6 +714,13 @@ pub fn try_extract_continuation(text: &str, is_book_only: bool) -> Option<Contin
                 if let Some((chapter, next_idx)) = consume_number(&tokens, i + 1) {
                     if chapter <= 0 {
                         continue;
+                    }
+                    // Deepgram may omit the "verse" word in a spoken
+                    // reference, e.g. "chapter one fourteen".
+                    if let Some((verse, _)) = consume_number(&tokens, next_idx) {
+                        if verse > 0 && verse <= 176 {
+                            return Some(Continuation::ChapterAndVerse(chapter, verse));
+                        }
                     }
                     // Scan forward for "verse" keyword (up to 15 tokens)
                     let scan_limit = (next_idx + 15).min(tokens.len());
@@ -740,6 +795,14 @@ mod tests {
     }
 
     #[test]
+    fn test_colon_reference_after_chapter_keyword() {
+        let bm = make_book_match("John", 43, 4);
+        let result = parse_reference("John chapter 1:14", &bm).unwrap();
+        assert_eq!(result.chapter, 1);
+        assert_eq!(result.verse_start, 14);
+    }
+
+    #[test]
     fn test_colon_range() {
         let bm = make_book_match("Romans", 45, 6);
         let text = "Romans 8:28-30 is powerful";
@@ -774,6 +837,14 @@ mod tests {
         let result = parse_reference(text, &bm).unwrap();
         assert_eq!(result.chapter, 53);
         assert_eq!(result.verse_start, 5);
+    }
+
+    #[test]
+    fn test_chapter_spoken_without_verse_keyword() {
+        let bm = make_book_match("John", 43, 4);
+        let result = parse_reference("John chapter one fourteen", &bm).unwrap();
+        assert_eq!(result.chapter, 1);
+        assert_eq!(result.verse_start, 14);
     }
 
     #[test]
@@ -1049,6 +1120,14 @@ mod tests {
         assert_eq!(
             try_extract_continuation("chapter three and I'm reading from verse twenty two", false),
             Some(Continuation::ChapterAndVerse(3, 22))
+        );
+        assert_eq!(
+            try_extract_continuation("1:14", false),
+            Some(Continuation::ChapterAndVerse(1, 14))
+        );
+        assert_eq!(
+            try_extract_continuation("chapter 1:14", false),
+            Some(Continuation::ChapterAndVerse(1, 14))
         );
     }
 

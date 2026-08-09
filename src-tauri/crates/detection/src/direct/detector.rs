@@ -830,6 +830,19 @@ mod tests {
     }
 
     #[test]
+    fn test_split_chapter_colon_reference() {
+        let mut detector = DirectDetector::new();
+        assert!(detector.detect("John chapter").is_empty());
+
+        let results = detector.detect("1:14");
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].verse_ref.book_name, "John");
+        assert_eq!(results[0].verse_ref.chapter, 1);
+        assert_eq!(results[0].verse_ref.verse_start, 14);
+        assert!(!results[0].is_chapter_only);
+    }
+
+    #[test]
     fn test_spoken_reference() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("David in Psalm thirty two verse one now says");

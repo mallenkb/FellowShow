@@ -1,37 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from "react"
-import {
-  BookMarkedIcon,
-  LoaderCircleIcon,
-  ListPlusIcon,
-  PlayIcon,
-  RefreshCwIcon,
-  SparklesIcon,
-  TextIcon,
-} from "lucide-react"
+import { useMemo } from "react"
+import { BookMarkedIcon, ListPlusIcon, PlayIcon, TextIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import {
-  MIN_RELATED_CONTEXT_CHARACTERS,
-  requestRelatedScriptureSuggestions,
-  type RelatedScriptureConfidenceTier,
-  type RelatedScriptureSuggestion,
-} from "@/lib/sermon-ai-related"
-import {
   useBibleStore,
   useBroadcastStore,
   useDetectionStore,
   useQueueStore,
-  useSettingsStore,
   useTranscriptStore,
 } from "@/stores"
-import type { TranscriptSegment, Verse } from "@/types"
+import type { DetectionResult, TranscriptSegment, Verse } from "@/types"
 
-const SEARCH_DEBOUNCE_MS = 900
 const MAX_CONTEXT_SEGMENTS = 6
 const MAX_CONTEXT_CHARACTERS = 1_200
+const MAX_RELATED_SCRIPTURES = 6
+const MIN_RELATED_CONFIDENCE = 0.74
+const REVIEW_CONFIDENCE_THRESHOLD = 0.82
+const HIGH_CONFIDENCE_THRESHOLD = 0.86
+
+type RelatedScriptureConfidenceTier = "high" | "review" | "uncertain"
 
 function recentSermonContext(segments: TranscriptSegment[]) {
   return segments
@@ -43,69 +33,22 @@ function recentSermonContext(segments: TranscriptSegment[]) {
     .trim()
 }
 
-function resultAsVerse(result: RelatedScriptureSuggestion): Verse {
-  return {
-    id: 0,
-    translation_id: useBibleStore.getState().activeTranslationId,
-    book_number: result.book_number,
-    book_name: result.book_name,
-    book_abbreviation: "",
-    chapter: result.chapter,
-    verse: result.verse,
-    text: result.verse_text,
-  }
+function normalizeTranscript(value: string) {
+  return value
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
-function selectScripture(result: RelatedScriptureSuggestion) {
-  const verse = resultAsVerse(result)
-  bibleActions.selectVerse(verse)
-  bibleActions.navigateToVerse(result.book_number, result.chapter, result.verse)
+function detectionKey(detection: DetectionResult) {
+  return `${detection.book_number}:${detection.chapter}:${detection.verse}`
 }
 
-function presentScripture(result: RelatedScriptureSuggestion) {
-  const bible = useBibleStore.getState()
-  const abbreviation =
-    bible.translations.find(
-      (translation) => translation.id === bible.activeTranslationId
-    )?.abbreviation ?? "KJV"
-  useBroadcastStore
-    .getState()
-    .presentOnLive(toVerseRenderData(resultAsVerse(result), abbreviation), null)
-}
-
-function sendScriptureToScroll(result: RelatedScriptureSuggestion) {
-  const broadcast = useBroadcastStore.getState()
-  const id = broadcast.saveTickerMessage({
-    text: result.verse_ref + ": " + result.verse_text,
-    targetOutputIds: broadcast.overlayConfig.logo.logos[0]?.targetOutputIds ?? [
-      "main",
-    ],
-  })
-  broadcast.showTickerMessage(id)
-  toast.success(result.verse_ref + " is scrolling live")
-}
-
-function queueScripture(result: RelatedScriptureSuggestion) {
-  const queue = useQueueStore.getState()
-  const duplicateIndex = queue.findDuplicate(
-    result.book_number,
-    result.chapter,
-    result.verse
-  )
-  if (duplicateIndex !== -1) {
-    queue.flashItem(queue.items[duplicateIndex].id)
-    queue.setActive(duplicateIndex)
-    return
-  }
-  queue.addItem({
-    id: crypto.randomUUID(),
-    verse: resultAsVerse(result),
-    reference: result.verse_ref,
-    confidence: result.confidence,
-    source: "ai-cloud",
-    added_at: Date.now(),
-  })
-  toast.success(result.verse_ref + " added to the queue")
+function confidenceTier(confidence: number): RelatedScriptureConfidenceTier {
+  if (confidence >= HIGH_CONFIDENCE_THRESHOLD) return "high"
+  if (confidence >= REVIEW_CONFIDENCE_THRESHOLD) return "review"
+  return "uncertain"
 }
 
 function confidenceLabel(tier: RelatedScriptureConfidenceTier) {
@@ -130,12 +73,110 @@ function confidenceClassName(tier: RelatedScriptureConfidenceTier) {
   }
 }
 
-function RelatedScriptureRow({
-  result,
-}: {
-  result: RelatedScriptureSuggestion
-}) {
-  const reviewRequired = result.confidenceTier !== "high"
+function getRelatedScriptureDetections(
+  detections: DetectionResult[],
+  transcriptContext: string,
+  directReferences: Set<string>
+) {
+  const normalizedContext = normalizeTranscript(transcriptContext)
+  const unique = new Map<string, DetectionResult>()
+
+  for (const detection of detections) {
+    if (
+      detection.source !== "semantic" ||
+      detection.confidence < MIN_RELATED_CONFIDENCE ||
+      detection.is_chapter_only ||
+      !detection.transcript_snippet.trim() ||
+      directReferences.has(detectionKey(detection))
+    ) {
+      continue
+    }
+
+    const normalizedSnippet = normalizeTranscript(detection.transcript_snippet)
+    if (!normalizedSnippet || !normalizedContext.includes(normalizedSnippet)) {
+      continue
+    }
+
+    const key = detectionKey(detection)
+    const current = unique.get(key)
+    if (!current || detection.confidence > current.confidence) {
+      unique.set(key, detection)
+    }
+  }
+
+  return [...unique.values()]
+    .sort((left, right) => right.confidence - left.confidence)
+    .slice(0, MAX_RELATED_SCRIPTURES)
+}
+
+function resultAsVerse(result: DetectionResult): Verse {
+  return {
+    id: 0,
+    translation_id: useBibleStore.getState().activeTranslationId,
+    book_number: result.book_number,
+    book_name: result.book_name,
+    book_abbreviation: "",
+    chapter: result.chapter,
+    verse: result.verse,
+    text: result.verse_text,
+  }
+}
+
+function selectScripture(result: DetectionResult) {
+  const verse = resultAsVerse(result)
+  bibleActions.selectVerse(verse)
+  bibleActions.navigateToVerse(result.book_number, result.chapter, result.verse)
+}
+
+function presentScripture(result: DetectionResult) {
+  const bible = useBibleStore.getState()
+  const abbreviation =
+    bible.translations.find(
+      (translation) => translation.id === bible.activeTranslationId
+    )?.abbreviation ?? "KJV"
+  useBroadcastStore
+    .getState()
+    .presentOnLive(toVerseRenderData(resultAsVerse(result), abbreviation), null)
+}
+
+function sendScriptureToScroll(result: DetectionResult) {
+  const broadcast = useBroadcastStore.getState()
+  const id = broadcast.saveTickerMessage({
+    text: result.verse_ref + ": " + result.verse_text,
+    targetOutputIds: broadcast.overlayConfig.logo.logos[0]?.targetOutputIds ?? [
+      "main",
+    ],
+  })
+  broadcast.showTickerMessage(id)
+  toast.success(result.verse_ref + " is scrolling live")
+}
+
+function queueScripture(result: DetectionResult) {
+  const queue = useQueueStore.getState()
+  const duplicateIndex = queue.findDuplicate(
+    result.book_number,
+    result.chapter,
+    result.verse
+  )
+  if (duplicateIndex !== -1) {
+    queue.flashItem(queue.items[duplicateIndex].id)
+    queue.setActive(duplicateIndex)
+    return
+  }
+  queue.addItem({
+    id: crypto.randomUUID(),
+    verse: resultAsVerse(result),
+    reference: result.verse_ref,
+    confidence: result.confidence,
+    source: "deepgram",
+    added_at: Date.now(),
+  })
+  toast.success(result.verse_ref + " added to the queue")
+}
+
+function RelatedScriptureRow({ result }: { result: DetectionResult }) {
+  const tier = confidenceTier(result.confidence)
+  const reviewRequired = tier !== "high"
 
   return (
     <article
@@ -158,37 +199,26 @@ function RelatedScriptureRow({
             </h3>
             <Badge
               variant="secondary"
-              className="h-4 px-1.5 text-[0.5rem] uppercase"
+              className="h-4 bg-ai-semantic/15 px-1.5 text-[0.5rem] text-ai-semantic uppercase hover:bg-ai-semantic/15"
             >
-              <SparklesIcon className="size-2.5" /> AI suggestion
+              Deepgram match
             </Badge>
             <Badge
               variant="outline"
               className={
-                "h-4 px-1.5 text-[0.5rem] " +
-                confidenceClassName(result.confidenceTier)
+                "h-4 px-1.5 text-[0.5rem] " + confidenceClassName(tier)
               }
             >
-              {confidenceLabel(result.confidenceTier)} ·{" "}
-              {Math.round(result.confidence * 100)}%
+              {confidenceLabel(tier)} · {Math.round(result.confidence * 100)}%
             </Badge>
           </div>
-          {result.rationale ? (
-            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-              {result.rationale}
-            </p>
-          ) : null}
-          {result.evidenceVerified ? (
-            <p className="mt-1 line-clamp-2 text-[0.625rem] leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">Transcript:</span> “
-              {result.transcriptEvidence}”
-            </p>
-          ) : (
-            <p className="mt-1 text-[0.625rem] leading-relaxed text-amber-700 dark:text-amber-300">
-              Transcript evidence was not verified; review this AI suggestion
-              before using it.
-            </p>
-          )}
+          <p className="mt-1 line-clamp-2 text-[0.625rem] leading-relaxed text-muted-foreground">
+            <span className="font-medium text-foreground">Transcript:</span> “
+            {result.transcript_snippet}”
+          </p>
+          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+            {result.verse_text}
+          </p>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
           <Button
@@ -244,170 +274,56 @@ function RelatedScriptureRow({
   )
 }
 
-export function RelatedScripturesPanel({ isActive }: { isActive: boolean }) {
+export function RelatedScripturesPanel() {
   const segments = useTranscriptStore((state) => state.segments)
   const detections = useDetectionStore((state) => state.detections)
-  const activeTranslationId = useBibleStore(
-    (state) => state.activeTranslationId
-  )
-  const aiConfigured = useSettingsStore((state) =>
-    state.aiProvider === "openai"
-      ? Boolean(state.sermonOpenAiApiKey?.trim())
-      : Boolean(state.openRouterApiKey?.trim())
-  )
   const context = useMemo(() => recentSermonContext(segments), [segments])
   const directReferences = useMemo(
     () =>
-      Array.from(
-        new Set(
-          detections
-            .filter((detection) => detection.source === "direct")
-            .map((detection) => detection.verse_ref)
-        )
+      new Set(
+        detections
+          .filter((detection) => detection.source === "direct")
+          .map(detectionKey)
       ),
     [detections]
   )
-  const directReferencesKey = directReferences.join("\u001f")
-  const requestIdRef = useRef(0)
-  const [refreshKey, setRefreshKey] = useState(0)
-  const [results, setResults] = useState<RelatedScriptureSuggestion[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const hasEnoughContext = context.length >= MIN_RELATED_CONTEXT_CHARACTERS
-  const canSearch = isActive && aiConfigured && hasEnoughContext
-  const visibleResults = canSearch ? results : []
-  const visibleIsSearching = canSearch && isSearching
-  const visibleError = canSearch ? error : null
-
-  useEffect(() => {
-    if (!isActive || !aiConfigured || !hasEnoughContext) {
-      requestIdRef.current += 1
-      return
-    }
-
-    const requestId = ++requestIdRef.current
-    const controller = new AbortController()
-    const timer = window.setTimeout(() => {
-      setIsSearching(true)
-      setError(null)
-      void requestRelatedScriptureSuggestions(
-        context,
-        activeTranslationId,
-        directReferences,
-        controller.signal
-      )
-        .then((relatedScriptures) => {
-          if (requestId !== requestIdRef.current) return
-          setResults(relatedScriptures)
-        })
-        .catch((searchError: unknown) => {
-          if (requestId !== requestIdRef.current) return
-          setError(
-            searchError instanceof Error
-              ? searchError.message
-              : "AI suggestions are unavailable."
-          )
-        })
-        .finally(() => {
-          if (requestId === requestIdRef.current) setIsSearching(false)
-        })
-    }, SEARCH_DEBOUNCE_MS)
-
-    return () => {
-      window.clearTimeout(timer)
-      controller.abort()
-      requestIdRef.current += 1
-    }
-  }, [
-    activeTranslationId,
-    context,
-    directReferences,
-    directReferencesKey,
-    hasEnoughContext,
-    aiConfigured,
-    isActive,
-    refreshKey,
-  ])
+  const results = useMemo(
+    () => getRelatedScriptureDetections(detections, context, directReferences),
+    [context, detections, directReferences]
+  )
+  const hasTranscript = context.length > 0
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2">
-        <div className="min-w-0">
-          <p className="text-[0.6875rem] text-muted-foreground">
-            AI suggestions from the recent transcript
-          </p>
-          <p className="text-[0.5625rem] text-muted-foreground/75">
-            Uncited context only · direct references stay in Sermon
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="xs"
-          disabled={!aiConfigured || !hasEnoughContext || visibleIsSearching}
-          onClick={() => setRefreshKey((current) => current + 1)}
-        >
-          {visibleIsSearching ? (
-            <LoaderCircleIcon className="size-3 animate-spin" />
-          ) : (
-            <RefreshCwIcon className="size-3" />
-          )}
-          Refresh
-        </Button>
+      <div className="shrink-0 border-b border-border px-3 py-2">
+        <p className="text-[0.6875rem] text-muted-foreground">
+          Scripture matches from the live Deepgram transcript
+        </p>
+        <p className="text-[0.5625rem] text-muted-foreground/75">
+          Quoted or closely matching text is checked against the local Bible ·
+          direct references stay in Sermon
+        </p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {!aiConfigured ? (
-          <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
-            <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
-              <SparklesIcon className="size-4" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Configure the selected provider in Settings → AI Model to enable
-              uncited scripture suggestions.
-            </p>
-            <p className="text-[0.625rem] text-muted-foreground/75">
-              Directly spoken references and manual Bible search remain
-              available without AI.
-            </p>
-          </div>
-        ) : !hasEnoughContext ? (
+        {!hasTranscript ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
             <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
               <BookMarkedIcon className="size-4" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Related scripture suggestions will appear after more live
-              transcript is available.
+              Related scriptures will appear when Deepgram transcribes a quoted
+              Bible passage.
             </p>
           </div>
-        ) : visibleIsSearching && visibleResults.length === 0 ? (
-          <div className="flex min-h-full items-center justify-center gap-2 text-xs text-muted-foreground">
-            <LoaderCircleIcon className="size-4 animate-spin" />
-            Asking the configured AI model…
-          </div>
-        ) : visibleError ? (
-          <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
-            <p className="text-xs text-destructive">{visibleError}</p>
-            <p className="text-[0.625rem] text-muted-foreground">
-              Check the selected AI provider or use manual Bible search. No AI
-              suggestion was queued automatically.
-            </p>
-          </div>
-        ) : visibleResults.length === 0 ? (
+        ) : results.length === 0 ? (
           <div className="flex min-h-full items-center justify-center p-6 text-center text-xs text-muted-foreground">
-            No uncited AI suggestions found in the recent transcript.
+            No related scripture matches found in the recent transcript.
           </div>
         ) : (
           <div className="space-y-1.5">
-            {visibleResults.map((result) => (
-              <RelatedScriptureRow
-                key={
-                  result.book_number + ":" + result.chapter + ":" + result.verse
-                }
-                result={result}
-              />
+            {results.map((result) => (
+              <RelatedScriptureRow key={detectionKey(result)} result={result} />
             ))}
           </div>
         )}
