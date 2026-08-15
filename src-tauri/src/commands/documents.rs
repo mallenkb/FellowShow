@@ -213,7 +213,7 @@ fn libreoffice_candidates(resource_dir: Option<&Path>) -> Vec<PathBuf> {
                 .join("document-converter")
                 .join("LibreOffice")
                 .join("program")
-                .join("soffice.exe"),
+                .join("soffice.com"),
         );
 
         #[cfg(target_os = "linux")]
@@ -243,7 +243,7 @@ fn libreoffice_candidates(resource_dir: Option<&Path>) -> Vec<PathBuf> {
                     PathBuf::from(directory)
                         .join("LibreOffice")
                         .join("program")
-                        .join("soffice.exe"),
+                        .join("soffice.com"),
                 );
             }
         }
@@ -377,7 +377,7 @@ mod tests {
         );
         #[cfg(target_os = "windows")]
         let expected = PathBuf::from(
-            "/fellowshow/resources/document-converter/LibreOffice/program/soffice.exe",
+            "/fellowshow/resources/document-converter/LibreOffice/program/soffice.com",
         );
         #[cfg(target_os = "linux")]
         let expected =
