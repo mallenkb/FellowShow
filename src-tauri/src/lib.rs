@@ -182,9 +182,6 @@ pub fn run() {
                 let mut state = managed_state
                     .lock()
                     .unwrap_or_else(std::sync::PoisonError::into_inner);
-                if let Ok(Some(nkjv_id)) = bible_db.get_translation_id_by_abbreviation("NKJV") {
-                    state.active_translation_id = nkjv_id;
-                }
                 state.bible_db = Some(bible_db);
                 drop(state);
                 log::info!("Bible database loaded from {}", db_path.display());

@@ -14,7 +14,7 @@ impl AppState {
     pub fn new() -> Self {
         Self {
             bible_db: None,
-            active_translation_id: 1, // Default to first translation (KJV)
+            active_translation_id: 0, // No translation selected until the user installs one.
             audio_active: Arc::new(AtomicBool::new(false)),
             stt_active: Arc::new(AtomicBool::new(false)),
         }

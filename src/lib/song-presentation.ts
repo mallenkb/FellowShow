@@ -68,7 +68,7 @@ export function presentSong(song: CopSong) {
   const translation =
     bible.translations.find(
       (candidate) => candidate.id === bible.activeTranslationId
-    )?.abbreviation ?? "KJV"
+    )?.abbreviation ?? "Scripture"
 
   useBroadcastStore
     .getState()

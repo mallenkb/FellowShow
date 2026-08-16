@@ -62,7 +62,7 @@ describe("bible store persistence", () => {
       mockGet.mockResolvedValue(5)
       mockInvoke
         .mockRejectedValueOnce(new Error("KJV is not downloaded"))
-        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(0)
       const { hydrateBibleStore, useBibleStore } = await import("./bible-store")
 
       await hydrateBibleStore()
@@ -71,30 +71,30 @@ describe("bible store persistence", () => {
         translationId: 5,
       })
       expect(mockInvoke).toHaveBeenCalledWith("get_active_translation")
-      expect(useBibleStore.getState().activeTranslationId).toBe(1)
-      expect(mockSet).toHaveBeenCalledWith("activeTranslationId", 1)
+      expect(useBibleStore.getState().activeTranslationId).toBe(0)
+      expect(mockSet).toHaveBeenCalledWith("activeTranslationId", 0)
       expect(mockSave).toHaveBeenCalled()
     })
 
     it("uses backend default when stored value is null", async () => {
       mockGet.mockResolvedValue(null)
-      mockInvoke.mockResolvedValue(6)
+      mockInvoke.mockResolvedValue(0)
       const { hydrateBibleStore, useBibleStore } = await import("./bible-store")
 
       await hydrateBibleStore()
 
-      expect(useBibleStore.getState().activeTranslationId).toBe(6)
+      expect(useBibleStore.getState().activeTranslationId).toBe(0)
       expect(mockInvoke).toHaveBeenCalledWith("get_active_translation")
     })
 
     it("uses backend default when stored value is undefined", async () => {
       mockGet.mockResolvedValue(undefined)
-      mockInvoke.mockResolvedValue(6)
+      mockInvoke.mockResolvedValue(0)
       const { hydrateBibleStore, useBibleStore } = await import("./bible-store")
 
       await hydrateBibleStore()
 
-      expect(useBibleStore.getState().activeTranslationId).toBe(6)
+      expect(useBibleStore.getState().activeTranslationId).toBe(0)
       expect(mockInvoke).toHaveBeenCalledWith("get_active_translation")
     })
 

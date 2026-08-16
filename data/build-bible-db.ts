@@ -173,6 +173,7 @@ const requestedTranslations = new Set(
 )
 const includeUndownloadedTranslations =
   process.env.FELLOWSHOW_INCLUDE_UNDOWNLOADED_TRANSLATIONS === "1"
+const metadataOnly = process.env.FELLOWSHOW_METADATA_ONLY === "1"
 
 const TRANSLATIONS_META: Array<{
   file: string
@@ -339,7 +340,7 @@ function main() {
   // Process each translation
   const requestedTranslationOrder = [...requestedTranslations]
   const translationsToBuild =
-    requestedTranslations.size > 0
+    requestedTranslations.size > 0 && !metadataOnly
       ? [
           ...requestedTranslationOrder
             .map((abbreviation) =>
@@ -378,9 +379,23 @@ function main() {
   for (const meta of translationsToBuild) {
     const filePath = join(SOURCES_DIR, meta.file)
     const shouldImportVerses =
-      requestedTranslations.size === 0 ||
-      requestedTranslations.has(meta.abbreviation)
+      !metadataOnly &&
+      (requestedTranslations.size === 0 ||
+        requestedTranslations.has(meta.abbreviation))
     console.log(`  📖 Processing ${meta.abbreviation}...`)
+
+    if (metadataOnly) {
+      insertTranslation.run(
+        meta.abbreviation,
+        meta.title,
+        meta.language,
+        meta.license,
+        meta.isCopyrighted ? 1 : 0,
+        0
+      )
+      console.log(`  ✓ ${meta.abbreviation}: metadata only`)
+      continue
+    }
 
     let raw: string
     try {

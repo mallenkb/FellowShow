@@ -38,8 +38,6 @@ const DIST_DB_PATH = join(DIST_DIR, "fellowshow.db")
 const DB_PATH = DIST_DB_PATH
 const MANIFEST_PATH = join(DIST_DIR, "content-manifest.json")
 const PACKS_DIR = join(DIST_DIR, "packs")
-// Translations that ship inside the app and never need downloading.
-const BUNDLED_TRANSLATIONS = new Set(["NKJV", "NIV", "WASNA"])
 const PREBUILT_PACKS = new Map([["ATWI", join(DATA_DIR, "atwi.db")]])
 
 type R2Target = {
@@ -184,11 +182,7 @@ function buildPacksAndManifest(version: string, prefix: string) {
         "SELECT abbreviation FROM translations WHERE is_downloaded = 1 ORDER BY id"
       )
       .all() as Array<{ abbreviation: string }>
-  )
-    .map((row) => row.abbreviation)
-    .filter(
-      (abbreviation) => !BUNDLED_TRANSLATIONS.has(abbreviation.toUpperCase())
-    )
+  ).map((row) => row.abbreviation)
   source.close()
 
   const prebuiltAbbreviations = [...PREBUILT_PACKS.entries()]

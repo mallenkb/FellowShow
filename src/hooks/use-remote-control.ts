@@ -175,7 +175,7 @@ async function presentQueueItem(index: number) {
     const translation =
       bibleState.translations.find(
         (t) => t.id === bibleState.activeTranslationId
-      )?.abbreviation ?? "KJV"
+      )?.abbreviation ?? "Scripture"
 
     bibleState.selectVerse(verseToPresent)
     useBroadcastStore

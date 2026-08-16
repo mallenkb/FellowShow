@@ -170,7 +170,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     slides.find((slide) => slide.id === selectedSlideId) ?? null
   const translation =
     translations.find((t) => t.id === activeTranslationId)?.abbreviation ??
-    "KJV"
+    "Scripture"
 
   const timer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null

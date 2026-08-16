@@ -39,7 +39,7 @@ Generated and third-party runtime assets are not part of the MIT-licensed source
 - **Interactive onboarding tutorial** — 11-step guided tour covering all panels, auto-launches on first startup
 - **Light/dark mode** with system theme detection (light, dark, or follow OS)
 - **Settings persistence** — all preferences auto-saved to disk across restarts
-- **Cross-platform** — Windows, macOS, and Linux
+- **Cross-platform runtime** — Windows, macOS, and Linux support in the app; published installers currently target Windows and macOS
 - **Remote control** via OSC and HTTP API for hardware controllers and automation
   - [Remote control guide](documentation/remote-control.md) — Stream Deck, TouchOSC, REST API integration
 
@@ -186,8 +186,14 @@ python3 data/precompute-embeddings.py  # Precompute embeddings (GPU or ONNX fall
 ### Run in development
 
 ```bash
-bun run tauri dev
+bun run dev:fast
+# or: bun run tauri dev
 ```
+
+`dev:fast` uses a Tauri development configuration that skips staging and
+packaging the LibreOffice converter. Office document imports in this mode use
+a supported converter installed on the development machine. PDFs, images, and
+videos keep their normal import behavior.
 
 ### Build for production
 
@@ -195,34 +201,30 @@ bun run tauri dev
 bun run tauri build
 ```
 
-Release installers bundle one SQLite database listed in
-`src-tauri/tauri.conf.json`: `data/fellowshow.db`. The default release database
-contains these Bible translations with full verse text:
+Production and release builds stage the LibreOffice converter and remain
+self-contained for office document imports. Their SQLite database contains the
+translation catalog only, with no embedded verse text. Every Bible version,
+including NKJV, NIV, and WASNA, is downloaded on demand from Cloudflare R2.
+Existing installations keep their writable app-data database and downloaded
+translation packs when they update. New installations start in a no-Scripture
+state and can download versions from Settings.
 
-- NKJV — New King James Version
-- NIV — New International Version
-- WASNA — Asante Twi Contemporary Bible
-
-The remaining supported translations, including ATWI/Twerɛ Kronkron (2012), are
-listed as downloadable metadata and their verse packs are fetched from R2.
-ATWI’s external pack is `data/atwi.db` and is published as `packs/atwi.db`; it is
-not bundled into the installer. To build the default database, place licensed
-exports at
-`data/sources/NIV.json` and `data/sources/NKJV.json`, then run:
+The normal release command is:
 
 ```bash
 bun run release:bundled
 ```
 
-That command downloads the open Asante Twi source, verifies the licensed source
-files, builds `data/fellowshow.db` with WASNA, NIV, and NKJV, and then runs the
-Tauri release build. It does not download or bundle song assets.
+It rebuilds the metadata-only release catalog, stages the document converter,
+and runs the full Tauri release build. It does not download or bundle song
+assets. The GitHub release workflow currently publishes Windows and macOS
+artifacts only; Linux compatibility code remains in the repository.
 
-### Publish bundled content to R2
+### Publish Bible content to R2
 
-FellowShow can publish the same release database to Cloudflare R2 for future
-content update flows. The publisher prefers Wrangler with a Cloudflare API token
-and can also use R2's S3-compatible API through the AWS CLI.
+FellowShow publishes downloadable translation packs to Cloudflare R2. The
+publisher prefers Wrangler with a Cloudflare API token and can also use R2's
+S3-compatible API through the AWS CLI.
 
 Create a local `.env` from `.env.example` or set these variables in CI:
 
@@ -238,19 +240,20 @@ Then run:
 bun run release:r2
 ```
 
-That command rebuilds `data/fellowshow.db` from every available translation
-source in `data/sources`, adds the prebuilt ATWI pack from `data/atwi.db`, writes
+That command builds packs from every available translation source in
+`data/sources`, adds the prebuilt ATWI pack from `data/atwi.db`, writes
 `data/dist/content-manifest.json`, and uploads:
 
 ```text
-content/v<app-version>/fellowshow.db
+content/v<app-version>/packs/*.db
 content/v<app-version>/content-manifest.json
 content/latest/content-manifest.json
 ```
 
-The ATWI entry in the manifest points to `packs/atwi.db`. If you have a newer
-TK2012 Access source, set `TK2012_BIB_PATH` before running the release command
-to regenerate that pack first.
+All published translations, including NKJV, NIV, and WASNA, are eligible for
+download. The ATWI entry in the manifest points to `packs/atwi.db`. If you have
+a newer TK2012 Access source, set `TK2012_BIB_PATH` before running the release
+command to regenerate that pack first.
 
 To let the desktop app download published translation packs at runtime, expose
 the R2 objects through a public/custom domain and set one of:
@@ -322,6 +325,7 @@ fellowshow/
 |---|---|
 | `setup:all` | **Full setup** — runs all data/model/embedding phases (idempotent) |
 | `dev` | Start Vite dev server (port 3000) |
+| `dev:fast` | Start the Tauri app without staging or packaging LibreOffice |
 | `build` | TypeScript check + Vite production build |
 | `tauri` | Run Tauri CLI commands |
 | `test` | Run Vitest tests |

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
+  "build": {
+    "beforeBuildCommand": "bun run build"
+  },
+  "bundle": {
+    "active": false,
+    "resources": {
+      "../data/fellowshow.db": "fellowshow.db"
+    }
+  }
+}

@@ -32,7 +32,7 @@ function activeTranslationAbbreviation() {
   return (
     bible.translations.find(
       (translation) => translation.id === bible.activeTranslationId
-    )?.abbreviation ?? "KJV"
+    )?.abbreviation ?? "Scripture"
   )
 }
 

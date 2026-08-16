@@ -25,6 +25,10 @@ async function loadBooks(translationId?: number) {
   }
 
   const id = translationId ?? useBibleStore.getState().activeTranslationId
+  if (id <= 0) {
+    useBibleStore.getState().setBooks([])
+    return []
+  }
   const books = await invoke("list_books", { translationId: id })
   useBibleStore.getState().setBooks(books)
   return books
@@ -41,6 +45,10 @@ async function loadChapter(
   }
 
   const id = translationId ?? useBibleStore.getState().activeTranslationId
+  if (id <= 0) {
+    useBibleStore.getState().setCurrentChapter([])
+    return []
+  }
   const verses = await invoke("get_chapter", {
     translationId: id,
     bookNumber,
@@ -59,6 +67,7 @@ async function fetchVerse(
   if (!isTauri()) return null
 
   const id = translationId ?? useBibleStore.getState().activeTranslationId
+  if (id <= 0) return null
   return invoke("get_verse", {
     translationId: id,
     bookNumber,
@@ -74,6 +83,10 @@ async function searchVerses(query: string, limit = 20, translationId?: number) {
   }
 
   const id = translationId ?? useBibleStore.getState().activeTranslationId
+  if (id <= 0) {
+    useBibleStore.getState().setSearchResults([])
+    return []
+  }
   const results = await invoke("search_verses", {
     query,
     translationId: id,
@@ -85,6 +98,11 @@ async function searchVerses(query: string, limit = 20, translationId?: number) {
 
 async function semanticSearch(query: string, limit = 10) {
   if (!isTauri()) {
+    useBibleStore.getState().setSemanticResults([])
+    return []
+  }
+
+  if (useBibleStore.getState().activeTranslationId <= 0) {
     useBibleStore.getState().setSemanticResults([])
     return []
   }

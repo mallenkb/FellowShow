@@ -32,35 +32,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/fellowshow.db
-          key: bible-db-bundled-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/prepare-release-bible.ts', 'data/download-sources.ts', 'data/download-asante-twi.ts', 'data/download-biblegateway.py') }}
-
-      - name: Set up Python
-        if: steps.bible-db-cache.outputs.cache-hit != 'true'
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+          key: bible-db-catalog-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/prepare-release-bible.ts') }}
 
       - name: Install dependencies
         if: steps.bible-db-cache.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
-
-      - name: Install BibleGateway downloader dependency
-        if: steps.bible-db-cache.outputs.cache-hit != 'true'
-        run: python -m pip install meaningless
-
-      - name: Download Bible source data
-        if: steps.bible-db-cache.outputs.cache-hit != 'true'
-        env:
-          BIBLEGATEWAY_BOOK_DELAY: "1"
-          BIBLEGATEWAY_TRANSLATIONS: "NKJV,NIV"
-          PYTHONUTF8: "1"
-        run: |
-          bun run download:bible-data
-          python data/download-biblegateway.py
-
-      - name: Download Asante Twi source data
-        if: steps.bible-db-cache.outputs.cache-hit != 'true'
-        run: bun run download:asante-twi
 
       - name: Build Bible database
         if: steps.bible-db-cache.outputs.cache-hit != 'true'
@@ -69,7 +45,7 @@ jobs:
       - name: Verify Bible database
         run: |
           test -s data/fellowshow.db
-          bun -e "const { Database } = require('bun:sqlite'); const db = new Database('data/fellowshow.db'); console.log(db.query('select count(*) as count from translations').get().count + ' translations'); console.log(db.query('select count(*) as count from verses').get().count + ' verses');"
+          bun -e "const { Database } = require('bun:sqlite'); const db = new Database('data/fellowshow.db'); const translations = db.query('select count(*) as count from translations').get().count; const verses = db.query('select count(*) as count from verses').get().count; console.log(translations + ' translation catalog entries'); console.log(verses + ' embedded verses'); if (verses !== 0) process.exit(1);"
 
       - name: Upload Bible database
         uses: actions/upload-artifact@v4
@@ -105,18 +81,6 @@ jobs:
               src-tauri/target/release/bundle/macos/latest.json
               src-tauri/target/release/bundle/dmg/*.dmg.sig
               src-tauri/target/release/bundle/dmg/latest.json
-          - name: Linux packages
-            os: ubuntu-24.04
-            bundle_args: --bundles deb,appimage
-            artifact_name: fellowshow-linux-packages
-            artifact_path: |
-              src-tauri/target/release/bundle/deb/*.deb
-              src-tauri/target/release/bundle/deb/*.deb.sig
-              src-tauri/target/release/bundle/deb/latest.json
-              src-tauri/target/release/bundle/appimage/*.AppImage
-              src-tauri/target/release/bundle/appimage/*.AppImage.sig
-              src-tauri/target/release/bundle/appimage/latest.json
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4

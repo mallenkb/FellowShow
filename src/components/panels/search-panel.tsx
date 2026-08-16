@@ -89,6 +89,7 @@ import { useSongSearch } from "@/components/panels/search/use-song-search"
 import { usePresentationDocumentImport } from "@/components/panels/search/use-presentation-document-import"
 import { cachePresentationMedia } from "@/lib/presentation-media"
 import { PRESENTATION_DOCUMENT_EXTENSIONS } from "@/lib/presentation-documents"
+import { ScriptureDownloadPrompt } from "@/components/panels/scripture-download-prompt"
 
 type SearchTab =
   | "book"
@@ -130,6 +131,7 @@ export function SearchPanel({
 }) {
   const [activeTab, setActiveTab] = useState<SearchTab>("book")
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
+  const [selectedBookTranslationId, setSelectedBookTranslationId] = useState(0)
   const [chapter, setChapter] = useState(1)
   const [selectedVerseId, setSelectedVerseId] = useState<number | null>(null)
   const [contextQuery, setContextQuery] = useState("")
@@ -164,6 +166,7 @@ export function SearchPanel({
   const [quickInput, setQuickInput] = useState("")
   const [showQuickVerses, setShowQuickVerses] = useState(false)
   const [quickVersesList, setQuickVersesList] = useState<Verse[]>([])
+  const [quickVersesTranslationId, setQuickVersesTranslationId] = useState(0)
 
   const quickInputRef = useRef<HTMLInputElement>(null)
   const presentationInputRef = useRef<HTMLInputElement>(null)
@@ -512,32 +515,47 @@ export function SearchPanel({
     renderLimit: songRenderLimit,
   })
 
-  const selectedBookNumber = selectedBook?.book_number
+  const activeSelectedBook =
+    selectedBookTranslationId === activeTranslationId ? selectedBook : null
+  const selectedBookNumber = activeSelectedBook?.book_number
   const activeTranslationAbbreviation =
     translations.find((translation) => translation.id === activeTranslationId)
       ?.abbreviation ?? ""
-  const selectedBookLabel = selectedBook
+  const selectedBookLabel = activeSelectedBook
     ? formatBibleBookName(
-        selectedBook.name,
-        selectedBook.book_number,
+        activeSelectedBook.name,
+        activeSelectedBook.book_number,
         activeTranslationAbbreviation
       )
     : null
 
-  // Load initial data and default to Genesis 1:1
+  const hasAvailableScripture =
+    activeTranslationId > 0 && translations.length > 0
+
+  // Load the translation catalog without selecting a version.
   useEffect(() => {
     bibleActions.loadTranslations().catch(console.error)
-    bibleActions
-      .loadBooks()
-      .then(() => {
-        useBibleStore.getState().setPendingNavigation({
-          bookNumber: 1,
-          chapter: 1,
-          verse: 1,
-        })
-      })
-      .catch(console.error)
   }, [])
+
+  // Refresh books when the user selects a downloaded translation in Settings.
+  useEffect(() => {
+    if (activeTranslationId <= 0) {
+      useBibleStore.getState().setBooks([])
+      useBibleStore.getState().setCurrentChapter([])
+      return
+    }
+    bibleActions.loadBooks(activeTranslationId).catch(console.error)
+  }, [activeTranslationId])
+
+  // Select Genesis 1:1 only after a real translation has been installed.
+  useEffect(() => {
+    if (activeTab !== "book" || activeSelectedBook || books.length === 0) return
+    useBibleStore.getState().setPendingNavigation({
+      bookNumber: 1,
+      chapter: 1,
+      verse: 1,
+    })
+  }, [activeSelectedBook, activeTab, books.length])
 
   // Load chapter when book + chapter are set
   useEffect(() => {
@@ -573,9 +591,10 @@ export function SearchPanel({
     (book: Book, navChapter: number) => {
       setSearchTab("book")
       setSelectedBook(book)
+      setSelectedBookTranslationId(activeTranslationId)
       setChapter(navChapter)
     },
-    [setSearchTab]
+    [activeTranslationId, setSearchTab]
   )
 
   // Auto-navigate when a detection or "Present" click sets pendingNavigation
@@ -701,6 +720,11 @@ export function SearchPanel({
       const requestId = ++contextSearchRequestIdRef.current
       const isStale = () => requestId !== contextSearchRequestIdRef.current
 
+      if (translationId <= 0) {
+        useBibleStore.getState().setSemanticResults([])
+        return
+      }
+
       // Primary: hybrid search backend (combines vector + FTS5 BM25)
       const hybridResults = await invoke("semantic_search", {
         query,
@@ -768,6 +792,8 @@ export function SearchPanel({
   useEffect(() => {
     const result = autocompleteResult
 
+    if (activeTranslationId <= 0) return
+
     if (result.matchedBook && result.chapter && result.verse) {
       useBibleStore.getState().setPendingNavigation({
         bookNumber: result.matchedBook.book_number,
@@ -799,6 +825,7 @@ export function SearchPanel({
       })
         .then((verses) => {
           setQuickVersesList(verses)
+          setQuickVersesTranslationId(activeTranslationId)
           setShowQuickVerses(true)
         })
         .catch(console.error)
@@ -807,6 +834,8 @@ export function SearchPanel({
 
   // Derive dropdown visibility: only show when autocomplete stage is chapter/verse
   const shouldShowVerseDropdown =
+    activeTranslationId > 0 &&
+    quickVersesTranslationId === activeTranslationId &&
     showQuickVerses &&
     (autocompleteResult.stage === "chapter" ||
       autocompleteResult.stage === "verse")
@@ -883,18 +912,14 @@ export function SearchPanel({
     const translationsById = new Map(
       translations.map((translation) => [translation.id, translation])
     )
-    const nkjv = translations.find(
-      (translation) => translation.abbreviation === "NKJV"
-    )
     const pinned = pinnedTranslationIds
       .map((id) => translationsById.get(id))
       .filter(
         (translation): translation is (typeof translations)[number] =>
-          translation !== undefined && translation.abbreviation !== "NKJV"
+          translation !== undefined
       )
 
-    const orderedPinned = nkjv ? [nkjv, ...pinned] : pinned
-    if (orderedPinned.length > 0) return orderedPinned
+    if (pinned.length > 0) return pinned
 
     const activeTranslation = translationsById.get(activeTranslationId)
     return activeTranslation ? [activeTranslation] : []
@@ -1017,7 +1042,7 @@ export function SearchPanel({
           </button>
         </div>
 
-        {activeTab === "book" ? (
+        {activeTab === "book" && hasAvailableScripture ? (
           <>
             <div className="flex min-w-0 items-center gap-2">
               {/* EasyWorship-style autocomplete */}
@@ -1084,7 +1109,7 @@ export function SearchPanel({
             </div>
             {pinnedTranslationRow}
           </>
-        ) : activeTab === "context" ? (
+        ) : activeTab === "context" && hasAvailableScripture ? (
           <>
             <div className="flex min-w-0 items-center gap-2">
               <Input
@@ -1180,17 +1205,19 @@ export function SearchPanel({
       {/* Quick nav tab */}
 
       {/* Book search tab */}
-      {activeTab === "book" && (
+      {activeTab === "book" && !hasAvailableScripture ? (
+        <ScriptureDownloadPrompt />
+      ) : activeTab === "book" ? (
         <>
           {/* STICKY: Chapter header */}
 
           <div className="flex min-h-9 shrink-0 items-center justify-between px-3 py-2">
-            {selectedBook ? (
+            {activeSelectedBook ? (
               <h3 className="text-sm font-semibold text-foreground">
                 {selectedBookLabel} {chapter}
               </h3>
             ) : null}
-            {selectedBook ? (
+            {activeSelectedBook ? (
               <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
@@ -1320,10 +1347,12 @@ export function SearchPanel({
             </div>
           </div>
         </>
-      )}
+      ) : null}
 
       {/* Context search tab — semantic AI search */}
-      {activeTab === "context" && (
+      {activeTab === "context" && !hasAvailableScripture ? (
+        <ScriptureDownloadPrompt />
+      ) : activeTab === "context" ? (
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="flex flex-col gap-0 p-2">
             {contextQuery.length < 5 && (
@@ -1468,7 +1497,7 @@ export function SearchPanel({
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Songs tab */}
       {activeTab === "songs" && (

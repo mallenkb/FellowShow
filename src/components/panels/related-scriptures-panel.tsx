@@ -133,7 +133,7 @@ function presentScripture(result: DetectionResult) {
   const abbreviation =
     bible.translations.find(
       (translation) => translation.id === bible.activeTranslationId
-    )?.abbreviation ?? "KJV"
+    )?.abbreviation ?? "Scripture"
   useBroadcastStore
     .getState()
     .presentOnLive(toVerseRenderData(resultAsVerse(result), abbreviation), null)

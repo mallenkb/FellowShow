@@ -30,10 +30,13 @@ FellowShow is a Tauri v2 desktop app. The frontend is React 19 + TypeScript + Ta
 3. Run the Tauri dev shell:
 
    ```sh
-   bun run tauri dev
+   bun run dev:fast
    ```
 
-   This starts the Vite dev server and launches the desktop app. The first Rust build takes a while; later runs are incremental.
+   This starts the Vite dev server and launches the desktop app without
+   staging the LibreOffice converter. Use `bun run tauri dev` when you need the
+   full development configuration. The first Rust build takes a while; later
+   runs are incremental.
 
 ### Bible data, models, and embeddings
 
@@ -84,6 +87,7 @@ Frontend and top-level commands:
 
 | Command | What it does |
 |---|---|
+| `bun run dev:fast` | Run the app without staging or packaging LibreOffice |
 | `bun run tauri dev` | Run the full app (Vite + Tauri) |
 | `bun run tauri build` | Produce a platform installer |
 | `bun run dev` | Run the frontend only on the Vite dev server |
@@ -203,7 +207,9 @@ cargo test
 - **New features** need a convincing reason. If there isn't an issue with maintainer agreement that the feature is wanted, open one (or a discussion) before writing code.
 - **Bug fixes**: reference the issue in the PR title if one exists, e.g. `fix: handle missing NDI library on Linux (fix #123)`. Include reproduction steps. Add test coverage when practical.
 - **UI changes**: include a screenshot or a short recording. The PR template has a slot for it.
-- **Cross-platform work**: FellowShow ships on macOS, Windows, and Linux. If you only tested on one, say so — the "Tested on" checklist is how we know.
+- **Cross-platform work**: FellowShow supports macOS, Windows, and Linux in
+  the app. Release artifacts currently target Windows and macOS. If you only
+  tested on one, say so, the "Tested on" checklist is how we know.
 - **PR title** must follow the [Commit message format](#commit-message-format). It becomes the merge commit message and shows up in release notes.
 - Multiple small commits during review are fine; they'll be squashed on merge.
 

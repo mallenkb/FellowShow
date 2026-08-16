@@ -79,13 +79,9 @@ function TranslationGroup({
       </div>
       <div className="rounded-md border border-border">
         {translations.map((t) => {
-          const isRequiredPinned = t.abbreviation === "NKJV"
           const isDownloaded = t.is_downloaded
-          const isPinned =
-            isRequiredPinned ||
-            (isDownloaded && pinnedTranslationIds.includes(t.id))
-          const isHidden =
-            !isRequiredPinned && hiddenTranslationIds.includes(t.id)
+          const isPinned = isDownloaded && pinnedTranslationIds.includes(t.id)
+          const isHidden = hiddenTranslationIds.includes(t.id)
           const isDownloading = downloadingTranslation === t.abbreviation
           const isAnotherDownloadActive =
             downloadingTranslation !== null && !isDownloading
@@ -136,19 +132,15 @@ function TranslationGroup({
                     variant="ghost"
                     size="icon-xs"
                     className={
-                      isPinned || isRequiredPinned
-                        ? "text-primary"
-                        : "text-muted-foreground"
+                      isPinned ? "text-primary" : "text-muted-foreground"
                     }
                     onClick={() => onTogglePinned(t.id)}
-                    disabled={isRequiredPinned || !isDownloaded}
+                    disabled={!isDownloaded}
                     aria-label={`${isPinned ? "Unpin" : "Pin"} ${t.abbreviation}`}
                   >
                     <PinIcon
                       className={
-                        isPinned || isRequiredPinned
-                          ? "size-3.5 fill-current"
-                          : "size-3.5"
+                        isPinned ? "size-3.5 fill-current" : "size-3.5"
                       }
                     />
                   </Button>
@@ -166,7 +158,7 @@ function TranslationGroup({
                       <Switch
                         checked={!isHidden}
                         onCheckedChange={() => onToggleHidden(t.id)}
-                        disabled={t.id === activeId || isRequiredPinned}
+                        disabled={t.id === activeId}
                         aria-label={`${isHidden ? "Show" : "Hide"} ${t.abbreviation}`}
                       />
                     </>
@@ -221,7 +213,7 @@ function TranslationGroup({
 
 export function BibleSection() {
   const [translations, setTranslations] = useState<TranslationInfo[]>([])
-  const [activeId, setActiveId] = useState<number>(1)
+  const [activeId, setActiveId] = useState<number>(0)
   const [loading, setLoading] = useState(true)
   const [downloadingTranslation, setDownloadingTranslation] = useState<
     string | null
@@ -399,20 +391,13 @@ export function BibleSection() {
   const hiddenInstalledCount = hiddenTranslationIds.filter((id) =>
     installedTranslations.some((translation) => translation.id === id)
   ).length
-  const nkjvTranslation = translations.find(
-    (translation) =>
-      translation.abbreviation === "NKJV" && translation.is_downloaded
-  )
   const orderedPinnedTranslations = pinnedTranslationIds
     .map((id) => translations.find((translation) => translation.id === id))
     .filter(
       (translation): translation is TranslationInfo =>
         translation !== undefined && translation.is_downloaded
     )
-  const pinnedTranslations =
-    nkjvTranslation && !pinnedTranslationIds.includes(nkjvTranslation.id)
-      ? [nkjvTranslation, ...orderedPinnedTranslations]
-      : orderedPinnedTranslations
+  const pinnedTranslations = orderedPinnedTranslations
   const previewPinnedTranslations =
     draggedPinnedTranslationId !== null && pinnedDropIndex !== null
       ? (() => {
@@ -710,11 +695,9 @@ export function BibleSection() {
                               setPinnedDropIndex(null)
                               setTranslationDropTarget(null)
                             }}
-                            onClick={() => {
-                              if (translation.abbreviation !== "NKJV") {
-                                togglePinnedTranslation(translation.id)
-                              }
-                            }}
+                            onClick={() =>
+                              togglePinnedTranslation(translation.id)
+                            }
                             className={`cursor-grab rounded-md border border-primary/35 bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition hover:bg-primary/15 active:cursor-grabbing ${
                               draggedPinnedTranslationId === translation.id
                                 ? "opacity-50"

@@ -34,7 +34,7 @@ interface BibleState {
 
 export const useBibleStore = create<BibleState>((set) => ({
   translations: [],
-  activeTranslationId: 1,
+  activeTranslationId: 0,
   books: [],
   searchResults: [],
   semanticResults: [],

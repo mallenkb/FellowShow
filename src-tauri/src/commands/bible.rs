@@ -345,6 +345,11 @@ pub fn set_active_translation(
     translation_id: i64,
 ) -> Result<i64, String> {
     let mut app_state = state.lock().map_err(|e| e.to_string())?;
+    if translation_id == 0 {
+        app_state.active_translation_id = 0;
+        log::info!("[BIBLE] Active translation cleared");
+        return Ok(0);
+    }
     if app_state.active_translation_id == translation_id {
         return Ok(translation_id);
     }
