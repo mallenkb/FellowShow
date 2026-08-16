@@ -60,9 +60,9 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   }
   const currentTimer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null
-    const timerBackgroundMediaType =
-      timerBackgroundOptions.find((option) => option.url === timerBackgroundUrl)
-        ?.mediaType ?? "image"
+    const timerBackground = timerBackgroundOptions.find(
+      (option) => option.url === timerBackgroundUrl
+    )
     return {
       remainingSeconds: timerRemaining,
       totalSeconds: timerTotal,
@@ -70,7 +70,8 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
       isFinished: timerRemaining === 0,
       fontFamily: timerFontFamily,
       backgroundUrl: timerBackgroundUrl,
-      backgroundMediaType: timerBackgroundMediaType,
+      backgroundMediaType: timerBackground?.mediaType ?? "image",
+      backgroundPlaybackStartedAt: timerBackground?.playbackStartedAt,
     }
   }, [
     timerBackgroundOptions,

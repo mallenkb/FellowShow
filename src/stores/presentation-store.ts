@@ -7,6 +7,7 @@ export interface PresentationSlide {
   name: string
   url: string
   mediaType?: "image" | "video"
+  playbackStartedAt?: number
   createdAt: number
   pinned: boolean
   locked: boolean
@@ -120,12 +121,22 @@ export const usePresentationStore = create<PresentationState>((set) => ({
   selectedPageId: null,
 
   addSlides: (slides) =>
-    set((state) => ({
-      slides: [...state.slides, ...slides],
-      selectedSlideId: slides[0]?.id ?? state.selectedSlideId,
-      selectedDocumentId: slides.length > 0 ? null : state.selectedDocumentId,
-      selectedPageId: slides.length > 0 ? null : state.selectedPageId,
-    })),
+    set((state) => {
+      const playbackStartedAt = Date.now()
+      const normalizedSlides = slides.map((slide) =>
+        slide.mediaType === "video" && slide.playbackStartedAt === undefined
+          ? { ...slide, playbackStartedAt }
+          : slide
+      )
+      return {
+        slides: [...state.slides, ...normalizedSlides],
+        selectedSlideId: normalizedSlides[0]?.id ?? state.selectedSlideId,
+        selectedDocumentId:
+          normalizedSlides.length > 0 ? null : state.selectedDocumentId,
+        selectedPageId:
+          normalizedSlides.length > 0 ? null : state.selectedPageId,
+      }
+    }),
 
   selectSlide: (selectedSlideId) =>
     set(

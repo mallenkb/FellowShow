@@ -46,6 +46,7 @@ function bytesToDataUrl(bytes: Uint8Array, mime: string): string {
 export async function pickThemeBackgroundMedia(): Promise<{
   url: string
   mediaType: "image" | "video"
+  playbackStartedAt?: number
 } | null> {
   const selected = await open({
     multiple: false,
@@ -85,7 +86,11 @@ export async function pickThemeBackgroundMedia(): Promise<{
       ? (await cacheMediaBytes(bytes, fileName, mime)).url
       : bytesToDataUrl(bytes, mime)
 
-  return { url, mediaType }
+  return {
+    url,
+    mediaType,
+    playbackStartedAt: mediaType === "video" ? Date.now() : undefined,
+  }
 }
 
 /**
@@ -96,6 +101,7 @@ export async function pickTimerBackgroundMedia(): Promise<{
   url: string
   name: string
   mediaType: "image" | "video"
+  playbackStartedAt?: number
 } | null> {
   const selected = await open({
     multiple: false,
@@ -140,7 +146,12 @@ export async function pickTimerBackgroundMedia(): Promise<{
           .url
       : bytesToDataUrl(bytes, mime)
 
-  return { url, name, mediaType }
+  return {
+    url,
+    name,
+    mediaType,
+    playbackStartedAt: mediaType === "video" ? Date.now() : undefined,
+  }
 }
 
 /**
@@ -208,7 +219,14 @@ export async function importTheme(
       background: image
         ? {
             ...parsed.background,
-            image: { ...image, mediaType: inferredMediaType },
+            image: {
+              ...image,
+              mediaType: inferredMediaType,
+              playbackStartedAt:
+                inferredMediaType === "video"
+                  ? (image.playbackStartedAt ?? Date.now())
+                  : undefined,
+            },
           }
         : parsed.background,
       id: crypto.randomUUID(),
@@ -256,6 +274,7 @@ export async function importTheme(
       image: {
         url,
         mediaType,
+        playbackStartedAt: mediaType === "video" ? now : undefined,
         fit: "cover",
         blur: 0,
         brightness: 100,

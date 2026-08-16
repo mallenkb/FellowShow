@@ -7,6 +7,26 @@ export interface CachedPresentationMedia {
   filePath: string | null
 }
 
+const MEDIA_MIME_BY_EXTENSION: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  bmp: "image/bmp",
+  svg: "image/svg+xml",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  mov: "video/quicktime",
+  m4v: "video/mp4",
+}
+
+function mediaMimeType(blob: Blob, originalName: string): string {
+  if (blob.type) return blob.type
+  const extension = originalName.split(".").pop()?.toLowerCase() ?? ""
+  return MEDIA_MIME_BY_EXTENSION[extension] ?? "application/octet-stream"
+}
+
 function bytesToDataUrl(bytes: Uint8Array, mimeType: string): string {
   let binary = ""
   for (const byte of bytes) binary += String.fromCharCode(byte)
@@ -42,7 +62,7 @@ export async function cachePresentationMediaAsset(
   return cacheMediaBytes(
     new Uint8Array(await blob.arrayBuffer()),
     originalName,
-    blob.type
+    mediaMimeType(blob, originalName)
   )
 }
 

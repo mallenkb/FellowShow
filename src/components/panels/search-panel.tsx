@@ -240,6 +240,7 @@ export function SearchPanel({
             url: slide.url,
             name: slide.name,
             mediaType: slide.mediaType,
+            playbackStartedAt: slide.playbackStartedAt,
             fit: slide.fit,
             scale: slide.scale,
             offsetX: slide.offsetX,
@@ -273,10 +274,14 @@ export function SearchPanel({
     async (files: FileList | null) => {
       if (!files || files.length === 0) return
 
-      const mediaFiles = Array.from(files).filter(
-        (file) =>
-          file.type.startsWith("image/") || file.type.startsWith("video/")
-      )
+      const mediaFiles = Array.from(files).filter((file) => {
+        const extension = file.name.split(".").pop()?.toLowerCase() ?? ""
+        return (
+          file.type.startsWith("image/") ||
+          file.type.startsWith("video/") ||
+          PRESENTATION_MEDIA_EXTENSION_SET.has(extension)
+        )
+      })
       let slides: Array<{
         id: string
         name: string
@@ -298,7 +303,11 @@ export function SearchPanel({
             // Cache media once, then give both webviews an asset URL. This avoids
             // copying a large video into each broadcast event as a data URL.
             url: await cachePresentationMedia(file, file.name),
-            mediaType: file.type.startsWith("video/")
+            mediaType:
+              file.type.startsWith("video/") ||
+              PRESENTATION_VIDEO_EXTENSIONS.has(
+                file.name.split(".").pop()?.toLowerCase() ?? ""
+              )
               ? ("video" as const)
               : ("image" as const),
             createdAt: Date.now(),

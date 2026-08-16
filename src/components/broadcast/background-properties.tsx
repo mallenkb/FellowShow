@@ -291,6 +291,8 @@ function ImageSection() {
                     if (background.image) {
                       background.image.url = media.url
                       background.image.mediaType = media.mediaType
+                      background.image.playbackStartedAt =
+                        media.playbackStartedAt
                     }
                   }, "image.media")
                   toast.success(

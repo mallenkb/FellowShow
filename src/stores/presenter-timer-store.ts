@@ -8,6 +8,7 @@ interface PresenterTimerBackgroundOption {
   name: string
   url: string
   mediaType: "image" | "video"
+  playbackStartedAt?: number
   builtin?: boolean
 }
 
@@ -74,6 +75,11 @@ function loadPersistedBackgroundState(): Pick<
             typeof option.name === "string" &&
             typeof option.url === "string" &&
             (option.mediaType === "image" || option.mediaType === "video")
+        ).map((option) =>
+          option.mediaType === "video" &&
+          option.playbackStartedAt === undefined
+            ? { ...option, playbackStartedAt: Date.now() }
+            : option
         )
       : []
     const backgroundOptions = [
@@ -144,7 +150,14 @@ export const usePresenterTimerStore = create<PresenterTimerState>(
       addBackgroundOption: (option) => {
         set((state) => {
           const id = option.id ?? crypto.randomUUID()
-          const nextOption = { ...option, id }
+          const nextOption = {
+            ...option,
+            id,
+            playbackStartedAt:
+              option.mediaType === "video"
+                ? (option.playbackStartedAt ?? Date.now())
+                : undefined,
+          }
           return {
             backgroundUrl: nextOption.url,
             backgroundOptions: [
@@ -196,6 +209,8 @@ export const usePresenterTimerStore = create<PresenterTimerState>(
           fontFamily: state.fontFamily,
           backgroundUrl: state.backgroundUrl,
           backgroundMediaType: selectedBackground.mediaType,
+          backgroundPlaybackStartedAt:
+            selectedBackground.playbackStartedAt,
         }
       },
     }

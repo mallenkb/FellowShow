@@ -12,6 +12,7 @@ import {
   getOverlayBackgroundColor,
   type OverlayOutputMode,
 } from "@/lib/broadcast-outputs"
+import { syncVideoToPlaybackClock } from "@/lib/video-playback"
 import type {
   BroadcastTheme,
   BroadcastOverlayPayload,
@@ -100,34 +101,59 @@ export const CanvasVerse = memo(function CanvasVerse({
       overlays?.lowerThird?.logoImageUrl ?? null,
       ...(overlays?.logos.map((logo) => logo.imageUrl) ?? []),
     ].filter((url): url is string => Boolean(url))
-    const videoUrls = [
+    const videoMedia = [
       theme.background.type === "image" &&
       theme.background.image?.mediaType === "video"
-        ? theme.background.image.url
+        ? {
+            url: theme.background.image.url,
+            playbackStartedAt: theme.background.image.playbackStartedAt,
+          }
         : null,
       verse?.presentationImage?.mediaType === "video"
-        ? verse.presentationImage.url
+        ? {
+            url: verse.presentationImage.url,
+            playbackStartedAt: verse.presentationImage.playbackStartedAt,
+          }
         : null,
       timer?.backgroundMediaType === "video"
-        ? (timer.backgroundUrl ?? null)
+        ? timer.backgroundUrl
+          ? {
+              url: timer.backgroundUrl,
+              playbackStartedAt: timer.backgroundPlaybackStartedAt,
+            }
+          : null
         : null,
-    ].filter((url): url is string => Boolean(url))
-    for (const url of videoUrls) {
-      if (videoCacheRef.current.has(url)) continue
+    ].filter(
+      (item): item is {
+        url: string
+        playbackStartedAt: number | undefined
+      } =>
+        Boolean(item)
+    )
+    for (const item of videoMedia) {
+      const cachedVideo = videoCacheRef.current.get(item.url)
+      if (cachedVideo) {
+        syncVideoToPlaybackClock(cachedVideo, item.playbackStartedAt)
+        continue
+      }
       const video = document.createElement("video")
       video.muted = true
       video.loop = true
       video.playsInline = true
       video.preload = "auto"
+      video.onloadedmetadata = () => {
+        syncVideoToPlaybackClock(video, item.playbackStartedAt)
+      }
       video.onloadeddata = () => {
-        videoCacheRef.current.set(url, video)
+        syncVideoToPlaybackClock(video, item.playbackStartedAt)
+        videoCacheRef.current.set(item.url, video)
         void video.play().catch(() => {})
         setVideoVersion((version) => version + 1)
       }
       video.onerror = () => {
-        console.warn("[canvas-verse] failed to load video", url)
+        console.warn("[canvas-verse] failed to load video", item.url)
       }
-      video.src = url
+      video.src = item.url
     }
     const uncachedUrls = imageUrls.filter(
       (url) => !imageCacheRef.current.has(url)
@@ -153,8 +179,10 @@ export const CanvasVerse = memo(function CanvasVerse({
     }
   }, [
     theme.background,
+    theme.background.image?.playbackStartedAt,
     verse?.presentationImage,
     timer?.backgroundMediaType,
+    timer?.backgroundPlaybackStartedAt,
     timer?.backgroundUrl,
     overlays?.logos,
     overlays?.lowerThird?.avatarImageUrl,
@@ -162,16 +190,49 @@ export const CanvasVerse = memo(function CanvasVerse({
   ])
 
   useEffect(() => {
-    const hasVideo =
-      (theme.background.type === "image" &&
-        theme.background.image?.mediaType === "video") ||
-      verse?.presentationImage?.mediaType === "video" ||
-      timer?.backgroundMediaType === "video"
+    const clockedVideoMedia = [
+      theme.background.type === "image" &&
+      theme.background.image?.mediaType === "video"
+        ? {
+            url: theme.background.image.url,
+            playbackStartedAt: theme.background.image.playbackStartedAt,
+          }
+        : null,
+      verse?.presentationImage?.mediaType === "video"
+        ? {
+            url: verse.presentationImage.url,
+            playbackStartedAt: verse.presentationImage.playbackStartedAt,
+          }
+        : null,
+      timer?.backgroundMediaType === "video" && timer.backgroundUrl
+        ? {
+            url: timer.backgroundUrl,
+            playbackStartedAt: timer.backgroundPlaybackStartedAt,
+          }
+        : null,
+    ].filter(
+      (item): item is {
+        url: string
+        playbackStartedAt: number | undefined
+      } =>
+        Boolean(item)
+    )
+    const hasVideo = clockedVideoMedia.length > 0
     if (!hasVideo) return
 
     let frame = 0
     let lastRender = 0
+    let lastPlaybackSync = 0
     const tick = (now: number) => {
+      if (now - lastPlaybackSync >= 250) {
+        lastPlaybackSync = now
+        for (const item of clockedVideoMedia) {
+          const video = videoCacheRef.current.get(item.url)
+          if (video) {
+            syncVideoToPlaybackClock(video, item.playbackStartedAt)
+          }
+        }
+      }
       // Avoid a React render on every display refresh, especially in WebKit.
       if (now - lastRender >= 66) {
         lastRender = now
@@ -183,8 +244,11 @@ export const CanvasVerse = memo(function CanvasVerse({
     return () => window.cancelAnimationFrame(frame)
   }, [
     theme.background,
-    verse?.presentationImage?.mediaType,
+    theme.background.image?.playbackStartedAt,
+    verse?.presentationImage,
     timer?.backgroundMediaType,
+    timer?.backgroundPlaybackStartedAt,
+    timer?.backgroundUrl,
   ])
 
   const hasTicker =
@@ -245,6 +309,8 @@ export const CanvasVerse = memo(function CanvasVerse({
         verse?.segments.map((segment) => segment.text).join("\n") ?? null,
       announcement: verse?.announcement ?? null,
       presentationImage: verse?.presentationImage?.url ?? null,
+      presentationPlaybackStartedAt:
+        verse?.presentationImage?.playbackStartedAt ?? null,
       timer: timer
         ? {
             isVisible: true,

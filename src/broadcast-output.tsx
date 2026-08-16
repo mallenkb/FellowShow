@@ -9,6 +9,7 @@ import { drawTransitionFrame } from "@/lib/render-transition"
 import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
 import { hasAnimatingOverlay } from "@/lib/overlays"
 import { drawVideoStreamPlaceholder } from "@/lib/video-stream-placeholder"
+import { syncVideoToPlaybackClock } from "@/lib/video-playback"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import {
   getOverlayBackgroundColor,
@@ -72,6 +73,12 @@ interface BroadcastPayload {
   overlayMode?: OverlayOutputMode
 }
 
+interface MediaToPreload {
+  url: string
+  mediaType: "image" | "video"
+  playbackStartedAt?: number
+}
+
 type DirectVideo = NonNullable<VerseRenderData["presentationImage"]>
 
 function directVideoFor(payload: BroadcastPayload): DirectVideo | null {
@@ -102,6 +109,8 @@ function transitionKey(data: BroadcastPayload | null): string {
       data.verse?.segments.map((segment) => segment.text).join("\n") ?? null,
     announcement: data.verse?.announcement ?? null,
     presentationImage: data.verse?.presentationImage?.url ?? null,
+    presentationPlaybackStartedAt:
+      data.verse?.presentationImage?.playbackStartedAt ?? null,
     timerVisible: Boolean(data.timer),
     timerFinished: data.timer?.isFinished ?? false,
     overlayMode: data.overlayMode ?? null,
@@ -140,6 +149,7 @@ function BroadcastCanvas() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isNdiActive, setIsNdiActive] = useState(false)
   const [directVideo, setDirectVideo] = useState<DirectVideo | null>(null)
+  const directVideoRef = useRef<HTMLVideoElement>(null)
   const [latestOverlayMode, setLatestOverlayMode] = useState<
     OverlayOutputMode | undefined
   >(undefined)
@@ -398,14 +408,59 @@ function BroadcastCanvas() {
     [renderPayloadToCanvas]
   )
 
+  const syncActiveVideoPlayback = useCallback(() => {
+    const payload = latestData.current
+    if (!payload) return
+    const background = payload.theme.background.image
+    const presentation = payload.verse?.presentationImage
+    const activeVideos = [
+      payload.theme.background.type === "image" &&
+      background?.mediaType === "video"
+        ? {
+            url: background.url,
+            playbackStartedAt: background.playbackStartedAt,
+          }
+        : null,
+      presentation?.mediaType === "video"
+        ? {
+            url: presentation.url,
+            playbackStartedAt: presentation.playbackStartedAt,
+          }
+        : null,
+      payload.timer?.backgroundMediaType === "video" &&
+      payload.timer.backgroundUrl
+        ? {
+            url: payload.timer.backgroundUrl,
+            playbackStartedAt:
+              payload.timer.backgroundPlaybackStartedAt,
+          }
+        : null,
+    ].filter(
+      (item): item is {
+        url: string
+        playbackStartedAt: number | undefined
+      } =>
+        Boolean(item)
+    )
+    for (const item of activeVideos) {
+      const video = videoCacheRef.current.get(item.url)
+      if (video) syncVideoToPlaybackClock(video, item.playbackStartedAt)
+    }
+  }, [])
+
   const startAnimationLoop = useCallback(() => {
     if (animationFrameRef.current !== null) return
-    const tick = () => {
+    let lastPlaybackSync = 0
+    const tick = (now: number) => {
+      if (now - lastPlaybackSync >= 250) {
+        lastPlaybackSync = now
+        syncActiveVideoPlayback()
+      }
       draw()
       animationFrameRef.current = window.requestAnimationFrame(tick)
     }
     animationFrameRef.current = window.requestAnimationFrame(tick)
-  }, [draw])
+  }, [draw, syncActiveVideoPlayback])
 
   const stopAnimationLoop = useCallback(() => {
     if (animationFrameRef.current === null) return
@@ -416,42 +471,44 @@ function BroadcastCanvas() {
   const preloadMedia = useCallback(
     (payload: BroadcastPayload) => {
       const bg = payload.theme.background
-      const media = [
-        bg.type === "image" && bg.image?.url
-          ? { url: bg.image.url, mediaType: bg.image.mediaType ?? "image" }
-          : null,
-        payload.timer?.backgroundUrl
-          ? {
-              url: payload.timer.backgroundUrl,
-              mediaType:
-                payload.timer.backgroundMediaType ?? ("image" as const),
-            }
-          : null,
-        payload.verse?.presentationImage?.url
-          ? {
-              url: payload.verse.presentationImage.url,
-              mediaType: payload.verse.presentationImage.mediaType ?? "image",
-            }
-          : null,
-        payload.overlays?.lowerThird?.avatarImageUrl
-          ? {
-              url: payload.overlays.lowerThird.avatarImageUrl,
-              mediaType: "image" as const,
-            }
-          : null,
-        payload.overlays?.lowerThird?.logoImageUrl
-          ? {
-              url: payload.overlays.lowerThird.logoImageUrl,
-              mediaType: "image" as const,
-            }
-          : null,
-        ...(payload.overlays?.logos.map((logo) => ({
-          url: logo.imageUrl,
-          mediaType: "image" as const,
-        })) ?? []),
-      ].filter((item): item is { url: string; mediaType: "image" | "video" } =>
-        Boolean(item)
-      )
+      const media: MediaToPreload[] = []
+      if (bg.type === "image" && bg.image?.url) {
+        media.push({
+          url: bg.image.url,
+          mediaType: bg.image.mediaType ?? "image",
+          playbackStartedAt: bg.image.playbackStartedAt,
+        })
+      }
+      if (payload.timer?.backgroundUrl) {
+        media.push({
+          url: payload.timer.backgroundUrl,
+          mediaType: payload.timer.backgroundMediaType ?? "image",
+          playbackStartedAt: payload.timer.backgroundPlaybackStartedAt,
+        })
+      }
+      if (payload.verse?.presentationImage?.url) {
+        media.push({
+          url: payload.verse.presentationImage.url,
+          mediaType: payload.verse.presentationImage.mediaType ?? "image",
+          playbackStartedAt:
+            payload.verse.presentationImage.playbackStartedAt,
+        })
+      }
+      if (payload.overlays?.lowerThird?.avatarImageUrl) {
+        media.push({
+          url: payload.overlays.lowerThird.avatarImageUrl,
+          mediaType: "image",
+        })
+      }
+      if (payload.overlays?.lowerThird?.logoImageUrl) {
+        media.push({
+          url: payload.overlays.lowerThird.logoImageUrl,
+          mediaType: "image",
+        })
+      }
+      for (const logo of payload.overlays?.logos ?? []) {
+        media.push({ url: logo.imageUrl, mediaType: "image" })
+      }
 
       const hasVideo = media.some((item) => item.mediaType === "video")
       if (directVideoFor(payload) && !ndiConfigRef.current.active) {
@@ -464,13 +521,21 @@ function BroadcastCanvas() {
 
       for (const item of media) {
         if (item.mediaType === "video") {
-          if (videoCacheRef.current.has(item.url)) continue
+          const cachedVideo = videoCacheRef.current.get(item.url)
+          if (cachedVideo) {
+            syncVideoToPlaybackClock(cachedVideo, item.playbackStartedAt)
+            continue
+          }
           const video = document.createElement("video")
           video.muted = true
           video.loop = true
           video.playsInline = true
           video.preload = "auto"
+          video.onloadedmetadata = () => {
+            syncVideoToPlaybackClock(video, item.playbackStartedAt)
+          }
           video.onloadeddata = () => {
+            syncVideoToPlaybackClock(video, item.playbackStartedAt)
             videoCacheRef.current.set(item.url, video)
             void video.play().catch(() => {})
             logDebug("Background video loaded", { url: item.url })
@@ -504,6 +569,28 @@ function BroadcastCanvas() {
     },
     [draw, logDebug, startAnimationLoop, stopAnimationLoop]
   )
+
+  const directVideoUrl = directVideo?.url
+  const directVideoPlaybackStartedAt = directVideo?.playbackStartedAt
+
+  useEffect(() => {
+    const video = directVideoRef.current
+    if (!video || !directVideoUrl) return
+
+    const sync = () => {
+      syncVideoToPlaybackClock(video, directVideoPlaybackStartedAt)
+      if (video.paused) void video.play().catch(() => {})
+    }
+    video.addEventListener("loadedmetadata", sync)
+    video.addEventListener("loadeddata", sync)
+    sync()
+    const interval = window.setInterval(sync, 250)
+    return () => {
+      window.clearInterval(interval)
+      video.removeEventListener("loadedmetadata", sync)
+      video.removeEventListener("loadeddata", sync)
+    }
+  }, [directVideoPlaybackStartedAt, directVideoUrl])
 
   const pushNdiFrame = useCallback(async () => {
     if (!ndiConfigRef.current.active) return
@@ -680,6 +767,7 @@ function BroadcastCanvas() {
     >
       {directVideo && !isNdiActive ? (
         <video
+          ref={directVideoRef}
           key={directVideo.url}
           src={directVideo.url}
           autoPlay

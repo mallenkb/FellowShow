@@ -85,6 +85,7 @@ export function PresenterTimer({ variant = "popover" }: PresenterTimerProps) {
         name: selected.name,
         url: selected.url,
         mediaType: selected.mediaType,
+        playbackStartedAt: selected.playbackStartedAt,
       })
     } catch (error) {
       console.warn("[presenter-timer] failed to upload timer background", error)

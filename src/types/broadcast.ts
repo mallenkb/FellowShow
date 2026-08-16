@@ -19,6 +19,7 @@ export interface VerseRenderData {
     url: string
     name: string
     mediaType?: "image" | "video"
+    playbackStartedAt?: number
     fit?: "contain" | "cover" | "stretch"
     scale?: number
     offsetX?: number
@@ -34,6 +35,7 @@ export interface PresenterTimerRenderData {
   fontFamily?: string
   backgroundUrl?: string
   backgroundMediaType?: "image" | "video"
+  backgroundPlaybackStartedAt?: number
 }
 
 export interface LowerThirdRenderData {
@@ -85,6 +87,7 @@ export interface BroadcastTheme {
     image: {
       url: string
       mediaType?: "image" | "video"
+      playbackStartedAt?: number
       fit: "cover" | "contain" | "stretch"
       blur: number
       brightness: number

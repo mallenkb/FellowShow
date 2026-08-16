@@ -174,9 +174,9 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 
   const timer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null
-    const timerBackgroundMediaType =
-      timerBackgroundOptions.find((option) => option.url === timerBackgroundUrl)
-        ?.mediaType ?? "image"
+    const timerBackground = timerBackgroundOptions.find(
+      (option) => option.url === timerBackgroundUrl
+    )
     return {
       remainingSeconds: timerRemaining,
       totalSeconds: timerTotal,
@@ -184,7 +184,8 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       isFinished: timerRemaining === 0,
       fontFamily: timerFontFamily,
       backgroundUrl: timerBackgroundUrl,
-      backgroundMediaType: timerBackgroundMediaType,
+      backgroundMediaType: timerBackground?.mediaType ?? "image",
+      backgroundPlaybackStartedAt: timerBackground?.playbackStartedAt,
     }
   }, [
     timerBackgroundOptions,
@@ -281,6 +282,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
             url: selectedSlide.url,
             name: selectedSlide.name,
             mediaType: selectedSlide.mediaType,
+            playbackStartedAt: selectedSlide.playbackStartedAt,
             fit: selectedSlide.fit,
             scale: selectedSlide.scale,
             offsetX: selectedSlide.offsetX,
@@ -521,6 +523,7 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
             image: {
               url: cachedMedia.url,
               mediaType,
+              playbackStartedAt: mediaType === "video" ? now : undefined,
               fit: "cover",
               blur: 0,
               brightness: 100,

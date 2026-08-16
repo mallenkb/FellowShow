@@ -189,6 +189,7 @@ export function PresentationPanel() {
                           url: slide.url,
                           name: slide.name,
                           mediaType: slide.mediaType,
+                          playbackStartedAt: slide.playbackStartedAt,
                           fit: slide.fit,
                           scale: slide.scale,
                           offsetX: slide.offsetX,

@@ -184,6 +184,24 @@ function isSelectableTheme(theme: BroadcastTheme): boolean {
   return theme.outputMode !== "lower-third" && theme.outputMode !== "ticker"
 }
 
+function withThemePlaybackClock(theme: BroadcastTheme): BroadcastTheme {
+  const image = theme.background.image
+  if (
+    theme.background.type !== "image" ||
+    image?.mediaType !== "video" ||
+    image.playbackStartedAt !== undefined
+  ) {
+    return theme
+  }
+  return {
+    ...theme,
+    background: {
+      ...theme.background,
+      image: { ...image, playbackStartedAt: Date.now() },
+    },
+  }
+}
+
 function sanitizeSectionThemeIds(
   sectionThemeIds: Partial<Record<string, string>> | undefined
 ): Partial<Record<BroadcastThemeSection, string>> {
@@ -369,6 +387,8 @@ function verseRenderKey(verse: VerseRenderData | null): string {
       ? {
           url: verse.presentationImage.url,
           mediaType: verse.presentationImage.mediaType ?? null,
+          playbackStartedAt:
+            verse.presentationImage.playbackStartedAt ?? null,
           fit: verse.presentationImage.fit ?? null,
           scale: verse.presentationImage.scale ?? null,
           offsetX: verse.presentationImage.offsetX ?? null,
@@ -377,6 +397,28 @@ function verseRenderKey(verse: VerseRenderData | null): string {
       : null,
     tickerText: verse.tickerText ?? null,
   })
+}
+
+function withPresentationPlaybackClock(
+  verse: VerseRenderData | null,
+  previousVerse: VerseRenderData | null
+): VerseRenderData | null {
+  const image = verse?.presentationImage
+  if (!image || image.mediaType !== "video") return verse
+
+  const previousImage = previousVerse?.presentationImage
+  const playbackStartedAt =
+    image.playbackStartedAt ??
+    (previousImage?.url === image.url
+      ? previousImage.playbackStartedAt
+      : undefined) ??
+    Date.now()
+
+  if (image.playbackStartedAt === playbackStartedAt) return verse
+  return {
+    ...verse,
+    presentationImage: { ...image, playbackStartedAt },
+  }
 }
 
 function timerRenderKey(timer: PresenterTimerRenderData | null): string {
@@ -389,6 +431,8 @@ function timerRenderKey(timer: PresenterTimerRenderData | null): string {
     fontFamily: timer.fontFamily,
     backgroundUrl: timer.backgroundUrl ?? null,
     backgroundMediaType: timer.backgroundMediaType ?? null,
+    backgroundPlaybackStartedAt:
+      timer.backgroundPlaybackStartedAt ?? null,
   })
 }
 
@@ -452,12 +496,14 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
       ),
     }))
   },
-  saveTheme: (theme) =>
+  saveTheme: (theme) => {
+    const nextTheme = withThemePlaybackClock(theme)
     set((s) => ({
-      themes: s.themes.some((t) => t.id === theme.id)
-        ? s.themes.map((t) => (t.id === theme.id ? theme : t))
-        : [...s.themes, theme],
-    })),
+      themes: s.themes.some((t) => t.id === nextTheme.id)
+        ? s.themes.map((t) => (t.id === nextTheme.id ? nextTheme : t))
+        : [...s.themes, nextTheme],
+    }))
+  },
   deleteTheme: (id) => {
     if (id === DEFAULT_ANNOUNCEMENT_THEME_ID) return
     set((s) => {
@@ -655,6 +701,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
         ? DEFAULT_ANNOUNCEMENT_THEME_ID
         : themeId
     set((s) => ({
+      themes: s.themes.map((theme) =>
+        theme.id === resolvedThemeId ? withThemePlaybackClock(theme) : theme
+      ),
       activeThemeId:
         targetSection === "bible" ? resolvedThemeId : s.activeThemeId,
       selectedThemeSection: targetSection,
@@ -741,15 +790,19 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   setPreviewOutput: (previewVerse, previewTimer) => {
     let previewChanged = false
     set((s) => {
+      const nextPreviewVerse = withPresentationPlaybackClock(
+        previewVerse,
+        s.previewVerse
+      )
       const samePreview = hasSameProgramPayload(
         s.previewVerse,
         s.previewTimer,
-        previewVerse,
+        nextPreviewVerse,
         previewTimer
       )
       if (samePreview) return s
       previewChanged = true
-      return { previewVerse, previewTimer }
+      return { previewVerse: nextPreviewVerse, previewTimer }
     })
     if (previewChanged) {
       for (const output of get().outputs) {
@@ -767,11 +820,15 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutput()
   },
   presentOnLive: (previewVerse, previewTimer, source = "manual") => {
-    set({
+    const nextVerse = withPresentationPlaybackClock(
       previewVerse,
+      get().previewVerse
+    )
+    set({
+      previewVerse: nextVerse,
       previewTimer,
       isLive: true,
-      liveVerse: previewVerse,
+      liveVerse: nextVerse,
       presenterTimer: previewTimer,
       liveSource: source,
     })
@@ -816,7 +873,9 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
     get().syncBroadcastOutputFor(outputId)
   },
   setLiveVerse: (liveVerse) => {
-    set({ liveVerse })
+    set((s) => ({
+      liveVerse: withPresentationPlaybackClock(liveVerse, s.liveVerse),
+    }))
     get().syncBroadcastOutput()
   },
   setPresenterTimer: (presenterTimer) => {

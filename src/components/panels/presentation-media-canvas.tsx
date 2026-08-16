@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
   type PointerEvent,
@@ -13,11 +14,13 @@ import {
   type PresentationMediaResizeHandle,
   type PresentationMediaTransform,
 } from "@/lib/presentation-media-transform"
+import { syncVideoToPlaybackClock } from "@/lib/video-playback"
 
 export interface PresentationMediaCanvasValue extends Required<PresentationMediaTransform> {
   name: string
   url: string
   mediaType?: "image" | "video"
+  playbackStartedAt?: number
   fit: "contain" | "cover" | "stretch"
 }
 
@@ -77,6 +80,7 @@ export function PresentationMediaCanvas({
   className?: string
 }) {
   const localFrameRef = useRef<HTMLDivElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const interactionRef = useRef<CanvasInteraction | null>(null)
   const [interaction, setInteraction] = useState<CanvasInteraction | null>(null)
 
@@ -203,6 +207,28 @@ export function PresentationMediaCanvas({
   )
 
   const showGuides = interaction !== null
+  const mediaType = media?.mediaType
+  const mediaUrl = media?.url
+  const playbackStartedAt = media?.playbackStartedAt
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || mediaType !== "video" || !mediaUrl) return
+
+    const sync = () => {
+      syncVideoToPlaybackClock(video, playbackStartedAt)
+      if (video.paused) void video.play().catch(() => {})
+    }
+    video.addEventListener("loadedmetadata", sync)
+    video.addEventListener("loadeddata", sync)
+    sync()
+    const interval = window.setInterval(sync, 250)
+    return () => {
+      window.clearInterval(interval)
+      video.removeEventListener("loadedmetadata", sync)
+      video.removeEventListener("loadeddata", sync)
+    }
+  }, [mediaType, mediaUrl, playbackStartedAt])
 
   return (
     <div
@@ -230,6 +256,7 @@ export function PresentationMediaCanvas({
         >
           {media.mediaType === "video" ? (
             <video
+              ref={videoRef}
               src={media.url}
               autoPlay
               muted
