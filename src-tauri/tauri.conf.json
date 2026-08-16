@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Fellow Show",
   "mainBinaryName": "fellowshow",
-  "version": "0.1.39",
+  "version": "0.1.40",
   "identifier": "com.openbezal.fellowshow",
   "build": {
     "frontendDist": "../build",
@@ -41,6 +41,11 @@
     "resources": {
       "../data/fellowshow.db": "fellowshow.db",
       "../vendor/document-converter/runtime/": "document-converter/"
+    },
+    "windows": {
+      "nsis": {
+        "compression": "zlib"
+      }
     },
     "icon": [
       "icons/32x32.png",

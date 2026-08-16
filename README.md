@@ -209,6 +209,11 @@ Existing installations keep their writable app-data database and downloaded
 translation packs when they update. New installations start in a no-Scripture
 state and can download versions from Settings.
 
+Windows NSIS release installers use faster Zlib compression to reduce packaging
+time. This intentionally produces a larger installer than the default LZMA
+compression; the installed app and its self-contained document converter are
+unchanged.
+
 The normal release command is:
 
 ```bash
