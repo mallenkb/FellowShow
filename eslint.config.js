@@ -11,6 +11,8 @@ export default defineConfig([
     "dist",
     "node_modules",
     "src-tauri/target",
+    ".tmp",
+    "tmp",
     "vendor/document-converter/runtime/",
   ]),
   {

@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import { useBroadcastStore, usePresentationStore } from "@/stores"
 import { PresentationDocumentViewer } from "@/components/panels/presentation-document-viewer"
+import { PresentationMediaViewer } from "@/components/panels/presentation-media-viewer"
 
 function VideoSlideThumbnail({
   src,
@@ -84,9 +85,14 @@ export function PresentationPanel() {
   const selectedDocument = documents.find(
     (document) => document.id === selectedDocumentId
   )
+  const selectedSlide = slides.find((slide) => slide.id === selectedSlideId)
 
   if (selectedDocument) {
     return <PresentationDocumentViewer document={selectedDocument} />
+  }
+
+  if (selectedSlide) {
+    return <PresentationMediaViewer slide={selectedSlide} />
   }
 
   return (

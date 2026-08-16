@@ -1494,7 +1494,7 @@ dependencies = [
 
 [[package]]
 name = "fellowshow"
-version = "0.1.35"
+version = "0.1.36"
 dependencies = [
  "base64 0.22.1",
  "crossbeam-channel",

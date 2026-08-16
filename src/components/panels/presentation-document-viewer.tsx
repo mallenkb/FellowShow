@@ -5,7 +5,6 @@ import {
   useState,
   type KeyboardEvent,
   type PointerEvent,
-  type WheelEvent,
 } from "react"
 import {
   ChevronLeftIcon,
@@ -33,12 +32,15 @@ import {
   type PresentationPage,
 } from "@/stores/presentation-store"
 import type { VerseRenderData } from "@/types"
+import {
+  PRESENTATION_MEDIA_MAX_SCALE,
+  PRESENTATION_MEDIA_MIN_SCALE,
+} from "@/lib/presentation-media-transform"
+import { PresentationMediaCanvas } from "./presentation-media-canvas"
 
-const MIN_ZOOM = 0.5
-const MAX_ZOOM = 2.5
+const MIN_ZOOM = PRESENTATION_MEDIA_MIN_SCALE
+const MAX_ZOOM = PRESENTATION_MEDIA_MAX_SCALE
 const ZOOM_STEP = 0.1
-const WHEEL_ZOOM_STEP = 0.05
-const SNAP_THRESHOLD = 0.035
 const MIN_THUMBNAIL_RAIL_WIDTH = 80
 const MAX_THUMBNAIL_RAIL_WIDTH = 420
 const DEFAULT_THUMBNAIL_RAIL_WIDTH = 96
@@ -52,11 +54,6 @@ function initialThumbnailRailWidth(): number {
     MAX_THUMBNAIL_RAIL_WIDTH,
     Math.max(MIN_THUMBNAIL_RAIL_WIDTH, stored)
   )
-}
-
-function snapToGrid(value: number, step: number) {
-  const snapped = Math.round(value / step) * step
-  return Math.abs(value - snapped) <= SNAP_THRESHOLD ? snapped : value
 }
 
 function pageRenderData(page: PresentationPage): VerseRenderData {
@@ -95,7 +92,6 @@ export function PresentationDocumentViewer({
   const selectedPageId = usePresentationStore((state) => state.selectedPageId)
   const frameRef = useRef<HTMLDivElement>(null)
   const navigationModeRef = useRef<"preview" | "live">("preview")
-  const [isDragging, setIsDragging] = useState(false)
   const [thumbnailRailWidth, setThumbnailRailWidth] = useState(
     initialThumbnailRailWidth
   )
@@ -103,13 +99,6 @@ export function PresentationDocumentViewer({
     pointerId: number
     startX: number
     startWidth: number
-  } | null>(null)
-  const dragRef = useRef<{
-    pointerId: number
-    x: number
-    y: number
-    offsetX: number
-    offsetY: number
   } | null>(null)
   const selectedIndex = useMemo(
     () => document.pages.findIndex((page) => page.id === selectedPageId),
@@ -195,70 +184,6 @@ export function PresentationDocumentViewer({
       offsetY: 0,
     })
   }, [selectedPage, updateTransform])
-
-  const zoomWithWheel = useCallback(
-    (event: WheelEvent<HTMLDivElement>) => {
-      if (!selectedPage) return
-      event.preventDefault()
-      const amount = event.deltaY < 0 ? WHEEL_ZOOM_STEP : -WHEEL_ZOOM_STEP
-      updateTransform(selectedPage, {
-        scale: Math.min(
-          MAX_ZOOM,
-          Math.max(MIN_ZOOM, selectedPage.scale + amount)
-        ),
-      })
-    },
-    [selectedPage, updateTransform]
-  )
-
-  const startPan = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (!selectedPage || event.button !== 0) return
-      dragRef.current = {
-        pointerId: event.pointerId,
-        x: event.clientX,
-        y: event.clientY,
-        offsetX: selectedPage.offsetX,
-        offsetY: selectedPage.offsetY,
-      }
-      setIsDragging(true)
-      event.currentTarget.setPointerCapture(event.pointerId)
-    },
-    [selectedPage]
-  )
-
-  const pan = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      const frame = frameRef.current
-      const drag = dragRef.current
-      if (
-        !frame ||
-        !selectedPage ||
-        !drag ||
-        drag.pointerId !== event.pointerId
-      )
-        return
-      const rect = frame.getBoundingClientRect()
-      updateTransform(selectedPage, {
-        offsetX: snapToGrid(
-          drag.offsetX + (event.clientX - drag.x) / rect.width,
-          0.25
-        ),
-        offsetY: snapToGrid(
-          drag.offsetY + (event.clientY - drag.y) / rect.height,
-          0.5
-        ),
-      })
-    },
-    [selectedPage, updateTransform]
-  )
-
-  const stopPan = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (dragRef.current?.pointerId !== event.pointerId) return
-    dragRef.current = null
-    setIsDragging(false)
-    event.currentTarget.releasePointerCapture(event.pointerId)
-  }, [])
 
   const setRailWidth = useCallback((width: number) => {
     const nextWidth = Math.min(
@@ -479,51 +404,29 @@ export function PresentationDocumentViewer({
           </div>
 
           <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted/25 p-4">
-            <div
-              ref={frameRef}
-              role="region"
-              aria-label={`${document.name} broadcast frame`}
-              tabIndex={0}
-              onWheel={zoomWithWheel}
-              onPointerDown={startPan}
-              onPointerMove={pan}
-              onPointerUp={stopPan}
-              onPointerCancel={stopPan}
-              className="relative aspect-video max-h-full w-full max-w-full cursor-move touch-none overflow-hidden rounded-md border border-border bg-black shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            >
-              {selectedPage ? (
-                <div
-                  className="absolute inset-0 select-none"
-                  style={{
-                    transform: `translate(${selectedPage.offsetX * 100}%, ${selectedPage.offsetY * 100}%) scale(${selectedPage.scale})`,
-                  }}
-                >
-                  <img
-                    src={selectedPage.url}
-                    alt={`Page ${selectedPage.pageNumber}`}
-                    draggable={false}
-                    className={cn(
-                      "h-full w-full",
-                      selectedPage.fit === "contain" && "object-contain",
-                      selectedPage.fit === "cover" && "object-cover",
-                      selectedPage.fit === "stretch" && "object-fill"
-                    )}
-                  />
-                </div>
-              ) : null}
-              <div className="pointer-events-none absolute inset-0 border border-white/10" />
-              {isDragging ? (
-                <div className="pointer-events-none absolute inset-0 grid grid-cols-8 grid-rows-4">
-                  {Array.from({ length: 32 }, (_, index) => (
-                    <div
-                      key={index}
-                      className="[border-width:0.5px] border-black/15 dark:border-white/20"
-                    />
-                  ))}
-                  <div className="absolute top-1/2 right-0 left-0 h-px bg-black/30 dark:bg-white/35" />
-                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-black/30 dark:bg-white/35" />
-                </div>
-              ) : null}
+            <div className="relative flex max-h-full w-full items-center justify-center">
+              <PresentationMediaCanvas
+                media={
+                  selectedPage
+                    ? {
+                        name: `Page ${selectedPage.pageNumber}`,
+                        url: selectedPage.url,
+                        mediaType: "image",
+                        fit: selectedPage.fit,
+                        scale: selectedPage.scale,
+                        offsetX: selectedPage.offsetX,
+                        offsetY: selectedPage.offsetY,
+                      }
+                    : null
+                }
+                ariaLabel={`${document.name} broadcast frame`}
+                frameRef={(node) => {
+                  frameRef.current = node
+                }}
+                onTransform={(transform) => {
+                  if (selectedPage) updateTransform(selectedPage, transform)
+                }}
+              />
               {document.status === "importing" ? (
                 <div className="absolute right-2 bottom-2 flex items-center gap-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
                   <LoaderCircleIcon className="size-3.5 animate-spin" />

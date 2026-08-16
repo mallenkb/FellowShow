@@ -5,7 +5,6 @@ import {
   useCallback,
   useRef,
   useMemo,
-  type PointerEvent,
 } from "react"
 import { motion } from "motion/react"
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core"
@@ -38,17 +37,12 @@ import {
   UnlockIcon,
   TrashIcon,
   PinIcon,
-  PencilIcon,
   TypeIcon,
   MoreHorizontalIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  CrosshairIcon,
   CheckIcon,
   PlusIcon,
-  RotateCcwIcon,
   TimerIcon,
   MegaphoneIcon,
   LayersIcon,
@@ -105,28 +99,6 @@ type SearchTab =
   | "timer"
   | "on-display"
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
-type TransformHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w"
-type TransformInteraction =
-  | {
-      type: "move"
-      pointerId: number
-      startX: number
-      startY: number
-      startOffsetX: number
-      startOffsetY: number
-      previewWidth: number
-      previewHeight: number
-    }
-  | {
-      type: "resize"
-      handle: TransformHandle
-      pointerId: number
-      startX: number
-      startY: number
-      startScale: number
-      previewWidth: number
-      previewHeight: number
-    }
 
 const SHOW_CONTEXT_SEARCH = false
 const PRESENTATION_MEDIA_EXTENSIONS = [
@@ -149,7 +121,6 @@ const SONG_PAGE_SIZE = 50
 
 import { TranslationOptions } from "@/components/panels/search/translation-options"
 import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
-import { TransformRange } from "@/components/panels/search/transform-range"
 import { HighlightedText } from "@/components/panels/search/highlighted-text"
 
 export function SearchPanel({
@@ -175,14 +146,10 @@ export function SearchPanel({
     setSongRenderLimit(SONG_PAGE_SIZE)
   }
   const [allSongs, setAllSongs] = useState<CopSong[]>([])
-  const [editingPresentationSlideId, setEditingPresentationSlideId] = useState<
-    string | null
-  >(null)
   const [renamingPresentationSlideId, setRenamingPresentationSlideId] =
     useState<string | null>(null)
   const [renamingPresentationSlideName, setRenamingPresentationSlideName] =
     useState("")
-  const [, setIsPresentationDragging] = useState(false)
   const [draggedPresentationSlideId, setDraggedPresentationSlideId] = useState<
     string | null
   >(null)
@@ -192,8 +159,6 @@ export function SearchPanel({
   const [presentationDropPosition, setPresentationDropPosition] = useState<
     "before" | "after"
   >("before")
-  const [transformInteraction, setTransformInteraction] =
-    useState<TransformInteraction | null>(null)
 
   // EasyWorship-style autocomplete
   const [quickInput, setQuickInput] = useState("")
@@ -203,7 +168,6 @@ export function SearchPanel({
   const quickInputRef = useRef<HTMLInputElement>(null)
   const presentationInputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const transformPreviewRef = useRef<HTMLDivElement>(null)
   const lastPresentationDragOverIdRef = useRef<string | null>(null)
   const draggedPresentationIdRef = useRef<string | null>(null)
   const { importPresentationDocuments, isImportingDocuments } =
@@ -286,135 +250,6 @@ export function SearchPanel({
       )
     },
     []
-  )
-  const editingPresentationSlide = useMemo(
-    () =>
-      presentationSlides.find(
-        (slide) => slide.id === editingPresentationSlideId
-      ) ?? null,
-    [editingPresentationSlideId, presentationSlides]
-  )
-  const updateEditingPresentationTransform = useCallback(
-    (transform: { scale?: number; offsetX?: number; offsetY?: number }) => {
-      if (!editingPresentationSlideId) return
-      usePresentationStore
-        .getState()
-        .updateSlideTransform(editingPresentationSlideId, transform)
-    },
-    [editingPresentationSlideId]
-  )
-  const startTransformMove = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (!editingPresentationSlide) return
-      const preview = transformPreviewRef.current
-      if (!preview) return
-
-      const rect = preview.getBoundingClientRect()
-      event.currentTarget.setPointerCapture(event.pointerId)
-      setTransformInteraction({
-        type: "move",
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        startOffsetX: editingPresentationSlide.offsetX,
-        startOffsetY: editingPresentationSlide.offsetY,
-        previewWidth: rect.width,
-        previewHeight: rect.height,
-      })
-    },
-    [editingPresentationSlide]
-  )
-  const startTransformResize = useCallback(
-    (handle: TransformHandle, event: PointerEvent<HTMLButtonElement>) => {
-      if (!editingPresentationSlide) return
-      const preview = transformPreviewRef.current
-      if (!preview) return
-
-      const rect = preview.getBoundingClientRect()
-      event.preventDefault()
-      event.stopPropagation()
-      event.currentTarget.setPointerCapture(event.pointerId)
-      setTransformInteraction({
-        type: "resize",
-        handle,
-        pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
-        startScale: editingPresentationSlide.scale,
-        previewWidth: rect.width,
-        previewHeight: rect.height,
-      })
-    },
-    [editingPresentationSlide]
-  )
-  const updateTransformInteraction = useCallback(
-    (event: PointerEvent<HTMLElement>) => {
-      if (
-        !transformInteraction ||
-        event.pointerId !== transformInteraction.pointerId
-      )
-        return
-
-      const deltaX = event.clientX - transformInteraction.startX
-      const deltaY = event.clientY - transformInteraction.startY
-      if (transformInteraction.type === "move") {
-        const SNAP = 0.02
-        let nextOffsetX =
-          transformInteraction.startOffsetX +
-          deltaX / transformInteraction.previewWidth
-        let nextOffsetY =
-          transformInteraction.startOffsetY +
-          deltaY / transformInteraction.previewHeight
-        // Snap to the centre line so manual centring is easy.
-        if (Math.abs(nextOffsetX) < SNAP) nextOffsetX = 0
-        if (Math.abs(nextOffsetY) < SNAP) nextOffsetY = 0
-        updateEditingPresentationTransform({
-          offsetX: nextOffsetX,
-          offsetY: nextOffsetY,
-        })
-        return
-      }
-
-      const horizontalSign = transformInteraction.handle.includes("e")
-        ? 1
-        : transformInteraction.handle.includes("w")
-          ? -1
-          : 0
-      const verticalSign = transformInteraction.handle.includes("s")
-        ? 1
-        : transformInteraction.handle.includes("n")
-          ? -1
-          : 0
-      const horizontalDelta =
-        horizontalSign === 0
-          ? 0
-          : (deltaX * horizontalSign) / transformInteraction.previewWidth
-      const verticalDelta =
-        verticalSign === 0
-          ? 0
-          : (deltaY * verticalSign) / transformInteraction.previewHeight
-      const scaleDelta =
-        Math.abs(horizontalDelta) > Math.abs(verticalDelta)
-          ? horizontalDelta
-          : verticalDelta
-      const nextScale = Math.min(
-        3,
-        Math.max(0.25, transformInteraction.startScale + scaleDelta * 2)
-      )
-      updateEditingPresentationTransform({ scale: nextScale })
-    },
-    [transformInteraction, updateEditingPresentationTransform]
-  )
-  const endTransformInteraction = useCallback(
-    (event: PointerEvent<HTMLElement>) => {
-      if (
-        !transformInteraction ||
-        event.pointerId !== transformInteraction.pointerId
-      )
-        return
-      setTransformInteraction(null)
-    },
-    [transformInteraction]
   )
   const activeSongItem =
     queueItems.find((item) => item.lyricKind === "song") ?? null
@@ -611,7 +446,6 @@ export function SearchPanel({
       event.preventDefault()
       event.stopPropagation()
       event.dataTransfer.dropEffect = "copy"
-      setIsPresentationDragging(true)
     },
     [activeTab]
   )
@@ -621,7 +455,6 @@ export function SearchPanel({
       if (activeTab !== "presentation") return
       if (event.currentTarget.contains(event.relatedTarget as Node | null))
         return
-      setIsPresentationDragging(false)
       setPresentationDropTargetId(null)
       setPresentationDropPosition("before")
     },
@@ -635,7 +468,6 @@ export function SearchPanel({
       if (draggedPresentationIdRef.current) return
       event.preventDefault()
       event.stopPropagation()
-      setIsPresentationDragging(false)
       setPresentationDropTargetId(null)
       setPresentationDropPosition("before")
       void handlePresentationFiles(event.dataTransfer.files)
@@ -1957,18 +1789,6 @@ export function SearchPanel({
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => {
-                                setEditingPresentationSlideId(slide.id)
-                                usePresentationStore
-                                  .getState()
-                                  .selectSlide(slide.id)
-                              }}
-                              disabled={slide.locked}
-                            >
-                              <PencilIcon className="size-3.5" />
-                              Edit position
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onSelect={() => {
                                 usePresentationStore
                                   .getState()
                                   .toggleLock(slide.id)
@@ -2085,339 +1905,6 @@ export function SearchPanel({
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={Boolean(editingPresentationSlide)}
-        onOpenChange={(open) => {
-          if (!open) setEditingPresentationSlideId(null)
-        }}
-      >
-        <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto p-4 sm:max-w-3xl sm:p-6 lg:max-w-5xl xl:max-w-6xl">
-          <DialogHeader>
-            <DialogTitle>Edit position</DialogTitle>
-          </DialogHeader>
-          {editingPresentationSlide ? (
-            <div className="grid gap-5">
-              <div
-                ref={transformPreviewRef}
-                className="relative aspect-video w-full overflow-hidden rounded-md border border-border bg-black"
-              >
-                <div
-                  className="absolute inset-0 cursor-move touch-none select-none"
-                  style={{
-                    transform: `translate(${editingPresentationSlide.offsetX * 100}%, ${editingPresentationSlide.offsetY * 100}%) scale(${editingPresentationSlide.scale})`,
-                  }}
-                  onPointerDown={startTransformMove}
-                  onPointerMove={updateTransformInteraction}
-                  onPointerUp={endTransformInteraction}
-                  onPointerCancel={endTransformInteraction}
-                >
-                  {editingPresentationSlide.mediaType === "video" ? (
-                    <video
-                      src={editingPresentationSlide.url}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      className={cn(
-                        "h-full w-full",
-                        editingPresentationSlide.fit === "contain" &&
-                          "object-contain",
-                        editingPresentationSlide.fit === "cover" &&
-                          "object-cover",
-                        editingPresentationSlide.fit === "stretch" &&
-                          "object-fill"
-                      )}
-                    />
-                  ) : (
-                    <img
-                      src={editingPresentationSlide.url}
-                      alt=""
-                      draggable={false}
-                      className={cn(
-                        "h-full w-full",
-                        editingPresentationSlide.fit === "contain" &&
-                          "object-contain",
-                        editingPresentationSlide.fit === "cover" &&
-                          "object-cover",
-                        editingPresentationSlide.fit === "stretch" &&
-                          "object-fill"
-                      )}
-                    />
-                  )}
-                  <div className="pointer-events-none absolute inset-0 border-2 border-white/70 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.45)]" />
-                  {[
-                    [
-                      "nw",
-                      "left-0 top-0 -translate-x-1/2 -translate-y-1/2 cursor-nwse-resize",
-                    ],
-                    [
-                      "n",
-                      "left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 cursor-ns-resize",
-                    ],
-                    [
-                      "ne",
-                      "right-0 top-0 translate-x-1/2 -translate-y-1/2 cursor-nesw-resize",
-                    ],
-                    [
-                      "e",
-                      "right-0 top-1/2 translate-x-1/2 -translate-y-1/2 cursor-ew-resize",
-                    ],
-                    [
-                      "se",
-                      "right-0 bottom-0 translate-x-1/2 translate-y-1/2 cursor-nwse-resize",
-                    ],
-                    [
-                      "s",
-                      "left-1/2 bottom-0 -translate-x-1/2 translate-y-1/2 cursor-ns-resize",
-                    ],
-                    [
-                      "sw",
-                      "left-0 bottom-0 -translate-x-1/2 translate-y-1/2 cursor-nesw-resize",
-                    ],
-                    [
-                      "w",
-                      "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize",
-                    ],
-                  ].map(([handle, classes]) => (
-                    <button
-                      key={handle}
-                      type="button"
-                      aria-label={`Resize from ${handle.toUpperCase()} handle`}
-                      className={cn(
-                        "absolute size-3 touch-none rounded-[2px] border border-black/50 bg-white shadow-sm",
-                        classes
-                      )}
-                      onPointerDown={(event) =>
-                        startTransformResize(handle as TransformHandle, event)
-                      }
-                      onPointerMove={updateTransformInteraction}
-                      onPointerUp={endTransformInteraction}
-                      onPointerCancel={endTransformInteraction}
-                    />
-                  ))}
-                </div>
-                {transformInteraction?.type === "move" &&
-                editingPresentationSlide.offsetX === 0 ? (
-                  <div className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[#F1E600]" />
-                ) : null}
-                {transformInteraction?.type === "move" &&
-                editingPresentationSlide.offsetY === 0 ? (
-                  <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[#F1E600]" />
-                ) : null}
-                <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-[0.6875rem] font-medium text-white">
-                  Drag to move · drag handles to resize · snaps to centre
-                </div>
-              </div>
-
-              <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-                <div className="grid content-start gap-3">
-                  {/* Zoom */}
-                  <TransformRange
-                    label="Zoom"
-                    value={editingPresentationSlide.scale}
-                    min={0.25}
-                    max={3}
-                    step={0.01}
-                    defaultValue={1}
-                    onChange={(value) =>
-                      updateEditingPresentationTransform({ scale: value })
-                    }
-                  />
-
-                  <TransformRange
-                    label="Move left / right"
-                    value={editingPresentationSlide.offsetX}
-                    min={-1}
-                    max={1}
-                    step={0.01}
-                    defaultValue={0}
-                    bipolar
-                    onChange={(value) =>
-                      updateEditingPresentationTransform({ offsetX: value })
-                    }
-                  />
-                  <TransformRange
-                    label="Move up / down"
-                    value={editingPresentationSlide.offsetY}
-                    min={-1}
-                    max={1}
-                    step={0.01}
-                    defaultValue={0}
-                    bipolar
-                    onChange={(value) =>
-                      updateEditingPresentationTransform({ offsetY: value })
-                    }
-                  />
-                </div>
-
-                {/* Fine nudge + reset */}
-                <div className="grid content-start gap-2 rounded-lg border border-border bg-background/40 p-2">
-                  <div className="mx-auto grid w-32 grid-cols-3 gap-1.5">
-                    <span className="size-9" />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon-sm"
-                      className="size-9"
-                      aria-label="Move media up by 1 percent"
-                      onClick={() =>
-                        updateEditingPresentationTransform({
-                          offsetY: Math.max(
-                            -1,
-                            editingPresentationSlide.offsetY - 0.01
-                          ),
-                        })
-                      }
-                    >
-                      <ArrowUpIcon className="size-3.5" aria-hidden="true" />
-                    </Button>
-                    <span className="size-9" />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon-sm"
-                      className="size-9"
-                      aria-label="Move media left by 1 percent"
-                      onClick={() =>
-                        updateEditingPresentationTransform({
-                          offsetX: Math.max(
-                            -1,
-                            editingPresentationSlide.offsetX - 0.01
-                          ),
-                        })
-                      }
-                    >
-                      <ArrowLeftIcon className="size-3.5" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon-sm"
-                      className="size-9"
-                      aria-label="Center media in frame"
-                      onClick={() =>
-                        updateEditingPresentationTransform({
-                          offsetX: 0,
-                          offsetY: 0,
-                        })
-                      }
-                    >
-                      <CrosshairIcon className="size-3.5" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon-sm"
-                      className="size-9"
-                      aria-label="Move media right by 1 percent"
-                      onClick={() =>
-                        updateEditingPresentationTransform({
-                          offsetX: Math.min(
-                            1,
-                            editingPresentationSlide.offsetX + 0.01
-                          ),
-                        })
-                      }
-                    >
-                      <ArrowRightIcon className="size-3.5" aria-hidden="true" />
-                    </Button>
-                    <span className="size-9" />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon-sm"
-                      className="size-9"
-                      aria-label="Move media down by 1 percent"
-                      onClick={() =>
-                        updateEditingPresentationTransform({
-                          offsetY: Math.min(
-                            1,
-                            editingPresentationSlide.offsetY + 0.01
-                          ),
-                        })
-                      }
-                    >
-                      <ArrowDownIcon className="size-3.5" aria-hidden="true" />
-                    </Button>
-                    <span className="size-9" />
-                  </div>
-                  <div className="grid gap-2">
-                    <span id="presentation-fill-mode-label" className="sr-only">
-                      Fill mode
-                    </span>
-                    <div
-                      role="group"
-                      aria-labelledby="presentation-fill-mode-label"
-                      className="grid h-8 grid-cols-3 gap-0.5 rounded-[calc(var(--radius-md)+2px)] bg-muted p-0.5"
-                    >
-                      {(
-                        [
-                          ["Fit", "contain"],
-                          ["Fill", "cover"],
-                          ["Stretch", "stretch"],
-                        ] as const
-                      ).map(([label, fit]) => {
-                        const active = editingPresentationSlide.fit === fit
-                        return (
-                          <button
-                            key={fit}
-                            type="button"
-                            aria-pressed={active}
-                            aria-label={`Use ${label.toLowerCase()} fill mode`}
-                            onClick={() =>
-                              usePresentationStore
-                                .getState()
-                                .setSlideFit(editingPresentationSlide.id, fit)
-                            }
-                            className={cn(
-                              "flex h-7 min-w-0 items-center justify-center rounded-[var(--radius-md)] px-1.5 text-xs leading-none font-medium whitespace-nowrap transition-colors",
-                              active
-                                ? "bg-background text-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                            )}
-                          >
-                            {label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <div className="flex justify-center">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      aria-label="Reset all position controls"
-                      onClick={() =>
-                        usePresentationStore
-                          .getState()
-                          .updateSlideTransform(editingPresentationSlide.id, {
-                            scale: 1,
-                            offsetX: 0,
-                            offsetY: 0,
-                          })
-                      }
-                    >
-                      <RotateCcwIcon className="size-3.5" aria-hidden="true" />
-                      Reset all
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <DialogFooter className="gap-2 border-t border-border/60 pt-4 sm:gap-2">
-                <Button
-                  type="button"
-                  onClick={() => setEditingPresentationSlideId(null)}
-                >
-                  Done
-                </Button>
-              </DialogFooter>
-            </div>
-          ) : null}
         </DialogContent>
       </Dialog>
     </div>

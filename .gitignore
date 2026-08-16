@@ -66,3 +66,12 @@ ghs.json
 
 # GSD planning artifacts
 .planning/
+
+# Local document-rendering verification artifacts
+.tmp/document-fixtures/
+.tmp/lo-*/
+.tmp/stale-node-modules/
+.tmp/verification/
+tmp/lo-*/
+tmp/windows-document-test.*
+tmp/word-com-test.pdf
