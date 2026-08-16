@@ -45,7 +45,10 @@ export async function renderPdfPresentationPages(
   onPageRendered?: (page: PresentationPage, pageCount: number) => void
 ): Promise<PresentationPage[]> {
   const pdfjs = await import("pdfjs-dist")
-  pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    pdfWorkerUrl,
+    window.location.href
+  ).href
 
   const loadingTask = pdfjs.getDocument({ data: new Uint8Array(pdfData) })
   const document = await loadingTask.promise

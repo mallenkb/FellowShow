@@ -35,10 +35,10 @@ const SEARCH_MODES: SearchMode[] = [
   "book",
   "context",
   "songs",
-  "announcements",
   "presentation",
-  "timer",
   "on-display",
+  "timer",
+  "announcements",
 ]
 
 interface DashboardLayoutSnapshot {

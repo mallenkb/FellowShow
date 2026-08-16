@@ -978,18 +978,19 @@ export function SearchPanel({
             <span className="search-tab-label">Songs</span>
           </button>
           <button
-            onClick={() => setSearchTab("announcements")}
-            className={tabButtonClass("announcements")}
-          >
-            <MegaphoneIcon className={tabIconClass("announcements")} />
-            <span className="search-tab-label">Announcements</span>
-          </button>
-          <button
             onClick={() => setSearchTab("presentation")}
             className={tabButtonClass("presentation")}
           >
             <ImageIcon className={tabIconClass("presentation")} />
             <span className="search-tab-label">Presentations</span>
+          </button>
+          <button
+            onClick={() => setSearchTab("on-display")}
+            className={tabButtonClass("on-display")}
+            title="Video Overlays"
+          >
+            <LayersIcon className={tabIconClass("on-display")} />
+            <span className="search-tab-label">Video Overlays</span>
           </button>
           <button
             onClick={() => setSearchTab("timer")}
@@ -999,12 +1000,11 @@ export function SearchPanel({
             <span className="search-tab-label">Timer</span>
           </button>
           <button
-            onClick={() => setSearchTab("on-display")}
-            className={tabButtonClass("on-display")}
-            title="Video Overlays"
+            onClick={() => setSearchTab("announcements")}
+            className={tabButtonClass("announcements")}
           >
-            <LayersIcon className={tabIconClass("on-display")} />
-            <span className="search-tab-label">Video Overlays</span>
+            <MegaphoneIcon className={tabIconClass("announcements")} />
+            <span className="search-tab-label">Announcements</span>
           </button>
         </div>
 
