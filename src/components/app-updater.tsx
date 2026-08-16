@@ -5,6 +5,7 @@ import {
   getUpdateErrorMessage,
   IS_TAURI_RUNTIME,
   setLastUpdateCheckAt,
+  shouldRunAutomaticUpdateCheck,
   shouldCheckForUpdates,
   UPDATE_CHECK_INTERVAL_MS,
   UPDATE_READY_EVENT,
@@ -26,6 +27,7 @@ function AppUpdater() {
 
   const runDailyUpdateCheck = useCallback(async () => {
     if (!IS_TAURI_RUNTIME) return
+    if (!(await shouldRunAutomaticUpdateCheck())) return
     if (!shouldCheckForUpdates()) return
 
     // Record the attempt up front so dev StrictMode and repeated webview reloads

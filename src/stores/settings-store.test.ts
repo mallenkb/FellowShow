@@ -70,6 +70,7 @@ describe("settings store", () => {
     expect(after.gain).toBe(before.gain)
     expect(after.sttProvider).toBe(before.sttProvider)
     expect(after.autoMode).toBe(before.autoMode)
+    expect(after.autoUpdateEnabled).toBe(true)
     expect(after.pinnedTranslationIds).toEqual([6, 2])
     expect(after.defaultPinnedTranslationsApplied).toBe(true)
     expect(mockSet).toHaveBeenCalledWith("pinnedTranslationIds", [6, 2])
@@ -77,6 +78,19 @@ describe("settings store", () => {
       "defaultPinnedTranslationsApplied",
       true
     )
+  })
+
+  it("hydrates the automatic update preference", async () => {
+    mockGet.mockImplementation(async (key: string) => {
+      if (key === "autoUpdateEnabled") return false
+      return null
+    })
+
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
+    await hydrateSettings()
+
+    expect(useSettingsStore.getState().autoUpdateEnabled).toBe(false)
   })
 
   it("uses NKJV and NIV as default pinned translations", async () => {

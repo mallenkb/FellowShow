@@ -5,19 +5,25 @@ import { useEffect, useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { downloadAndInstallAvailableUpdate } from "@/lib/app-updater"
 import { RefreshCwIcon } from "lucide-react"
+import { useSettingsStore } from "@/stores/settings-store"
 
 const FELLOW_SHOW_RELEASES_URL =
   "https://github.com/mallenkb/FellowShow/releases/latest"
 
 export function UpdatesSection() {
+  const autoUpdateEnabled = useSettingsStore((state) => state.autoUpdateEnabled)
+  const setAutoUpdateEnabled = useSettingsStore(
+    (state) => state.setAutoUpdateEnabled
+  )
   const [currentVersion, setCurrentVersion] = useState("0.1.6")
   const [status, setStatus] = useState<
     "idle" | "checking" | "downloading" | "installing" | "installed" | "error"
   >("idle")
   const [message, setMessage] = useState(
-    "Check for updates. If one is available, FellowShow will download and install it automatically."
+    "Use Check & update to look for and install a release immediately."
   )
   const [latestVersion, setLatestVersion] = useState<string | null>(null)
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null)
@@ -108,6 +114,21 @@ export function UpdatesSection() {
           <Badge variant="outline" className="text-[0.625rem]">
             Installed
           </Badge>
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+          <div className="min-w-0 pr-4">
+            <p className="text-sm font-medium">Automatic updates</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Check for and install updates once a day in the background. You
+              can still check manually when this is off.
+            </p>
+          </div>
+          <Switch
+            checked={autoUpdateEnabled}
+            onCheckedChange={setAutoUpdateEnabled}
+            aria-label="Enable automatic updates"
+          />
         </div>
 
         <div className="rounded-lg border border-border bg-muted/30 p-4">

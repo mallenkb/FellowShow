@@ -1,5 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core"
 import { check, type DownloadEvent } from "@tauri-apps/plugin-updater"
+import { hydrateSettings, useSettingsStore } from "@/stores/settings-store"
 
 export const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 export const UPDATE_READY_EVENT = "fellowshow:update-ready"
@@ -67,4 +68,9 @@ export async function downloadAndInstallAvailableUpdate(
   } finally {
     updateCheckInFlight = false
   }
+}
+
+export async function shouldRunAutomaticUpdateCheck() {
+  await hydrateSettings()
+  return useSettingsStore.getState().autoUpdateEnabled
 }

@@ -28,6 +28,7 @@ interface SettingsState {
   audioDeviceId: string | null
   gain: number
   autoMode: boolean
+  autoUpdateEnabled: boolean
   confidenceThreshold: number
   cooldownMs: number
   onboardingComplete: boolean
@@ -48,6 +49,7 @@ interface SettingsState {
   setAudioDeviceId: (id: string | null) => void
   setGain: (gain: number) => void
   setAutoMode: (auto: boolean) => void
+  setAutoUpdateEnabled: (enabled: boolean) => void
   setConfidenceThreshold: (threshold: number) => void
   setCooldownMs: (ms: number) => void
   setOnboardingComplete: (complete: boolean) => void
@@ -71,6 +73,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   audioDeviceId: null,
   gain: 1.0,
   autoMode: false,
+  autoUpdateEnabled: true,
   confidenceThreshold: 0.8,
   cooldownMs: 2500,
   onboardingComplete: false,
@@ -91,6 +94,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setAudioDeviceId: (audioDeviceId) => set({ audioDeviceId }),
   setGain: (gain) => set({ gain }),
   setAutoMode: (autoMode) => set({ autoMode }),
+  setAutoUpdateEnabled: (autoUpdateEnabled) => set({ autoUpdateEnabled }),
   setConfidenceThreshold: (confidenceThreshold) => set({ confidenceThreshold }),
   setCooldownMs: (cooldownMs) => set({ cooldownMs }),
   setOnboardingComplete: (onboardingComplete) => set({ onboardingComplete }),
@@ -129,6 +133,7 @@ const PERSISTED_KEYS = [
   "audioDeviceId",
   "gain",
   "autoMode",
+  "autoUpdateEnabled",
   "confidenceThreshold",
   "cooldownMs",
   "onboardingComplete",
@@ -168,6 +173,10 @@ export function hydrateSettings(): Promise<void> {
             if (typeof value === "string" && value.trim()) {
               patch[key] = value.trim()
             }
+            continue
+          }
+          if (key === "autoUpdateEnabled") {
+            if (typeof value === "boolean") patch.autoUpdateEnabled = value
             continue
           }
           ;(patch as Record<string, unknown>)[key] = value
