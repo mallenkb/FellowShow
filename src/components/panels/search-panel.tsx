@@ -308,8 +308,8 @@ export function SearchPanel({
               PRESENTATION_VIDEO_EXTENSIONS.has(
                 file.name.split(".").pop()?.toLowerCase() ?? ""
               )
-              ? ("video" as const)
-              : ("image" as const),
+                ? ("video" as const)
+                : ("image" as const),
             createdAt: Date.now(),
             pinned: false,
             locked: false,

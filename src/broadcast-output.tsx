@@ -9,7 +9,7 @@ import { drawTransitionFrame } from "@/lib/render-transition"
 import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
 import { hasAnimatingOverlay } from "@/lib/overlays"
 import { drawVideoStreamPlaceholder } from "@/lib/video-stream-placeholder"
-import { syncVideoToPlaybackClock } from "@/lib/video-playback"
+import { playVideoSafely, syncVideoToPlaybackClock } from "@/lib/video-playback"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import {
   getOverlayBackgroundColor,
@@ -431,16 +431,16 @@ function BroadcastCanvas() {
       payload.timer.backgroundUrl
         ? {
             url: payload.timer.backgroundUrl,
-            playbackStartedAt:
-              payload.timer.backgroundPlaybackStartedAt,
+            playbackStartedAt: payload.timer.backgroundPlaybackStartedAt,
           }
         : null,
     ].filter(
-      (item): item is {
+      (
+        item
+      ): item is {
         url: string
         playbackStartedAt: number | undefined
-      } =>
-        Boolean(item)
+      } => Boolean(item)
     )
     for (const item of activeVideos) {
       const video = videoCacheRef.current.get(item.url)
@@ -490,8 +490,7 @@ function BroadcastCanvas() {
         media.push({
           url: payload.verse.presentationImage.url,
           mediaType: payload.verse.presentationImage.mediaType ?? "image",
-          playbackStartedAt:
-            payload.verse.presentationImage.playbackStartedAt,
+          playbackStartedAt: payload.verse.presentationImage.playbackStartedAt,
         })
       }
       if (payload.overlays?.lowerThird?.avatarImageUrl) {
@@ -537,7 +536,7 @@ function BroadcastCanvas() {
           video.onloadeddata = () => {
             syncVideoToPlaybackClock(video, item.playbackStartedAt)
             videoCacheRef.current.set(item.url, video)
-            void video.play().catch(() => {})
+            playVideoSafely(video)
             logDebug("Background video loaded", { url: item.url })
             draw()
           }
@@ -579,7 +578,7 @@ function BroadcastCanvas() {
 
     const sync = () => {
       syncVideoToPlaybackClock(video, directVideoPlaybackStartedAt)
-      if (video.paused) void video.play().catch(() => {})
+      if (video.paused) playVideoSafely(video)
     }
     video.addEventListener("loadedmetadata", sync)
     video.addEventListener("loadeddata", sync)

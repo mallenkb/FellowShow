@@ -387,8 +387,7 @@ function verseRenderKey(verse: VerseRenderData | null): string {
       ? {
           url: verse.presentationImage.url,
           mediaType: verse.presentationImage.mediaType ?? null,
-          playbackStartedAt:
-            verse.presentationImage.playbackStartedAt ?? null,
+          playbackStartedAt: verse.presentationImage.playbackStartedAt ?? null,
           fit: verse.presentationImage.fit ?? null,
           scale: verse.presentationImage.scale ?? null,
           offsetX: verse.presentationImage.offsetX ?? null,
@@ -431,8 +430,7 @@ function timerRenderKey(timer: PresenterTimerRenderData | null): string {
     fontFamily: timer.fontFamily,
     backgroundUrl: timer.backgroundUrl ?? null,
     backgroundMediaType: timer.backgroundMediaType ?? null,
-    backgroundPlaybackStartedAt:
-      timer.backgroundPlaybackStartedAt ?? null,
+    backgroundPlaybackStartedAt: timer.backgroundPlaybackStartedAt ?? null,
   })
 }
 

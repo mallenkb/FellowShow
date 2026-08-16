@@ -68,19 +68,21 @@ function loadPersistedBackgroundState(): Pick<
       backgroundOptions: PresenterTimerBackgroundOption[]
     }>
     const customOptions = Array.isArray(parsed.backgroundOptions)
-      ? parsed.backgroundOptions.filter(
-          (option) =>
-            option &&
-            typeof option.id === "string" &&
-            typeof option.name === "string" &&
-            typeof option.url === "string" &&
-            (option.mediaType === "image" || option.mediaType === "video")
-        ).map((option) =>
-          option.mediaType === "video" &&
-          option.playbackStartedAt === undefined
-            ? { ...option, playbackStartedAt: Date.now() }
-            : option
-        )
+      ? parsed.backgroundOptions
+          .filter(
+            (option) =>
+              option &&
+              typeof option.id === "string" &&
+              typeof option.name === "string" &&
+              typeof option.url === "string" &&
+              (option.mediaType === "image" || option.mediaType === "video")
+          )
+          .map((option) =>
+            option.mediaType === "video" &&
+            option.playbackStartedAt === undefined
+              ? { ...option, playbackStartedAt: Date.now() }
+              : option
+          )
       : []
     const backgroundOptions = [
       DEFAULT_TIMER_BACKGROUND_OPTION,
@@ -209,8 +211,7 @@ export const usePresenterTimerStore = create<PresenterTimerState>(
           fontFamily: state.fontFamily,
           backgroundUrl: state.backgroundUrl,
           backgroundMediaType: selectedBackground.mediaType,
-          backgroundPlaybackStartedAt:
-            selectedBackground.playbackStartedAt,
+          backgroundPlaybackStartedAt: selectedBackground.playbackStartedAt,
         }
       },
     }

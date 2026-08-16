@@ -14,7 +14,7 @@ import {
   type PresentationMediaResizeHandle,
   type PresentationMediaTransform,
 } from "@/lib/presentation-media-transform"
-import { syncVideoToPlaybackClock } from "@/lib/video-playback"
+import { playVideoSafely, syncVideoToPlaybackClock } from "@/lib/video-playback"
 
 export interface PresentationMediaCanvasValue extends Required<PresentationMediaTransform> {
   name: string
@@ -217,7 +217,7 @@ export function PresentationMediaCanvas({
 
     const sync = () => {
       syncVideoToPlaybackClock(video, playbackStartedAt)
-      if (video.paused) void video.play().catch(() => {})
+      if (video.paused) playVideoSafely(video)
     }
     video.addEventListener("loadedmetadata", sync)
     video.addEventListener("loadeddata", sync)

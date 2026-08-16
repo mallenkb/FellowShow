@@ -12,7 +12,7 @@ import {
   getOverlayBackgroundColor,
   type OverlayOutputMode,
 } from "@/lib/broadcast-outputs"
-import { syncVideoToPlaybackClock } from "@/lib/video-playback"
+import { playVideoSafely, syncVideoToPlaybackClock } from "@/lib/video-playback"
 import type {
   BroadcastTheme,
   BroadcastOverlayPayload,
@@ -124,11 +124,12 @@ export const CanvasVerse = memo(function CanvasVerse({
           : null
         : null,
     ].filter(
-      (item): item is {
+      (
+        item
+      ): item is {
         url: string
         playbackStartedAt: number | undefined
-      } =>
-        Boolean(item)
+      } => Boolean(item)
     )
     for (const item of videoMedia) {
       const cachedVideo = videoCacheRef.current.get(item.url)
@@ -147,7 +148,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       video.onloadeddata = () => {
         syncVideoToPlaybackClock(video, item.playbackStartedAt)
         videoCacheRef.current.set(item.url, video)
-        void video.play().catch(() => {})
+        playVideoSafely(video)
         setVideoVersion((version) => version + 1)
       }
       video.onerror = () => {
@@ -211,11 +212,12 @@ export const CanvasVerse = memo(function CanvasVerse({
           }
         : null,
     ].filter(
-      (item): item is {
+      (
+        item
+      ): item is {
         url: string
         playbackStartedAt: number | undefined
-      } =>
-        Boolean(item)
+      } => Boolean(item)
     )
     const hasVideo = clockedVideoMedia.length > 0
     if (!hasVideo) return

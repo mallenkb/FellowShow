@@ -4,7 +4,7 @@
  * their individual HTMLVideoElement clocks cannot be used as the source of
  * truth.
  */
-export function videoPositionForPlaybackClock(
+function videoPositionForPlaybackClock(
   playbackStartedAt: number | undefined,
   duration: number
 ): number | null {
@@ -17,11 +17,17 @@ export function videoPositionForPlaybackClock(
   }
   if (duration <= 0) return null
 
-  const elapsedSeconds = Math.max(
-    0,
-    (Date.now() - playbackStartedAt) / 1000
-  )
+  const elapsedSeconds = Math.max(0, (Date.now() - playbackStartedAt) / 1000)
   return elapsedSeconds % duration
+}
+
+export function playVideoSafely(video: HTMLVideoElement): void {
+  try {
+    const playback = video.play() as Promise<void> | undefined
+    void playback?.catch(() => {})
+  } catch {
+    // Some embedded browsers can reject playback synchronously.
+  }
 }
 
 export function syncVideoToPlaybackClock(
