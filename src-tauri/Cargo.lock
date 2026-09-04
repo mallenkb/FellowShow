@@ -1504,7 +1504,7 @@ dependencies = [
 
 [[package]]
 name = "fellowshow"
-version = "0.1.42"
+version = "0.1.43"
 dependencies = [
  "crossbeam-channel",
  "dotenvy",

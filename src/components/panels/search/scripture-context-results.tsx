@@ -65,7 +65,7 @@ export function ScriptureContextResults({
                 <span className="text-xs font-semibold">
                   {reference} · {translation}
                 </span>
-                <span className="mt-0.5 text-[0.5rem] text-muted-foreground">
+                <span className="mt-0.5 text-[0.625rem] font-semibold text-green-600 dark:text-green-400">
                   {Math.round(result.similarity * 100)}%
                 </span>
               </div>
