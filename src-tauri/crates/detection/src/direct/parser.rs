@@ -18,8 +18,6 @@ pub enum Continuation {
 pub fn parse_reference(text: &str, book_match: &BookMatch) -> Option<VerseRef> {
     let after = &text[book_match.end..];
     let after_trimmed = after.trim_start();
-    let offset = after.len() - after_trimmed.len();
-    let _ = offset; // consumed whitespace
 
     // Tokenize the text after the book name for easier parsing
     let tokens = tokenize(after_trimmed);

@@ -1,10 +1,24 @@
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core"
 import { appDataDir, join } from "@tauri-apps/api/path"
-import { mkdir, writeFile } from "@tauri-apps/plugin-fs"
+import { copyFile, mkdir, writeFile } from "@tauri-apps/plugin-fs"
 
 export interface CachedPresentationMedia {
   url: string
   filePath: string | null
+}
+
+export async function cachePresentationMediaPath(
+  sourcePath: string
+): Promise<string> {
+  const directory = await join(await appDataDir(), "media")
+  await mkdir(directory, { recursive: true })
+  const extension = sourcePath.split(".").pop()?.toLowerCase() ?? "bin"
+  const destination = await join(
+    directory,
+    `${crypto.randomUUID()}.${extension}`
+  )
+  await copyFile(sourcePath, destination)
+  return convertFileSrc(destination)
 }
 
 const MEDIA_MIME_BY_EXTENSION: Record<string, string> = {

@@ -12,13 +12,14 @@ function ScrollArea({
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
   return (
     <ScrollAreaPrimitive.Root
+      type="auto"
       data-slot="scroll-area"
-      className={cn("relative", className)}
+      className={cn("relative min-h-0 min-w-0 overflow-hidden", className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:!block [&>div]:w-full [&>div]:min-w-0"
+        className="size-full overscroll-contain rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:!block [&>div]:w-full [&>div]:min-w-0"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
@@ -46,7 +47,7 @@ function ScrollBar({
     >
       <ScrollAreaPrimitive.ScrollAreaThumb
         data-slot="scroll-area-thumb"
-        className="relative flex-1 rounded-full bg-border"
+        className="relative min-h-6 flex-1 rounded-full bg-muted-foreground/45 hover:bg-muted-foreground/70"
       />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   )

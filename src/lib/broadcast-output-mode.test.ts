@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { BUILTIN_THEMES } from "./builtin-themes"
 import {
-  isLowerThirdOverlayTheme,
-  isTickerTheme,
   shouldRenderLowerThirdLayer,
   shouldRenderStandardBroadcastContent,
   shouldRenderTickerLayer,
@@ -26,7 +24,6 @@ describe("broadcast output mode", () => {
       outputMode: "lower-third" as const,
     }
 
-    expect(isLowerThirdOverlayTheme(overlayTheme)).toBe(true)
     expect(shouldRenderLowerThirdLayer(overlayTheme)).toBe(true)
     expect(shouldRenderStandardBroadcastContent(overlayTheme)).toBe(false)
   })
@@ -44,10 +41,8 @@ describe("broadcast output mode", () => {
     if (!tickerTheme || !standardTheme)
       throw new Error("expected built-in themes")
 
-    expect(isTickerTheme(tickerTheme)).toBe(true)
     expect(shouldRenderTickerLayer(tickerTheme)).toBe(true)
     expect(shouldRenderStandardBroadcastContent(tickerTheme)).toBe(true)
-    expect(isLowerThirdOverlayTheme(standardTheme)).toBe(false)
     expect(shouldRenderLowerThirdLayer(standardTheme)).toBe(false)
     expect(shouldRenderStandardBroadcastContent(standardTheme)).toBe(true)
   })

@@ -114,6 +114,15 @@ const REFERENCE_WORDS = new Set([
   "verses",
   "vs",
   "v",
+  "please",
+  "find",
+  "show",
+  "me",
+  "open",
+  "go",
+  "to",
+  "the",
+  "of",
 ])
 
 function levenshteinDistance(a: string, b: string): number {
@@ -123,6 +132,7 @@ function levenshteinDistance(a: string, b: string): number {
 
   const previous = Array.from({ length: b.length + 1 }, (_, i) => i)
   const current = Array.from({ length: b.length + 1 }, () => 0)
+  const beforePrevious = [...previous]
 
   for (let i = 1; i <= a.length; i += 1) {
     current[0] = i
@@ -133,7 +143,11 @@ function levenshteinDistance(a: string, b: string): number {
         current[j - 1] + 1,
         previous[j - 1] + substitutionCost
       )
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        current[j] = Math.min(current[j], beforePrevious[j - 2] + 1)
+      }
     }
+    beforePrevious.splice(0, beforePrevious.length, ...previous)
     previous.splice(0, previous.length, ...current)
   }
 
@@ -264,7 +278,10 @@ function parseNaturalReference(input: string): {
   }
 
   const hasVerseSeparator = trimmed.includes(":")
-  const tokens = normalized.replace(/:/g, " ").split(" ")
+  const tokens = normalized
+    .replace(/([\p{L}])(?=\d)/gu, "$1 ")
+    .replace(/:/g, " ")
+    .split(" ")
   const usableTokens = tokens
     .map((token) => ORDINAL_WORDS[token] ?? token)
     .filter((token) => !REFERENCE_WORDS.has(token))

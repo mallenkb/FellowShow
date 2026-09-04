@@ -23,7 +23,7 @@ export interface NdiFrameRequest {
   outputId: string
   width: number
   height: number
-  rgbaBase64: string
+  rgba: Uint8ClampedArray
 }
 
 export interface NdiConfigEventPayload {

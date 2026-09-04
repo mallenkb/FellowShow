@@ -3,6 +3,7 @@ import { emitTo } from "@tauri-apps/api/event"
 import { getAllWindows } from "@tauri-apps/api/window"
 import { toast } from "sonner"
 import { invoke } from "@/lib/ipc"
+import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
 import {
   outputWindowTitle,
   windowLabelForOutput,
@@ -297,7 +298,7 @@ export async function setOutputEnabled(
       toast.error("Pick a screen first", {
         description: `Choose a screen for ${output.name} in Manage, then turn it on.`,
       })
-      openBroadcastSettingsDeferred(output.id)
+      openBroadcastSettings(output.id)
       return false
     }
     await openDisplayOutput(output)
@@ -305,13 +306,4 @@ export async function setOutputEnabled(
   }
   await startNdiOutput(output)
   return true
-}
-
-function openBroadcastSettingsDeferred(focusOutputId: string) {
-  // Dynamic import keeps this module free of a hard cycle with the dialog UI.
-  void import("@/lib/broadcast-settings-dialog")
-    .then((mod) => {
-      mod.openBroadcastSettings(focusOutputId)
-    })
-    .catch(() => {})
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { LevelMeter } from "@/components/ui/level-meter"
 import { Button } from "@/components/ui/button"
@@ -25,6 +25,7 @@ import { endSermon } from "@/lib/sermon-actions"
 
 const MAX_TRANSCRIPT_ANNOTATIONS = 120
 const SEGMENT_ANNOTATION_GRACE_MS = 2_000
+let annotationRequestId = 0
 
 function annotationFromDetection(
   detection: DetectionResult
@@ -103,22 +104,36 @@ async function loadAnnotationVerse(annotation: TranscriptVerseAnnotation) {
   )
 }
 
-function selectAnnotation(annotation: TranscriptVerseAnnotation) {
+function selectAnnotation(
+  annotation: TranscriptVerseAnnotation,
+  activate = true
+) {
+  const requestId = ++annotationRequestId
+  const { selectedVerse, activeTranslationId } = useBibleStore.getState()
+  const isCurrent = () => {
+    const state = useBibleStore.getState()
+    return (
+      requestId === annotationRequestId &&
+      state.activeTranslationId === activeTranslationId &&
+      state.selectedVerse === selectedVerse
+    )
+  }
   bibleActions.navigateToVerse(
     annotation.bookNumber,
     annotation.chapter,
-    annotation.verse
+    annotation.verse,
+    activate
   )
   void loadAnnotationVerse(annotation)
     .then((verse) => {
-      bibleActions.selectVerse(verse)
+      if (isCurrent()) bibleActions.selectVerse(verse)
     })
     .catch((error: unknown) => {
       console.error(
         `[transcript] Failed to load ${annotation.reference}`,
         error
       )
-      bibleActions.selectVerse(fallbackVerse(annotation))
+      if (isCurrent()) bibleActions.selectVerse(fallbackVerse(annotation))
     })
 }
 
@@ -174,21 +189,11 @@ function AudioLevelMeter() {
  * Leaf component that subscribes to `currentPartial`. Partials update per audio tick.
  */
 function LivePartialLine({
-  scrollRef,
-  shouldFollowRef,
   annotations,
 }: {
-  scrollRef: RefObject<HTMLDivElement | null>
-  shouldFollowRef: RefObject<boolean>
   annotations: TranscriptVerseAnnotation[]
 }) {
   const currentPartial = useTranscriptStore((s) => s.currentPartial)
-
-  useEffect(() => {
-    if (shouldFollowRef.current && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [currentPartial, scrollRef, shouldFollowRef])
 
   if (!currentPartial) return null
 
@@ -217,6 +222,7 @@ export function TranscriptPanel() {
     (state) => state.activeSessionId !== null
   )
   const scrollRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const shouldFollowTranscriptRef = useRef(true)
   const [isFollowingTranscript, setIsFollowingTranscript] = useState(true)
   const [transcriptAnnotations, setTranscriptAnnotations] = useState<
@@ -260,7 +266,7 @@ export function TranscriptPanel() {
     // Auto-navigate book search + select verse for preview/live
     const directHit = highlightedDetections[0]
     if (directHit && directHit.book_number > 0) {
-      selectAnnotation(annotationFromDetection(directHit))
+      selectAnnotation(annotationFromDetection(directHit), false)
     }
 
     // Automatic queue entries must come from the exact set rendered as
@@ -314,6 +320,7 @@ export function TranscriptPanel() {
         text: advance.verse_text,
       })
       useBibleStore.getState().setPendingNavigation({
+        activate: false,
         bookNumber: advance.book_number,
         chapter: advance.chapter,
         verse: advance.verse,
@@ -321,13 +328,25 @@ export function TranscriptPanel() {
     }
   })
 
-  // Auto-scroll on segment additions. Partial-driven scrolling lives in
-  // LivePartialLine so the panel doesn't re-render per audio tick.
   useEffect(() => {
-    if (shouldFollowTranscriptRef.current && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    const viewport = scrollRef.current
+    const content = contentRef.current
+    if (!viewport || !content) return
+    let frame = 0
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        if (shouldFollowTranscriptRef.current)
+          viewport.scrollTop = viewport.scrollHeight
+      })
+    })
+    observer.observe(content)
+    observer.observe(viewport)
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
     }
-  }, [segments])
+  }, [])
 
   const handleTranscriptScroll = useCallback(() => {
     const element = scrollRef.current
@@ -374,11 +393,7 @@ export function TranscriptPanel() {
         </div>
       </PanelHeader>
 
-      <div
-        ref={scrollRef}
-        onScroll={handleTranscriptScroll}
-        className="relative min-h-0 flex-1 overflow-y-auto"
-      >
+      <div className="relative min-h-0 flex-1">
         {!isFollowingTranscript && segments.length > 0 ? (
           <Button
             type="button"
@@ -390,43 +405,54 @@ export function TranscriptPanel() {
             Jump to latest
           </Button>
         ) : null}
-        <div className="flex flex-col gap-2 p-3">
-          {/* Faded top gradient */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-linear-to-b from-card to-transparent" />
+        <div
+          ref={scrollRef}
+          onScroll={handleTranscriptScroll}
+          onWheel={(event) => {
+            if (event.deltaY < 0) {
+              shouldFollowTranscriptRef.current = false
+              setIsFollowingTranscript(false)
+            }
+          }}
+          className="h-full [scrollbar-gutter:stable] overflow-y-auto overscroll-contain [overflow-anchor:none]"
+        >
+          <div ref={contentRef} className="flex flex-col gap-2 p-3">
+            {/* Faded top gradient */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-linear-to-b from-card to-transparent" />
 
-          {segments.length === 0 && !hasPartial && !isTranscribing && (
-            <p className="text-sm text-muted-foreground">
-              Click "Start transcribing" to begin
-            </p>
-          )}
+            {segments.length === 0 && !hasPartial && !isTranscribing && (
+              <p className="text-sm text-muted-foreground">
+                Click "Start transcribing" to begin
+              </p>
+            )}
 
-          {/* Final segments — recent ones brighter, older ones fade */}
-          {segments.map((seg, idx) => {
-            const distFromEnd = segments.length - 1 - idx
-            const opacity =
-              distFromEnd === 0
-                ? "text-foreground/80"
-                : distFromEnd === 1
-                  ? "text-foreground/60"
-                  : distFromEnd <= 3
-                    ? "text-foreground/40"
-                    : "text-foreground/25"
-            return (
-              <HighlightedTranscriptText
-                key={seg.id}
-                text={seg.text}
-                annotations={annotationsForSegment(seg, transcriptAnnotations)}
-                className={`text-sm leading-relaxed transition-colors duration-300 ${opacity}`}
-              />
-            )
-          })}
+            {/* Final segments — recent ones brighter, older ones fade */}
+            {segments.map((seg, idx) => {
+              const distFromEnd = segments.length - 1 - idx
+              const opacity =
+                distFromEnd === 0
+                  ? "text-foreground/80"
+                  : distFromEnd === 1
+                    ? "text-foreground/60"
+                    : distFromEnd <= 3
+                      ? "text-foreground/40"
+                      : "text-foreground/25"
+              return (
+                <HighlightedTranscriptText
+                  key={seg.id}
+                  text={seg.text}
+                  annotations={annotationsForSegment(
+                    seg,
+                    transcriptAnnotations
+                  )}
+                  className={`text-sm leading-relaxed transition-colors duration-300 ${opacity}`}
+                />
+              )
+            })}
 
-          {/* Partial (in-progress) text rendered by leaf subscriber */}
-          <LivePartialLine
-            scrollRef={scrollRef}
-            shouldFollowRef={shouldFollowTranscriptRef}
-            annotations={transcriptAnnotations}
-          />
+            {/* Partial (in-progress) text rendered by leaf subscriber */}
+            <LivePartialLine annotations={transcriptAnnotations} />
+          </div>
         </div>
       </div>
 
@@ -436,7 +462,9 @@ export function TranscriptPanel() {
             variant="destructive"
             size="sm"
             onClick={() =>
-              void (hasActiveSermon ? endSermon() : stopTranscription())
+              void (hasActiveSermon ? endSermon() : stopTranscription()).catch(
+                console.error
+              )
             }
           >
             <MicIcon className="size-3" />

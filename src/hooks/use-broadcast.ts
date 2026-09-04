@@ -27,16 +27,3 @@ export function toVerseRenderData(
     segments: [{ verseNumber: verse.verse, text: verse.text }],
   }
 }
-
-export function deriveLiveVerse({
-  isLive,
-  selectedVerse,
-  translation,
-}: {
-  isLive: boolean
-  selectedVerse: Verse | null
-  translation: string
-}): VerseRenderData | null {
-  if (!isLive || !selectedVerse) return null
-  return toVerseRenderData(selectedVerse, translation)
-}

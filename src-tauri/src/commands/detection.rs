@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use std::sync::Mutex;
 
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 use fellowshow_detection::{DetectionPipeline, MergedDetection, ReadingMode};
 
@@ -168,13 +168,90 @@ pub struct SemanticSearchResult {
 }
 
 #[tauri::command]
-pub fn semantic_search(
+pub async fn search_scripture_phrases(
+    app: AppHandle,
+    query: String,
+    translation_id: i64,
+    limit: Option<usize>,
+) -> Result<Vec<SemanticSearchResult>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        search_scripture_phrases_inner(app.state(), query, translation_id, limit)
+    })
+    .await
+    .map_err(|e| format!("Scripture search worker failed: {e}"))?
+}
+
+fn search_scripture_phrases_inner(
+    state: State<'_, Mutex<AppState>>,
+    query: String,
+    translation_id: i64,
+    limit: Option<usize>,
+) -> Result<Vec<SemanticSearchResult>, String> {
+    if query.trim().chars().count() < 2 || !query.chars().any(char::is_alphanumeric) {
+        return Ok(Vec::new());
+    }
+    let app_state = state.lock().map_err(|e| e.to_string())?;
+    let db = app_state
+        .bible_db
+        .as_ref()
+        .ok_or("Bible database not loaded")?;
+    let query: String = query.chars().take(500).collect();
+    let matches = db
+        .search_verses_bm25_including_translation(
+            &query,
+            limit.unwrap_or(15).clamp(1, 50),
+            Some(translation_id),
+        )
+        .map_err(|e| format!("Scripture phrase search failed: {e}"))?;
+    let mut results = Vec::with_capacity(matches.len());
+    for (rank, found) in matches.into_iter().enumerate() {
+        if let Some(v) = db
+            .get_verse(
+                translation_id,
+                found.book_number,
+                found.chapter,
+                found.verse,
+            )
+            .map_err(|e| format!("Could not resolve scripture in selected translation: {e}"))?
+        {
+            let rank = u32::try_from(rank).map_err(|e| e.to_string())?;
+            results.push(SemanticSearchResult {
+                verse_ref: format!("{} {}:{}", v.book_name, v.chapter, v.verse),
+                verse_text: v.text,
+                book_name: v.book_name,
+                book_number: v.book_number,
+                chapter: v.chapter,
+                verse: v.verse,
+                similarity: (0.98 - f64::from(rank) * 0.025).max(0.5),
+            });
+        }
+    }
+    Ok(results)
+}
+
+#[tauri::command]
+pub async fn semantic_search(
+    app: AppHandle,
+    query: String,
+    limit: Option<usize>,
+    translation_id: Option<i64>,
+) -> Result<Vec<SemanticSearchResult>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        semantic_search_inner(app.state(), app.state(), query, limit, translation_id)
+    })
+    .await
+    .map_err(|e| format!("Meaning search worker failed: {e}"))?
+}
+
+fn semantic_search_inner(
     state: State<'_, Mutex<AppState>>,
     pipeline_state: State<'_, Mutex<DetectionPipeline>>,
     query: String,
     limit: Option<usize>,
+    translation_id: Option<i64>,
 ) -> Result<Vec<SemanticSearchResult>, String> {
-    let k = limit.unwrap_or(10);
+    let k = limit.unwrap_or(10).clamp(1, 50);
+    let query: String = query.chars().take(500).collect();
 
     // Lock pipeline for vector search (may be slow if ONNX runs)
     let vector_results = {
@@ -187,12 +264,18 @@ pub fn semantic_search(
 
     // Lock AppState for DB lookups only (fast)
     let app_state = state.lock().map_err(|e| e.to_string())?;
+    let translation_id = translation_id.unwrap_or(app_state.active_translation_id);
 
     let mut results: Vec<SemanticSearchResult> = vector_results
         .into_iter()
         .filter_map(|(verse_id, similarity)| {
             if let Some(ref db) = app_state.bible_db {
                 if let Ok(Some(v)) = db.get_verse_by_id(verse_id) {
+                    let Ok(Some(v)) =
+                        db.get_verse(translation_id, v.book_number, v.chapter, v.verse)
+                    else {
+                        return None;
+                    };
                     return Some(SemanticSearchResult {
                         verse_ref: format!("{} {}:{}", v.book_name, v.chapter, v.verse),
                         verse_text: v.text,
@@ -211,25 +294,22 @@ pub fn semantic_search(
     // FTS5 BM25 across all English translations — resolve to active translation
     if let Some(ref db) = app_state.bible_db {
         let fts_results = db.search_verses_bm25(&query, k).unwrap_or_default();
-        let seen: HashSet<(i32, i32, i32)> = results
+        let mut seen: HashSet<(i32, i32, i32)> = results
             .iter()
             .map(|r| (r.book_number, r.chapter, r.verse))
             .collect();
 
         for (rank, fts) in fts_results.iter().enumerate() {
-            if !seen.contains(&(fts.book_number, fts.chapter, fts.verse)) {
+            if seen.insert((fts.book_number, fts.chapter, fts.verse)) {
                 #[expect(clippy::cast_precision_loss, reason = "rank is small")]
                 let similarity = FTS5_RANK0_CONFIDENCE - (rank as f64 * FTS5_CONFIDENCE_DECAY);
                 if similarity < FTS5_MIN_CONFIDENCE {
                     break;
                 }
                 // Resolve to active translation text
-                if let Ok(Some(v)) = db.get_verse(
-                    app_state.active_translation_id,
-                    fts.book_number,
-                    fts.chapter,
-                    fts.verse,
-                ) {
+                if let Ok(Some(v)) =
+                    db.get_verse(translation_id, fts.book_number, fts.chapter, fts.verse)
+                {
                     results.push(SemanticSearchResult {
                         verse_ref: format!("{} {}:{}", v.book_name, v.chapter, v.verse),
                         verse_text: v.text,
@@ -251,6 +331,7 @@ pub fn semantic_search(
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
+    results.truncate(k);
     Ok(results)
 }
 

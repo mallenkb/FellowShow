@@ -347,13 +347,20 @@ impl ActiveNdiSession {
         // Convert RGBA -> BGRA for NDIlib_FourCC_type_BGRA.
         for (idx, px) in rgba_data.chunks_exact(4).enumerate() {
             let offset = idx * 4;
-            self.frame_buffer[offset] = px[2];
-            self.frame_buffer[offset + 1] = px[1];
-            self.frame_buffer[offset + 2] = px[0];
-            self.frame_buffer[offset + 3] = match self.info.alpha_mode {
-                NdiAlphaMode::NoneOpaque => 255,
-                NdiAlphaMode::StraightAlpha | NdiAlphaMode::PremultipliedAlpha => px[3],
+            let (red, green, blue, alpha) = match self.info.alpha_mode {
+                NdiAlphaMode::NoneOpaque => (px[0], px[1], px[2], 255),
+                NdiAlphaMode::StraightAlpha => (px[0], px[1], px[2], px[3]),
+                NdiAlphaMode::PremultipliedAlpha => (
+                    premultiply_alpha(px[0], px[3]),
+                    premultiply_alpha(px[1], px[3]),
+                    premultiply_alpha(px[2], px[3]),
+                    px[3],
+                ),
             };
+            self.frame_buffer[offset] = blue;
+            self.frame_buffer[offset + 1] = green;
+            self.frame_buffer[offset + 2] = red;
+            self.frame_buffer[offset + 3] = alpha;
         }
 
         #[expect(
@@ -397,6 +404,11 @@ impl ActiveNdiSession {
         }
         Ok(())
     }
+}
+
+fn premultiply_alpha(channel: u8, alpha: u8) -> u8 {
+    let scaled = (u16::from(channel) * u16::from(alpha) + 127) / 255;
+    u8::try_from(scaled).map_or(u8::MAX, std::convert::identity)
 }
 
 impl Drop for ActiveNdiSession {

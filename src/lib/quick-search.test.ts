@@ -77,6 +77,30 @@ const mockBooks: Book[] = [
 ]
 
 describe("numberToRoman", () => {
+  it("accepts a transposed book name with a colon-free reference", () => {
+    expect(getAutocompleteSuggestion("Jhon 3 16", mockBooks)).toMatchObject({
+      matchedBook: { book_number: 43 },
+      chapter: 3,
+      verse: 16,
+    })
+  })
+
+  it("accepts a reference without a space after the book name", () => {
+    expect(getAutocompleteSuggestion("John3:16", mockBooks)).toMatchObject({
+      matchedBook: { book_number: 43 },
+      chapter: 3,
+      verse: 16,
+    })
+  })
+
+  it("accepts a natural-language reference request", () => {
+    expect(
+      getAutocompleteSuggestion(
+        "please show me John chapter 3 verse 16",
+        mockBooks
+      )
+    ).toMatchObject({ matchedBook: { book_number: 43 }, chapter: 3, verse: 16 })
+  })
   it("converts 1 to I", () => {
     expect(numberToRoman(1)).toBe("I")
   })

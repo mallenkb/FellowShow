@@ -5,9 +5,8 @@
 
 use std::sync::Mutex;
 
-use base64::Engine;
 use fellowshow_broadcast::ndi::{NdiRuntime, NdiSessionInfo, NdiStartRequest};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tauri::webview::PageLoadEvent;
 use tauri::State;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
@@ -120,15 +119,6 @@ pub struct MonitorInfo {
     pub x: i32,
     pub y: i32,
     pub is_primary: bool,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NdiFrameRequest {
-    pub output_id: String,
-    pub width: u32,
-    pub height: u32,
-    pub rgba_base64: String,
 }
 
 #[tauri::command]
@@ -332,20 +322,37 @@ pub fn get_ndi_status(
 #[tauri::command]
 pub fn push_ndi_frame(
     runtime: State<'_, Mutex<NdiRuntime>>,
-    request: NdiFrameRequest,
+    request: tauri::ipc::Request<'_>,
 ) -> Result<(), String> {
-    let rgba_data = base64::engine::general_purpose::STANDARD
-        .decode(&request.rgba_base64)
-        .map_err(|e| format!("base64 decode error: {e}"))?;
+    let output_id = required_header(&request, "x-fellowshow-output-id")?;
+    let width = parse_u32_header(&request, "x-fellowshow-frame-width")?;
+    let height = parse_u32_header(&request, "x-fellowshow-frame-height")?;
+    let rgba_data = match request.body() {
+        tauri::ipc::InvokeBody::Raw(data) => data,
+        tauri::ipc::InvokeBody::Json(_) => {
+            return Err("NDI frame command requires a binary body".to_string());
+        }
+    };
     let mut runtime = runtime.lock().map_err(|e| e.to_string())?;
     runtime
-        .send_frame_rgba(
-            &request.output_id,
-            request.width,
-            request.height,
-            &rgba_data,
-        )
+        .send_frame_rgba(&output_id, width, height, rgba_data)
         .map_err(|e| e.to_string())
+}
+
+fn required_header(request: &tauri::ipc::Request<'_>, name: &str) -> Result<String, String> {
+    request
+        .headers()
+        .get(name)
+        .ok_or_else(|| format!("missing {name} header"))?
+        .to_str()
+        .map(str::to_owned)
+        .map_err(|e| format!("invalid {name} header: {e}"))
+}
+
+fn parse_u32_header(request: &tauri::ipc::Request<'_>, name: &str) -> Result<u32, String> {
+    required_header(request, name)?
+        .parse::<u32>()
+        .map_err(|e| format!("invalid {name} header: {e}"))
 }
 
 #[cfg(test)]

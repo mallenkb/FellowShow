@@ -1,94 +1,65 @@
-import Fuse from "fuse.js"
-import { invoke, type VerseSearchRow } from "@/lib/ipc"
+import { invoke } from "@/lib/ipc"
 import type { SemanticSearchResult } from "@/types/detection"
 
-type ContextSearchDoc = SemanticSearchResult
-
-const DEFAULT_LIMIT = 15
-const MIN_SIMILARITY = 0.55
-
-const fuseByTranslation = new Map<number, Fuse<ContextSearchDoc>>()
-const fusePromiseByTranslation = new Map<
-  number,
-  Promise<Fuse<ContextSearchDoc>>
+const cache = new Map<
+  string,
+  { results: SemanticSearchResult[]; expires: number }
 >()
+const pending = new Map<string, Promise<SemanticSearchResult[]>>()
+let semanticPending: Promise<unknown> = Promise.resolve()
 
-function normalizeQuery(query: string) {
-  return query.toLowerCase().replace(/\s+/g, " ").trim()
-}
-
-function rowToDoc(row: VerseSearchRow): ContextSearchDoc {
-  return {
-    verse_ref: `${row.book_name} ${row.chapter}:${row.verse}`,
-    verse_text: row.text,
-    book_name: row.book_name,
-    book_number: row.book_number,
-    chapter: row.chapter,
-    verse: row.verse,
-    similarity: 0,
-  }
-}
-
-async function getFuseIndex(
-  translationId: number
-): Promise<Fuse<ContextSearchDoc>> {
-  const existing = fuseByTranslation.get(translationId)
-  if (existing) return existing
-
-  const pending = fusePromiseByTranslation.get(translationId)
-  if (pending) return pending
-
-  const promise = (async () => {
-    const rows = await invoke("get_translation_verses_for_search", {
-      translationId,
-    })
-    const docs = rows.map(rowToDoc)
-
-    const fuse = new Fuse(docs, {
-      includeScore: true,
-      shouldSort: true,
-      threshold: 0.35,
-      ignoreLocation: true,
-      minMatchCharLength: 2,
-      keys: [
-        { name: "verse_text", weight: 0.92 },
-        { name: "book_name", weight: 0.08 },
-      ],
-    })
-
-    fuseByTranslation.set(translationId, fuse)
-    return fuse
-  })()
-  fusePromiseByTranslation.set(translationId, promise)
-
-  try {
-    return await promise
-  } finally {
-    fusePromiseByTranslation.delete(translationId)
-  }
-}
-
-function fuseScoreToSimilarity(score: number | undefined) {
-  // Fuse scores are 0 (best) -> 1 (worst), so invert for our UI confidence.
-  const clamped = Math.min(1, Math.max(0, score ?? 1))
-  return Number((1 - clamped).toFixed(4))
-}
-
-export async function searchContextWithFuse(
+export function searchScripture(
   query: string,
   translationId: number,
-  limit = DEFAULT_LIMIT
+  semantic = false,
+  isCurrent: () => boolean = () => true
 ): Promise<SemanticSearchResult[]> {
-  const normalized = normalizeQuery(query)
-  if (normalized.length < 2) return []
+  const normalized = query
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .slice(0, 500)
+  const key = `${semantic}:${translationId}:${normalized}`
+  const hit = cache.get(key)
+  if (hit && hit.expires > Date.now()) return Promise.resolve(hit.results)
+  const existing = pending.get(key)
+  if (existing && !semantic) return existing
+  const run = async () => {
+    if (!isCurrent()) return []
+    const results = await invoke(
+      semantic ? "semantic_search" : "search_scripture_phrases",
+      {
+        query: normalized,
+        translationId,
+        limit: 15,
+      }
+    )
+    if (cache.size >= 100) {
+      const oldest = cache.keys().next().value
+      if (oldest !== undefined) cache.delete(oldest)
+    }
+    cache.set(key, { results, expires: Date.now() + 60_000 })
+    return results
+  }
+  const promise = (semantic ? semanticPending.then(run) : run()).finally(() => {
+    if (!semantic) pending.delete(key)
+  })
+  if (semantic) semanticPending = promise.catch(() => undefined)
+  if (!semantic) pending.set(key, promise)
+  return promise
+}
 
-  const fuse = await getFuseIndex(translationId)
-  const hits = fuse.search(normalized, { limit })
-
-  return hits
-    .map(({ item, score }) => ({
-      ...item,
-      similarity: fuseScoreToSimilarity(score),
-    }))
-    .filter((result) => result.similarity >= MIN_SIMILARITY)
+export function mergeScriptureMatches(
+  phrases: SemanticSearchResult[],
+  semantic: SemanticSearchResult[]
+): SemanticSearchResult[] {
+  const seen = new Set<string>()
+  return [...phrases, ...semantic]
+    .filter((result) => {
+      const key = `${result.book_number}:${result.chapter}:${result.verse}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .slice(0, 20)
 }

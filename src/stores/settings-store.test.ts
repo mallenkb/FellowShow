@@ -4,10 +4,16 @@ const mockGet = vi.fn()
 const mockSet = vi.fn()
 const mockSave = vi.fn()
 const mockDelete = vi.fn()
+const mockHas = vi.fn()
 const mockLoad = vi.fn()
+const mockInvoke = vi.fn()
 
 vi.mock("@tauri-apps/plugin-store", () => ({
   load: (...args: unknown[]) => mockLoad(...args),
+}))
+
+vi.mock("@tauri-apps/api/core", () => ({
+  invoke: (...args: unknown[]) => mockInvoke(...args),
 }))
 
 async function flushSave(): Promise<void> {
@@ -25,17 +31,26 @@ describe("settings store", () => {
     mockSet.mockReset()
     mockSave.mockReset()
     mockDelete.mockReset()
+    mockHas.mockReset()
     mockLoad.mockReset()
+    mockInvoke.mockReset()
+    mockHas.mockResolvedValue(false)
+    mockInvoke.mockImplementation(async (command: string) => {
+      if (command === "load_secure_settings") return {}
+      return undefined
+    })
     mockLoad.mockResolvedValue({
       get: mockGet,
       set: mockSet,
       delete: mockDelete,
+      has: mockHas,
       save: mockSave,
     })
     vi.resetModules()
   })
 
-  it("hydrate merges persisted values over defaults", async () => {
+  it("validates settings at startup and migrates legacy secrets on explicit unlock", async () => {
+    mockHas.mockImplementation(async (key: string) => key === "deepgramApiKey")
     mockGet.mockImplementation(async (key: string) => {
       if (key === "gain") return 2.5
       if (key === "sttProvider") return "whisper"
@@ -43,17 +58,21 @@ describe("settings store", () => {
       return null
     })
 
-    const { hydrateSettings, useSettingsStore } =
+    const { hydrateSettings, unlockSecureSettings, useSettingsStore } =
       await import("./settings-store")
     await hydrateSettings()
+    expect(mockInvoke).not.toHaveBeenCalled()
+    await unlockSecureSettings()
 
     const state = useSettingsStore.getState()
-    expect(state.gain).toBe(2.5)
+    expect(state.gain).toBe(1)
     expect(state.sttProvider).toBe("whisper")
     expect(state.deepgramApiKey).toBe("dg-key")
     expect(mockGet).toHaveBeenCalledWith("deepgramApiKey")
-    expect(mockDelete).not.toHaveBeenCalled()
-    // Defaults remain for keys with null
+    expect(mockInvoke).toHaveBeenCalledWith("save_secure_settings", {
+      secrets: { deepgramApiKey: "dg-key" },
+    })
+    expect(mockDelete).toHaveBeenCalledWith("deepgramApiKey")
     expect(state.autoMode).toBe(false)
     expect(state.confidenceThreshold).toBe(0.8)
   })
@@ -77,6 +96,41 @@ describe("settings store", () => {
     expect(mockSet).toHaveBeenCalledWith(
       "defaultPinnedTranslationsApplied",
       true
+    )
+  })
+
+  it("does not open the vault for startup or ordinary settings changes", async () => {
+    mockGet.mockResolvedValue(null)
+    const { hydrateSettings, saveSettingsNow, useSettingsStore } =
+      await import("./settings-store")
+    await hydrateSettings()
+    useSettingsStore.getState().setGain(0.5)
+    await saveSettingsNow()
+    expect(mockInvoke).not.toHaveBeenCalled()
+  })
+
+  it("shares one vault request across concurrent unlocks", async () => {
+    mockGet.mockResolvedValue(null)
+    const { unlockSecureSettings } = await import("./settings-store")
+    await Promise.all([unlockSecureSettings(), unlockSecureSettings()])
+    expect(
+      mockInvoke.mock.calls.filter(
+        ([command]) => command === "load_secure_settings"
+      )
+    ).toHaveLength(1)
+  })
+
+  it("does not overwrite stored secrets when access is denied", async () => {
+    mockGet.mockResolvedValue(null)
+    mockInvoke.mockRejectedValue(new Error("access denied"))
+    const { unlockSecureSettings, saveSettingsNow, useSettingsStore } =
+      await import("./settings-store")
+    await expect(unlockSecureSettings()).rejects.toThrow("access denied")
+    useSettingsStore.getState().setGain(0.5)
+    await saveSettingsNow()
+    expect(mockInvoke).not.toHaveBeenCalledWith(
+      "save_secure_settings",
+      expect.anything()
     )
   })
 
@@ -146,16 +200,24 @@ describe("settings store", () => {
   it("saveSettingsNow persists API keys", async () => {
     mockGet.mockResolvedValue(null)
 
-    const { hydrateSettings, saveSettingsNow, useSettingsStore } =
-      await import("./settings-store")
+    const {
+      hydrateSettings,
+      unlockSecureSettings,
+      saveSettingsNow,
+      useSettingsStore,
+    } = await import("./settings-store")
     await hydrateSettings()
+    await unlockSecureSettings()
     mockSet.mockClear()
     mockSave.mockClear()
 
     useSettingsStore.getState().setDeepgramApiKey("dg-key")
     await saveSettingsNow()
 
-    expect(mockSet).toHaveBeenCalledWith("deepgramApiKey", "dg-key")
+    expect(mockInvoke).toHaveBeenCalledWith("save_secure_settings", {
+      secrets: { deepgramApiKey: "dg-key" },
+    })
+    expect(mockSet).not.toHaveBeenCalledWith("deepgramApiKey", "dg-key")
     expect(mockSave).toHaveBeenCalledTimes(1)
   })
 
@@ -204,7 +266,8 @@ describe("settings store", () => {
     await flushSave()
 
     expect(warnSpy).toHaveBeenCalledWith(
-      "[settings] Failed to persist settings"
+      "[settings] Failed to persist settings",
+      expect.any(Error)
     )
     warnSpy.mockRestore()
   })

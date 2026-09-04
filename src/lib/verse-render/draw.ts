@@ -1,3 +1,4 @@
+import { presentationMedia } from "@/lib/presentation-composition"
 import type {
   BroadcastTheme,
   PresenterTimerRenderData,
@@ -255,7 +256,7 @@ export function drawBackground(
       const media = isVideo
         ? videoCache?.get(bg.image.url)
         : imageCache?.get(bg.image.url)
-      if (!media) {
+      if (!media || (isVideo && (media as HTMLVideoElement).readyState < 2)) {
         // Use a deterministic fallback while image is still loading.
         ctx.fillStyle = bg.image.tint ?? "#000"
         ctx.fillRect(0, 0, width, height)
@@ -339,6 +340,7 @@ function drawImageToRect(
   offsetX = 0,
   offsetY = 0
 ): void {
+  if (img instanceof HTMLVideoElement && img.readyState < 2) return
   let drawX = x
   let drawY = y
   let drawW = width
@@ -389,24 +391,38 @@ export function drawPresentationImage(
   ctx.fillStyle = "#000000"
   ctx.fillRect(0, 0, width, height)
 
-  const isVideo = image.mediaType === "video"
-  const media = isVideo
-    ? videoCache?.get(image.url)
-    : imageCache?.get(image.url)
-  if (!media) return true
+  for (const layer of presentationMedia(image)) {
+    const isVideo = layer.mediaType === "video"
+    const media = isVideo
+      ? videoCache?.get(layer.url)
+      : imageCache?.get(layer.url)
+    if (!media) continue
 
-  drawImageToRect(
-    ctx,
-    media,
-    0,
-    0,
-    width,
-    height,
-    image.fit ?? "contain",
-    image.scale ?? 1,
-    image.offsetX ?? 0,
-    image.offsetY ?? 0
-  )
+    const scale = layer.scale ?? 1
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(
+      width * (0.5 + (layer.offsetX ?? 0) - scale / 2),
+      height * (0.5 + (layer.offsetY ?? 0) - scale / 2),
+      width * scale,
+      height * scale
+    )
+    ctx.clip()
+
+    drawImageToRect(
+      ctx,
+      media,
+      0,
+      0,
+      width,
+      height,
+      layer.fit ?? "contain",
+      scale,
+      layer.offsetX ?? 0,
+      layer.offsetY ?? 0
+    )
+    ctx.restore()
+  }
   return true
 }
 

@@ -15,6 +15,10 @@
     "fs:default",
     "fs:allow-write-text-file",
     {
+      "identifier": "fs:allow-copy-file",
+      "allow": [{ "path": "$APPDATA/media/*" }]
+    },
+    {
       "identifier": "fs:allow-mkdir",
       "allow": [{ "path": "$APPDATA/media" }]
     },

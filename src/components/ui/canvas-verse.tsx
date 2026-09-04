@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { renderVerse } from "@/lib/verse-renderer"
+import { presentationMedia } from "@/lib/presentation-composition"
+import { pruneVideoCache } from "@/lib/media-cache"
 import { drawTransitionFrame } from "@/lib/render-transition"
 import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
 import { hasAnimatingOverlay } from "@/lib/overlays"
@@ -59,6 +61,11 @@ export const CanvasVerse = memo(function CanvasVerse({
   const [tickerVersion, setTickerVersion] = useState(0)
   const [fontVersion, setFontVersion] = useState(0)
 
+  useEffect(() => {
+    const cache = videoCacheRef.current
+    return () => pruneVideoCache(cache, new Set())
+  }, [])
+
   // Measure container size with ResizeObserver
   useEffect(() => {
     const container = containerRef.current
@@ -91,9 +98,9 @@ export const CanvasVerse = memo(function CanvasVerse({
       theme.background.image?.mediaType !== "video"
         ? theme.background.image?.url
         : null,
-      verse?.presentationImage?.mediaType !== "video"
-        ? (verse?.presentationImage?.url ?? null)
-        : null,
+      ...presentationMedia(verse?.presentationImage)
+        .filter((item) => item.mediaType !== "video")
+        .map((item) => item.url),
       timer?.backgroundMediaType !== "video"
         ? (timer?.backgroundUrl ?? null)
         : null,
@@ -109,12 +116,12 @@ export const CanvasVerse = memo(function CanvasVerse({
             playbackStartedAt: theme.background.image.playbackStartedAt,
           }
         : null,
-      verse?.presentationImage?.mediaType === "video"
-        ? {
-            url: verse.presentationImage.url,
-            playbackStartedAt: verse.presentationImage.playbackStartedAt,
-          }
-        : null,
+      ...presentationMedia(verse?.presentationImage)
+        .filter((item) => item.mediaType === "video")
+        .map((item) => ({
+          url: item.url,
+          playbackStartedAt: item.playbackStartedAt,
+        })),
       timer?.backgroundMediaType === "video"
         ? timer.backgroundUrl
           ? {
@@ -131,6 +138,8 @@ export const CanvasVerse = memo(function CanvasVerse({
         playbackStartedAt: number | undefined
       } => Boolean(item)
     )
+    const activeVideoUrls = new Set(videoMedia.map((item) => item.url))
+    pruneVideoCache(videoCacheRef.current, activeVideoUrls)
     for (const item of videoMedia) {
       const cachedVideo = videoCacheRef.current.get(item.url)
       if (cachedVideo) {
@@ -138,6 +147,7 @@ export const CanvasVerse = memo(function CanvasVerse({
         continue
       }
       const video = document.createElement("video")
+      videoCacheRef.current.set(item.url, video)
       video.muted = true
       video.loop = true
       video.playsInline = true
@@ -152,6 +162,7 @@ export const CanvasVerse = memo(function CanvasVerse({
         setVideoVersion((version) => version + 1)
       }
       video.onerror = () => {
+        videoCacheRef.current.delete(item.url)
         console.warn("[canvas-verse] failed to load video", item.url)
       }
       video.src = item.url
@@ -199,12 +210,12 @@ export const CanvasVerse = memo(function CanvasVerse({
             playbackStartedAt: theme.background.image.playbackStartedAt,
           }
         : null,
-      verse?.presentationImage?.mediaType === "video"
-        ? {
-            url: verse.presentationImage.url,
-            playbackStartedAt: verse.presentationImage.playbackStartedAt,
-          }
-        : null,
+      ...presentationMedia(verse?.presentationImage)
+        .filter((item) => item.mediaType === "video")
+        .map((item) => ({
+          url: item.url,
+          playbackStartedAt: item.playbackStartedAt,
+        })),
       timer?.backgroundMediaType === "video" && timer.backgroundUrl
         ? {
             url: timer.backgroundUrl,
@@ -311,6 +322,11 @@ export const CanvasVerse = memo(function CanvasVerse({
         verse?.segments.map((segment) => segment.text).join("\n") ?? null,
       announcement: verse?.announcement ?? null,
       presentationImage: verse?.presentationImage?.url ?? null,
+      presentationLayers:
+        verse?.presentationImage?.layers?.map((item) => [
+          item.url,
+          item.playbackStartedAt,
+        ]) ?? null,
       presentationPlaybackStartedAt:
         verse?.presentationImage?.playbackStartedAt ?? null,
       timer: timer
@@ -403,7 +419,7 @@ export const CanvasVerse = memo(function CanvasVerse({
         lowerThird,
         imageCache: imageCacheRef.current,
         videoCache: videoCacheRef.current,
-        now: hasTicker ? performance.now() : undefined,
+        now: hasTicker ? Date.now() : undefined,
       })
       if (!verse && !timer) {
         drawVideoStreamPlaceholder(sceneCtx, theme.resolution)

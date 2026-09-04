@@ -65,7 +65,9 @@ export function TransportBar() {
   const [now, setNow] = useState(() => Date.now())
 
   const startTranscription = useCallback(() => {
-    void transcriptionActions.start(() => setShowKeyPrompt(true))
+    void transcriptionActions
+      .start(() => setShowKeyPrompt(true))
+      .catch(console.error)
   }, [])
 
   useEffect(() => {
@@ -85,14 +87,16 @@ export function TransportBar() {
 
   const handleStartSermon = () => {
     setIsChangingSermon(true)
-    void startSermon(() => setShowKeyPrompt(true)).finally(() =>
-      setIsChangingSermon(false)
-    )
+    void startSermon(() => setShowKeyPrompt(true))
+      .catch(console.error)
+      .finally(() => setIsChangingSermon(false))
   }
 
   const handleEndSermon = () => {
     setIsChangingSermon(true)
-    void endSermon().finally(() => setIsChangingSermon(false))
+    void endSermon()
+      .catch(console.error)
+      .finally(() => setIsChangingSermon(false))
   }
 
   const sermonElapsed = activeSession
@@ -119,7 +123,7 @@ export function TransportBar() {
             onClick={
               activeSession
                 ? handleEndSermon
-                : () => void transcriptionActions.stop()
+                : () => void transcriptionActions.stop().catch(console.error)
             }
           >
             <MicIcon className="size-3" />

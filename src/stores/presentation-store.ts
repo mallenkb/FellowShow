@@ -1,6 +1,14 @@
 import { create } from "zustand"
+import { toast } from "sonner"
+import { sanitizeSlides, storedSlides } from "@/lib/presentation-storage"
 import { remove } from "@tauri-apps/plugin-fs"
 import { load, type Store } from "@tauri-apps/plugin-store"
+import {
+  arrangeMedia,
+  slideLayers,
+  type PresentationLayer,
+} from "@/lib/presentation-composition"
+import { clampPresentationMediaTransform } from "@/lib/presentation-media-transform"
 
 export interface PresentationSlide {
   id: string
@@ -15,6 +23,7 @@ export interface PresentationSlide {
   scale: number
   offsetX: number
   offsetY: number
+  layers?: PresentationLayer[]
 }
 
 export interface PresentationPage {
@@ -51,14 +60,18 @@ interface PresentationState {
   selectedDocumentId: string | null
   selectedPageId: string | null
   addSlides: (slides: PresentationSlide[]) => void
+  addSlideMedia: (id: string, media: PresentationLayer[]) => boolean
+  updateSlideLayer: (
+    id: string,
+    layerId: string,
+    patch: Partial<
+      Pick<PresentationLayer, "fit" | "scale" | "offsetX" | "offsetY">
+    >
+  ) => void
+  removeSlideLayer: (id: string, layerId: string) => void
+  arrangeSlideMedia: (id: string) => void
   selectSlide: (id: string | null) => void
   renameSlide: (id: string, name: string) => void
-  setSlideFit: (id: string, fit: PresentationSlide["fit"]) => void
-  updateSlideTransform: (
-    id: string,
-    transform: Partial<Pick<PresentationSlide, "scale" | "offsetX" | "offsetY">>
-  ) => void
-  setTickerText: (text: string) => void
   togglePin: (id: string) => void
   toggleLock: (id: string) => void
   reorderSlides: (
@@ -67,7 +80,6 @@ interface PresentationState {
     position?: "before" | "after"
   ) => void
   removeSlide: (id: string) => void
-  clearSlides: () => void
   startDocumentImport: (document: PresentationDocument) => void
   appendDocumentPage: (
     documentId: string,
@@ -112,13 +124,81 @@ function removeCachedDocumentPages(document: PresentationDocument) {
   })
 }
 
-export const usePresentationStore = create<PresentationState>((set) => ({
+export const usePresentationStore = create<PresentationState>((set, get) => ({
   tickerText: "",
   slides: [],
   documents: [],
   selectedSlideId: null,
   selectedDocumentId: null,
   selectedPageId: null,
+
+  addSlideMedia: (id, media) => {
+    const slide = get().slides.find((item) => item.id === id)
+    if (!slide || slide.locked || slideLayers(slide).length + media.length > 16)
+      return false
+    const layers = [
+      ...slideLayers(slide),
+      ...media.map((item) => ({
+        ...item,
+        playbackStartedAt: item.mediaType === "video" ? Date.now() : undefined,
+      })),
+    ]
+    set((state) => ({
+      slides: state.slides.map((item) =>
+        item.id === id ? { ...item, layers: arrangeMedia(layers) } : item
+      ),
+    }))
+    return true
+  },
+
+  updateSlideLayer: (id, layerId, patch) =>
+    set((state) => ({
+      slides: state.slides.map((slide) => {
+        if (slide.id !== id || slide.locked) return slide
+        if (!slide.layers?.length && slide.id === layerId) {
+          return {
+            ...slide,
+            ...patch,
+            ...clampPresentationMediaTransform({ ...slide, ...patch }),
+          }
+        }
+        return {
+          ...slide,
+          layers: slideLayers(slide).map((layer) =>
+            layer.id === layerId
+              ? {
+                  ...layer,
+                  ...patch,
+                  ...clampPresentationMediaTransform({ ...layer, ...patch }),
+                }
+              : layer
+          ),
+        }
+      }),
+    })),
+
+  removeSlideLayer: (id, layerId) =>
+    set((state) => ({
+      slides: state.slides.map((slide) => {
+        if (slide.id !== id || slide.locked) return slide
+        const layers = slideLayers(slide)
+        if (layers.length <= 1) return slide
+        // A live output may still hold this URL. Keep its media valid until the session ends.
+        return {
+          ...slide,
+          layers: layers.filter((layer) => layer.id !== layerId),
+        }
+      }),
+    })),
+
+  arrangeSlideMedia: (id) =>
+    set((state) => ({
+      slides: state.slides.map((slide) =>
+        slide.id === id && !slide.locked
+          ? { ...slide, layers: arrangeMedia(slideLayers(slide)) }
+          : slide
+      ),
+    })),
 
   addSlides: (slides) =>
     set((state) => {
@@ -149,20 +229,6 @@ export const usePresentationStore = create<PresentationState>((set) => ({
     set((state) => ({
       slides: state.slides.map((slide) =>
         slide.id === id && !slide.locked ? { ...slide, name } : slide
-      ),
-    })),
-
-  setSlideFit: (id, fit) =>
-    set((state) => ({
-      slides: state.slides.map((slide) =>
-        slide.id === id && !slide.locked ? { ...slide, fit } : slide
-      ),
-    })),
-
-  updateSlideTransform: (id, transform) =>
-    set((state) => ({
-      slides: state.slides.map((slide) =>
-        slide.id === id && !slide.locked ? { ...slide, ...transform } : slide
       ),
     })),
 
@@ -227,14 +293,6 @@ export const usePresentationStore = create<PresentationState>((set) => ({
           : state.selectedSlideId
       return { slides, selectedSlideId }
     }),
-
-  clearSlides: () =>
-    set((state) => {
-      state.slides.forEach((slide) => revokeObjectUrl(slide.url))
-      return { slides: [], selectedSlideId: null, tickerText: "" }
-    }),
-
-  setTickerText: (tickerText) => set({ tickerText }),
 
   startDocumentImport: (document) =>
     set((state) => ({
@@ -424,6 +482,7 @@ function sanitizeDocuments(value: unknown): PresentationDocument[] {
 let persistedStore: Store | null = null
 let documentHydration: Promise<void> | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
+let pendingSave: Promise<void> = Promise.resolve()
 
 async function getPersistedStore() {
   if (!persistedStore) {
@@ -437,7 +496,10 @@ async function getPersistedStore() {
 
 async function persistDocuments(state: PresentationState) {
   const store = await getPersistedStore()
-  await store.set("version", 1)
+  await store.set("version", 2)
+  await store.set("slides", storedSlides(state.slides))
+  await store.set("selectedSlideId", state.selectedSlideId)
+  await store.set("tickerText", state.tickerText)
   await store.set(
     "documents",
     state.documents.filter((document) => document.status === "ready")
@@ -450,9 +512,16 @@ async function persistDocuments(state: PresentationState) {
 export function hydratePresentationDocuments(): Promise<void> {
   if (documentHydration) return documentHydration
   documentHydration = (async () => {
+    const initial = usePresentationStore.getState()
     try {
       const store = await getPersistedStore()
+      const version = await store.get<unknown>("version")
+      if (typeof version === "number" && version > 2)
+        throw new Error("Presentation data was saved by a newer app version")
       const documents = sanitizeDocuments(await store.get<unknown>("documents"))
+      const slides = sanitizeSlides(await store.get<unknown>("slides"))
+      const storedSlideId = await store.get<unknown>("selectedSlideId")
+      const tickerText = await store.get<unknown>("tickerText")
       const storedDocumentId = await store.get<unknown>("selectedDocumentId")
       const selectedDocument =
         documents.find((document) => document.id === storedDocumentId) ??
@@ -464,14 +533,45 @@ export function hydratePresentationDocuments(): Promise<void> {
         selectedDocument?.pages[0] ??
         null
 
+      const current = usePresentationStore.getState()
+      const interacted = current !== initial
       usePresentationStore.setState({
-        documents,
-        selectedDocumentId: selectedDocument?.id ?? null,
-        selectedPageId: selectedPage?.id ?? null,
+        documents: [
+          ...documents.filter(
+            (item) =>
+              !current.documents.some((existing) => existing.id === item.id)
+          ),
+          ...current.documents,
+        ],
+        slides: [
+          ...slides.filter(
+            (item) =>
+              !current.slides.some((existing) => existing.id === item.id)
+          ),
+          ...current.slides,
+        ],
+        ...(!interacted
+          ? {
+              selectedSlideId:
+                slides.find((slide) => slide.id === storedSlideId)?.id ?? null,
+              selectedDocumentId: slides.some(
+                (slide) => slide.id === storedSlideId
+              )
+                ? null
+                : (selectedDocument?.id ?? null),
+              selectedPageId: slides.some((slide) => slide.id === storedSlideId)
+                ? null
+                : (selectedPage?.id ?? null),
+              tickerText: typeof tickerText === "string" ? tickerText : "",
+            }
+          : {}),
       })
       usePresentationStore.subscribe((state, previous) => {
         if (
           state.documents === previous.documents &&
+          state.slides === previous.slides &&
+          state.selectedSlideId === previous.selectedSlideId &&
+          state.tickerText === previous.tickerText &&
           state.selectedDocumentId === previous.selectedDocumentId &&
           state.selectedPageId === previous.selectedPageId
         ) {
@@ -480,15 +580,21 @@ export function hydratePresentationDocuments(): Promise<void> {
         if (saveTimer) clearTimeout(saveTimer)
         saveTimer = setTimeout(() => {
           saveTimer = null
-          void persistDocuments(usePresentationStore.getState()).catch(
-            (error: unknown) => {
+          pendingSave = pendingSave
+            .then(() => persistDocuments(usePresentationStore.getState()))
+            .catch((error: unknown) => {
               console.warn("[presentations] Failed to persist documents", error)
-            }
-          )
+              toast.error(
+                "Could not save presentations. Keep the app open and try again."
+              )
+            })
         }, 500)
       })
     } catch (error) {
       console.warn("[presentations] Failed to hydrate documents", error)
+      toast.error(
+        "Could not restore presentations. New changes will not be saved this session."
+      )
     }
   })()
   return documentHydration

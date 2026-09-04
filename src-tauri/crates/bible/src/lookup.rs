@@ -1,6 +1,6 @@
 use crate::db::BibleDb;
 use crate::error::BibleError;
-use crate::models::{Book, SearchVerse, Translation, Verse};
+use crate::models::{Book, Translation, Verse};
 
 impl BibleDb {
     /// Look up a verse by its database primary key (verses.id).
@@ -128,30 +128,6 @@ impl BibleDb {
                 })
             },
         )?;
-        Ok(rows.collect::<Result<Vec<_>, _>>()?)
-    }
-
-    /// Load all verses for one translation for client-side context search indexing.
-    pub fn load_translation_verses_for_search(
-        &self,
-        translation_id: i64,
-    ) -> Result<Vec<SearchVerse>, BibleError> {
-        let conn = self.conn();
-        let mut stmt = conn.prepare(
-            "SELECT book_number, book_name, chapter, verse, text \
-             FROM verses \
-             WHERE translation_id = ?1 \
-             ORDER BY book_number, chapter, verse",
-        )?;
-        let rows = stmt.query_map([translation_id], |row: &rusqlite::Row| {
-            Ok(SearchVerse {
-                book_number: row.get(0)?,
-                book_name: row.get(1)?,
-                chapter: row.get(2)?,
-                verse: row.get(3)?,
-                text: row.get(4)?,
-            })
-        })?;
         Ok(rows.collect::<Result<Vec<_>, _>>()?)
     }
 

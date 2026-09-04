@@ -1,7 +1,12 @@
 import { useCallback } from "react"
 import { invoke } from "@/lib/ipc"
+import { waitForStartup } from "@/lib/startup-ready"
 import { toast } from "sonner"
-import { hydrateSettings, useSettingsStore } from "@/stores/settings-store"
+import {
+  hydrateSettings,
+  unlockSecureSettings,
+  useSettingsStore,
+} from "@/stores/settings-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
 import { useTauriEvent } from "./use-tauri-event"
 
@@ -36,10 +41,14 @@ export const transcriptionActions = {
 
     startPromise = (async () => {
       if (stopPromise) await stopPromise
+      await waitForStartup()
       // The UI renders before persisted stores finish booting. Always wait for
       // settings here so a saved API key is never mistaken for a missing one
       // immediately after an app update or relaunch.
       await hydrateSettings()
+      if (useSettingsStore.getState().sttProvider !== "whisper") {
+        await unlockSecureSettings()
+      }
       const transcript = useTranscriptStore.getState()
       if (transcript.isTranscribing) return
       transcript.setConnectionStatus("connecting")
@@ -55,15 +64,22 @@ export const transcriptionActions = {
               : ""
 
       try {
+        transcript.setTranscribing(true)
         await invoke("start_transcription", {
           apiKey,
           deviceId: settings.audioDeviceId,
           gain: settings.gain,
           provider: settings.sttProvider,
         })
-        transcript.setTranscribing(true)
+        if (
+          useTranscriptStore.getState().connectionStatus !== "error" &&
+          useTranscriptStore.getState().connectionStatus !== "disconnected"
+        ) {
+          transcript.setTranscribing(true)
+        }
       } catch (e) {
         const msg = String(e)
+        transcript.setTranscribing(false)
         transcript.setConnectionStatus("error")
         if (
           (msg.includes(MISSING_DEEPGRAM_KEY_MARKER) ||
@@ -97,15 +113,16 @@ export const transcriptionActions = {
         await invoke("stop_transcription")
       } catch (e) {
         if (String(e) !== NOT_RUNNING_ERROR) {
+          transcript.setConnectionStatus("error")
           toast.error("Could not stop transcription", {
             description: String(e),
           })
+          throw e
         }
-      } finally {
-        transcript.setTranscribing(false)
-        transcript.setPartial("")
-        transcript.setConnectionStatus("disconnected")
       }
+      transcript.setTranscribing(false)
+      transcript.setPartial("")
+      transcript.setConnectionStatus("disconnected")
     })().finally(() => {
       stopPromise = null
     })
@@ -134,16 +151,28 @@ export function useTranscription(options?: UseTranscriptionOptions) {
   })
   useTauriEvent<string>("stt_error", (msg) => {
     const store = useTranscriptStore.getState()
-    store.setTranscribing(false)
     store.setConnectionStatus("error")
     toast.error("Transcription error", { description: msg })
   })
 
   useTauriEvent<TranscriptPartialPayload>("transcript_partial", (payload) => {
-    useTranscriptStore.getState().setPartial(payload.text)
+    const store = useTranscriptStore.getState()
+    if (
+      store.isTranscribing ||
+      store.connectionStatus === "connecting" ||
+      store.connectionStatus === "connected"
+    )
+      store.setPartial(payload.text)
   })
 
   useTauriEvent<TranscriptPartialPayload>("transcript_final", (payload) => {
+    const store = useTranscriptStore.getState()
+    if (
+      !store.isTranscribing &&
+      store.connectionStatus !== "connecting" &&
+      store.connectionStatus !== "connected"
+    )
+      return
     useTranscriptStore.getState().addSegment({
       id: crypto.randomUUID(),
       text: payload.text,

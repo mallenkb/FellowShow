@@ -1,4 +1,9 @@
 import Fuse from "fuse.js"
+import {
+  normalizeNaturalSearch,
+  relatedSearchTerms,
+  searchTerms,
+} from "./natural-search"
 
 export interface SearchableSong {
   id: string
@@ -21,7 +26,9 @@ export interface SongSearchIndex<TSong extends SearchableSong> {
   songs: TSong[]
   normalizedSongs: Array<{
     title: string
+    lyrics: string
   }>
+  wordPostings: Map<string, number[]>
   fuzzyDocuments: Array<{
     songIndex: number
     title: string
@@ -43,12 +50,7 @@ const FUZZY_OPTIONS = {
 }
 
 function normalizeSearchText(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim()
+  return normalizeNaturalSearch(value)
 }
 
 function normalizeSongSearchQuery(query: string) {
@@ -89,7 +91,16 @@ export function createSongSearchIndex<TSong extends SearchableSong>(
 ): SongSearchIndex<TSong> {
   const normalizedSongs = songs.map((song) => ({
     title: normalizeSearchText(song.title),
+    lyrics: normalizeSearchText(song.lyrics),
   }))
+  const wordPostings = new Map<string, number[]>()
+  normalizedSongs.forEach((song, index) => {
+    for (const word of new Set(`${song.title} ${song.lyrics}`.split(" "))) {
+      const postings = wordPostings.get(word)
+      if (postings) postings.push(index)
+      else wordPostings.set(word, [index])
+    }
+  })
   const fuzzyDocuments = songs.map((song, songIndex) => ({
     songIndex,
     title: song.title,
@@ -108,6 +119,7 @@ export function createSongSearchIndex<TSong extends SearchableSong>(
   return {
     songs,
     normalizedSongs,
+    wordPostings,
     fuzzyDocuments,
     fuzzyTrigramPostings,
   }
@@ -167,6 +179,44 @@ export function searchSongs<TSong extends SearchableSong>(
       results.push(song)
       if (results.length >= limit) return results
     }
+  }
+
+  // Query-time work follows word postings, not every song's full lyrics.
+  const terms = searchTerms(query)
+  const scores = new Map<number, number>()
+  for (const term of terms) {
+    const matched = new Map<number, number>()
+    for (const alternative of relatedSearchTerms(term)) {
+      for (const songIndex of index.wordPostings.get(alternative) ?? []) {
+        matched.set(
+          songIndex,
+          Math.max(matched.get(songIndex) ?? 0, alternative === term ? 1 : 0.7)
+        )
+      }
+    }
+    for (const [songIndex, score] of matched)
+      scores.set(songIndex, (scores.get(songIndex) ?? 0) + score)
+  }
+  const lyricMatches = [...scores]
+    .filter(
+      ([songIndex, score]) =>
+        !seenSongIndexes.has(songIndex) &&
+        matchesSongFilters(index.songs[songIndex], filters) &&
+        score >= Math.max(0.7, terms.length * 0.65)
+    )
+    .map(([songIndex, score]) => ({
+      songIndex,
+      score:
+        score +
+        (index.normalizedSongs[songIndex].lyrics.includes(normalizedQuery)
+          ? terms.length + 2
+          : 0),
+    }))
+    .sort((a, b) => b.score - a.score)
+  for (const { songIndex } of lyricMatches) {
+    results.push(index.songs[songIndex])
+    seenSongIndexes.add(songIndex)
+    if (results.length >= limit) return results
   }
 
   // Fall back to fuzzy title matching for misspellings. Trigram overlap first

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Verse } from "@/types"
-import { deriveLiveVerse } from "./use-broadcast"
+import { toVerseRenderData } from "./use-broadcast"
 
 const sampleVerse: Verse = {
   id: 1,
@@ -13,23 +13,9 @@ const sampleVerse: Verse = {
   text: "The earth was without form and void.",
 }
 
-describe("deriveLiveVerse", () => {
-  it("returns null when live output is off", () => {
-    const result = deriveLiveVerse({
-      isLive: false,
-      selectedVerse: sampleVerse,
-      translation: "NKJV",
-    })
-
-    expect(result).toBeNull()
-  })
-
-  it("returns verse render data when live output is on", () => {
-    const result = deriveLiveVerse({
-      isLive: true,
-      selectedVerse: sampleVerse,
-      translation: "NKJV",
-    })
+describe("toVerseRenderData", () => {
+  it("returns scripture render data", () => {
+    const result = toVerseRenderData(sampleVerse, "NKJV")
 
     expect(result).toEqual(
       expect.objectContaining({
@@ -39,11 +25,7 @@ describe("deriveLiveVerse", () => {
   })
 
   it("uses the Asante Twi book name for WASNA references", () => {
-    const result = deriveLiveVerse({
-      isLive: true,
-      selectedVerse: sampleVerse,
-      translation: "WASNA",
-    })
+    const result = toVerseRenderData(sampleVerse, "WASNA")
 
     expect(result).toEqual(
       expect.objectContaining({
@@ -53,11 +35,10 @@ describe("deriveLiveVerse", () => {
   })
 
   it("uses the Asante Twi label for the ATWI translation", () => {
-    const result = deriveLiveVerse({
-      isLive: true,
-      selectedVerse: { ...sampleVerse, book_name: "Gyenesis" },
-      translation: "ATWI",
-    })
+    const result = toVerseRenderData(
+      { ...sampleVerse, book_name: "Gyenesis" },
+      "ATWI"
+    )
 
     expect(result).toEqual(
       expect.objectContaining({

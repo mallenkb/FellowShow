@@ -72,15 +72,13 @@ impl BookMatcher {
     /// Results are filtered so that only matches occurring at word boundaries
     /// are returned, and overlapping matches are resolved in favor of the longest.
     pub fn find_books(&self, text: &str) -> Vec<BookMatch> {
-        let text_lower = text.to_lowercase();
-        let text_bytes = text_lower.as_bytes();
         let mut raw_matches: Vec<BookMatch> = Vec::new();
 
         // Use overlapping iterator to get ALL possible matches,
         // including longer patterns that share a start position with shorter ones.
         let mut state = aho_corasick::automaton::OverlappingState::start();
         loop {
-            self.automaton.find_overlapping(&text_lower, &mut state);
+            self.automaton.find_overlapping(text, &mut state);
             let Some(mat) = state.get_match() else {
                 break;
             };
@@ -91,18 +89,20 @@ impl BookMatcher {
             let end = mat.end();
 
             // Check word boundary at start
-            if start > 0 {
-                let prev = text_bytes[start - 1];
-                if prev.is_ascii_alphanumeric() {
-                    continue;
-                }
+            if text[..start]
+                .chars()
+                .next_back()
+                .is_some_and(char::is_alphanumeric)
+            {
+                continue;
             }
             // Check word boundary at end
-            if end < text_bytes.len() {
-                let next = text_bytes[end];
-                if next.is_ascii_alphanumeric() {
-                    continue;
-                }
+            if text[end..]
+                .chars()
+                .next()
+                .is_some_and(char::is_alphanumeric)
+            {
+                continue;
             }
 
             raw_matches.push(BookMatch {

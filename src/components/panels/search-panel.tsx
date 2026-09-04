@@ -1,95 +1,34 @@
-import {
-  Fragment,
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react"
-import { motion } from "motion/react"
-import { convertFileSrc, isTauri } from "@tauri-apps/api/core"
-import { invoke } from "@/lib/ipc"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { isTauri } from "@tauri-apps/api/core"
 import { open } from "@tauri-apps/plugin-dialog"
-import { toast } from "sonner"
-// Using native overflow-y-auto instead of Radix ScrollArea for reliable scrolling in flex layouts
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  getAutocompleteSuggestion,
-  getTabNavigationResult,
-} from "@/lib/quick-search"
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
 import {
   BookOpenIcon,
-  SparklesIcon,
-  MusicIcon,
   ImageIcon,
-  FileTextIcon,
-  LoaderCircleIcon,
-  UploadIcon,
-  LockIcon,
-  UnlockIcon,
-  TrashIcon,
-  PinIcon,
-  TypeIcon,
-  MoreHorizontalIcon,
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  CheckIcon,
-  PlusIcon,
-  TimerIcon,
-  MegaphoneIcon,
   LayersIcon,
+  MegaphoneIcon,
+  MusicIcon,
+  TimerIcon,
+  UploadIcon,
 } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { useBible, bibleActions } from "@/hooks/use-bible"
-import { toVerseRenderData } from "@/hooks/use-broadcast"
-import { formatBibleBookName } from "@/lib/bible-book-names"
-import {
-  useBibleStore,
-  useBroadcastStore,
-  useQueueStore,
-  useSettingsStore,
-  usePresentationStore,
-} from "@/stores"
-import type { Book, Verse } from "@/types"
-import { searchContextWithFuse } from "@/lib/context-search"
-import { type CopSong, type CopSongSource } from "@/lib/cop-songs"
-import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
-import { prepareSong, presentSong } from "@/lib/song-presentation"
+import { toast } from "sonner"
+import { OnDisplayOverview } from "@/components/on-display/on-display-overview"
+import { AnnouncementsTab } from "@/components/panels/search/announcements-tab"
+import { PresentationSearchTab } from "@/components/panels/search/presentation-search-tab"
+import { ScriptureSearchTab } from "@/components/panels/search/scripture-search-tab"
+import type { ScriptureSearchMode } from "@/components/panels/search/use-scripture-search"
+import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
 import { SongsTab } from "@/components/panels/search/songs-tab"
 import { TimerTab } from "@/components/panels/search/timer-tab"
-import { AnnouncementsTab } from "@/components/panels/search/announcements-tab"
-import { OnDisplayOverview } from "@/components/on-display/on-display-overview"
 import { useSongSearch } from "@/components/panels/search/use-song-search"
-import { usePresentationDocumentImport } from "@/components/panels/search/use-presentation-document-import"
-import { cachePresentationMedia } from "@/lib/presentation-media"
-import { PRESENTATION_DOCUMENT_EXTENSIONS } from "@/lib/presentation-documents"
-import { ScriptureDownloadPrompt } from "@/components/panels/scripture-download-prompt"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import type { CopSong } from "@/lib/cop-songs"
+import { useSongFilterStore } from "@/stores/song-filter-store"
+import { invoke } from "@/lib/ipc"
+import { prepareSong, presentSong } from "@/lib/song-presentation"
+import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
+import { cn } from "@/lib/utils"
+import { useQueueStore } from "@/stores"
 
 type SearchTab =
   | "book"
@@ -99,30 +38,7 @@ type SearchTab =
   | "presentation"
   | "timer"
   | "on-display"
-type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
-
-const SHOW_CONTEXT_SEARCH = false
-const PRESENTATION_MEDIA_EXTENSIONS = [
-  "png",
-  "jpg",
-  "jpeg",
-  "gif",
-  "webp",
-  "svg",
-  "mp4",
-  "mov",
-  "m4v",
-  "webm",
-] as const
-const PRESENTATION_MEDIA_EXTENSION_SET = new Set<string>(
-  PRESENTATION_MEDIA_EXTENSIONS
-)
-const PRESENTATION_VIDEO_EXTENSIONS = new Set(["mp4", "mov", "m4v", "webm"])
 const SONG_PAGE_SIZE = 50
-
-import { TranslationOptions } from "@/components/panels/search/translation-options"
-import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
-import { HighlightedText } from "@/components/panels/search/highlighted-text"
 
 export function SearchPanel({
   onSearchModeChange,
@@ -130,268 +46,68 @@ export function SearchPanel({
   onSearchModeChange?: (mode: SearchTab) => void
 }) {
   const [activeTab, setActiveTab] = useState<SearchTab>("book")
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null)
-  const [selectedBookTranslationId, setSelectedBookTranslationId] = useState(0)
-  const [chapter, setChapter] = useState(1)
-  const [selectedVerseId, setSelectedVerseId] = useState<number | null>(null)
-  const [contextQuery, setContextQuery] = useState("")
+  const [scriptureMode, setScriptureMode] =
+    useState<ScriptureSearchMode>("book")
   const [songQuery, setSongQuery] = useState("")
-  const [songLetterFilter, setSongLetterFilter] = useState("all")
-  const [songSourceFilter, setSongSourceFilter] =
-    useState<SongSourceFilter>("all")
+  const songLetterFilter = useSongFilterStore((s) => s.letter)
+  const songSourceFilter = useSongFilterStore((s) => s.source)
+  const setSongLetterFilter = useSongFilterStore((s) => s.setLetter)
+  const setSongSourceFilter = useSongFilterStore((s) => s.setSource)
   const [songRenderLimit, setSongRenderLimit] = useState(SONG_PAGE_SIZE)
+  const [allSongs, setAllSongs] = useState<CopSong[]>([])
   const songSearchKey = `${songQuery}\u0000${songSourceFilter}\u0000${songLetterFilter}`
   const [previousSongSearchKey, setPreviousSongSearchKey] =
     useState(songSearchKey)
+
   if (previousSongSearchKey !== songSearchKey) {
     setPreviousSongSearchKey(songSearchKey)
     setSongRenderLimit(SONG_PAGE_SIZE)
   }
-  const [allSongs, setAllSongs] = useState<CopSong[]>([])
-  const [renamingPresentationSlideId, setRenamingPresentationSlideId] =
-    useState<string | null>(null)
-  const [renamingPresentationSlideName, setRenamingPresentationSlideName] =
-    useState("")
-  const [draggedPresentationSlideId, setDraggedPresentationSlideId] = useState<
-    string | null
-  >(null)
-  const [presentationDropTargetId, setPresentationDropTargetId] = useState<
-    string | null
-  >(null)
-  const [presentationDropPosition, setPresentationDropPosition] = useState<
-    "before" | "after"
-  >("before")
 
-  // EasyWorship-style autocomplete
-  const [quickInput, setQuickInput] = useState("")
-  const [showQuickVerses, setShowQuickVerses] = useState(false)
-  const [quickVersesList, setQuickVersesList] = useState<Verse[]>([])
-  const [quickVersesTranslationId, setQuickVersesTranslationId] = useState(0)
+  const queueItems = useQueueStore((state) => state.items)
+  const activeSongItem =
+    queueItems.find((item) => item.lyricKind === "song") ?? null
 
-  const quickInputRef = useRef<HTMLInputElement>(null)
-  const presentationInputRef = useRef<HTMLInputElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const lastPresentationDragOverIdRef = useRef<string | null>(null)
-  const draggedPresentationIdRef = useRef<string | null>(null)
-  const { importPresentationDocuments, isImportingDocuments } =
-    usePresentationDocumentImport()
-
-  const updatePresentationDropTarget = useCallback(
-    (event: React.DragEvent<HTMLElement>, slideId: string) => {
-      const fromId = draggedPresentationIdRef.current
-      if (!fromId || fromId === slideId) return
-
-      const rect = event.currentTarget.getBoundingClientRect()
-      const position =
-        event.clientY > rect.top + rect.height / 2 ? "after" : "before"
-      const targetKey = `${slideId}:${position}`
-      setPresentationDropTargetId(slideId)
-      setPresentationDropPosition(position)
-      if (lastPresentationDragOverIdRef.current === targetKey) return
-
-      lastPresentationDragOverIdRef.current = targetKey
-      usePresentationStore.getState().reorderSlides(fromId, slideId, position)
-    },
-    []
-  )
+  const setSearchTab = useCallback((tab: SearchTab) => {
+    setActiveTab(tab)
+    if (tab === "book" || tab === "context") {
+      setScriptureMode(tab)
+    }
+  }, [])
 
   useEffect(() => {
     onSearchModeChange?.(activeTab)
   }, [activeTab, onSearchModeChange])
 
+  useEffect(() => {
+    if (allSongs.length > 0) return
+    let active = true
+    void loadAllSongs()
+      .then((songs) => {
+        if (active) setAllSongs(songs)
+      })
+      .catch((error) => {
+        console.warn("[songs] Could not prepare song catalog", error)
+        toast.error("Could not load songs. Reopen the Songs tab to retry.")
+      })
+    return () => {
+      active = false
+    }
+  }, [activeTab, allSongs.length])
+
   const {
-    translations,
-    books,
-    currentChapter,
-    semanticResults,
-    activeTranslationId,
-    selectedVerse,
-  } = useBible()
-  const pinnedTranslationIds = useSettingsStore((s) => s.pinnedTranslationIds)
-
-  const queueItems = useQueueStore((s) => s.items)
-  const presentationSlides = usePresentationStore((s) => s.slides)
-  const presentationDocuments = usePresentationStore((s) => s.documents)
-  const selectedPresentationSlideId = usePresentationStore(
-    (s) => s.selectedSlideId
-  )
-  const selectedPresentationDocumentId = usePresentationStore(
-    (s) => s.selectedDocumentId
-  )
-  const pinnedPresentationSlides = useMemo(
-    () => presentationSlides.filter((slide) => slide.pinned),
-    [presentationSlides]
-  )
-  const unpinnedPresentationSlides = useMemo(
-    () => presentationSlides.filter((slide) => !slide.pinned),
-    [presentationSlides]
-  )
-  const orderedPresentationSlides = useMemo(
-    () => [...pinnedPresentationSlides, ...unpinnedPresentationSlides],
-    [pinnedPresentationSlides, unpinnedPresentationSlides]
-  )
-  const presentSlide = useCallback(
-    (slide: (typeof presentationSlides)[number]) => {
-      usePresentationStore.getState().selectSlide(slide.id)
-      const store = useBroadcastStore.getState()
-      store.presentOnLive(
-        {
-          reference: slide.name,
-          themeSection: "presentation",
-          segments: [],
-          presentationImage: {
-            url: slide.url,
-            name: slide.name,
-            mediaType: slide.mediaType,
-            playbackStartedAt: slide.playbackStartedAt,
-            fit: slide.fit,
-            scale: slide.scale,
-            offsetX: slide.offsetX,
-            offsetY: slide.offsetY,
-          },
-        },
-        null
-      )
-    },
-    []
-  )
-  const activeSongItem =
-    queueItems.find((item) => item.lyricKind === "song") ?? null
-  const queuedVerseKeys = useMemo(() => {
-    return new Set(
-      queueItems.map(
-        (item) =>
-          `${item.verse.book_number}:${item.verse.chapter}:${item.verse.verse}`
-      )
-    )
-  }, [queueItems])
-  const formatSongReference = useCallback((song: CopSong) => {
-    return song.title
-  }, [])
-
-  const setSearchTab = useCallback((tab: SearchTab) => {
-    setActiveTab(tab)
-  }, [])
-
-  const handlePresentationFiles = useCallback(
-    async (files: FileList | null) => {
-      if (!files || files.length === 0) return
-
-      const mediaFiles = Array.from(files).filter((file) => {
-        const extension = file.name.split(".").pop()?.toLowerCase() ?? ""
-        return (
-          file.type.startsWith("image/") ||
-          file.type.startsWith("video/") ||
-          PRESENTATION_MEDIA_EXTENSION_SET.has(extension)
-        )
-      })
-      let slides: Array<{
-        id: string
-        name: string
-        url: string
-        mediaType: "image" | "video"
-        createdAt: number
-        pinned: boolean
-        locked: boolean
-        fit: "contain"
-        scale: number
-        offsetX: number
-        offsetY: number
-      }>
-      try {
-        slides = await Promise.all(
-          mediaFiles.map(async (file) => ({
-            id: crypto.randomUUID(),
-            name: file.name.replace(/\.[^.]+$/, ""),
-            // Cache media once, then give both webviews an asset URL. This avoids
-            // copying a large video into each broadcast event as a data URL.
-            url: await cachePresentationMedia(file, file.name),
-            mediaType:
-              file.type.startsWith("video/") ||
-              PRESENTATION_VIDEO_EXTENSIONS.has(
-                file.name.split(".").pop()?.toLowerCase() ?? ""
-              )
-                ? ("video" as const)
-                : ("image" as const),
-            createdAt: Date.now(),
-            pinned: false,
-            locked: false,
-            fit: "contain" as const,
-            scale: 1,
-            offsetX: 0,
-            offsetY: 0,
-          }))
-        )
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Could not load media."
-        )
-        return
-      }
-
-      if (slides.length > 0) {
-        usePresentationStore.getState().addSlides(slides)
-      }
-    },
-    []
-  )
-
-  const importPresentationContent = useCallback(async () => {
-    if (!isTauri()) {
-      presentationInputRef.current?.click()
-      return
-    }
-
-    const selected = await open({
-      multiple: true,
-      filters: [
-        {
-          name: "Media and documents",
-          extensions: [
-            ...PRESENTATION_MEDIA_EXTENSIONS,
-            ...PRESENTATION_DOCUMENT_EXTENSIONS,
-          ],
-        },
-      ],
-    })
-    if (!selected) return
-    const paths = Array.isArray(selected) ? selected : [selected]
-    const documentExtensions = new Set<string>(PRESENTATION_DOCUMENT_EXTENSIONS)
-    const documentPaths: string[] = []
-    const mediaSlides = []
-
-    for (const path of paths) {
-      const fileName = path.split(/[/\\]/).pop() ?? path
-      const extension = fileName.split(".").pop()?.toLowerCase() ?? ""
-      if (documentExtensions.has(extension)) {
-        documentPaths.push(path)
-        continue
-      }
-      if (!PRESENTATION_MEDIA_EXTENSION_SET.has(extension)) continue
-      mediaSlides.push({
-        id: crypto.randomUUID(),
-        name: fileName.replace(/\.[^.]+$/, ""),
-        url: convertFileSrc(path),
-        mediaType: PRESENTATION_VIDEO_EXTENSIONS.has(extension)
-          ? ("video" as const)
-          : ("image" as const),
-        createdAt: Date.now(),
-        pinned: false,
-        locked: false,
-        fit: "contain" as const,
-        scale: 1,
-        offsetX: 0,
-        offsetY: 0,
-      })
-    }
-
-    if (mediaSlides.length > 0) {
-      usePresentationStore.getState().addSlides(mediaSlides)
-    }
-    if (documentPaths.length > 0) {
-      importPresentationDocuments(documentPaths)
-    }
-  }, [importPresentationDocuments])
+    songs: visibleSongs,
+    totalCount: songResultCount,
+    hiddenCount: hiddenSongCount,
+    effectiveQuery: effectiveSongQuery,
+    isSearching: isSongSearching,
+  } = useSongSearch({
+    songs: allSongs,
+    query: songQuery,
+    source: songSourceFilter,
+    letter: songLetterFilter,
+    renderLimit: songRenderLimit,
+  })
 
   const importEasyWorshipSongs = useCallback(async () => {
     if (!isTauri()) {
@@ -431,9 +147,7 @@ export function SearchPanel({
         sourceLabel: "EasyWorship",
       }))
       saveEasyWorshipSongs(songs)
-      const catalog = await loadAllSongs()
-      setAllSongs(catalog)
-      setSongSourceFilter("all")
+      setAllSongs(await loadAllSongs())
       toast.success(
         `Imported ${songs.length} song${songs.length === 1 ? "" : "s"} from EasyWorship.`
       )
@@ -444,443 +158,6 @@ export function SearchPanel({
           : "Could not import EasyWorship songs."
       )
     }
-  }, [])
-
-  const handlePresentationDragOver = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (activeTab !== "presentation") return
-      // Internal slide reordering handles its own drop targets — only react to OS file drags.
-      if (
-        draggedPresentationIdRef.current ||
-        !event.dataTransfer.types.includes("Files")
-      )
-        return
-      event.preventDefault()
-      event.stopPropagation()
-      event.dataTransfer.dropEffect = "copy"
-    },
-    [activeTab]
-  )
-
-  const handlePresentationDragLeave = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (activeTab !== "presentation") return
-      if (event.currentTarget.contains(event.relatedTarget as Node | null))
-        return
-      setPresentationDropTargetId(null)
-      setPresentationDropPosition("before")
-    },
-    [activeTab]
-  )
-
-  const handlePresentationDrop = useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (activeTab !== "presentation") return
-      // A slide reorder drop is handled on the slide itself, not the container.
-      if (draggedPresentationIdRef.current) return
-      event.preventDefault()
-      event.stopPropagation()
-      setPresentationDropTargetId(null)
-      setPresentationDropPosition("before")
-      void handlePresentationFiles(event.dataTransfer.files)
-    },
-    [activeTab, handlePresentationFiles]
-  )
-
-  // Song catalog is code-split and fetched the first time the Songs tab opens.
-  useEffect(() => {
-    if (activeTab !== "songs" || allSongs.length > 0) return
-    let active = true
-    void loadAllSongs()
-      .then((songs) => {
-        if (active) setAllSongs(songs)
-      })
-      .catch(console.error)
-    return () => {
-      active = false
-    }
-  }, [activeTab, allSongs.length])
-
-  const {
-    songs: visibleSongs,
-    totalCount: songResultCount,
-    hiddenCount: hiddenSongCount,
-    effectiveQuery: effectiveSongQuery,
-    isSearching: isSongSearching,
-  } = useSongSearch({
-    songs: allSongs,
-    query: songQuery,
-    source: songSourceFilter,
-    letter: songLetterFilter,
-    renderLimit: songRenderLimit,
-  })
-
-  const activeSelectedBook =
-    selectedBookTranslationId === activeTranslationId ? selectedBook : null
-  const selectedBookNumber = activeSelectedBook?.book_number
-  const activeTranslationAbbreviation =
-    translations.find((translation) => translation.id === activeTranslationId)
-      ?.abbreviation ?? ""
-  const selectedBookLabel = activeSelectedBook
-    ? formatBibleBookName(
-        activeSelectedBook.name,
-        activeSelectedBook.book_number,
-        activeTranslationAbbreviation
-      )
-    : null
-
-  const hasAvailableScripture =
-    activeTranslationId > 0 && translations.length > 0
-
-  // Load the translation catalog without selecting a version.
-  useEffect(() => {
-    bibleActions.loadTranslations().catch(console.error)
-  }, [])
-
-  // Refresh books when the user selects a downloaded translation in Settings.
-  useEffect(() => {
-    if (activeTranslationId <= 0) {
-      useBibleStore.getState().setBooks([])
-      useBibleStore.getState().setCurrentChapter([])
-      return
-    }
-    bibleActions.loadBooks(activeTranslationId).catch(console.error)
-  }, [activeTranslationId])
-
-  // Select Genesis 1:1 only after a real translation has been installed.
-  useEffect(() => {
-    if (activeTab !== "book" || activeSelectedBook || books.length === 0) return
-    useBibleStore.getState().setPendingNavigation({
-      bookNumber: 1,
-      chapter: 1,
-      verse: 1,
-    })
-  }, [activeSelectedBook, activeTab, books.length])
-
-  // Load chapter when book + chapter are set
-  useEffect(() => {
-    if (selectedBookNumber && chapter >= 1) {
-      bibleActions.loadChapter(selectedBookNumber, chapter).catch(console.error)
-    }
-  }, [selectedBookNumber, chapter, activeTranslationId])
-
-  const effectiveSelectedVerseId = useMemo(() => {
-    if (!selectedVerseId || currentChapter.length === 0) return null
-    if (currentChapter.some((v) => v.id === selectedVerseId))
-      return selectedVerseId
-    if (!selectedVerse) return null
-    return (
-      currentChapter.find((v) => v.verse === selectedVerse.verse)?.id ?? null
-    )
-  }, [currentChapter, selectedVerseId, selectedVerse])
-
-  // After chapter reloads (e.g., translation change), re-select by verse number
-  useEffect(() => {
-    if (!selectedVerseId || !selectedVerse || currentChapter.length === 0)
-      return
-    const stillExists = currentChapter.some((v) => v.id === selectedVerseId)
-    if (!stillExists) {
-      const match = currentChapter.find((v) => v.verse === selectedVerse.verse)
-      if (match && match.id !== selectedVerse.id) {
-        bibleActions.selectVerse(match)
-      }
-    }
-  }, [currentChapter, selectedVerseId, selectedVerse])
-
-  const applyNavigationSelection = useCallback(
-    (book: Book, navChapter: number) => {
-      setSearchTab("book")
-      setSelectedBook(book)
-      setSelectedBookTranslationId(activeTranslationId)
-      setChapter(navChapter)
-    },
-    [activeTranslationId, setSearchTab]
-  )
-
-  // Auto-navigate when a detection or "Present" click sets pendingNavigation
-  useEffect(() => {
-    let lastHandledKey: string | null = null
-
-    const unsubscribe = useBibleStore.subscribe((state) => {
-      const pendingNavigation = state.pendingNavigation
-      if (!pendingNavigation) {
-        lastHandledKey = null
-        return
-      }
-
-      const {
-        bookNumber,
-        chapter: navChapter,
-        verse: navVerse,
-      } = pendingNavigation
-      const pendingKey = `${bookNumber}:${navChapter}:${navVerse}`
-      if (pendingKey === lastHandledKey) return
-
-      const book = state.books.find((b) => b.book_number === bookNumber)
-      if (!book) return
-
-      lastHandledKey = pendingKey
-      applyNavigationSelection(book, navChapter)
-
-      // Load chapter explicitly, then select + scroll to the verse.
-      bibleActions
-        .loadChapter(bookNumber, navChapter)
-        .then((verses) => {
-          const target = verses.find((v) => v.verse === navVerse)
-          if (target) {
-            setSelectedVerseId(target.id)
-            bibleActions.selectVerse(target)
-            document
-              .getElementById(`verse-${target.id}`)
-              ?.scrollIntoView({ behavior: "smooth", block: "center" })
-          }
-          panelRef.current?.focus()
-        })
-        .catch(console.error)
-        .finally(() => {
-          useBibleStore.getState().setPendingNavigation(null)
-        })
-    })
-
-    return unsubscribe
-  }, [applyNavigationSelection])
-
-  const handleVerseClick = useCallback((verse: Verse) => {
-    setSelectedVerseId(verse.id)
-    bibleActions.selectVerse(verse)
-  }, [])
-
-  const handleVerseDoubleClick = useCallback(
-    (verse: Verse) => {
-      handleVerseClick(verse)
-      const translation =
-        translations.find((item) => item.id === activeTranslationId)
-          ?.abbreviation ?? "KJV"
-      const store = useBroadcastStore.getState()
-      store.presentOnLive(toVerseRenderData(verse, translation), null)
-    },
-    [activeTranslationId, handleVerseClick, translations]
-  )
-
-  // Arrow key navigation
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "ArrowLeft") {
-        e.preventDefault()
-        if (chapter > 1) {
-          setChapter((c) => c - 1)
-          setSelectedVerseId(null)
-        }
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault()
-        setChapter((c) => c + 1)
-        setSelectedVerseId(null)
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault()
-        if (currentChapter.length === 0) return
-        const currentIdx = effectiveSelectedVerseId
-          ? currentChapter.findIndex((v) => v.id === effectiveSelectedVerseId)
-          : -1
-        const nextIdx = Math.min(currentIdx + 1, currentChapter.length - 1)
-        const next = currentChapter[nextIdx]
-        if (next) {
-          setSelectedVerseId(next.id)
-          bibleActions.selectVerse(next)
-          document
-            .getElementById(`verse-${next.id}`)
-            ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-        }
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        if (currentChapter.length === 0) return
-        const currentIdx = effectiveSelectedVerseId
-          ? currentChapter.findIndex((v) => v.id === effectiveSelectedVerseId)
-          : currentChapter.length
-        const prevIdx = Math.max(currentIdx - 1, 0)
-        const prev = currentChapter[prevIdx]
-        if (prev) {
-          setSelectedVerseId(prev.id)
-          bibleActions.selectVerse(prev)
-          document
-            .getElementById(`verse-${prev.id}`)
-            ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-        }
-      }
-    },
-    [chapter, currentChapter, effectiveSelectedVerseId]
-  )
-
-  // Context search — hybrid backend (vector + FTS5 BM25) as primary,
-  // Fuse.js fallback when semantic model is not loaded.
-  const contextDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const contextSearchRequestIdRef = useRef(0)
-
-  const runContextSearch = useCallback(
-    async (query: string, translationId: number) => {
-      const requestId = ++contextSearchRequestIdRef.current
-      const isStale = () => requestId !== contextSearchRequestIdRef.current
-
-      if (translationId <= 0) {
-        useBibleStore.getState().setSemanticResults([])
-        return
-      }
-
-      // Primary: hybrid search backend (combines vector + FTS5 BM25)
-      const hybridResults = await invoke("semantic_search", {
-        query,
-        limit: 15,
-      }).catch(() => null)
-
-      if (isStale()) return
-
-      if (hybridResults && hybridResults.length > 0) {
-        useBibleStore.getState().setSemanticResults(hybridResults)
-        return
-      }
-
-      // Fallback: client-side Fuse.js when semantic model is not loaded
-      const fuseResults = await searchContextWithFuse(
-        query,
-        translationId,
-        15
-      ).catch(() => [])
-      if (isStale()) return
-      useBibleStore.getState().setSemanticResults(fuseResults)
-    },
-    []
-  )
-
-  const handleContextSearch = useCallback(
-    (query: string) => {
-      setContextQuery(query)
-      if (contextDebounceRef.current) clearTimeout(contextDebounceRef.current)
-      if (query.length >= 5) {
-        const translationId = useBibleStore.getState().activeTranslationId
-        contextDebounceRef.current = setTimeout(() => {
-          runContextSearch(query, translationId).catch(console.error)
-        }, 280)
-      } else {
-        contextSearchRequestIdRef.current += 1
-        useBibleStore.getState().setSemanticResults([])
-      }
-    },
-    [runContextSearch]
-  )
-
-  useEffect(() => {
-    if (activeTab !== "context" || contextQuery.length < 5) return
-    if (contextDebounceRef.current) clearTimeout(contextDebounceRef.current)
-    contextDebounceRef.current = setTimeout(() => {
-      runContextSearch(contextQuery, activeTranslationId).catch(console.error)
-    }, 120)
-  }, [activeTranslationId, activeTab, contextQuery, runContextSearch])
-
-  useEffect(() => {
-    return () => {
-      if (contextDebounceRef.current) clearTimeout(contextDebounceRef.current)
-    }
-  }, [])
-
-  // Derive autocomplete suggestion during render (no setState cascading)
-  const autocompleteResult = useMemo(
-    () => getAutocompleteSuggestion(quickInput, books),
-    [quickInput, books]
-  )
-  const quickSuggestion = autocompleteResult.suggestion
-
-  // Side effects only: navigation + verse loading
-  useEffect(() => {
-    const result = autocompleteResult
-
-    if (activeTranslationId <= 0) return
-
-    if (result.matchedBook && result.chapter && result.verse) {
-      useBibleStore.getState().setPendingNavigation({
-        bookNumber: result.matchedBook.book_number,
-        chapter: result.chapter,
-        verse: result.verse,
-      })
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (
-            quickInputRef.current &&
-            document.activeElement !== quickInputRef.current
-          ) {
-            quickInputRef.current.focus()
-          }
-        })
-      })
-    }
-
-    if (
-      (result.stage === "chapter" || result.stage === "verse") &&
-      result.matchedBook &&
-      result.chapter
-    ) {
-      invoke("get_chapter", {
-        translationId: activeTranslationId,
-        bookNumber: result.matchedBook.book_number,
-        chapter: result.chapter,
-      })
-        .then((verses) => {
-          setQuickVersesList(verses)
-          setQuickVersesTranslationId(activeTranslationId)
-          setShowQuickVerses(true)
-        })
-        .catch(console.error)
-    }
-  }, [autocompleteResult, activeTranslationId])
-
-  // Derive dropdown visibility: only show when autocomplete stage is chapter/verse
-  const shouldShowVerseDropdown =
-    activeTranslationId > 0 &&
-    quickVersesTranslationId === activeTranslationId &&
-    showQuickVerses &&
-    (autocompleteResult.stage === "chapter" ||
-      autocompleteResult.stage === "verse")
-
-  const handleQuickKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Tab or → accepts suggestion and advances to NEXT STAGE
-      if (
-        (e.key === "Tab" || e.key === "ArrowRight") &&
-        quickSuggestion &&
-        quickSuggestion !== quickInput
-      ) {
-        e.preventDefault()
-        const nextInput = getTabNavigationResult(quickInput, quickSuggestion)
-        setQuickInput(nextInput)
-        return
-      }
-
-      // Enter clears input (verse is already showing in panel)
-      if (e.key === "Enter") {
-        e.preventDefault()
-        setQuickInput("")
-        setShowQuickVerses(false)
-        return
-      }
-
-      // Escape clears
-      if (e.key === "Escape") {
-        e.preventDefault()
-        setQuickInput("")
-        setShowQuickVerses(false)
-        return
-      }
-    },
-    [quickInput, quickSuggestion]
-  )
-
-  const handleQuickVerseClick = useCallback((verse: Verse) => {
-    useBibleStore.getState().setPendingNavigation({
-      bookNumber: verse.book_number,
-      chapter: verse.chapter,
-      verse: verse.verse,
-    })
-    setQuickInput("")
-    setShowQuickVerses(false)
   }, [])
 
   const tabButtonClass = (tab: SearchTab) =>
@@ -899,235 +176,70 @@ export function SearchPanel({
         : "text-muted-foreground"
     )
 
-  const setActiveTranslation = useCallback(async (id: number) => {
-    try {
-      await invoke("set_active_translation", { translationId: id })
-      useBibleStore.getState().setActiveTranslation(id)
-    } catch (err) {
-      console.error(err)
-    }
-  }, [])
-
-  const pinnedTranslations = useMemo(() => {
-    const translationsById = new Map(
-      translations.map((translation) => [translation.id, translation])
-    )
-    const pinned = pinnedTranslationIds
-      .map((id) => translationsById.get(id))
-      .filter(
-        (translation): translation is (typeof translations)[number] =>
-          translation !== undefined
-      )
-
-    if (pinned.length > 0) return pinned
-
-    const activeTranslation = translationsById.get(activeTranslationId)
-    return activeTranslation ? [activeTranslation] : []
-  }, [activeTranslationId, pinnedTranslationIds, translations])
-
-  const translationSelect = (
-    <Select
-      value={String(activeTranslationId)}
-      onValueChange={(v) => void setActiveTranslation(Number(v))}
-    >
-      <SelectTrigger className="!h-10 w-28 shrink-0 text-sm">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <TranslationOptions translations={translations} />
-      </SelectContent>
-    </Select>
+  const tabs = useMemo(
+    () => [
+      {
+        id: "book" as const,
+        label: "Sermon",
+        icon: BookOpenIcon,
+        tour: "book-search",
+      },
+      { id: "songs" as const, label: "Songs", icon: MusicIcon },
+      {
+        id: "presentation" as const,
+        label: "Presentations",
+        icon: ImageIcon,
+      },
+      {
+        id: "on-display" as const,
+        label: "Video Overlays",
+        icon: LayersIcon,
+      },
+      { id: "timer" as const, label: "Timer", icon: TimerIcon },
+      {
+        id: "announcements" as const,
+        label: "Announcements",
+        icon: MegaphoneIcon,
+      },
+    ],
+    []
   )
 
-  const pinnedTranslationRow =
-    pinnedTranslations.length > 0 &&
-    activeTab !== "songs" &&
-    activeTab !== "announcements" &&
-    activeTab !== "presentation" &&
-    activeTab !== "timer" ? (
-      <div className="-mt-0.5 flex min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5">
-        {pinnedTranslations.map((translation) => {
-          const isActive = translation.id === activeTranslationId
-          return (
-            <button
-              key={translation.id}
-              type="button"
-              onClick={() => void setActiveTranslation(translation.id)}
-              className={cn(
-                "h-6 shrink-0 rounded-md border px-2 text-[0.6875rem] font-medium transition-colors",
-                isActive
-                  ? "border-[#101084]/50 bg-[#101084]/15 text-[#101084] dark:border-[#F1E600]/50 dark:bg-[#F1E600]/15 dark:text-[#F1E600]"
-                  : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40"
-              )}
-            >
-              {translation.abbreviation}
-            </button>
-          )
-        })}
-      </div>
-    ) : null
+  const isScriptureActive = activeTab === "book" || activeTab === "context"
 
   return (
     <div
-      ref={panelRef}
       data-slot="search-panel"
-      className={cn(
-        "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors outline-none"
-      )}
-      onDragOver={handlePresentationDragOver}
-      onDragLeave={handlePresentationDragLeave}
-      onDrop={handlePresentationDrop}
-      onKeyDown={activeTab === "book" ? handleKeyDown : undefined}
-      tabIndex={-1}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors outline-none"
     >
-      {/* STICKY: Tabs */}
       <div className="flex shrink-0 flex-col gap-2.5 border-b border-border px-3 pt-2 pb-3">
         <div className="-mx-1 flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:hidden">
-          <button
-            data-tour="book-search"
-            onClick={() => setSearchTab("book")}
-            className={tabButtonClass("book")}
-          >
-            <BookOpenIcon className={tabIconClass("book")} />
-            <span className="search-tab-label">Sermon</span>
-          </button>
-          {SHOW_CONTEXT_SEARCH && (
-            <button
-              data-tour="context-search"
-              onClick={() => {
-                setSearchTab("context")
-                setContextQuery("")
-              }}
-              className={tabButtonClass("context")}
-            >
-              <SparklesIcon className={tabIconClass("context")} />
-              <span className="search-tab-label">Context search</span>
-            </button>
-          )}
-          <button
-            onClick={() => setSearchTab("songs")}
-            className={tabButtonClass("songs")}
-          >
-            <MusicIcon className={tabIconClass("songs")} />
-            <span className="search-tab-label">Songs</span>
-          </button>
-          <button
-            onClick={() => setSearchTab("presentation")}
-            className={tabButtonClass("presentation")}
-          >
-            <ImageIcon className={tabIconClass("presentation")} />
-            <span className="search-tab-label">Presentations</span>
-          </button>
-          <button
-            onClick={() => setSearchTab("on-display")}
-            className={tabButtonClass("on-display")}
-            title="Video Overlays"
-          >
-            <LayersIcon className={tabIconClass("on-display")} />
-            <span className="search-tab-label">Video Overlays</span>
-          </button>
-          <button
-            onClick={() => setSearchTab("timer")}
-            className={tabButtonClass("timer")}
-          >
-            <TimerIcon className={tabIconClass("timer")} />
-            <span className="search-tab-label">Timer</span>
-          </button>
-          <button
-            onClick={() => setSearchTab("announcements")}
-            className={tabButtonClass("announcements")}
-          >
-            <MegaphoneIcon className={tabIconClass("announcements")} />
-            <span className="search-tab-label">Announcements</span>
-          </button>
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                data-tour={tab.tour}
+                onClick={() => setSearchTab(tab.id)}
+                className={tabButtonClass(tab.id)}
+                title={tab.label}
+                aria-label={tab.label}
+                aria-pressed={activeTab === tab.id}
+              >
+                <Icon className={tabIconClass(tab.id)} />
+                <span className="search-tab-label">{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
 
-        {activeTab === "book" && hasAvailableScripture ? (
-          <>
-            <div className="flex min-w-0 items-center gap-2">
-              {/* EasyWorship-style autocomplete */}
-              <div className="relative min-w-0 flex-1">
-                {/* Suggestion overlay */}
-                {quickSuggestion && quickSuggestion !== quickInput && (
-                  <div className="pointer-events-none absolute inset-0 z-10 flex items-center px-3">
-                    <span className="text-sm font-normal">
-                      <span className="text-foreground">{quickInput}</span>
-                      <span className="text-gray-500 dark:text-gray-400">
-                        {quickSuggestion.slice(quickInput.length)}
-                      </span>
-                    </span>
-                  </div>
-                )}
-
-                {/* Actual input */}
-                <Input
-                  ref={quickInputRef}
-                  data-tour="quick-nav"
-                  value={quickInput}
-                  onChange={(e) => setQuickInput(e.target.value)}
-                  onKeyDown={handleQuickKeyDown}
-                  placeholder="Type: J → John 3:16"
-                  className={cn(
-                    "relative h-10 bg-background text-sm",
-                    quickSuggestion && quickSuggestion !== quickInput
-                      ? "text-transparent"
-                      : ""
-                  )}
-                  style={
-                    quickSuggestion && quickSuggestion !== quickInput
-                      ? {
-                          caretColor: "var(--foreground)",
-                        }
-                      : undefined
-                  }
-                />
-
-                {/* Verse dropdown */}
-                {shouldShowVerseDropdown && quickVersesList.length > 0 && (
-                  <div className="absolute top-full right-0 left-0 z-50 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-                    <div className="p-1">
-                      {quickVersesList.map((verse) => (
-                        <button
-                          key={verse.id}
-                          onClick={() => handleQuickVerseClick(verse)}
-                          className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
-                        >
-                          <span className="w-6 shrink-0 text-right font-semibold text-[#101084] dark:text-[#F1E600]">
-                            {verse.verse}
-                          </span>
-                          <span className="line-clamp-1 flex-1 text-muted-foreground">
-                            {verse.text}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {translationSelect}
-            </div>
-            {pinnedTranslationRow}
-          </>
-        ) : activeTab === "context" && hasAvailableScripture ? (
-          <>
-            <div className="flex min-w-0 items-center gap-2">
-              <Input
-                placeholder="Search verse text..."
-                value={contextQuery}
-                onChange={(e) => handleContextSearch(e.target.value)}
-                className="h-10 min-w-0 flex-1 text-sm"
-              />
-              {translationSelect}
-            </div>
-            {pinnedTranslationRow}
-          </>
-        ) : activeTab === "songs" ? (
+        {activeTab === "songs" ? (
           <div className="flex min-w-0 items-center gap-2">
             <Input
-              placeholder="Search song titles..."
+              placeholder="Title, lyrics, or topic..."
               value={songQuery}
-              onChange={(e) => setSongQuery(e.target.value)}
+              onChange={(event) => setSongQuery(event.target.value)}
               className="h-10 min-w-0 flex-1 text-sm"
             />
             <SongFilterDropdown
@@ -1148,359 +260,26 @@ export function SearchPanel({
               <UploadIcon className="size-4" />
             </Button>
           </div>
-        ) : activeTab === "presentation" ? (
-          <div
-            className="flex items-center gap-2"
-            onDragEnter={handlePresentationDragOver}
-            onDragOver={handlePresentationDragOver}
-            onDrop={handlePresentationDrop}
-          >
-            <input
-              ref={presentationInputRef}
-              type="file"
-              accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.odt,.odp,.ods,.rtf"
-              multiple
-              className="hidden"
-              onChange={(event) => {
-                void handlePresentationFiles(event.target.files)
-                event.target.value = ""
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 flex-1 justify-center"
-              disabled={isImportingDocuments}
-              onClick={() => void importPresentationContent()}
-            >
-              {isImportingDocuments ? (
-                <LoaderCircleIcon className="size-4 animate-spin" />
-              ) : (
-                <UploadIcon className="size-4" />
-              )}
-              <span>{isImportingDocuments ? "Importing…" : "Import"}</span>
-            </Button>
-          </div>
         ) : activeTab === "announcements" ? (
-          <div className="flex h-10 items-center">
-            <span className="text-xs font-medium text-muted-foreground">
-              Choose a set and item, then edit it in the workspace
-            </span>
-          </div>
+          <TabDescription>
+            Choose a set and item, then edit it in the workspace
+          </TabDescription>
         ) : activeTab === "timer" ? (
-          <div className="flex h-10 items-center">
-            <span className="text-xs font-medium text-muted-foreground">
-              Timer controls
-            </span>
-          </div>
+          <TabDescription>Timer controls</TabDescription>
         ) : activeTab === "on-display" ? (
-          <div className="flex h-10 items-center">
-            <span className="text-xs font-medium text-muted-foreground">
-              Video Overlays · logo, scrolling text, and lower thirds
-            </span>
-          </div>
+          <TabDescription>
+            Video Overlays · logo, scrolling text, and lower thirds
+          </TabDescription>
         ) : null}
       </div>
 
-      {/* Quick nav tab */}
+      <ScriptureSearchTab
+        mode={scriptureMode}
+        isActive={isScriptureActive}
+        onRequestMode={setSearchTab}
+      />
 
-      {/* Book search tab */}
-      {activeTab === "book" && !hasAvailableScripture ? (
-        <ScriptureDownloadPrompt />
-      ) : activeTab === "book" ? (
-        <>
-          {/* STICKY: Chapter header */}
-
-          <div className="flex min-h-9 shrink-0 items-center justify-between px-3 py-2">
-            {activeSelectedBook ? (
-              <h3 className="text-sm font-semibold text-foreground">
-                {selectedBookLabel} {chapter}
-              </h3>
-            ) : null}
-            {activeSelectedBook ? (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon-lg"
-                  onClick={() => {
-                    if (chapter > 1) {
-                      setChapter((c) => c - 1)
-                      setSelectedVerseId(null)
-                    }
-                  }}
-                  disabled={chapter <= 1}
-                >
-                  <ArrowLeftIcon className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-lg"
-                  onClick={() => {
-                    setChapter((c) => c + 1)
-                    setSelectedVerseId(null)
-                  }}
-                >
-                  <ArrowRightIcon className="size-4" />
-                </Button>
-              </div>
-            ) : null}
-          </div>
-
-          {/* SCROLLABLE: Verse list only */}
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="flex flex-col gap-0 p-2">
-              {currentChapter.map((verse) => (
-                <div
-                  key={verse.id}
-                  id={`verse-${verse.id}`}
-                  onClick={() => handleVerseClick(verse)}
-                  onDoubleClick={() => handleVerseDoubleClick(verse)}
-                  className={cn(
-                    "group flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors",
-                    verse.id === effectiveSelectedVerseId
-                      ? "border border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                      : "border border-transparent hover:bg-muted/50"
-                  )}
-                >
-                  <span className="w-6 shrink-0 text-right text-sm font-semibold text-[#101084] dark:text-[#F1E600]">
-                    {verse.verse}
-                  </span>
-                  <p className="flex-1 text-sm leading-relaxed text-foreground/80">
-                    {verse.text}
-                  </p>
-                  {queuedVerseKeys.has(
-                    `${verse.book_number}:${verse.chapter}:${verse.verse}`
-                  ) ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span
-                            className="flex size-6 shrink-0 cursor-pointer items-center justify-center"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              const store = useQueueStore.getState()
-                              const idx = store.findDuplicate(
-                                verse.book_number,
-                                verse.chapter,
-                                verse.verse
-                              )
-                              if (idx !== -1) {
-                                store.flashItem(store.items[idx].id)
-                                document
-                                  .querySelector(
-                                    `[data-slot="queue-panel"] [data-queue-idx="${idx}"]`
-                                  )
-                                  ?.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "nearest",
-                                  })
-                              }
-                            }}
-                          >
-                            <CheckIcon className="size-4 text-ai-direct" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="left">
-                          Already in queue
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            className={cn(
-                              "shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
-                              verse.id === effectiveSelectedVerseId
-                                ? "text-[#101084] hover:bg-[#101084]/20 hover:text-[#101084] dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
-                                : "!bg-[#101084]/40 text-white hover:!bg-[#101084] dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
-                            )}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              useQueueStore.getState().addItem({
-                                id: crypto.randomUUID(),
-                                verse,
-                                reference: `${verse.book_name} ${verse.chapter}:${verse.verse}`,
-                                confidence: 1,
-                                source: "manual",
-                                added_at: Date.now(),
-                              })
-                            }}
-                          >
-                            <PlusIcon className="size-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="left"
-                          className="bg-[#101084] text-white [--tooltip-bg:#101084] dark:bg-[#F1E600] dark:text-background dark:[--tooltip-bg:#F1E600]"
-                        >
-                          Add to queue
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      ) : null}
-
-      {/* Context search tab — semantic AI search */}
-      {activeTab === "context" && !hasAvailableScripture ? (
-        <ScriptureDownloadPrompt />
-      ) : activeTab === "context" ? (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="flex flex-col gap-0 p-2">
-            {contextQuery.length < 5 && (
-              <p className="p-4 text-center text-xs text-muted-foreground">
-                Search by meaning — type a phrase, paraphrase, or topic...
-              </p>
-            )}
-            {contextQuery.length >= 5 && semanticResults.length === 0 && (
-              <p className="p-4 text-center text-xs text-muted-foreground">
-                No results found
-              </p>
-            )}
-            {semanticResults.map((result, idx) => (
-              <div
-                key={`${result.book_number}-${result.chapter}-${result.verse}-${idx}`}
-                onClick={() => {
-                  bibleActions.selectVerse({
-                    id: 0,
-                    translation_id: activeTranslationId,
-                    book_number: result.book_number,
-                    book_name: result.book_name,
-                    book_abbreviation: "",
-                    chapter: result.chapter,
-                    verse: result.verse,
-                    text: result.verse_text,
-                  })
-                }}
-                onDoubleClick={() => {
-                  const verse = {
-                    id: 0,
-                    translation_id: activeTranslationId,
-                    book_number: result.book_number,
-                    book_name: result.book_name,
-                    book_abbreviation: "",
-                    chapter: result.chapter,
-                    verse: result.verse,
-                    text: result.verse_text,
-                  }
-                  const store = useBroadcastStore.getState()
-                  const liveVerse = toVerseRenderData(
-                    verse,
-                    translations.find((item) => item.id === activeTranslationId)
-                      ?.abbreviation ?? "KJV"
-                  )
-                  store.presentOnLive(liveVerse, null)
-                }}
-                className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
-              >
-                <div className="flex shrink-0 flex-row items-start gap-2">
-                  <span className="text-xs font-semibold">
-                    {result.book_name} {result.chapter}:{result.verse}
-                  </span>
-                  <span className="mt-0.5 text-[0.5rem] text-muted-foreground">
-                    {Math.round(result.similarity * 100)}%
-                  </span>
-                </div>
-                <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
-                  <HighlightedText
-                    text={result.verse_text}
-                    query={contextQuery}
-                  />
-                </p>
-                {queuedVerseKeys.has(
-                  `${result.book_number}:${result.chapter}:${result.verse}`
-                ) ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span
-                          className="absolute top-1/2 right-2 flex size-6 shrink-0 -translate-y-1/2 cursor-pointer items-center justify-center"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            const store = useQueueStore.getState()
-                            const idx = store.findDuplicate(
-                              result.book_number,
-                              result.chapter,
-                              result.verse
-                            )
-                            if (idx !== -1) {
-                              store.flashItem(store.items[idx].id)
-                              document
-                                .querySelector(
-                                  `[data-slot="queue-panel"] [data-queue-idx="${idx}"]`
-                                )
-                                ?.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "nearest",
-                                })
-                            }
-                          }}
-                        >
-                          <CheckIcon className="size-4 text-ai-direct" />
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent side="left">
-                        Already in queue
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon-xs"
-                          className="absolute top-1/2 right-2 shrink-0 -translate-y-1/2 !bg-[#101084] text-white opacity-0 transition-opacity group-hover:opacity-100 hover:!bg-[#101084]/80 dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            useQueueStore.getState().addItem({
-                              id: crypto.randomUUID(),
-                              verse: {
-                                id: 0,
-                                translation_id: activeTranslationId,
-                                book_number: result.book_number,
-                                book_name: result.book_name,
-                                book_abbreviation: "",
-                                chapter: result.chapter,
-                                verse: result.verse,
-                                text: result.verse_text,
-                              },
-                              reference: `${result.book_name} ${result.chapter}:${result.verse}`,
-                              confidence: result.similarity,
-                              source: "manual",
-                              added_at: Date.now(),
-                            })
-                          }}
-                        >
-                          <PlusIcon className="size-3" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="left"
-                        className="bg-[#101084] text-white [--tooltip-bg:#101084] dark:bg-[#F1E600] dark:text-background dark:[--tooltip-bg:#F1E600]"
-                      >
-                        Add to queue
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {/* Songs tab */}
-      {activeTab === "songs" && (
+      {activeTab === "songs" ? (
         <SongsTab
           songs={visibleSongs}
           totalCount={songResultCount}
@@ -1510,441 +289,27 @@ export function SearchPanel({
           query={effectiveSongQuery}
           onOpenSong={prepareSong}
           onPresentSong={presentSong}
-          formatReference={formatSongReference}
+          formatReference={(song) => song.title}
           onLoadMore={() =>
             setSongRenderLimit((limit) => limit + SONG_PAGE_SIZE)
           }
         />
-      )}
+      ) : null}
 
-      {/* Presentation tab */}
-      {activeTab === "presentation" && (
-        <div
-          className="flex min-h-0 flex-1 flex-col overflow-y-auto select-none"
-          onDragEnter={handlePresentationDragOver}
-          onDragOver={handlePresentationDragOver}
-          onDragLeave={handlePresentationDragLeave}
-          onDrop={handlePresentationDrop}
-        >
-          {presentationSlides.length === 0 &&
-          presentationDocuments.length === 0 ? (
-            <div className="flex h-full items-center justify-center p-6 text-center">
-              <div className="max-w-xs">
-                <ImageIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
-                <p className="text-sm font-medium text-foreground">
-                  No presentation media
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  Add images, videos, PDFs, PowerPoint, Word, or other documents
-                  to preview and present them.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-2 p-2">
-              {presentationDocuments.length > 0 ? (
-                <>
-                  <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
-                    <span>Documents</span>
-                    <span className="h-px flex-1 bg-border" />
-                  </div>
-                  {presentationDocuments.map((document) => {
-                    const isActive =
-                      document.id === selectedPresentationDocumentId
-                    return (
-                      <article
-                        key={document.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() =>
-                          usePresentationStore
-                            .getState()
-                            .selectDocument(document.id)
-                        }
-                        onKeyDown={(event) => {
-                          if (event.key !== "Enter" && event.key !== " ") return
-                          event.preventDefault()
-                          usePresentationStore
-                            .getState()
-                            .selectDocument(document.id)
-                        }}
-                        className={cn(
-                          "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          isActive
-                            ? "border-[#101084]/60 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                            : "border-border bg-background/30 hover:bg-muted/40"
-                        )}
-                      >
-                        <FileTextIcon className="size-5 shrink-0 text-muted-foreground" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium text-foreground">
-                            {document.name}
-                          </span>
-                          <span className="block text-[0.625rem] text-muted-foreground">
-                            {document.status === "importing"
-                              ? `Importing ${document.pages.length}${
-                                  document.totalPages > 0
-                                    ? ` of ${document.totalPages}`
-                                    : ""
-                                } pages`
-                              : document.status === "error"
-                                ? "Import failed"
-                                : `${document.pages.length} page${
-                                    document.pages.length === 1 ? "" : "s"
-                                  }`}
-                          </span>
-                        </span>
-                        {document.status === "importing" ? (
-                          <LoaderCircleIcon className="size-4 shrink-0 animate-spin text-muted-foreground" />
-                        ) : null}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label={`Remove ${document.name}`}
-                          disabled={document.status === "importing"}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            usePresentationStore
-                              .getState()
-                              .removeDocument(document.id)
-                          }}
-                        >
-                          <TrashIcon className="size-4" />
-                        </Button>
-                      </article>
-                    )
-                  })}
-                </>
-              ) : null}
-              {presentationSlides.length > 0 &&
-              presentationDocuments.length > 0 ? (
-                <div className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
-                  <span>Media</span>
-                  <span className="h-px flex-1 bg-border" />
-                </div>
-              ) : null}
-              {pinnedPresentationSlides.length > 0 ? (
-                <motion.div
-                  layout="position"
-                  transition={{ duration: 0.14, ease: "easeOut" }}
-                  className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase"
-                >
-                  <span>Pinned</span>
-                  <span className="h-px flex-1 bg-border" />
-                </motion.div>
-              ) : null}
-              {orderedPresentationSlides.map((slide, index) => {
-                const isActive = slide.id === selectedPresentationSlideId
-                const isDragging = slide.id === draggedPresentationSlideId
-                const isDropTarget =
-                  slide.id === presentationDropTargetId &&
-                  slide.id !== draggedPresentationSlideId
-                const showDropBefore =
-                  isDropTarget && presentationDropPosition === "before"
-                const showDropAfter =
-                  isDropTarget && presentationDropPosition === "after"
-                const showUnpinnedDivider =
-                  pinnedPresentationSlides.length > 0 &&
-                  index === pinnedPresentationSlides.length &&
-                  unpinnedPresentationSlides.length > 0
-                return (
-                  <Fragment key={slide.id}>
-                    {showUnpinnedDivider ? (
-                      <motion.div
-                        layout="position"
-                        transition={{ duration: 0.14, ease: "easeOut" }}
-                        className="flex items-center gap-2 px-1 py-1 text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase"
-                      >
-                        <span>Presentations</span>
-                        <span className="h-px flex-1 bg-border" />
-                      </motion.div>
-                    ) : null}
-                    <motion.article
-                      layout={isDragging ? false : "position"}
-                      transition={{
-                        layout: {
-                          duration: 0.14,
-                          ease: "easeOut",
-                        },
-                      }}
-                      draggable
-                      onDragEndCapture={() => {
-                        draggedPresentationIdRef.current = null
-                        setDraggedPresentationSlideId(null)
-                        setPresentationDropTargetId(null)
-                        setPresentationDropPosition("before")
-                        lastPresentationDragOverIdRef.current = null
-                      }}
-                      onDragStartCapture={(event) => {
-                        if (slide.locked) {
-                          event.preventDefault()
-                          return
-                        }
-                        draggedPresentationIdRef.current = slide.id
-                        lastPresentationDragOverIdRef.current = slide.id
-                        event.dataTransfer.effectAllowed = "move"
-                        event.dataTransfer.setData("text/plain", slide.id)
-                        // Defer cosmetic state — restyling the drag source synchronously
-                        // inside dragstart can abort the drag in WebKit.
-                        requestAnimationFrame(() => {
-                          setDraggedPresentationSlideId(slide.id)
-                          setPresentationDropTargetId(null)
-                          setPresentationDropPosition("before")
-                        })
-                      }}
-                      onDragOver={(event) => {
-                        const fromId = draggedPresentationIdRef.current
-                        if (!fromId) return
-                        event.preventDefault()
-                        event.stopPropagation()
-                        event.dataTransfer.dropEffect = "move"
-                        updatePresentationDropTarget(event, slide.id)
-                      }}
-                      onDragEnter={(event) => {
-                        const fromId = draggedPresentationIdRef.current
-                        if (!fromId) return
-                        event.preventDefault()
-                        event.stopPropagation()
-                        updatePresentationDropTarget(event, slide.id)
-                      }}
-                      onDrop={(event) => {
-                        const fromId =
-                          draggedPresentationIdRef.current ||
-                          event.dataTransfer.getData("text/plain")
-                        if (!fromId) return
-                        event.preventDefault()
-                        event.stopPropagation()
-                        draggedPresentationIdRef.current = null
-                        setDraggedPresentationSlideId(null)
-                        setPresentationDropTargetId(null)
-                        setPresentationDropPosition("before")
-                        lastPresentationDragOverIdRef.current = null
-                      }}
-                      onClick={() =>
-                        usePresentationStore.getState().selectSlide(slide.id)
-                      }
-                      onDoubleClick={() => presentSlide(slide)}
-                      className={cn(
-                        "group relative cursor-pointer overflow-hidden rounded-lg border p-2 transition-colors select-none active:cursor-grabbing",
-                        isActive
-                          ? "border-[#101084]/60 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                          : "border-border bg-background/30 hover:bg-muted/40",
-                        isDragging && "scale-[0.99] border-dashed opacity-55",
-                        slide.locked && "cursor-default"
-                      )}
-                    >
-                      {showDropBefore ? (
-                        <div className="pointer-events-none absolute inset-x-2 top-0 z-20 h-0.5 -translate-y-1 rounded-full bg-[#F1E600] shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
-                      ) : null}
-                      <div className="flex min-w-0 items-center gap-2">
-                        <div className="h-14 w-24 shrink-0 overflow-hidden rounded-md bg-black">
-                          {slide.mediaType === "video" ? (
-                            <video
-                              src={slide.url}
-                              autoPlay
-                              muted
-                              loop
-                              playsInline
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <img
-                              src={slide.url}
-                              alt=""
-                              draggable={false}
-                              className="h-full w-full object-cover"
-                            />
-                          )}
-                        </div>
-                        <div
-                          className="min-w-0 flex-1 select-none"
-                          draggable={false}
-                        >
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {slide.name}
-                          </p>
-                          <p className="text-[0.625rem] text-muted-foreground">
-                            {slide.mediaType === "video" ? "Video" : "Image"}
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className={cn(
-                            "shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground",
-                            slide.pinned && "text-[#101084] dark:text-[#F1E600]"
-                          )}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            usePresentationStore.getState().togglePin(slide.id)
-                          }}
-                          disabled={slide.locked}
-                          onPointerDown={(event) => event.stopPropagation()}
-                          onDragStart={(event) => event.preventDefault()}
-                          title={slide.pinned ? "Unpin" : "Pin to Default"}
-                        >
-                          <PinIcon
-                            className={cn(
-                              "size-4",
-                              slide.pinned && "fill-current"
-                            )}
-                          />
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              className="shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                              onClick={(event) => event.stopPropagation()}
-                              onPointerDown={(event) => event.stopPropagation()}
-                              onDragStart={(event) => event.preventDefault()}
-                              title="Slide actions"
-                            >
-                              <MoreHorizontalIcon className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="w-44"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <DropdownMenuItem
-                              onSelect={() => {
-                                setRenamingPresentationSlideId(slide.id)
-                                setRenamingPresentationSlideName(slide.name)
-                                usePresentationStore
-                                  .getState()
-                                  .selectSlide(slide.id)
-                              }}
-                              disabled={slide.locked}
-                            >
-                              <TypeIcon className="size-3.5" />
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onSelect={() => {
-                                usePresentationStore
-                                  .getState()
-                                  .toggleLock(slide.id)
-                              }}
-                            >
-                              {slide.locked ? (
-                                <UnlockIcon className="size-3.5" />
-                              ) : (
-                                <LockIcon className="size-3.5" />
-                              )}
-                              {slide.locked ? "Unlock slide" : "Lock slide"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onPointerDown={(event) => event.stopPropagation()}
-                              onSelect={() => {
-                                usePresentationStore
-                                  .getState()
-                                  .togglePin(slide.id)
-                              }}
-                              disabled={slide.locked}
-                            >
-                              <PinIcon
-                                className={cn(
-                                  "size-3.5",
-                                  slide.pinned && "fill-current"
-                                )}
-                              />
-                              {slide.pinned ? "Unpin" : "Pin to Default"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onSelect={() => {
-                                usePresentationStore
-                                  .getState()
-                                  .removeSlide(slide.id)
-                              }}
-                              disabled={slide.locked}
-                            >
-                              <TrashIcon className="size-3.5" />
-                              Remove slide
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      {showDropAfter ? (
-                        <div className="pointer-events-none absolute inset-x-2 bottom-0 z-20 h-0.5 translate-y-1 rounded-full bg-[#F1E600] shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
-                      ) : null}
-                    </motion.article>
-                  </Fragment>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
+      <PresentationSearchTab isActive={activeTab === "presentation"} />
+      {activeTab === "announcements" ? <AnnouncementsTab /> : null}
+      {activeTab === "on-display" ? <OnDisplayOverview /> : null}
+      {activeTab === "timer" ? <TimerTab /> : null}
+    </div>
+  )
+}
 
-      {activeTab === "announcements" && <AnnouncementsTab />}
-
-      {activeTab === "on-display" && <OnDisplayOverview />}
-
-      {/* Timer tab */}
-      {activeTab === "timer" && <TimerTab />}
-      <Dialog
-        open={Boolean(renamingPresentationSlideId)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setRenamingPresentationSlideId(null)
-            setRenamingPresentationSlideName("")
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Rename presentation</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              const nextName = renamingPresentationSlideName.trim()
-              if (!renamingPresentationSlideId || !nextName) return
-
-              usePresentationStore
-                .getState()
-                .renameSlide(renamingPresentationSlideId, nextName)
-              setRenamingPresentationSlideId(null)
-              setRenamingPresentationSlideName("")
-            }}
-          >
-            <Input
-              autoFocus
-              value={renamingPresentationSlideName}
-              onChange={(event) =>
-                setRenamingPresentationSlideName(event.target.value)
-              }
-              onFocus={(event) => event.target.select()}
-              placeholder="Presentation name"
-            />
-            <DialogFooter className="mt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setRenamingPresentationSlideId(null)
-                  setRenamingPresentationSlideName("")
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={!renamingPresentationSlideName.trim()}
-              >
-                Save
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+function TabDescription({ children }: { children: string }) {
+  return (
+    <div className="flex h-10 items-center">
+      <span className="text-xs font-medium text-muted-foreground">
+        {children}
+      </span>
     </div>
   )
 }

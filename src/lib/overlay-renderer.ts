@@ -716,6 +716,7 @@ function drawTicker(
   ctx.clip()
   ctx.textAlign = "left"
   ctx.fillStyle = ticker.textColor
+  ctx.textBaseline = "middle"
   ctx.font = `600 ${fontSize}px "Inter Variable", sans-serif`
   let track = `${message}${separator}`
   let trackWidth = Math.max(1, ctx.measureText(track).width)

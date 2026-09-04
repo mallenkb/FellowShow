@@ -16,6 +16,7 @@ pub mod error;
 pub mod lookup;
 pub mod models;
 pub mod search;
+mod spelling;
 
 pub use db::*;
 pub use error::*;

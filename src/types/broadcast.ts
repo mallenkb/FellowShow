@@ -1,5 +1,16 @@
 import type { AnnouncementRenderData } from "./announcements"
 
+export interface PresentationMediaItem {
+  url: string
+  name: string
+  mediaType?: "image" | "video"
+  playbackStartedAt?: number
+  fit?: "contain" | "cover" | "stretch"
+  scale?: number
+  offsetX?: number
+  offsetY?: number
+}
+
 interface VerseSegment {
   verseNumber?: number
   text: string
@@ -15,15 +26,8 @@ export interface VerseRenderData {
   referenceMode?: "default" | "lyric-footer"
   announcement?: AnnouncementRenderData
   announcementSetName?: string
-  presentationImage?: {
-    url: string
-    name: string
-    mediaType?: "image" | "video"
-    playbackStartedAt?: number
-    fit?: "contain" | "cover" | "stretch"
-    scale?: number
-    offsetX?: number
-    offsetY?: number
+  presentationImage?: PresentationMediaItem & {
+    layers?: PresentationMediaItem[]
   }
 }
 

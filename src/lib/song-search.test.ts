@@ -30,6 +30,21 @@ const songs: SearchableSong[] = [
 ]
 
 describe("song search", () => {
+  it("finds salvation lyrics from a natural-language request", () => {
+    const index = createSongSearchIndex(songs)
+    expect(
+      searchSongs(index, "please find a song about salvation")[0]?.id
+    ).toBe("amazing-grace")
+  })
+
+  it("keeps source filters when matching lyrics", () => {
+    const index = createSongSearchIndex([
+      { ...songs[0], source: "easyworship" },
+    ])
+    expect(
+      searchSongs(index, "saved a wretch", { source: "theme-2026" })
+    ).toEqual([])
+  })
   it("matches words entered from a song title", () => {
     const index = createSongSearchIndex(songs)
 
@@ -38,12 +53,12 @@ describe("song search", () => {
     expect(results[0]?.id).toBe("amazing-grace")
   })
 
-  it("does not match lyric phrases that are absent from the title", () => {
+  it("matches lyric phrases that are absent from the title", () => {
     const index = createSongSearchIndex(songs)
 
     const results = searchSongs(index, "saved a wretch like me")
 
-    expect(results).toEqual([])
+    expect(results[0]?.id).toBe("amazing-grace")
   })
 
   it("does not match song numbers", () => {

@@ -226,7 +226,7 @@ describe("use-transcription", () => {
       expect(useTranscriptStore.getState().isTranscribing).toBe(false)
     })
 
-    it("surfaces other stop errors as a toast AND still resets UI state", async () => {
+    it("keeps the microphone state and partial transcript when stop fails", async () => {
       mockInvoke.mockRejectedValue("Audio device disappeared")
       const { useTranscriptStore, transcriptionActions } = await loadModules()
 
@@ -236,16 +236,18 @@ describe("use-transcription", () => {
         connectionStatus: "connected",
       })
 
-      await transcriptionActions.stop()
+      await expect(transcriptionActions.stop()).rejects.toBe(
+        "Audio device disappeared"
+      )
 
       expect(mockToastError).toHaveBeenCalledWith(
         "Could not stop transcription",
         { description: "Audio device disappeared" }
       )
       const state = useTranscriptStore.getState()
-      expect(state.isTranscribing).toBe(false)
-      expect(state.currentPartial).toBe("")
-      expect(state.connectionStatus).toBe("disconnected")
+      expect(state.isTranscribing).toBe(true)
+      expect(state.currentPartial).toBe("mid-sentence...")
+      expect(state.connectionStatus).toBe("error")
     })
   })
 

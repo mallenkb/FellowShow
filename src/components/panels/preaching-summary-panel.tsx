@@ -1,3 +1,4 @@
+import { UnlockSavedKeys } from "@/components/settings/unlock-saved-keys"
 import {
   lazy,
   Suspense,
@@ -394,6 +395,7 @@ export function PreachingSummaryPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      <UnlockSavedKeys />
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
         <Select
           value={session?.id ?? ""}

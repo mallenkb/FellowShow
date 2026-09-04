@@ -38,13 +38,3 @@ pub struct CrossReference {
     pub to_ref: String,
     pub votes: i32,
 }
-
-/// A compact verse row used for client-side search indexing.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct SearchVerse {
-    pub book_number: i32,
-    pub book_name: String,
-    pub chapter: i32,
-    pub verse: i32,
-    pub text: String,
-}

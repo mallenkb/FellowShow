@@ -2,9 +2,11 @@
 import "./index.css"
 import { createRoot } from "react-dom/client"
 import { useRef, useEffect, useCallback, useState } from "react"
-import { invoke } from "@/lib/ipc"
+import { invoke, sendNdiFrame } from "@/lib/ipc"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
+import { presentationMedia } from "@/lib/presentation-composition"
+import { pruneVideoCache } from "@/lib/media-cache"
 import { drawTransitionFrame } from "@/lib/render-transition"
 import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
 import { hasAnimatingOverlay } from "@/lib/overlays"
@@ -18,6 +20,7 @@ import {
 import {
   shouldRenderLowerThirdLayer,
   shouldRenderStandardBroadcastContent,
+  shouldRenderTickerLayer,
 } from "@/lib/broadcast-output-mode"
 import {
   getBroadcastContextMenuLabel,
@@ -29,26 +32,7 @@ import type {
   PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types/broadcast"
-import type {
-  BroadcastOverlayPayload,
-  NdiConfigEventPayload,
-  NdiFrameRequest,
-} from "@/types"
-
-/** Convert Uint8Array/Uint8ClampedArray to base64 using Function.apply (avoids spread stack overflow) */
-function uint8ToBase64(bytes: Uint8Array | Uint8ClampedArray): string {
-  const CHUNK = 0x8000 // 32KB — safe for Function.apply
-  const parts: string[] = []
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    parts.push(
-      String.fromCharCode.apply(
-        null,
-        bytes.subarray(i, i + CHUNK) as unknown as number[]
-      )
-    )
-  }
-  return btoa(parts.join(""))
-}
+import type { BroadcastOverlayPayload, NdiConfigEventPayload } from "@/types"
 
 /** Read output ID from URL query param (?output=main or ?output=alt). Defaults to "main". */
 const OUTPUT_ID =
@@ -85,6 +69,7 @@ function directVideoFor(payload: BroadcastPayload): DirectVideo | null {
   const video = payload.verse?.presentationImage
   if (
     payload.overlayMode ||
+    Boolean(video?.layers?.length) ||
     video?.mediaType !== "video" ||
     payload.timer ||
     payload.verse?.tickerText ||
@@ -109,6 +94,11 @@ function transitionKey(data: BroadcastPayload | null): string {
       data.verse?.segments.map((segment) => segment.text).join("\n") ?? null,
     announcement: data.verse?.announcement ?? null,
     presentationImage: data.verse?.presentationImage?.url ?? null,
+    presentationLayers:
+      data.verse?.presentationImage?.layers?.map((item) => [
+        item.url,
+        item.playbackStartedAt,
+      ]) ?? null,
     presentationPlaybackStartedAt:
       data.verse?.presentationImage?.playbackStartedAt ?? null,
     timerVisible: Boolean(data.timer),
@@ -135,6 +125,10 @@ function BroadcastCanvas() {
   const latestData = useRef<BroadcastPayload | null>(null)
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const videoCacheRef = useRef<Map<string, HTMLVideoElement>>(new Map())
+  useEffect(() => {
+    const cache = videoCacheRef.current
+    return () => pruneVideoCache(cache, new Set())
+  }, [])
   const animationFrameRef = useRef<number | null>(null)
   const transitionFrameRef = useRef<number | null>(null)
   const ndiConfigRef = useRef<NdiConfigEventPayload>({
@@ -144,7 +138,9 @@ function BroadcastCanvas() {
     height: 1080,
   })
   const ndiCanvasRef = useRef<HTMLCanvasElement | null>(null)
-  const lastPushRef = useRef(0)
+  const ndiPushRef = useRef<() => void>(() => undefined)
+  const ndiScheduleRef = useRef(0)
+  const hasVisualAnimationRef = useRef(false)
   const pushingRef = useRef(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isNdiActive, setIsNdiActive] = useState(false)
@@ -314,6 +310,7 @@ function BroadcastCanvas() {
       }
       const result = renderVerse(ctx, theme, verse, {
         scale: 1,
+        now: Date.now(),
         imageCache: imageCacheRef.current,
         videoCache: videoCacheRef.current,
         timer,
@@ -396,11 +393,14 @@ function BroadcastCanvas() {
       const duration = Math.max(1, transition.duration)
       const tick = (now: number) => {
         const progress = Math.min(1, (now - startedAt) / duration)
+        // Media and fonts can finish loading during a transition.
+        renderPayloadToCanvas(next, nextData)
         drawTransitionFrame(ctx, previous, next, nextData.theme, progress)
         if (progress < 1) {
           transitionFrameRef.current = window.requestAnimationFrame(tick)
         } else {
           transitionFrameRef.current = null
+          renderPayloadToCanvas(canvas, latestData.current)
         }
       }
       transitionFrameRef.current = window.requestAnimationFrame(tick)
@@ -412,7 +412,6 @@ function BroadcastCanvas() {
     const payload = latestData.current
     if (!payload) return
     const background = payload.theme.background.image
-    const presentation = payload.verse?.presentationImage
     const activeVideos = [
       payload.theme.background.type === "image" &&
       background?.mediaType === "video"
@@ -421,12 +420,12 @@ function BroadcastCanvas() {
             playbackStartedAt: background.playbackStartedAt,
           }
         : null,
-      presentation?.mediaType === "video"
-        ? {
-            url: presentation.url,
-            playbackStartedAt: presentation.playbackStartedAt,
-          }
-        : null,
+      ...presentationMedia(payload.verse?.presentationImage)
+        .filter((item) => item.mediaType === "video")
+        .map((item) => ({
+          url: item.url,
+          playbackStartedAt: item.playbackStartedAt,
+        })),
       payload.timer?.backgroundMediaType === "video" &&
       payload.timer.backgroundUrl
         ? {
@@ -452,11 +451,25 @@ function BroadcastCanvas() {
     if (animationFrameRef.current !== null) return
     let lastPlaybackSync = 0
     const tick = (now: number) => {
-      if (now - lastPlaybackSync >= 250) {
+      const ndiConfig = ndiConfigRef.current
+      const ndiInterval = 1000 / Math.max(1, ndiConfig.fps)
+      const shouldPushNdi =
+        ndiConfig.active &&
+        (ndiScheduleRef.current === 0 ||
+          now - ndiScheduleRef.current >= ndiInterval)
+
+      if (hasVisualAnimationRef.current && now - lastPlaybackSync >= 250) {
         lastPlaybackSync = now
         syncActiveVideoPlayback()
       }
-      draw()
+
+      if (hasVisualAnimationRef.current || shouldPushNdi) draw()
+      if (shouldPushNdi) {
+        const elapsed = now - ndiScheduleRef.current
+        ndiScheduleRef.current =
+          ndiScheduleRef.current === 0 ? now : now - (elapsed % ndiInterval)
+        ndiPushRef.current()
+      }
       animationFrameRef.current = window.requestAnimationFrame(tick)
     }
     animationFrameRef.current = window.requestAnimationFrame(tick)
@@ -466,6 +479,7 @@ function BroadcastCanvas() {
     if (animationFrameRef.current === null) return
     window.cancelAnimationFrame(animationFrameRef.current)
     animationFrameRef.current = null
+    ndiScheduleRef.current = 0
   }, [])
 
   const preloadMedia = useCallback(
@@ -486,11 +500,11 @@ function BroadcastCanvas() {
           playbackStartedAt: payload.timer.backgroundPlaybackStartedAt,
         })
       }
-      if (payload.verse?.presentationImage?.url) {
+      for (const item of presentationMedia(payload.verse?.presentationImage)) {
         media.push({
-          url: payload.verse.presentationImage.url,
-          mediaType: payload.verse.presentationImage.mediaType ?? "image",
-          playbackStartedAt: payload.verse.presentationImage.playbackStartedAt,
+          url: item.url,
+          mediaType: item.mediaType ?? "image",
+          playbackStartedAt: item.playbackStartedAt,
         })
       }
       if (payload.overlays?.lowerThird?.avatarImageUrl) {
@@ -510,14 +524,31 @@ function BroadcastCanvas() {
       }
 
       const hasVideo = media.some((item) => item.mediaType === "video")
+      const hasVisualAnimation =
+        hasVideo ||
+        hasAnimatingOverlay(payload.overlays) ||
+        Boolean(
+          payload.verse?.tickerText &&
+          !payload.verse.presentationImage &&
+          shouldRenderTickerLayer(payload.theme)
+        )
+      hasVisualAnimationRef.current = hasVisualAnimation
       if (directVideoFor(payload) && !ndiConfigRef.current.active) {
         stopAnimationLoop()
         return
       }
-      if (hasVideo || hasAnimatingOverlay(payload.overlays)) {
+      if (hasVisualAnimation || ndiConfigRef.current.active) {
         startAnimationLoop()
       } else stopAnimationLoop()
 
+      pruneVideoCache(
+        videoCacheRef.current,
+        new Set(
+          media
+            .filter((item) => item.mediaType === "video")
+            .map((item) => item.url)
+        )
+      )
       for (const item of media) {
         if (item.mediaType === "video") {
           const cachedVideo = videoCacheRef.current.get(item.url)
@@ -526,6 +557,7 @@ function BroadcastCanvas() {
             continue
           }
           const video = document.createElement("video")
+          videoCacheRef.current.set(item.url, video)
           video.muted = true
           video.loop = true
           video.playsInline = true
@@ -541,6 +573,7 @@ function BroadcastCanvas() {
             draw()
           }
           video.onerror = () => {
+            videoCacheRef.current.delete(item.url)
             console.warn("[broadcast-output] failed to load background video", {
               url: item.url,
             })
@@ -624,17 +657,12 @@ function BroadcastCanvas() {
       }
 
       const imageData = sourceCtx.getImageData(0, 0, sourceWidth, sourceHeight)
-      const rgbaBase64 = uint8ToBase64(imageData.data)
-
-      const request: NdiFrameRequest = {
+      await sendNdiFrame({
         outputId: OUTPUT_ID,
         width: sourceWidth,
         height: sourceHeight,
-        rgbaBase64,
-      }
-
-      await invoke("push_ndi_frame", { request })
-      lastPushRef.current = Date.now()
+        rgba: imageData.data,
+      })
     } catch (error) {
       console.warn("[broadcast-output] push_ndi_frame failed", error)
     } finally {
@@ -642,15 +670,13 @@ function BroadcastCanvas() {
     }
   }, [])
 
-  /** Push a burst of 3 frames after content changes (NDI receivers need a few frames to sync) */
-  const pushNdiBurst = useCallback(() => {
-    void pushNdiFrame()
-    setTimeout(() => void pushNdiFrame(), 150)
-    setTimeout(() => void pushNdiFrame(), 300)
+  useEffect(() => {
+    ndiPushRef.current = () => void pushNdiFrame()
   }, [pushNdiFrame])
 
   useEffect(() => {
     // Set initial canvas size
+    let disposed = false
     const canvas = canvasRef.current
     if (canvas) {
       canvas.width = 1920
@@ -677,7 +703,6 @@ function BroadcastCanvas() {
           themeId: event.payload.theme.id,
         })
         drawPayloadTransition(previousData, event.payload)
-        pushNdiBurst()
       }
     )
 
@@ -685,13 +710,16 @@ function BroadcastCanvas() {
       "broadcast:ndi-config",
       (event) => {
         ndiConfigRef.current = event.payload
+        ndiScheduleRef.current = 0
         setIsNdiActive(event.payload.active)
-        if (event.payload.active && latestData.current) {
+        if (latestData.current) {
           preloadMedia(latestData.current)
+        } else if (event.payload.active) {
+          startAnimationLoop()
+        } else {
+          stopAnimationLoop()
         }
         logDebug("Received broadcast:ndi-config", event.payload)
-        // Push burst when NDI becomes active
-        if (event.payload.active) pushNdiBurst()
       }
     )
 
@@ -706,8 +734,13 @@ function BroadcastCanvas() {
             width: status.width,
             height: status.height,
           }
+          ndiScheduleRef.current = 0
           setIsNdiActive(true)
-          if (latestData.current) preloadMedia(latestData.current)
+          if (latestData.current) {
+            preloadMedia(latestData.current)
+          } else {
+            startAnimationLoop()
+          }
           logDebug("Fetched NDI status on mount", status)
         }
       })
@@ -715,8 +748,11 @@ function BroadcastCanvas() {
         // Command may not exist yet
       })
 
-    void currentWindow
-      .emitTo("main", "broadcast:output-ready")
+    void Promise.all([unlisten, unlistenNdiConfig])
+      .then(() => {
+        if (!disposed)
+          return currentWindow.emitTo("main", "broadcast:output-ready")
+      })
       .then(() => {
         logDebug("Sent broadcast:output-ready")
       })
@@ -726,6 +762,7 @@ function BroadcastCanvas() {
 
     return () => {
       stopAnimationLoop()
+      disposed = true
       if (transitionFrameRef.current !== null) {
         window.cancelAnimationFrame(transitionFrameRef.current)
       }
@@ -736,20 +773,9 @@ function BroadcastCanvas() {
     drawPayloadTransition,
     logDebug,
     preloadMedia,
-    pushNdiFrame,
-    pushNdiBurst,
+    startAnimationLoop,
     stopAnimationLoop,
   ])
-
-  // Slow keepalive: push one frame every 2s if idle (prevents NDI receivers from dropping the source)
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (!ndiConfigRef.current.active) return
-      const elapsed = Date.now() - lastPushRef.current
-      if (elapsed > 2000) void pushNdiFrame()
-    }, 2000)
-    return () => clearInterval(timer)
-  }, [pushNdiFrame])
 
   return (
     <div

@@ -5,6 +5,7 @@ import type { Translation, Book, Verse, CrossReference } from "@/types"
 import type { SemanticSearchResult } from "@/types/detection"
 
 interface PendingNavigation {
+  activate?: boolean
   bookNumber: number
   chapter: number
   verse: number

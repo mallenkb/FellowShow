@@ -1,5 +1,10 @@
 export type { DeviceInfo, AudioLevel } from "./audio"
 export type { TranscriptSegment } from "./transcript"
+export {
+  SECRET_SETTING_KEYS,
+  type SecretSettingKey,
+  type SecureSettings,
+} from "./settings"
 export type { PreachingSummary } from "./summary"
 export type { SermonNote, SermonSession } from "./sermon"
 export type { Translation, Book, Verse, CrossReference } from "./bible"
@@ -46,7 +51,6 @@ export type {
   NdiAlphaMode,
   NdiConfigEventPayload,
   NdiFrameRate,
-  NdiFrameRequest,
   NdiResolution,
   NdiSessionInfo,
   NdiStartRequest,

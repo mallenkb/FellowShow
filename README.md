@@ -40,8 +40,8 @@ Generated and third-party runtime assets are not part of the MIT-licensed source
 - **Light/dark mode** with system theme detection (light, dark, or follow OS)
 - **Settings persistence** — all preferences auto-saved to disk across restarts
 - **Cross-platform runtime** — Windows, macOS, and Linux support in the app; published installers currently target Windows and macOS
-- **Remote control** via OSC and HTTP API for hardware controllers and automation
-  - [Remote control guide](documentation/remote-control.md) — Stream Deck, TouchOSC, REST API integration
+- **Local control** via OSC and HTTP API for Companion and automation scripts
+  - [Remote control guide](documentation/remote-control.md) — Stream Deck through Companion and local REST integration
 
 ## Tech Stack
 

@@ -1,6 +1,7 @@
 import { open, save } from "@tauri-apps/plugin-dialog"
 import { readFile, writeTextFile } from "@tauri-apps/plugin-fs"
 import { cacheMediaBytes } from "@/lib/presentation-media"
+import { decodeBroadcastTheme } from "@/lib/broadcast-theme-schema"
 import type { BroadcastTheme } from "@/types"
 
 const MEDIA_MIME_BY_EXTENSION: Record<string, string> = {
@@ -199,10 +200,14 @@ export async function importTheme(
   const bytes = await readFile(path)
   if (extension === "json") {
     const text = new TextDecoder().decode(bytes)
-    const parsed = JSON.parse(text) as BroadcastTheme
-
-    if (!parsed.id || !parsed.name || !parsed.background || !parsed.layout) {
-      throw new Error("Invalid theme file: missing required fields")
+    let parsed: BroadcastTheme
+    try {
+      parsed = decodeBroadcastTheme(JSON.parse(text) as unknown)
+    } catch (error) {
+      throw new Error(
+        `Invalid theme file: ${error instanceof Error ? error.message : "invalid data"}`,
+        { cause: error }
+      )
     }
 
     const image = parsed.background.image

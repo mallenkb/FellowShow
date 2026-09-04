@@ -113,24 +113,19 @@ export function useSongSearch({
 
     const requestId = latestRequestIdRef.current + 1
     latestRequestIdRef.current = requestId
-    const timeoutId = setTimeout(() => {
-      workerRef.current?.postMessage({
-        type: "search",
-        requestId,
-        searchKey: activeSearchKey,
-        query: deferredQuery,
-        source,
-        letter,
-      })
-    }, 25)
-
-    return () => clearTimeout(timeoutId)
+    workerRef.current.postMessage({
+      type: "search",
+      requestId,
+      searchKey: activeSearchKey,
+      query: deferredQuery,
+      source,
+      letter,
+    })
   }, [
     activeSearchKey,
     deferredQuery,
     isSearchActive,
     letter,
-    renderLimit,
     source,
     workerReady,
   ])

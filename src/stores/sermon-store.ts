@@ -24,7 +24,6 @@ interface SermonState {
     summary: PreachingSummary,
     document: AnnouncementDocument
   ) => void
-  setSummaryDocument: (id: string, document: AnnouncementDocument) => void
   setSummaryTitle: (id: string, title: string) => void
   updateSessionTitle: (id: string, title: string) => void
   setNoteTickerMessage: (
@@ -281,12 +280,6 @@ export const useSermonStore = create<SermonState>((set) => ({
         session.id === id
           ? { ...session, finalSummary, summaryDocument }
           : session
-      ),
-    })),
-  setSummaryDocument: (id, summaryDocument) =>
-    set((state) => ({
-      sessions: state.sessions.map((session) =>
-        session.id === id ? { ...session, summaryDocument } : session
       ),
     })),
   setSummaryTitle: (id, summaryTitle) =>

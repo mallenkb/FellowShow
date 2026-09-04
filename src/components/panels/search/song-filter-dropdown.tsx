@@ -54,7 +54,10 @@ export function SongFilterDropdown({
     const rect = trigger.getBoundingClientRect()
     const width = Math.max(260, Math.round(rect.width))
     setMenuPosition({
-      left: Math.round(rect.right - width),
+      left: Math.max(
+        8,
+        Math.min(Math.round(rect.right - width), window.innerWidth - width - 8)
+      ),
       top: Math.round(rect.bottom + 6),
       width,
     })
@@ -131,11 +134,12 @@ export function SongFilterDropdown({
             style={{
               left: menuPosition.left,
               top: menuPosition.top,
-              width: menuPosition.width,
+              width: `min(${menuPosition.width}px, calc(100vw - 16px))`,
+              maxHeight: `calc(100dvh - ${menuPosition.top + 8}px)`,
             }}
-            className="fixed z-50 overflow-hidden rounded-md border border-border bg-popover shadow-lg ring-1 ring-foreground/10"
+            className="fixed z-50 [scrollbar-width:thin] overflow-y-auto overscroll-contain rounded-md border border-border bg-popover shadow-lg ring-1 ring-foreground/10"
           >
-            <div className="max-h-80 [scrollbar-width:thin] overflow-y-auto overscroll-contain p-1">
+            <div className="p-1">
               <div className="px-2 py-1.5 text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
                 Song type
               </div>

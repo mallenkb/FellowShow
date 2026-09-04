@@ -1,6 +1,7 @@
 import { toast } from "sonner"
 import { transcriptionActions } from "@/hooks/use-transcription"
 import { invoke } from "@/lib/ipc"
+import { waitForStartup } from "@/lib/startup-ready"
 import { announcementDocumentToVerse } from "@/lib/announcements"
 import { normalizePreachingSummary } from "@/lib/scripture-format"
 import { flushSermonSessions, useSermonStore } from "@/stores/sermon-store"
@@ -85,16 +86,19 @@ export async function startSermon(
 
   startSermonPromise = (async () => {
     if (endSermonPromise) await endSermonPromise
+    await waitForStartup()
     const sermon = useSermonStore.getState()
     if (sermon.activeSessionId) return true
 
     const transcript = useTranscriptStore.getState()
+    const transcriptStartIndex = transcript.segments.length
+    useTranscriptStore.setState({ highlightedScriptures: [] })
     if (!transcript.isTranscribing) {
       await transcriptionActions.start(onMissingApiKey)
       if (!useTranscriptStore.getState().isTranscribing) return false
     }
 
-    sermon.startSession(useTranscriptStore.getState().segments.length)
+    sermon.startSession(transcriptStartIndex)
     toast.success("Sermon started")
     return true
   })().finally(() => {
@@ -118,6 +122,7 @@ export async function generateLiveSermonNotes(force = false): Promise<void> {
   noteGenerationPromise = (async () => {
     try {
       const summary = await summarize(session)
+      if (useSermonStore.getState().activeSessionId !== session.id) return
       useSermonStore
         .getState()
         .addNotes(session.id, summary.key_points, segmentCount, "live")

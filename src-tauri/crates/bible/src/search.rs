@@ -23,13 +23,101 @@ pub struct Bm25Result {
 /// Common English stop words that match nearly every Bible verse.
 /// Filtering these keeps AND queries fast (~5-20ms instead of 200-1300ms).
 const STOP_WORDS: &[&str] = &[
-    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by",
-    "from", "is", "it", "not", "be", "are", "was", "were", "been", "has", "have", "had", "do",
-    "does", "did", "will", "would", "shall", "should", "may", "might", "can", "could", "that",
-    "this", "these", "those", "he", "she", "we", "they", "you", "i", "me", "him", "her", "us",
-    "them", "my", "his", "its", "our", "your", "their", "so", "if", "as", "no", "up", "all", "am",
-    "about", "into", "when", "what", "which", "who", "whom", "how", "than", "then", "now", "just",
-    "also", "very", "like", "even", "out", "there", "here",
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "is",
+    "it",
+    "not",
+    "be",
+    "are",
+    "was",
+    "were",
+    "been",
+    "has",
+    "have",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "shall",
+    "should",
+    "may",
+    "might",
+    "can",
+    "could",
+    "that",
+    "this",
+    "these",
+    "those",
+    "he",
+    "she",
+    "we",
+    "they",
+    "you",
+    "i",
+    "me",
+    "him",
+    "her",
+    "us",
+    "them",
+    "my",
+    "his",
+    "its",
+    "our",
+    "your",
+    "their",
+    "so",
+    "if",
+    "as",
+    "no",
+    "up",
+    "all",
+    "am",
+    "about",
+    "into",
+    "when",
+    "what",
+    "which",
+    "who",
+    "whom",
+    "how",
+    "than",
+    "then",
+    "now",
+    "just",
+    "also",
+    "very",
+    "like",
+    "even",
+    "out",
+    "there",
+    "here",
+    "please",
+    "find",
+    "show",
+    "search",
+    "looking",
+    "scripture",
+    "scriptures",
+    "verse",
+    "verses",
+    "bible",
+    "says",
 ];
 
 static STOP_WORD_SET: LazyLock<HashSet<&str>> =
@@ -71,6 +159,7 @@ fn build_and_query(input: &str) -> String {
         .map(clean_word)
         .filter(|w| w.len() >= 2 && !is_stop_word(w))
         .take(12)
+        .map(|w| format!("\"{w}\""))
         .collect();
     if tokens.is_empty() {
         return String::new();
@@ -106,6 +195,7 @@ fn run_fts_query(
     conn: &Connection,
     fts_query: &str,
     limit: usize,
+    translation_id: Option<i64>,
 ) -> Result<Vec<Bm25Result>, BibleError> {
     if fts_query.is_empty() {
         return Ok(vec![]);
@@ -115,12 +205,12 @@ fn run_fts_query(
          FROM verses_fts fts \
          JOIN verses v ON v.rowid = fts.rowid \
          JOIN translations t ON v.translation_id = t.id \
-         WHERE fts.text MATCH ?1 AND t.language = 'en' \
+         WHERE fts.text MATCH ?1 AND (t.language = 'en' OR v.translation_id = ?3) \
          ORDER BY rank \
          LIMIT ?2",
     )?;
     let rows = stmt.query_map(
-        rusqlite::params![fts_query, limit as i64],
+        rusqlite::params![fts_query, limit as i64, translation_id],
         |row: &rusqlite::Row| {
             Ok(Bm25Result {
                 rank: row.get(0)?,
@@ -210,20 +300,48 @@ impl BibleDb {
         query: &str,
         limit: usize,
     ) -> Result<Vec<Bm25Result>, BibleError> {
+        self.search_verses_bm25_including_translation(query, limit, None)
+    }
+
+    /// Include the selected translation alongside English versions for phrase lookup.
+    pub fn search_verses_bm25_including_translation(
+        &self,
+        query: &str,
+        limit: usize,
+        translation_id: Option<i64>,
+    ) -> Result<Vec<Bm25Result>, BibleError> {
         let conn = self.conn();
         let fetch_limit = limit * 4;
 
         // Tier 1: Exact phrase match
         let phrase = build_phrase_query(query);
         log::info!("[FTS5-BM25] Phrase: {phrase:?}");
-        let mut all_results = run_fts_query(&conn, &phrase, fetch_limit)?;
+        let mut all_results = run_fts_query(&conn, &phrase, fetch_limit, translation_id)?;
 
         // Tier 2: AND with stop words filtered (~5-20ms)
         if dedup_count(&all_results) < limit {
             let and_q = build_and_query(query);
             if !and_q.is_empty() {
                 log::info!("[FTS5-BM25] AND: {and_q:?}");
-                all_results.extend(run_fts_query(&conn, &and_q, fetch_limit)?);
+                all_results.extend(run_fts_query(&conn, &and_q, fetch_limit, translation_id)?);
+            }
+        }
+
+        // Interactive search only: keep speech detection's per-segment work unchanged.
+        if translation_id.is_some() && all_results.is_empty() {
+            if let Some(corrected) = crate::spelling::correct_query(&conn, query)? {
+                all_results.extend(run_fts_query(
+                    &conn,
+                    &build_phrase_query(&corrected),
+                    fetch_limit,
+                    translation_id,
+                )?);
+                all_results.extend(run_fts_query(
+                    &conn,
+                    &build_and_query(&corrected),
+                    fetch_limit,
+                    translation_id,
+                )?);
             }
         }
 
@@ -232,7 +350,7 @@ impl BibleDb {
             let or_q = build_or_query(query);
             if !or_q.is_empty() {
                 log::info!("[FTS5-BM25] OR: {or_q:?}");
-                all_results.extend(run_fts_query(&conn, &or_q, fetch_limit)?);
+                all_results.extend(run_fts_query(&conn, &or_q, fetch_limit, translation_id)?);
             }
         }
 
@@ -291,7 +409,10 @@ mod tests {
 
     #[test]
     fn and_query_filters_stop_words() {
-        assert_eq!(build_and_query("be doers of the word"), "doers word");
+        assert_eq!(
+            build_and_query("be doers of the word"),
+            "\"doers\" \"word\""
+        );
     }
 
     #[test]
@@ -303,7 +424,7 @@ mod tests {
     fn and_query_keeps_significant_words() {
         assert_eq!(
             build_and_query("for God so loved the world"),
-            "God loved world"
+            "\"God\" \"loved\" \"world\""
         );
     }
 
@@ -313,6 +434,14 @@ mod tests {
         let result = build_and_query(long_input);
         let term_count = result.split_whitespace().count();
         assert!(term_count <= 12);
+    }
+
+    #[test]
+    fn and_query_quotes_apostrophes_and_operators() {
+        assert_eq!(
+            build_and_query("God's love NOT fear"),
+            "\"God's\" \"love\" \"fear\""
+        );
     }
 
     #[test]

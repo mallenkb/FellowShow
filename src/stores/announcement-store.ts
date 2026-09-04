@@ -13,7 +13,6 @@ interface AnnouncementState {
   selectedSetId: string | null
   selectedItemId: string | null
   createSet: () => void
-  renameSet: (id: string, name: string) => void
   deleteSet: (id: string) => void
   selectSet: (id: string) => void
   addItem: (setId: string) => void
@@ -40,14 +39,6 @@ export const useAnnouncementStore = create<AnnouncementState>((set) => ({
         selectedItemId: next.items[0]?.id ?? null,
       }
     }),
-  renameSet: (id, name) => {
-    if (!name) return
-    set((state) => ({
-      sets: state.sets.map((set) =>
-        set.id === id ? { ...set, name, updatedAt: Date.now() } : set
-      ),
-    }))
-  },
   deleteSet: (id) =>
     set((state) => {
       const sets = state.sets.filter((set) => set.id !== id)

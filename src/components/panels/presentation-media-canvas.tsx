@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useEffect,
   useRef,
   useState,
   type PointerEvent,
@@ -14,7 +13,8 @@ import {
   type PresentationMediaResizeHandle,
   type PresentationMediaTransform,
 } from "@/lib/presentation-media-transform"
-import { playVideoSafely, syncVideoToPlaybackClock } from "@/lib/video-playback"
+import type { PresentationLayer } from "@/lib/presentation-composition"
+import { PresentationMediaLayer } from "./presentation-media-layer"
 
 export interface PresentationMediaCanvasValue extends Required<PresentationMediaTransform> {
   name: string
@@ -55,17 +55,11 @@ const RESIZE_HANDLES: Array<[PresentationMediaResizeHandle, string]> = [
   ["w", "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize"],
 ]
 
-function mediaClassName(fit: PresentationMediaCanvasValue["fit"]) {
-  return cn(
-    "h-full w-full",
-    fit === "contain" && "object-contain",
-    fit === "cover" && "object-cover",
-    fit === "stretch" && "object-fill"
-  )
-}
-
 export function PresentationMediaCanvas({
   media,
+  layers,
+  selectedLayerId,
+  onSelectLayer,
   ariaLabel,
   onTransform,
   frameRef,
@@ -73,6 +67,9 @@ export function PresentationMediaCanvas({
   className,
 }: {
   media: PresentationMediaCanvasValue | null
+  layers?: PresentationLayer[]
+  selectedLayerId?: string
+  onSelectLayer?: (id: string) => void
   ariaLabel: string
   onTransform: (transform: PresentationMediaTransform) => void
   frameRef?: (node: HTMLDivElement | null) => void
@@ -80,7 +77,6 @@ export function PresentationMediaCanvas({
   className?: string
 }) {
   const localFrameRef = useRef<HTMLDivElement | null>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
   const interactionRef = useRef<CanvasInteraction | null>(null)
   const [interaction, setInteraction] = useState<CanvasInteraction | null>(null)
 
@@ -199,6 +195,7 @@ export function PresentationMediaCanvas({
       const amount = event.deltaY < 0 ? 0.05 : -0.05
       onTransform(
         clampPresentationMediaTransform({
+          ...media,
           scale: media.scale + amount,
         })
       )
@@ -207,28 +204,6 @@ export function PresentationMediaCanvas({
   )
 
   const showGuides = interaction !== null
-  const mediaType = media?.mediaType
-  const mediaUrl = media?.url
-  const playbackStartedAt = media?.playbackStartedAt
-
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video || mediaType !== "video" || !mediaUrl) return
-
-    const sync = () => {
-      syncVideoToPlaybackClock(video, playbackStartedAt)
-      if (video.paused) playVideoSafely(video)
-    }
-    video.addEventListener("loadedmetadata", sync)
-    video.addEventListener("loadeddata", sync)
-    sync()
-    const interval = window.setInterval(sync, 250)
-    return () => {
-      window.clearInterval(interval)
-      video.removeEventListener("loadedmetadata", sync)
-      video.removeEventListener("loadeddata", sync)
-    }
-  }, [mediaType, mediaUrl, playbackStartedAt])
 
   return (
     <div
@@ -247,42 +222,41 @@ export function PresentationMediaCanvas({
         className
       )}
     >
-      {media ? (
+      {(layers ?? (media ? [{ ...media, id: "single" }] : [])).map((layer) => (
         <div
+          key={layer.id}
           className="absolute inset-0 select-none"
+          onPointerDown={(event) => {
+            if (layers && layer.id !== selectedLayerId) {
+              event.stopPropagation()
+              onSelectLayer?.(layer.id)
+            }
+          }}
           style={{
-            transform: `translate(${media.offsetX * 100}%, ${media.offsetY * 100}%) scale(${media.scale})`,
+            transform: `translate(${layer.offsetX * 100}%, ${layer.offsetY * 100}%) scale(${layer.scale})`,
           }}
         >
-          {media.mediaType === "video" ? (
-            <video
-              ref={videoRef}
-              src={media.url}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className={mediaClassName(media.fit)}
-            />
-          ) : (
-            <img
-              src={media.url}
-              alt={media.name}
-              draggable={false}
-              className={mediaClassName(media.fit)}
-            />
-          )}
+          <PresentationMediaLayer media={layer} />
         </div>
-      ) : null}
+      ))}
 
-      {!disabled && media
-        ? RESIZE_HANDLES.map(([handle, classes]) => (
+      {!disabled && media ? (
+        <div
+          className="pointer-events-none absolute z-10 border border-white/60"
+          style={{
+            width: `${media.scale * 100}%`,
+            height: `${media.scale * 100}%`,
+            left: `${(0.5 + media.offsetX - media.scale / 2) * 100}%`,
+            top: `${(0.5 + media.offsetY - media.scale / 2) * 100}%`,
+          }}
+        >
+          {RESIZE_HANDLES.map(([handle, classes]) => (
             <button
               key={handle}
               type="button"
               aria-label={`Resize from ${handle.toUpperCase()} handle`}
               className={cn(
-                "absolute z-10 size-3 touch-none rounded-[2px] border border-black/50 bg-white shadow-sm",
+                "pointer-events-auto absolute z-10 size-3 touch-none rounded-[2px] border border-black/50 bg-white shadow-sm",
                 classes
               )}
               onPointerDown={(event) => beginResize(handle, event)}
@@ -290,8 +264,9 @@ export function PresentationMediaCanvas({
               onPointerUp={endInteraction}
               onPointerCancel={endInteraction}
             />
-          ))
-        : null}
+          ))}
+        </div>
+      ) : null}
 
       {showGuides ? (
         <div className="pointer-events-none absolute inset-0 grid grid-cols-8 grid-rows-4">

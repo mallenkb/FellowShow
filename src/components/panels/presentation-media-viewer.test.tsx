@@ -1,9 +1,17 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { PresentationMediaViewer } from "./presentation-media-viewer"
+import { useBroadcastStore } from "@/stores/broadcast-store"
+import { slideLayers } from "@/lib/presentation-composition"
 import {
   usePresentationStore,
   type PresentationSlide,
@@ -19,6 +27,13 @@ vi.mock("@tauri-apps/plugin-fs", () => ({
 
 vi.mock("@tauri-apps/plugin-store", () => ({
   load: vi.fn(() => Promise.resolve()),
+}))
+
+vi.mock("@/lib/presentation-media", () => ({
+  cachePresentationMedia: vi.fn(
+    async (_file: File, name: string) => `asset://localhost/media/${name}`
+  ),
+  cachePresentationMediaPath: vi.fn(),
 }))
 
 const imageSlide: PresentationSlide = {
@@ -63,6 +78,45 @@ describe("PresentationMediaViewer", () => {
     })
   })
 
+  it("adds dropped files to the selected canvas without creating separate slides", async () => {
+    render(<PresentationMediaViewer slide={imageSlide} />)
+    fireEvent.drop(
+      screen.getByRole("region", { name: "Test image editor canvas" }),
+      {
+        dataTransfer: {
+          files: [new File(["image"], "second.png", { type: "image/png" })],
+          getData: () => "",
+          types: ["Files"],
+        },
+      }
+    )
+    await waitFor(() =>
+      expect(usePresentationStore.getState().slides[0].layers).toHaveLength(2)
+    )
+    expect(usePresentationStore.getState().slides).toHaveLength(1)
+  })
+
+  it("copies a dragged sidebar item into the canvas and leaves its source intact", () => {
+    usePresentationStore.setState({ slides: [imageSlide, videoSlide] })
+    render(<PresentationMediaViewer slide={imageSlide} />)
+    fireEvent.drop(
+      screen.getByRole("region", { name: "Test image editor canvas" }),
+      {
+        dataTransfer: {
+          files: [],
+          getData: (type: string) =>
+            type === "application/x-fellowshow-slide" ? videoSlide.id : "",
+          types: ["application/x-fellowshow-slide"],
+        },
+      }
+    )
+    expect(usePresentationStore.getState().slides).toHaveLength(2)
+    expect(usePresentationStore.getState().slides[0].layers?.[1].url).toBe(
+      videoSlide.url
+    )
+    expect(usePresentationStore.getState().slides[1]).toEqual(videoSlide)
+  })
+
   it("shows direct image editing handles in the center editor", () => {
     render(<PresentationMediaViewer slide={imageSlide} />)
 
@@ -94,5 +148,40 @@ describe("PresentationMediaViewer", () => {
     await user.click(screen.getByTitle("Zoom in"))
 
     expect(usePresentationStore.getState().slides[0]?.scale).toBe(1.1)
+  })
+
+  it("takes every media item live and keeps later edits in preview", async () => {
+    const user = userEvent.setup()
+    useBroadcastStore.setState({
+      outputs: [],
+      liveVerse: null,
+      previewVerse: null,
+    })
+    usePresentationStore.getState().addSlideMedia(imageSlide.id, [
+      {
+        ...slideLayers(imageSlide)[0],
+        id: "second",
+        name: "Second image",
+        url: "/second.png",
+      },
+    ])
+    const composition = usePresentationStore.getState().slides[0]
+    render(<PresentationMediaViewer slide={composition} />)
+
+    await user.click(screen.getByRole("button", { name: "Take Live" }))
+    expect(
+      useBroadcastStore.getState().liveVerse?.presentationImage?.layers
+    ).toHaveLength(2)
+
+    await user.click(screen.getByRole("button", { name: "2. Second image" }))
+    await user.click(screen.getByTitle("Zoom in"))
+    expect(
+      useBroadcastStore.getState().previewVerse?.presentationImage?.layers?.[1]
+        .scale
+    ).toBe(0.6)
+    expect(
+      useBroadcastStore.getState().liveVerse?.presentationImage?.layers?.[1]
+        .scale
+    ).toBe(0.5)
   })
 })

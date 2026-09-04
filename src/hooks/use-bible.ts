@@ -4,23 +4,33 @@ import { useBibleStore } from "@/stores"
 import { useSettingsStore } from "@/stores/settings-store"
 import type { Verse } from "@/types"
 
-// Stable action functions that use getState() instead of closing over the store.
-// This prevents the infinite re-render loop caused by useCallback deps changing every render.
+let translationsRequestId = 0
+let booksRequestId = 0
+let chapterRequestId = 0
+let verseSearchRequestId = 0
+let semanticSearchRequestId = 0
+let crossReferencesRequestId = 0
 
 async function loadTranslations() {
+  const requestId = ++translationsRequestId
   if (!isTauri()) {
-    useBibleStore.getState().setTranslations([])
+    if (requestId === translationsRequestId) {
+      useBibleStore.getState().setTranslations([])
+    }
     return []
   }
 
   const translations = await invoke("list_translations")
-  useBibleStore.getState().setTranslations(translations)
+  if (requestId === translationsRequestId) {
+    useBibleStore.getState().setTranslations(translations)
+  }
   return translations
 }
 
 async function loadBooks(translationId?: number) {
+  const requestId = ++booksRequestId
   if (!isTauri()) {
-    useBibleStore.getState().setBooks([])
+    if (requestId === booksRequestId) useBibleStore.getState().setBooks([])
     return []
   }
 
@@ -30,7 +40,7 @@ async function loadBooks(translationId?: number) {
     return []
   }
   const books = await invoke("list_books", { translationId: id })
-  useBibleStore.getState().setBooks(books)
+  if (requestId === booksRequestId) useBibleStore.getState().setBooks(books)
   return books
 }
 
@@ -39,8 +49,11 @@ async function loadChapter(
   chapter: number,
   translationId?: number
 ) {
+  const requestId = ++chapterRequestId
   if (!isTauri()) {
-    useBibleStore.getState().setCurrentChapter([])
+    if (requestId === chapterRequestId) {
+      useBibleStore.getState().setCurrentChapter([])
+    }
     return []
   }
 
@@ -54,7 +67,9 @@ async function loadChapter(
     bookNumber,
     chapter,
   })
-  useBibleStore.getState().setCurrentChapter(verses)
+  if (requestId === chapterRequestId) {
+    useBibleStore.getState().setCurrentChapter(verses)
+  }
   return verses
 }
 
@@ -77,8 +92,11 @@ async function fetchVerse(
 }
 
 async function searchVerses(query: string, limit = 20, translationId?: number) {
+  const requestId = ++verseSearchRequestId
   if (!isTauri()) {
-    useBibleStore.getState().setSearchResults([])
+    if (requestId === verseSearchRequestId) {
+      useBibleStore.getState().setSearchResults([])
+    }
     return []
   }
 
@@ -92,13 +110,18 @@ async function searchVerses(query: string, limit = 20, translationId?: number) {
     translationId: id,
     limit,
   })
-  useBibleStore.getState().setSearchResults(results)
+  if (requestId === verseSearchRequestId) {
+    useBibleStore.getState().setSearchResults(results)
+  }
   return results
 }
 
 async function semanticSearch(query: string, limit = 10) {
+  const requestId = ++semanticSearchRequestId
   if (!isTauri()) {
-    useBibleStore.getState().setSemanticResults([])
+    if (requestId === semanticSearchRequestId) {
+      useBibleStore.getState().setSemanticResults([])
+    }
     return []
   }
 
@@ -111,7 +134,9 @@ async function semanticSearch(query: string, limit = 10) {
     query,
     limit,
   })
-  useBibleStore.getState().setSemanticResults(results)
+  if (requestId === semanticSearchRequestId) {
+    useBibleStore.getState().setSemanticResults(results)
+  }
   return results
 }
 
@@ -120,8 +145,11 @@ async function loadCrossReferences(
   chapter: number,
   verse: number
 ) {
+  const requestId = ++crossReferencesRequestId
   if (!isTauri()) {
-    useBibleStore.getState().setCrossReferences([])
+    if (requestId === crossReferencesRequestId) {
+      useBibleStore.getState().setCrossReferences([])
+    }
     return []
   }
 
@@ -130,11 +158,12 @@ async function loadCrossReferences(
     chapter,
     verse,
   })
-  useBibleStore.getState().setCrossReferences(refs)
+  if (requestId === crossReferencesRequestId) {
+    useBibleStore.getState().setCrossReferences(refs)
+  }
   return refs
 }
 
-// Exported stable references — these never change between renders
 export const bibleActions = {
   loadTranslations,
   loadBooks,
@@ -143,15 +172,19 @@ export const bibleActions = {
   searchVerses,
   semanticSearch,
   loadCrossReferences,
-  navigateToVerse: (bookNumber: number, chapter: number, verse: number) =>
+  navigateToVerse: (
+    bookNumber: number,
+    chapter: number,
+    verse: number,
+    activate = true
+  ) =>
     useBibleStore
       .getState()
-      .setPendingNavigation({ bookNumber, chapter, verse }),
+      .setPendingNavigation({ bookNumber, chapter, verse, activate }),
   selectVerse: (verse: Verse | null) =>
     useBibleStore.getState().selectVerse(verse),
 }
 
-// Hook for components that need reactive store data
 export function useBible() {
   const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)

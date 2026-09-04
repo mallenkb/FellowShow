@@ -368,38 +368,3 @@ pub fn set_active_translation(
     log::info!("[BIBLE] Active translation set to ID {translation_id}");
     Ok(translation_id)
 }
-
-#[derive(Serialize)]
-pub struct VerseSearchRow {
-    pub book_number: i32,
-    pub book_name: String,
-    pub chapter: i32,
-    pub verse: i32,
-    pub text: String,
-}
-
-#[tauri::command]
-pub fn get_translation_verses_for_search(
-    state: State<'_, Mutex<AppState>>,
-    translation_id: i64,
-) -> Result<Vec<VerseSearchRow>, String> {
-    let app_state = state.lock().map_err(|e| e.to_string())?;
-    let db = app_state
-        .bible_db
-        .as_ref()
-        .ok_or_else(|| "Bible database not loaded".to_string())?;
-
-    db.load_translation_verses_for_search(translation_id)
-        .map(|rows| {
-            rows.into_iter()
-                .map(|v| VerseSearchRow {
-                    book_number: v.book_number,
-                    book_name: v.book_name,
-                    chapter: v.chapter,
-                    verse: v.verse,
-                    text: v.text,
-                })
-                .collect()
-        })
-        .map_err(|e| e.to_string())
-}

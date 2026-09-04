@@ -3,6 +3,7 @@ import { PanelHeader } from "@/components/ui/panel-header"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { PresentationCompositionThumbnail } from "./presentation-composition-thumbnail"
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { slideRenderData } from "@/lib/presentation-composition"
 import {
   GripVerticalIcon,
   ImageIcon,
@@ -138,7 +140,11 @@ export function PresentationPanel() {
                     setDraggedId(slide.id)
                     setDropTargetId(null)
                     lastDragOverIdRef.current = slide.id
-                    event.dataTransfer.effectAllowed = "move"
+                    event.dataTransfer.effectAllowed = "copyMove"
+                    event.dataTransfer.setData(
+                      "application/x-fellowshow-slide",
+                      slide.id
+                    )
                     event.dataTransfer.setData("text/plain", slide.id)
                   }}
                   onDragEnd={() => {
@@ -180,24 +186,7 @@ export function PresentationPanel() {
                   onDoubleClick={() => {
                     usePresentationStore.getState().selectSlide(slide.id)
                     const store = useBroadcastStore.getState()
-                    store.presentOnLive(
-                      {
-                        reference: slide.name,
-                        themeSection: "presentation",
-                        segments: [],
-                        presentationImage: {
-                          url: slide.url,
-                          name: slide.name,
-                          mediaType: slide.mediaType,
-                          playbackStartedAt: slide.playbackStartedAt,
-                          fit: slide.fit,
-                          scale: slide.scale,
-                          offsetX: slide.offsetX,
-                          offsetY: slide.offsetY,
-                        },
-                      },
-                      null
-                    )
+                    store.presentOnLive(slideRenderData(slide), null)
                   }}
                   onMouseEnter={() => setPreviewingSlideId(slide.id)}
                   onMouseLeave={() =>
@@ -218,7 +207,9 @@ export function PresentationPanel() {
                   )}
                 >
                   <div className="aspect-video overflow-hidden bg-black">
-                    {slide.mediaType === "video" ? (
+                    {slide.layers?.length ? (
+                      <PresentationCompositionThumbnail slide={slide} />
+                    ) : slide.mediaType === "video" ? (
                       <VideoSlideThumbnail
                         src={slide.url}
                         shouldPlay={isActive || previewingSlideId === slide.id}

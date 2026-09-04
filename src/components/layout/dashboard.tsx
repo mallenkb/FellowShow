@@ -1,19 +1,30 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { TransportBar } from "@/components/controls/transport-bar"
 import { TranscriptPanel } from "@/components/panels/transcript-panel"
-import {
-  MotionPanel,
-  PreviewPanel,
-  ThemesPanel,
-} from "@/components/panels/preview-panel"
+import { MotionPanel } from "@/components/panels/motion-panel"
+import { PreviewPanel } from "@/components/panels/preview-panel"
+import { ThemesPanel } from "@/components/panels/themes-panel"
 import { LiveOutputPanel } from "@/components/panels/live-output-panel"
 import { OutputsMultiviewPanel } from "@/components/panels/outputs-multiview-panel"
 import { QueuePanel } from "@/components/panels/queue-panel"
 import { SearchPanel } from "@/components/panels/search-panel"
-import { PresentationPanel } from "@/components/panels/presentation-panel"
-import { AnnouncementWorkspace } from "@/components/panels/announcement-workspace"
-import { OnDisplayPanel } from "@/components/panels/on-display-panel"
 import { useBroadcastStore } from "@/stores"
+
+const PresentationPanel = lazy(() =>
+  import("@/components/panels/presentation-panel").then((module) => ({
+    default: module.PresentationPanel,
+  }))
+)
+const AnnouncementWorkspace = lazy(() =>
+  import("@/components/panels/announcement-workspace").then((module) => ({
+    default: module.AnnouncementWorkspace,
+  }))
+)
+const OnDisplayPanel = lazy(() =>
+  import("@/components/panels/on-display-panel").then((module) => ({
+    default: module.OnDisplayPanel,
+  }))
+)
 
 const COLUMN_MIN_WIDTHS = [300, 340, 280]
 const HANDLE_WIDTH = 12
@@ -391,22 +402,37 @@ export function Dashboard() {
           onPointerDown={(event) => startColumnResize(0, event)}
         />
 
-        {searchMode === "presentation" ? (
-          <div className="grid min-h-0 *:min-h-0">
-            <PresentationPanel />
-          </div>
-        ) : searchMode === "announcements" ? (
-          <div className="grid min-h-0 *:min-h-0">
-            <AnnouncementWorkspace />
-          </div>
-        ) : searchMode === "on-display" ? (
-          <div className="grid min-h-0 *:min-h-0">
-            <OnDisplayPanel />
-          </div>
-        ) : (
+        <div className="grid min-h-0 *:min-h-0">
+          <Suspense
+            fallback={
+              <div role="status" className="p-4 text-sm text-muted-foreground">
+                Loading workspace…
+              </div>
+            }
+          >
+            {searchMode === "presentation" ? (
+              <div className="grid min-h-0 *:min-h-0">
+                <PresentationPanel />
+              </div>
+            ) : searchMode === "announcements" ? (
+              <div className="grid min-h-0 *:min-h-0">
+                <AnnouncementWorkspace />
+              </div>
+            ) : searchMode === "on-display" ? (
+              <div className="grid min-h-0 *:min-h-0">
+                <OnDisplayPanel />
+              </div>
+            ) : null}
+          </Suspense>
           <div
             ref={middleColumnRef}
-            className="grid min-h-0 *:min-h-0"
+            className={
+              searchMode === "presentation" ||
+              searchMode === "announcements" ||
+              searchMode === "on-display"
+                ? "hidden"
+                : "grid min-h-0 *:min-h-0"
+            }
             style={{
               gridTemplateRows: `minmax(${ROW_MIN_HEIGHTS[0]}px, ${middleRowRatios[0]}fr) ${HANDLE_HEIGHT}px minmax(${ROW_MIN_HEIGHTS[1]}px, ${middleRowRatios[1]}fr)`,
             }}
@@ -416,9 +442,17 @@ export function Dashboard() {
               label="Resize transcript and queue rows"
               onPointerDown={startMiddleRowResize}
             />
-            <QueuePanel mode={searchMode} />
+            <QueuePanel
+              mode={
+                searchMode === "songs" ||
+                searchMode === "context" ||
+                searchMode === "timer"
+                  ? searchMode
+                  : "book"
+              }
+            />
           </div>
-        )}
+        </div>
         <ResizeHandle
           label="Resize transcript and display columns"
           onPointerDown={(event) => startColumnResize(1, event)}

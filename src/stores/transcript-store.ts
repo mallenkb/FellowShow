@@ -16,8 +16,6 @@ interface TranscriptState {
   setPartial: (text: string) => void
   setTranscribing: (transcribing: boolean) => void
   setConnectionStatus: (status: ConnectionStatus) => void
-  replaceSegments: (segments: TranscriptSegment[]) => void
-  clearTranscript: () => void
 }
 
 const TRANSCRIPT_STORE_FILE = "transcript-sessions.json"
@@ -109,9 +107,4 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
   setPartial: (currentPartial) => set({ currentPartial }),
   setTranscribing: (isTranscribing) => set({ isTranscribing }),
   setConnectionStatus: (connectionStatus) => set({ connectionStatus }),
-  replaceSegments: (segments) => set({ segments }),
-  clearTranscript: () => {
-    set({ segments: [], highlightedScriptures: [], currentPartial: "" })
-    void persistSegments([])
-  },
 }))

@@ -7,6 +7,7 @@ import type {
   NdiSessionInfo,
   NdiStartRequest,
   SemanticSearchResult,
+  SecureSettings,
   PreachingSummary,
   Translation,
   Verse,
@@ -22,14 +23,6 @@ interface EasyWorshipImportedSong {
   id: string
   title: string
   lyrics: string
-}
-
-export interface VerseSearchRow {
-  book_number: number
-  book_name: string
-  chapter: number
-  verse: number
-  text: string
 }
 
 interface DetectionStatus {
@@ -90,10 +83,6 @@ export interface Commands {
     { query: string; translationId: number; limit: number },
     Verse[]
   >
-  get_translation_verses_for_search: WithArgs<
-    { translationId: number },
-    VerseSearchRow[]
-  >
   get_cross_references: WithArgs<
     { bookNumber: number; chapter: number; verse: number },
     CrossReference[]
@@ -103,7 +92,11 @@ export interface Commands {
   detect_verses: WithArgs<{ text: string }, DetectionResult[]>
   detection_status: NoArgs<DetectionStatus>
   semantic_search: WithArgs<
-    { query: string; limit?: number },
+    { query: string; limit?: number; translationId?: number },
+    SemanticSearchResult[]
+  >
+  search_scripture_phrases: WithArgs<
+    { query: string; translationId: number; limit?: number },
     SemanticSearchResult[]
   >
   toggle_paraphrase_detection: WithArgs<{ enabled: boolean }, boolean>
@@ -132,6 +125,8 @@ export interface Commands {
     void
   >
   stop_transcription: NoArgs<void>
+  load_secure_settings: NoArgs<SecureSettings>
+  save_secure_settings: WithArgs<{ secrets: SecureSettings }, void>
   list_monitors: NoArgs<MonitorInfo[]>
   ensure_broadcast_window: WithArgs<{ outputId: string; title: string }, void>
   open_broadcast_window: WithArgs<
@@ -164,11 +159,28 @@ export interface Commands {
   >
 }
 
-export function invoke<C extends keyof Commands>(
+type JsonCommand = Exclude<keyof Commands, "push_ndi_frame">
+
+export function invoke<C extends JsonCommand>(
   command: C,
   ...args: Commands[C]["args"] extends undefined ? [] : [Commands[C]["args"]]
 ): Promise<Commands[C]["result"]> {
   return args.length === 0
     ? tauriInvoke<Commands[C]["result"]>(command)
     : tauriInvoke<Commands[C]["result"]>(command, args[0])
+}
+
+export function sendNdiFrame(request: NdiFrameRequest): Promise<void> {
+  const rgba = new Uint8Array(
+    request.rgba.buffer,
+    request.rgba.byteOffset,
+    request.rgba.byteLength
+  )
+  return tauriInvoke<void>("push_ndi_frame", rgba, {
+    headers: {
+      "x-fellowshow-output-id": request.outputId,
+      "x-fellowshow-frame-width": String(request.width),
+      "x-fellowshow-frame-height": String(request.height),
+    },
+  })
 }

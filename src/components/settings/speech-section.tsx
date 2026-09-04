@@ -1,5 +1,6 @@
 import { invoke } from "@/lib/ipc"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -7,9 +8,11 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
 import { CheckIcon, CloudIcon, MonitorIcon } from "lucide-react"
+import { UnlockSavedKeys } from "./unlock-saved-keys"
 
 export function SpeechSection() {
   const {
+    secretsUnlocked,
     sttProvider,
     setSttProvider,
     deepgramApiKey,
@@ -43,12 +46,19 @@ export function SpeechSection() {
   }, [activeApiKey, sttProvider])
 
   const handleSaveKey = async () => {
-    if (sttProvider === "deepgram") setDeepgramApiKey(keyValue || null)
-    if (sttProvider === "openai") setOpenaiApiKey(keyValue || null)
-    if (sttProvider === "groq") setGroqApiKey(keyValue || null)
-    await saveSettingsNow()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    const key = keyValue.trim() || null
+    if (sttProvider === "deepgram") setDeepgramApiKey(key)
+    if (sttProvider === "openai") setOpenaiApiKey(key)
+    if (sttProvider === "groq") setGroqApiKey(key)
+    try {
+      await saveSettingsNow()
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not save API key"
+      )
+    }
   }
 
   const handleTestConnection = async () => {
@@ -171,6 +181,7 @@ export function SpeechSection() {
 
       {sttProvider !== "whisper" && (
         <div className="flex flex-col gap-2">
+          <UnlockSavedKeys />
           <div className="flex items-center gap-2">
             <label className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
               {sttProvider === "deepgram"
@@ -189,6 +200,7 @@ export function SpeechSection() {
           <div className="flex gap-2">
             <Input
               type="password"
+              disabled={!secretsUnlocked}
               placeholder={`Enter your ${sttProvider === "deepgram" ? "Deepgram" : sttProvider === "openai" ? "OpenAI" : "Groq"} API key...`}
               value={keyValue}
               onChange={(e) => setKeyValue(e.target.value)}
@@ -202,7 +214,11 @@ export function SpeechSection() {
             >
               {testingConnection ? "Testing..." : "Test"}
             </Button>
-            <Button size="sm" onClick={() => void handleSaveKey()}>
+            <Button
+              size="sm"
+              disabled={!secretsUnlocked}
+              onClick={() => void handleSaveKey()}
+            >
               {saved ? (
                 <>
                   <CheckIcon className="size-3" />

@@ -23,14 +23,14 @@ export default defineConfig({
     outDir: "build",
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, "index.html"),
-        broadcast: path.resolve(__dirname, "broadcast-output.html"),
+        main: path.resolve(import.meta.dirname, "index.html"),
+        broadcast: path.resolve(import.meta.dirname, "broadcast-output.html"),
       },
     },
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
 })

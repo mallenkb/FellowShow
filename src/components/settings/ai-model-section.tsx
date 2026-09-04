@@ -17,6 +17,7 @@ import { AiProviderSelector } from "@/components/settings/ai-provider-selector"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { UnlockSavedKeys } from "./unlock-saved-keys"
 import {
   fetchAiProviderModels,
   getAiProviderName,
@@ -34,6 +35,7 @@ import {
 type RequestState = "idle" | "loading" | "success" | "error"
 
 export function AiModelSection() {
+  const secretsUnlocked = useSettingsStore((state) => state.secretsUnlocked)
   const configuredProvider = useSettingsStore((state) => state.aiProvider)
   const configuredOpenRouterKey = useSettingsStore(
     (state) => state.openRouterApiKey
@@ -129,11 +131,12 @@ export function AiModelSection() {
 
   const save = async () => {
     setConfiguredProvider(provider)
-    setConfiguredOpenRouterKey(openRouterKey.trim() || null)
+    if (secretsUnlocked)
+      setConfiguredOpenRouterKey(openRouterKey.trim() || null)
     setConfiguredOpenRouterModel(
       openRouterModel.trim() || DEFAULT_OPENROUTER_MODEL
     )
-    setConfiguredOpenAiKey(openAiKey.trim() || null)
+    if (secretsUnlocked) setConfiguredOpenAiKey(openAiKey.trim() || null)
     setConfiguredOpenAiModel(openAiModel.trim() || DEFAULT_OPENAI_MODEL)
     await saveSettingsNow()
     setSaved(true)
@@ -229,6 +232,7 @@ export function AiModelSection() {
       </div>
 
       <AiProviderSelector provider={provider} onChange={setProvider} />
+      <UnlockSavedKeys />
 
       <label className="grid gap-2">
         <span className="flex items-center gap-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -242,6 +246,7 @@ export function AiModelSection() {
         <div className="relative">
           <Input
             type={showApiKey ? "text" : "password"}
+            disabled={!secretsUnlocked}
             value={apiKey}
             onChange={(event) => updateApiKey(event.target.value)}
             placeholder={`Paste your ${providerName} API key`}

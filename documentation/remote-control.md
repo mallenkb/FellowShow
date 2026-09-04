@@ -1,6 +1,6 @@
 # Remote Control
 
-FellowShow provides two remote control protocols for external integration: **OSC** (Open Sound Control) and **HTTP API**. These allow you to control broadcasts, navigate verses, switch themes, and adjust settings from hardware controllers, automation scripts, or custom dashboards.
+FellowShow provides two local control protocols: **OSC** (Open Sound Control) and **HTTP API**. They let software on the FellowShow computer control broadcasts, navigate verses, switch themes, and adjust settings.
 
 ## Overview
 
@@ -15,8 +15,8 @@ Remote control enables you to:
 
 | Protocol | Port | Transport | Best For |
 |----------|------|-----------|----------|
-| **OSC** | 8000 | UDP | Hardware controllers (Stream Deck, TouchOSC, Companion) |
-| **HTTP** | 8080 | TCP/HTTP | REST clients, automation scripts, custom dashboards |
+| **OSC** | 8000 | UDP | Local Companion, QLab, and OSC clients |
+| **HTTP** | 8080 | TCP/HTTP | Local scripts and dashboards |
 
 Both protocols support the same command set and can run simultaneously.
 
@@ -243,7 +243,7 @@ curl -X POST http://localhost:8080/api/v1/command \
 
 1. **Install Companion** and configure your Stream Deck
 2. **Add Generic OSC module**:
-   - Host: `127.0.0.1` (or your FellowShow computer's IP)
+   - Host: `127.0.0.1`
    - Port: `8000`
 3. **Create buttons** for each command:
    - **Next Verse**: OSC path `/fellowshow/next`
@@ -254,16 +254,9 @@ curl -X POST http://localhost:8080/api/v1/command \
 
 ### TouchOSC / Lemur
 
-Mobile control surfaces can send OSC commands directly.
-
-**TouchOSC Example:**
-1. Create buttons with OSC message type
-2. Set destination to FellowShow computer IP:8000
-3. Configure OSC addresses:
-   - `/fellowshow/next`
-   - `/fellowshow/prev`
-   - `/fellowshow/show`
-   - `/fellowshow/hide`
+Mobile OSC clients cannot connect while remote control is loopback-only. An
+authenticated LAN mode is required before FellowShow can accept commands from a
+phone or tablet.
 
 ### Node.js / JavaScript Automation
 
@@ -401,14 +394,10 @@ Use this to verify your integration is working correctly.
      -d '{"command":"next"}'
    ```
 
-3. **Firewall Issues**
-   - Allow incoming connections on OSC/HTTP ports
-   - On macOS: System Preferences → Security & Privacy → Firewall
-
-4. **Network Issues**
-   - Verify computer IP address: `ifconfig` (macOS/Linux) or `ipconfig` (Windows)
-   - Test connectivity: `ping <fellowshow-computer-ip>`
-   - Ensure both devices on same network (if remote)
+3. **Check Where the Controller Runs**
+   - The controller must run on the FellowShow computer
+   - Use `127.0.0.1` or `localhost` as the destination
+   - Phones, tablets, and other computers cannot connect
 
 #### Port Already in Use
 
@@ -420,8 +409,8 @@ If you see "Port already in use" error:
 #### OSC vs HTTP - Which to Use?
 
 **Use OSC if:**
-- Integrating with hardware controllers
-- Using Companion, TouchOSC, QLab, etc.
+- Integrating a locally attached controller through Companion
+- Using local OSC software such as QLab
 - Need low-latency, fire-and-forget commands
 - Already have OSC infrastructure
 
@@ -436,16 +425,9 @@ If you see "Port already in use" error:
 
 ### Network Exposure
 
-By default, both OSC and HTTP bind to `0.0.0.0`, making them accessible from any device on your network.
-
-**For local-only access:**
-- Bind to `127.0.0.1` instead (requires editing settings)
-- This prevents remote network access
-
-**For production environments:**
-- Use firewall rules to restrict access
-- Consider VPN or SSH tunneling for remote access
-- HTTP does not include authentication (add reverse proxy with auth if needed)
+Both OSC and HTTP bind to `127.0.0.1`. They are unavailable to other devices on
+the network. Do not expose the listeners through a proxy or port forward because
+the HTTP API has no authentication.
 
 ### Command Validation
 

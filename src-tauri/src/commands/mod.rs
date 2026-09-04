@@ -5,5 +5,6 @@ pub mod detection;
 pub mod documents;
 pub mod easyworship;
 pub mod remote;
+pub mod secrets;
 pub mod stt;
 pub mod summary;

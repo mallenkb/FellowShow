@@ -161,8 +161,8 @@ export function RemoteControlSection() {
           </p>
         )}
         <p className="text-[0.625rem] text-muted-foreground">
-          Receives commands from hardware controllers (Stream Deck, TouchOSC,
-          Companion) via OSC over UDP.
+          Receives OSC commands from controller software running on this
+          computer, such as Companion or QLab.
         </p>
       </div>
 
@@ -199,20 +199,18 @@ export function RemoteControlSection() {
           </p>
         )}
         <p className="text-[0.625rem] text-muted-foreground">
-          REST API for status queries and control commands. Use with custom
-          dashboards, automation scripts, or HTTP-capable controllers.
+          Local REST API for status queries, automation scripts, and dashboards
+          running on this computer.
         </p>
       </div>
 
-      {/* Firewall guidance */}
       <div className="rounded-lg border border-border bg-muted/30 p-3">
         <p className="mb-1 text-[0.625rem] font-medium text-muted-foreground">
-          Firewall Note
+          Local access only
         </p>
         <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-          Your OS may block incoming connections. On macOS, allow FellowShow
-          through System Settings → Network → Firewall. On Windows, allow
-          through Windows Security → Firewall → Allow an app.
+          Both listeners bind to 127.0.0.1. Phones, tablets, and other computers
+          cannot connect. No firewall changes are needed.
         </p>
       </div>
 

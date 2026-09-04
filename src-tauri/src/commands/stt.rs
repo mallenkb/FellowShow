@@ -1,10 +1,6 @@
-#![expect(
-    clippy::needless_pass_by_value,
-    reason = "Tauri command extractors require pass-by-value"
-)]
-
-use std::sync::atomic::Ordering;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -14,7 +10,49 @@ use crate::events::{
     AudioLevelPayload, TranscriptPayload, EVENT_AUDIO_LEVEL, EVENT_TRANSCRIPT_FINAL,
     EVENT_TRANSCRIPT_PARTIAL,
 };
-use crate::state::AppState;
+use crate::state::{AppState, SttSession};
+
+struct SttSessionGuard {
+    app: AppHandle,
+    session_id: u64,
+    finished: Arc<tokio::sync::Notify>,
+    cancelled: Arc<AtomicBool>,
+}
+
+impl Drop for SttSessionGuard {
+    fn drop(&mut self) {
+        // Provider failures must stop capture and transcript consumption too.
+        self.cancelled.store(true, Ordering::SeqCst);
+        finish_transcription_session(&self.app, self.session_id, &self.finished);
+    }
+}
+
+struct CancelCaptureOnDrop(Arc<AtomicBool>);
+
+impl Drop for CancelCaptureOnDrop {
+    fn drop(&mut self) {
+        self.0.store(true, Ordering::SeqCst);
+    }
+}
+
+fn finish_transcription_session(app: &AppHandle, session_id: u64, finished: &tokio::sync::Notify) {
+    let state: State<'_, Mutex<AppState>> = app.state();
+    let is_current_session = state.lock().is_ok_and(|mut app_state| {
+        if app_state.stt_session.as_ref().map(|session| session.id) != Some(session_id) {
+            return false;
+        }
+
+        app_state.stt_session = None;
+        app_state.stt_active.store(false, Ordering::SeqCst);
+        app_state.audio_active.store(false, Ordering::SeqCst);
+        true
+    });
+
+    finished.notify_waiters();
+    if is_current_session {
+        let _ = app.emit("stt_stopped", ());
+    }
+}
 
 /// Truncate a string to at most `max_bytes`, snapping to a valid UTF-8 char boundary.
 fn truncate_safe(s: &str, max_bytes: usize) -> &str {
@@ -164,15 +202,6 @@ pub async fn start_transcription(
     gain: Option<f32>,
     provider: Option<String>,
 ) -> Result<(), String> {
-    // ── 1. Guard: already running? ──────────────────────────────────────
-    let (stt_active, audio_active) = {
-        let app_state = state.lock().map_err(|e| e.to_string())?;
-        if app_state.stt_active.load(Ordering::Relaxed) {
-            return Err("Transcription is already running".into());
-        }
-        (app_state.stt_active.clone(), app_state.audio_active.clone())
-    };
-
     let provider_name = provider.as_deref().unwrap_or("deepgram");
 
     // ── 2. Build the STT provider ───────────────────────────────────────
@@ -294,8 +323,31 @@ pub async fn start_transcription(
         }
     };
 
-    stt_active.store(true, Ordering::SeqCst);
-    audio_active.store(true, Ordering::SeqCst);
+    let (session_id, cancelled, finished, stt_active, audio_active) = {
+        let mut app_state = state.lock().map_err(|e| e.to_string())?;
+        if app_state.stt_session.is_some() {
+            return Err("Transcription is already running or stopping".into());
+        }
+
+        let session_id = app_state.next_stt_session_id;
+        app_state.next_stt_session_id = app_state.next_stt_session_id.wrapping_add(1).max(1);
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let finished = Arc::new(tokio::sync::Notify::new());
+        app_state.stt_session = Some(SttSession {
+            id: session_id,
+            cancelled: cancelled.clone(),
+            finished: finished.clone(),
+        });
+        app_state.stt_active.store(true, Ordering::SeqCst);
+        app_state.audio_active.store(true, Ordering::SeqCst);
+        (
+            session_id,
+            cancelled,
+            finished,
+            app_state.stt_active.clone(),
+            app_state.audio_active.clone(),
+        )
+    };
 
     // ── 3. Prepare channels ─────────────────────────────────────────────
     let (audio_send_tx, audio_send_rx) = crossbeam_channel::bounded::<Vec<i16>>(64);
@@ -308,11 +360,10 @@ pub async fn start_transcription(
     //   c) computes levels → emits audio_level events
     //   d) forwards samples to STT provider via crossbeam
     let gain_val = gain.unwrap_or(1.0).clamp(0.0, 2.0);
-    let fan_active = stt_active.clone();
-    let fan_audio_active = audio_active.clone();
+    let fan_cancelled = cancelled.clone();
     let fan_app = app.clone();
 
-    std::thread::Builder::new()
+    let fanout_result = std::thread::Builder::new()
         .name("audio-fanout".into())
         .spawn(move || {
             let config = AudioConfig {
@@ -330,9 +381,7 @@ pub async fn start_transcription(
                     let message = format!("Failed to start audio capture: {e}");
                     log::error!("{message}");
                     let _ = fan_app.emit("stt_error", message);
-                    fan_active.store(false, Ordering::SeqCst);
-                    fan_audio_active.store(false, Ordering::SeqCst);
-                    let _ = fan_app.emit("stt_stopped", ());
+                    fan_cancelled.store(true, Ordering::SeqCst);
                     return;
                 }
             };
@@ -343,7 +392,7 @@ pub async fn start_transcription(
             let mut dropped_audio_frames: u64 = 0;
 
             loop {
-                if !fan_active.load(Ordering::SeqCst) {
+                if fan_cancelled.load(Ordering::SeqCst) {
                     break;
                 }
 
@@ -382,35 +431,52 @@ pub async fn start_transcription(
             // Dropping `capture` stops the cpal stream.
             capture.stop();
             log::info!("Audio capture stopped on fanout thread");
-        })
-        .map_err(|e| {
+        });
+
+    let fanout_thread = match fanout_result {
+        Ok(thread) => thread,
+        Err(error) => {
+            cancelled.store(true, Ordering::SeqCst);
             stt_active.store(false, Ordering::SeqCst);
             audio_active.store(false, Ordering::SeqCst);
-            format!("Failed to spawn audio fanout thread: {e}")
-        })?;
+            finish_transcription_session(&app, session_id, &finished);
+            return Err(format!("Failed to spawn audio fanout thread: {error}"));
+        }
+    };
 
     // ── 5. Spawn the STT provider on the tokio runtime ──────────────────
     let (event_tx, mut event_rx) = tokio::sync::mpsc::channel::<TranscriptEvent>(64);
 
-    let conn_active = stt_active.clone();
-    let conn_audio_active = audio_active.clone();
     let provider_log_name = stt_provider.name().to_string();
-    let terminal_app = app.clone();
+    // Keep the session reserved until transcript delivery and detection workers finish.
+    let session_guard = Arc::new(SttSessionGuard {
+        app: app.clone(),
+        session_id,
+        finished: finished.clone(),
+        cancelled: cancelled.clone(),
+    });
+    let provider_guard = Arc::clone(&session_guard);
 
     // Task A: run the STT provider (Deepgram WS+REST or Whisper local).
     tauri::async_runtime::spawn(async move {
+        let _cancel_capture = CancelCaptureOnDrop(provider_guard.cancelled.clone());
         let result = stt_provider.start(audio_send_rx, event_tx).await;
         if let Err(e) = result {
             log::error!("[STT-{provider_log_name}] Provider failed: {e}");
         }
-        conn_active.store(false, Ordering::SeqCst);
-        conn_audio_active.store(false, Ordering::SeqCst);
-        let _ = terminal_app.emit("stt_stopped", ());
+        provider_guard.cancelled.store(true, Ordering::SeqCst);
+        // Do not permit a replacement session until the microphone is released.
+        if !matches!(
+            tokio::task::spawn_blocking(move || fanout_thread.join()).await,
+            Ok(Ok(()))
+        ) {
+            log::warn!("Audio fanout thread did not shut down cleanly");
+        }
         log::info!("[STT-{provider_log_name}] Provider task exited");
     });
 
     // Task B: consume TranscriptEvents, emit to frontend, run detection
-    let evt_active = stt_active.clone();
+    let evt_cancelled = cancelled;
     let event_app = app.clone();
 
     // Background semantic detection channel — non-blocking, drops if busy
@@ -429,8 +495,12 @@ pub async fn start_transcription(
     // Uses spawn_blocking so ONNX doesn't starve the tokio async runtime
     // (WebSocket readers, event emitters, etc.).
     let sem_app = app.clone();
+    let semantic_guard = Arc::clone(&session_guard);
     tauri::async_runtime::spawn(async move {
         while let Some(text) = semantic_rx.recv().await {
+            if semantic_guard.cancelled.load(Ordering::SeqCst) {
+                break;
+            }
             let app_clone = sem_app.clone();
             let _ = tokio::task::spawn_blocking(move || {
                 run_semantic_detection(&app_clone, &text);
@@ -443,8 +513,12 @@ pub async fn start_transcription(
     // transcript delivery). Uses spawn_blocking so mutex locks and DB I/O don't
     // starve the tokio runtime.
     let det_app = app.clone();
+    let detection_guard = Arc::clone(&session_guard);
     tauri::async_runtime::spawn(async move {
         while let Some(transcript) = detect_rx.recv().await {
+            if detection_guard.cancelled.load(Ordering::SeqCst) {
+                break;
+            }
             let app_clone = det_app.clone();
             let _ = tokio::task::spawn_blocking(move || {
                 let direct_found = run_direct_detection(&app_clone, &transcript);
@@ -455,11 +529,14 @@ pub async fn start_transcription(
     });
 
     tauri::async_runtime::spawn(async move {
+        let _session_guard = session_guard;
         let mut dropped_direct_jobs: u64 = 0;
         let mut dropped_semantic_jobs: u64 = 0;
         while let Some(event) = event_rx.recv().await {
-            if !evt_active.load(Ordering::SeqCst) {
-                break;
+            if evt_cancelled.load(Ordering::SeqCst)
+                && !matches!(&event, TranscriptEvent::Final { .. })
+            {
+                continue;
             }
 
             match event {
@@ -501,6 +578,9 @@ pub async fn start_transcription(
                         );
 
                         // Check for translation commands (cheap, <1ms, stays inline)
+                        if evt_cancelled.load(Ordering::SeqCst) {
+                            continue;
+                        }
                         check_translation_command(&event_app, &transcript);
 
                         // Fire-and-forget: detection runs in background thread pool.
@@ -1118,17 +1198,35 @@ fn check_translation_command(app: &AppHandle, transcript: &str) {
 
 /// Stop the transcription pipeline (audio capture + STT provider).
 #[tauri::command]
-pub fn stop_transcription(state: State<'_, Mutex<AppState>>) -> Result<(), String> {
-    let app_state = state.lock().map_err(|e| e.to_string())?;
+pub async fn stop_transcription(state: State<'_, Mutex<AppState>>) -> Result<(), String> {
+    let (session_id, cancelled, finished) = {
+        let app_state = state.lock().map_err(|e| e.to_string())?;
+        let session = app_state
+            .stt_session
+            .as_ref()
+            .ok_or_else(|| "Transcription is not running".to_string())?;
+        (
+            session.id,
+            session.cancelled.clone(),
+            session.finished.clone(),
+        )
+    };
 
-    if !app_state.stt_active.load(Ordering::Relaxed) {
-        return Err("Transcription is not running".into());
+    cancelled.store(true, Ordering::SeqCst);
+    log::info!("Transcription stop requested for session {session_id}");
+
+    let mut finished_notification = Box::pin(finished.notified());
+    finished_notification.as_mut().enable();
+    let already_finished = {
+        let app_state = state.lock().map_err(|e| e.to_string())?;
+        app_state.stt_session.as_ref().map(|session| session.id) != Some(session_id)
+    };
+    if already_finished {
+        return Ok(());
     }
 
-    // Setting these flags causes the background threads/tasks to exit.
-    app_state.stt_active.store(false, Ordering::SeqCst);
-    app_state.audio_active.store(false, Ordering::SeqCst);
-
-    log::info!("Transcription stop requested");
+    tokio::time::timeout(Duration::from_secs(10), finished_notification)
+        .await
+        .map_err(|_| "Timed out while stopping transcription".to_string())?;
     Ok(())
 }

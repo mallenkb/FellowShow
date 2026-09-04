@@ -39,7 +39,7 @@ export function SongsTab({
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {isSearching
               ? "Preparing the fast song index."
-              : "Try searching by song title."}
+              : "Try a title, lyric phrase, or topic. Check your source and letter filters."}
           </p>
         </div>
       </div>

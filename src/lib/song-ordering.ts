@@ -1,11 +1,13 @@
 import type { CopSong } from "./cop-songs"
 
+const titleCollator = new Intl.Collator(undefined, {
+  sensitivity: "base",
+  numeric: true,
+})
+
 /** Case-insensitive, numeric-aware title comparison for lyric/song lists. */
 export function compareLyricTitles(a: { title: string }, b: { title: string }) {
-  return a.title.localeCompare(b.title, undefined, {
-    sensitivity: "base",
-    numeric: true,
-  })
+  return titleCollator.compare(a.title, b.title)
 }
 
 /** Order by song number first, falling back to title. */

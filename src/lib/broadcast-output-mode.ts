@@ -1,23 +1,15 @@
 import type { BroadcastTheme } from "@/types"
 
-export function isLowerThirdOverlayTheme(theme: BroadcastTheme): boolean {
+export function shouldRenderLowerThirdLayer(theme: BroadcastTheme): boolean {
   return theme.outputMode === "lower-third"
 }
 
-export function isTickerTheme(theme: BroadcastTheme): boolean {
-  return theme.outputMode === "ticker"
-}
-
-export function shouldRenderLowerThirdLayer(theme: BroadcastTheme): boolean {
-  return isLowerThirdOverlayTheme(theme)
-}
-
 export function shouldRenderTickerLayer(theme: BroadcastTheme): boolean {
-  return isTickerTheme(theme)
+  return theme.outputMode === "ticker"
 }
 
 export function shouldRenderStandardBroadcastContent(
   theme: BroadcastTheme
 ): boolean {
-  return !isLowerThirdOverlayTheme(theme)
+  return !shouldRenderLowerThirdLayer(theme)
 }
