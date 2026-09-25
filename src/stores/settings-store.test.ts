@@ -147,6 +147,36 @@ describe("settings store", () => {
     expect(useSettingsStore.getState().autoUpdateEnabled).toBe(false)
   })
 
+  it("hides Video Overlays and Timer until they are turned on", async () => {
+    mockGet.mockResolvedValue(null)
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
+    await hydrateSettings()
+
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual([])
+    useSettingsStore.getState().toggleExtraSearchTab("timer")
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual(["timer"])
+    useSettingsStore.getState().toggleExtraSearchTab("timer")
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual([])
+  })
+
+  it("keeps only known extra tabs from disk", async () => {
+    mockGet.mockImplementation(async (key: string) => {
+      if (key === "extraSearchTabs") {
+        return ["timer", "songs", "timer", 3, "on-display"]
+      }
+      return null
+    })
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
+    await hydrateSettings()
+
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual([
+      "timer",
+      "on-display",
+    ])
+  })
+
   it("uses NKJV and NIV as default pinned translations", async () => {
     const { DEFAULT_PINNED_TRANSLATION_IDS, useSettingsStore } =
       await import("./settings-store")

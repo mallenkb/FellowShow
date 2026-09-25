@@ -18,12 +18,18 @@ interface AnnouncementState {
   addItem: (setId: string) => void
   selectItem: (id: string) => void
   renameItem: (setId: string, itemId: string, title: string) => void
+  setHeading: (setId: string, heading: string) => void
   updateItem: (
     setId: string,
     itemId: string,
     content: AnnouncementDocument
   ) => void
   deleteItem: (setId: string, itemId: string) => void
+  addNoteFromDocument: (
+    setName: string,
+    title: string,
+    content: AnnouncementDocument
+  ) => void
 }
 
 export const useAnnouncementStore = create<AnnouncementState>((set) => ({
@@ -80,6 +86,45 @@ export const useAnnouncementStore = create<AnnouncementState>((set) => ({
       }
     }),
   selectItem: (selectedItemId) => set({ selectedItemId }),
+  // Adds a finished document (such as a sermon summary) as a note in the named
+  // set, creating the set on first use, and opens it.
+  addNoteFromDocument: (setName, title, content) =>
+    set((state) => {
+      const item = {
+        ...createAnnouncementItem(title.trim() || "Untitled note"),
+        content: sanitizeAnnouncementDocument(content),
+      }
+      const existing = state.sets.find(
+        (candidate) => candidate.name === setName
+      )
+      if (existing) {
+        return {
+          sets: state.sets.map((candidate) =>
+            candidate.id === existing.id
+              ? {
+                  ...candidate,
+                  items: [...candidate.items, item],
+                  updatedAt: Date.now(),
+                }
+              : candidate
+          ),
+          selectedSetId: existing.id,
+          selectedItemId: item.id,
+        }
+      }
+      const created = { ...createAnnouncementSet(setName), items: [item] }
+      return {
+        sets: [...state.sets, created],
+        selectedSetId: created.id,
+        selectedItemId: item.id,
+      }
+    }),
+  setHeading: (setId, heading) =>
+    set((state) => ({
+      sets: state.sets.map((set) =>
+        set.id === setId ? { ...set, heading, updatedAt: Date.now() } : set
+      ),
+    })),
   renameItem: (setId, itemId, title) =>
     set((state) => ({
       sets: state.sets.map((set) =>

@@ -167,7 +167,7 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
       }}
       onDrop={handleExternalDrop}
     >
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-3">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 pt-2.5 pb-3">
         <input
           ref={inputRef}
           type="file"
@@ -211,14 +211,11 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-2 p-2">
-            <PresentationDocumentList
-              documents={documents}
-              selectedDocumentId={selectedDocumentId}
-            />
-            {slides.length > 0 && documents.length > 0 ? (
+            {pinnedCount > 0 ? (
+              <SectionDivider label="Pinned" />
+            ) : slides.length > 0 && documents.length > 0 ? (
               <SectionDivider label="Media" />
             ) : null}
-            {pinnedCount > 0 ? <SectionDivider label="Pinned" /> : null}
             {orderedSlides.map((slide, index) => {
               const isDropTarget =
                 slide.id === dropTargetId && slide.id !== draggedSlideId
@@ -227,7 +224,7 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
               return (
                 <Fragment key={slide.id}>
                   {showUnpinnedDivider ? (
-                    <SectionDivider label="Presentations" />
+                    <SectionDivider label="Media" />
                   ) : null}
                   <PresentationSlideCard
                     slide={slide}
@@ -250,6 +247,10 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
                 </Fragment>
               )
             })}
+            <PresentationDocumentList
+              documents={documents}
+              selectedDocumentId={selectedDocumentId}
+            />
           </div>
         )}
       </div>

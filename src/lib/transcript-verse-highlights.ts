@@ -1,5 +1,9 @@
+import { findQuotedSpan } from "./transcript-quote-match"
+
 export interface TranscriptVerseAnnotation {
   id: string
+  /** "quote" marks spoken words that match the verse text; defaults to a spoken reference. */
+  kind?: "reference" | "quote"
   reference: string
   bookName: string
   bookNumber: number
@@ -13,6 +17,7 @@ export interface TranscriptVerseAnnotation {
 export type TranscriptHighlightPart =
   | { type: "text"; text: string }
   | { type: "reference"; text: string; annotation: TranscriptVerseAnnotation }
+  | { type: "quote"; text: string; annotation: TranscriptVerseAnnotation }
 
 interface CandidateMatch {
   start: number
@@ -162,6 +167,11 @@ function findMatches(
   const matches: CandidateMatch[] = []
 
   for (const annotation of annotations) {
+    if (annotation.kind === "quote") {
+      const span = findQuotedSpan(text, annotation.verseText)
+      if (span) matches.push({ ...span, annotation, specificity: "explicit" })
+      continue
+    }
     for (const { pattern, specificity } of phrasePatterns(annotation)) {
       const match = pattern.exec(text)
       if (!match) continue
@@ -203,11 +213,19 @@ export function buildTranscriptHighlightParts(
     if (match.start > cursor) {
       parts.push({ type: "text", text: text.slice(cursor, match.start) })
     }
-    parts.push({
-      type: "reference",
-      text: match.annotation.reference,
-      annotation: match.annotation,
-    })
+    parts.push(
+      match.annotation.kind === "quote"
+        ? {
+            type: "quote",
+            text: text.slice(match.start, match.end),
+            annotation: match.annotation,
+          }
+        : {
+            type: "reference",
+            text: match.annotation.reference,
+            annotation: match.annotation,
+          }
+    )
     cursor = match.end
   }
 

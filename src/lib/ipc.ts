@@ -107,6 +107,10 @@ export interface Commands {
     PreachingSummary
   >
   prepare_presentation_document: WithArgs<{ path: string }, ArrayBuffer>
+  find_easyworship_databases: WithArgs<
+    { folder: string },
+    { songsDbPath: string; songWordsDbPath: string }
+  >
   import_easyworship_songs: WithArgs<
     { songsDbPath: string; songWordsDbPath: string },
     EasyWorshipImportedSong[]

@@ -8,7 +8,7 @@ export type PresentationMediaResizeHandle =
   "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w"
 
 export const PRESENTATION_MEDIA_MIN_SCALE = 0.25
-export const PRESENTATION_MEDIA_MAX_SCALE = 3
+export const PRESENTATION_MEDIA_MAX_SCALE = 6
 
 function finiteOr(value: number | undefined, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback
@@ -93,4 +93,22 @@ export function resizePresentationMedia(
     PRESENTATION_MEDIA_MIN_SCALE,
     PRESENTATION_MEDIA_MAX_SCALE
   )
+}
+
+/**
+ * Size of the visible media inside its box, as fractions of the frame, so the
+ * selection outline can hug the picture instead of the whole frame. Fill and
+ * stretch cover the box; fit letterboxes by the media's aspect ratio.
+ */
+export function presentationMediaVisibleSize(
+  fit: "contain" | "cover" | "stretch",
+  mediaAspect: number | null,
+  frameAspect = 16 / 9
+): { width: number; height: number } {
+  if (fit !== "contain" || !mediaAspect || !Number.isFinite(mediaAspect)) {
+    return { width: 1, height: 1 }
+  }
+  return mediaAspect >= frameAspect
+    ? { width: 1, height: frameAspect / mediaAspect }
+    : { width: mediaAspect / frameAspect, height: 1 }
 }

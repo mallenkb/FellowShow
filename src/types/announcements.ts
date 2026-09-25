@@ -37,6 +37,8 @@ export interface AnnouncementItem {
 export interface AnnouncementSet {
   id: string
   name: string
+  /** Title shown at the top of every page of this set. Empty hides it. */
+  heading: string
   items: AnnouncementItem[]
   createdAt: number
   updatedAt: number

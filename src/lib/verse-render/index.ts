@@ -131,18 +131,20 @@ function renderVerseImpl(
   const verseRect = metrics.verseRect
   if (verseRect && verse.announcement) {
     const titleY = metrics.textRect.y
-    const titleHeight = drawReference(
-      ctx,
-      scaledTheme,
-      verse.reference,
-      metrics.textRect.x,
-      metrics.textRect.width,
-      titleY
-    )
-    const announcementY =
-      titleY +
-      titleHeight +
-      (scaledTheme.layout.referenceGap ?? scaledTheme.reference.fontSize * 0.5)
+    // An empty heading takes no space, so the list starts at the top of the text area.
+    const announcementY = verse.reference.trim()
+      ? titleY +
+        drawReference(
+          ctx,
+          scaledTheme,
+          verse.reference,
+          metrics.textRect.x,
+          metrics.textRect.width,
+          titleY
+        ) +
+        (scaledTheme.layout.referenceGap ??
+          scaledTheme.reference.fontSize * 0.5)
+      : titleY
     drawAnnouncement(
       ctx,
       scaledTheme,

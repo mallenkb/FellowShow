@@ -145,6 +145,9 @@ export function createAnnouncementItem(
   }
 }
 
+const DEFAULT_ANNOUNCEMENT_HEADING = "Announcements"
+const MAX_HEADING_LENGTH = 120
+
 export function createAnnouncementSet(
   name = "Sunday announcements"
 ): AnnouncementSet {
@@ -152,6 +155,7 @@ export function createAnnouncementSet(
   return {
     id: crypto.randomUUID(),
     name,
+    heading: DEFAULT_ANNOUNCEMENT_HEADING,
     items: [createAnnouncementItem("Announcement 1")],
     createdAt: now,
     updatedAt: now,
@@ -203,11 +207,24 @@ export function paginateAnnouncementSet(
   if (page.length > 0) pages.push(page)
 
   return pages.map((items, index) => ({
-    heading: "Announcements",
+    heading: set.heading,
     pageNumber: index + 1,
     pageCount: pages.length,
     items,
   }))
+}
+
+/** Index of the page that shows the given item, or -1 while the item is empty. */
+export function announcementPageIndexForItem(
+  set: AnnouncementSet,
+  pages: AnnouncementRenderData[],
+  itemId: string
+): number {
+  const number = set.items.findIndex((item) => item.id === itemId) + 1
+  if (number === 0) return -1
+  return pages.findIndex((page) =>
+    page.items.some((item) => item.number === number)
+  )
 }
 
 export function announcementPageToVerse(
@@ -309,6 +326,10 @@ export function sanitizeAnnouncementSets(value: unknown): AnnouncementSet[] {
         typeof candidate.name === "string" && candidate.name.trim()
           ? candidate.name.trim()
           : "Announcements",
+      heading:
+        typeof candidate.heading === "string"
+          ? candidate.heading.slice(0, MAX_HEADING_LENGTH)
+          : DEFAULT_ANNOUNCEMENT_HEADING,
       items:
         items.length > 0 ? items : [createAnnouncementItem("Announcement 1")],
       createdAt:

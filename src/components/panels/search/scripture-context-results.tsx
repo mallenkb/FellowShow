@@ -5,6 +5,7 @@ import type { Verse } from "@/types"
 import { HighlightedText } from "./highlighted-text"
 import { VerseQueueAction } from "./verse-queue-action"
 import type { ScriptureSearchController } from "./use-scripture-search"
+import { stageVerse } from "@/lib/preview-staging"
 
 export function ScriptureContextResults({
   controller,
@@ -53,7 +54,10 @@ export function ScriptureContextResults({
           return (
             <div
               key={`${verseKey}:${index}`}
-              onClick={() => bibleActions.selectVerse(verse)}
+              onClick={() => {
+                bibleActions.selectVerse(verse)
+                stageVerse(verse)
+              }}
               onDoubleClick={() =>
                 useBroadcastStore
                   .getState()

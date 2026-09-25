@@ -55,6 +55,8 @@ interface SermonState {
   ) => void
   markNotesProcessed: (id: string, throughSegmentIndex: number) => void
   updateNote: (sessionId: string, noteId: string, text: string) => void
+  removeLiveNote: (sessionId: string, noteId: string) => void
+  clearLiveNotes: (sessionId: string) => void
   toggleQueuedNote: (sessionId: string, noteId: string) => void
   clearQueue: (sessionId: string) => void
   selectSession: (id: string) => void
@@ -430,6 +432,36 @@ export const useSermonStore = create<SermonState>((set) => ({
             }
           : session
       ),
+    })),
+  removeLiveNote: (sessionId, noteId) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) => {
+        if (session.id !== sessionId) return session
+        const note = session.notes.find((candidate) => candidate.id === noteId)
+        if (note?.source !== "live") return session
+        return {
+          ...session,
+          notes: session.notes.filter((candidate) => candidate.id !== noteId),
+          queuedNoteIds: session.queuedNoteIds.filter((id) => id !== noteId),
+        }
+      }),
+    })),
+  clearLiveNotes: (sessionId) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) => {
+        if (session.id !== sessionId) return session
+        const remainingNotes = session.notes.filter(
+          (note) => note.source !== "live"
+        )
+        const remainingIds = new Set(remainingNotes.map((note) => note.id))
+        return {
+          ...session,
+          notes: remainingNotes,
+          queuedNoteIds: session.queuedNoteIds.filter((id) =>
+            remainingIds.has(id)
+          ),
+        }
+      }),
     })),
   toggleQueuedNote: (sessionId, noteId) =>
     set((state) => ({

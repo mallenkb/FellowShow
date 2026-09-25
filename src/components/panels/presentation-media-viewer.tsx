@@ -1,15 +1,19 @@
-import { useState } from "react"
+import { useRef, useState, type KeyboardEvent } from "react"
 import { toast } from "sonner"
 import {
   Grid2X2Icon,
   PlusIcon,
-  RotateCcwIcon,
   TrashIcon,
-  XIcon,
   ZoomInIcon,
   ZoomOutIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { slideLayers, slideRenderData } from "@/lib/presentation-composition"
 import {
   PRESENTATION_MEDIA_MAX_SCALE,
@@ -22,6 +26,16 @@ import {
 } from "@/stores/presentation-store"
 import { PresentationMediaCanvas } from "./presentation-media-canvas"
 import { usePresentationImport } from "./search/use-presentation-import"
+import { stageSlide } from "@/lib/preview-staging"
+
+const FIT_OPTIONS = [
+  {
+    fit: "contain",
+    label: "Fit",
+    title: "Fit the whole image in the frame",
+  },
+  { fit: "cover", label: "Fill", title: "Fill the frame and crop the edges" },
+] as const
 
 export function PresentationMediaViewer({
   slide,
@@ -33,6 +47,8 @@ export function PresentationMediaViewer({
   const layers = slideLayers(slide)
   const selected =
     layers.find((layer) => layer.id === selectedLayerId) ?? layers[0]
+  const hasMultipleLayers = layers.length > 1
+  const sectionRef = useRef<HTMLElement>(null)
   const { inputRef, importContent, importFiles } = usePresentationImport(
     slide.id
   )
@@ -41,10 +57,7 @@ export function PresentationMediaViewer({
     const current = usePresentationStore
       .getState()
       .slides.find((item) => item.id === slide.id)
-    if (current)
-      useBroadcastStore
-        .getState()
-        .setPreviewOutput(slideRenderData(current), null)
+    if (current) stageSlide(current)
   }
 
   function updateLayer(
@@ -58,6 +71,35 @@ export function PresentationMediaViewer({
     syncPreview()
   }
 
+  function removeSelectedLayer() {
+    if (slide.locked || !hasMultipleLayers) return
+    usePresentationStore.getState().removeSlideLayer(slide.id, selected.id)
+    syncPreview()
+  }
+
+  // With one item left, deleting from the menu removes the whole slide.
+  function deleteFromMenu() {
+    if (slide.locked) return
+    if (hasMultipleLayers) {
+      removeSelectedLayer()
+      return
+    }
+    usePresentationStore.getState().removeSlide(slide.id)
+  }
+
+  // Delete (Windows) and Backspace (the Mac delete key) remove the selected media.
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== "Delete" && event.key !== "Backspace") return
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest("input, textarea, [contenteditable='true']")
+    ) {
+      return
+    }
+    event.preventDefault()
+    removeSelectedLayer()
+  }
+
   function takeLive() {
     const current = usePresentationStore
       .getState()
@@ -68,7 +110,12 @@ export function PresentationMediaViewer({
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
+    <section
+      ref={sectionRef}
+      tabIndex={-1}
+      onKeyDown={handleKeyDown}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card outline-none"
+    >
       <input
         ref={inputRef}
         type="file"
@@ -80,9 +127,128 @@ export function PresentationMediaViewer({
           event.target.value = ""
         }}
       />
-      <div className="flex shrink-0 flex-col gap-2 border-b border-border p-2">
-        <p className="truncate px-1 text-sm font-medium">{slide.name}</p>
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div
+        className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border p-2"
+        role="group"
+        aria-label="Media controls"
+      >
+        {hasMultipleLayers ? (
+          <div
+            className="mr-1 flex items-center gap-0.5"
+            role="group"
+            aria-label="Canvas media items"
+          >
+            {layers.map((layer, index) => (
+              <Button
+                key={layer.id}
+                type="button"
+                size="icon-sm"
+                variant={selected.id === layer.id ? "secondary" : "ghost"}
+                aria-pressed={selected.id === layer.id}
+                aria-label={`Edit media ${index + 1}`}
+                className="tabular-nums"
+                onClick={() => setSelectedLayerId(layer.id)}
+              >
+                {index + 1}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          title="Zoom out"
+          aria-label="Zoom out"
+          disabled={
+            slide.locked || selected.scale <= PRESENTATION_MEDIA_MIN_SCALE
+          }
+          onClick={() => updateLayer({ scale: selected.scale - 0.1 })}
+        >
+          <ZoomOutIcon />
+        </Button>
+        <button
+          type="button"
+          className="h-7 w-12 rounded-md text-center text-xs tabular-nums hover:bg-muted/50 disabled:pointer-events-none"
+          title="Reset to 100%"
+          aria-label={`Zoom ${Math.round(selected.scale * 100)}%. Reset to 100%`}
+          disabled={slide.locked}
+          onClick={() =>
+            updateLayer({ fit: "contain", scale: 1, offsetX: 0, offsetY: 0 })
+          }
+        >
+          {Math.round(selected.scale * 100)}%
+        </button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          title="Zoom in"
+          aria-label="Zoom in"
+          disabled={
+            slide.locked || selected.scale >= PRESENTATION_MEDIA_MAX_SCALE
+          }
+          onClick={() => updateLayer({ scale: selected.scale + 0.1 })}
+        >
+          <ZoomInIcon />
+        </Button>
+        <div
+          className="mx-1 flex items-center rounded-md border border-border p-0.5"
+          role="group"
+          aria-label="Fit"
+        >
+          {FIT_OPTIONS.map((option) => (
+            <Button
+              key={option.fit}
+              type="button"
+              size="sm"
+              className="h-7 px-2.5"
+              variant={selected.fit === option.fit ? "secondary" : "ghost"}
+              aria-pressed={selected.fit === option.fit}
+              disabled={slide.locked}
+              title={option.title}
+              onClick={() =>
+                updateLayer({
+                  fit: option.fit,
+                  scale: 1,
+                  offsetX: 0,
+                  offsetY: 0,
+                })
+              }
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+        {hasMultipleLayers ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            title="Remove this media (Delete)"
+            aria-label="Remove this media"
+            disabled={slide.locked}
+            onClick={removeSelectedLayer}
+          >
+            <TrashIcon />
+          </Button>
+        ) : null}
+        <div className="ml-auto flex items-center gap-1.5">
+          {hasMultipleLayers ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={slide.locked}
+              onClick={() => {
+                usePresentationStore.getState().arrangeSlideMedia(slide.id)
+                syncPreview()
+              }}
+            >
+              <Grid2X2Icon />
+              {layers.length === 2 ? "Side by side" : "Arrange grid"}
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"
@@ -94,140 +260,16 @@ export function PresentationMediaViewer({
           >
             <PlusIcon /> Add media
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={slide.locked || layers.length < 2}
-            onClick={() => {
-              usePresentationStore.getState().arrangeSlideMedia(slide.id)
-              syncPreview()
-            }}
-          >
-            <Grid2X2Icon />{" "}
-            {layers.length === 2 ? "Side by side" : "Arrange grid"}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            title="Close editor"
-            onClick={() => usePresentationStore.getState().selectSlide(null)}
-          >
-            <XIcon />
-          </Button>
           <Button type="button" size="sm" onClick={takeLive}>
             Take Live
-          </Button>
-        </div>
-        <div
-          className="flex gap-1 overflow-x-auto"
-          role="group"
-          aria-label="Canvas media items"
-        >
-          {layers.map((layer, index) => (
-            <Button
-              key={layer.id}
-              type="button"
-              size="sm"
-              variant={selected.id === layer.id ? "secondary" : "ghost"}
-              aria-pressed={selected.id === layer.id}
-              title={layer.name}
-              className="max-w-40 shrink-0"
-              onClick={() => setSelectedLayerId(layer.id)}
-            >
-              <span className="truncate">
-                {index + 1}. {layer.name}
-              </span>
-            </Button>
-          ))}
-        </div>
-        <div
-          className="flex flex-wrap items-center gap-1.5"
-          aria-label={`Controls for ${selected.name}`}
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            title="Zoom out"
-            disabled={
-              slide.locked || selected.scale <= PRESENTATION_MEDIA_MIN_SCALE
-            }
-            onClick={() => updateLayer({ scale: selected.scale - 0.1 })}
-          >
-            <ZoomOutIcon />
-          </Button>
-          <span className="w-12 text-center text-xs tabular-nums">
-            {Math.round(selected.scale * 100)}%
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            title="Zoom in"
-            disabled={
-              slide.locked || selected.scale >= PRESENTATION_MEDIA_MAX_SCALE
-            }
-            onClick={() => updateLayer({ scale: selected.scale + 0.1 })}
-          >
-            <ZoomInIcon />
-          </Button>
-          {(["contain", "cover", "stretch"] as const).map((fit) => (
-            <Button
-              key={fit}
-              type="button"
-              size="sm"
-              className="capitalize"
-              variant={selected.fit === fit ? "secondary" : "ghost"}
-              disabled={slide.locked}
-              title={`Set ${fit} fit`}
-              onClick={() => updateLayer({ fit })}
-            >
-              {fit}
-            </Button>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            title="Fit media inside the frame"
-            disabled={slide.locked}
-            onClick={() => updateLayer({ fit: "contain" })}
-          >
-            Fit
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            title="Reset view"
-            disabled={slide.locked}
-            onClick={() =>
-              updateLayer({ fit: "contain", scale: 1, offsetX: 0, offsetY: 0 })
-            }
-          >
-            <RotateCcwIcon />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            title="Remove selected media"
-            disabled={slide.locked || layers.length < 2}
-            onClick={() => {
-              usePresentationStore
-                .getState()
-                .removeSlideLayer(slide.id, selected.id)
-              syncPreview()
-            }}
-          >
-            <TrashIcon />
           </Button>
         </div>
       </div>
       <div
         className={`relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted/25 p-4 ${isDropTarget ? "ring-2 ring-primary ring-inset" : ""}`}
+        onPointerDownCapture={() =>
+          sectionRef.current?.focus({ preventScroll: true })
+        }
         onDragOver={(event) => {
           if (
             !event.dataTransfer.types.includes("Files") &&
@@ -282,20 +324,33 @@ export function PresentationMediaViewer({
             Add to this canvas
           </span>
         ) : null}
-        <PresentationMediaCanvas
-          key={`${slide.id}:${selected.id}`}
-          media={selected}
-          layers={layers}
-          onSelectLayer={setSelectedLayerId}
-          selectedLayerId={selected.id}
-          ariaLabel={`${slide.name} editor canvas`}
-          disabled={slide.locked}
-          onTransform={updateLayer}
-        />
+        <ContextMenu>
+          <ContextMenuTrigger asChild disabled={slide.locked}>
+            <div className="contents">
+              <PresentationMediaCanvas
+                key={`${slide.id}:${selected.id}`}
+                media={selected}
+                layers={layers}
+                onSelectLayer={setSelectedLayerId}
+                selectedLayerId={selected.id}
+                ariaLabel={`${slide.name} editor canvas`}
+                disabled={slide.locked}
+                onTransform={updateLayer}
+              />
+            </div>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem variant="destructive" onSelect={deleteFromMenu}>
+              <TrashIcon />
+              {hasMultipleLayers ? "Delete" : "Delete slide"}
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
       </div>
       <div className="flex shrink-0 flex-wrap justify-between gap-2 border-t border-border px-3 py-2 text-[0.6875rem] text-muted-foreground">
         <span>
-          Select an item · drag to move · handles to resize · wheel to zoom
+          Drag to move · handles to resize · wheel to zoom
+          {hasMultipleLayers ? " · Delete removes the selected item" : ""}
         </span>
         <span>
           {slide.locked

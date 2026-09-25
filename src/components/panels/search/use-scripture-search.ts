@@ -9,6 +9,8 @@ import {
 import { bibleActions, useBible } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { formatBibleBookName } from "@/lib/bible-book-names"
+import { getChapterCount } from "@/lib/bible-chapter-counts"
+import { stageVerse, stageVerseInBackground } from "@/lib/preview-staging"
 import { useContextSearch } from "./use-context-search"
 import { invoke } from "@/lib/ipc"
 import {
@@ -24,6 +26,7 @@ import {
 import type { Book, Verse } from "@/types"
 
 export type ScriptureSearchMode = "book" | "context"
+type ScripturePickerStage = "books" | "chapters" | "verses"
 
 export function useScriptureSearch({
   mode,
@@ -35,7 +38,7 @@ export function useScriptureSearch({
   onRequestMode: (mode: ScriptureSearchMode) => void
 }) {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
-  const [selectedBookTranslationId, setSelectedBookTranslationId] = useState(0)
+  const [chapterPicked, setChapterPicked] = useState(false)
   const [chapter, setChapter] = useState(1)
   const [selectedVerseId, setSelectedVerseId] = useState<number | null>(null)
   const [contextQuery, setContextQuery] = useState("")
@@ -66,9 +69,20 @@ export function useScriptureSearch({
     [queueItems]
   )
 
-  const activeSelectedBook =
-    selectedBookTranslationId === activeTranslationId ? selectedBook : null
+  // Resolve the book against the active translation so switching translations keeps the reader's place.
+  const activeSelectedBook = selectedBook
+    ? (books.find((book) => book.book_number === selectedBook.book_number) ??
+      selectedBook)
+    : null
   const selectedBookNumber = activeSelectedBook?.book_number
+  const chapterCount = selectedBookNumber
+    ? getChapterCount(selectedBookNumber)
+    : null
+  const pickerStage: ScripturePickerStage = !activeSelectedBook
+    ? "books"
+    : chapterPicked
+      ? "verses"
+      : "chapters"
   const activeTranslationAbbreviation =
     translations.find((translation) => translation.id === activeTranslationId)
       ?.abbreviation ?? ""
@@ -96,26 +110,10 @@ export function useScriptureSearch({
   }, [activeTranslationId])
 
   useEffect(() => {
-    if (
-      !isActive ||
-      mode !== "book" ||
-      activeSelectedBook ||
-      books.length === 0
-    ) {
-      return
-    }
-    useBibleStore.getState().setPendingNavigation({
-      bookNumber: 1,
-      chapter: 1,
-      verse: 1,
-    })
-  }, [activeSelectedBook, books.length, isActive, mode])
-
-  useEffect(() => {
-    if (selectedBookNumber && chapter >= 1) {
+    if (selectedBookNumber && chapterPicked && chapter >= 1) {
       bibleActions.loadChapter(selectedBookNumber, chapter).catch(console.error)
     }
-  }, [activeTranslationId, chapter, selectedBookNumber])
+  }, [activeTranslationId, chapter, chapterPicked, selectedBookNumber])
 
   const effectiveSelectedVerseId = useMemo(() => {
     if (!selectedVerseId || currentChapter.length === 0) return null
@@ -150,10 +148,10 @@ export function useScriptureSearch({
     (book: Book, nextChapter: number, activate = true) => {
       if (activate) onRequestMode("book")
       setSelectedBook(book)
-      setSelectedBookTranslationId(activeTranslationId)
       setChapter(nextChapter)
+      setChapterPicked(true)
     },
-    [activeTranslationId, onRequestMode]
+    [onRequestMode]
   )
 
   useEffect(() => {
@@ -192,6 +190,8 @@ export function useScriptureSearch({
           if (target) {
             setSelectedVerseId(target.id)
             bibleActions.selectVerse(target)
+            if (pending.activate === false) stageVerseInBackground(target)
+            else stageVerse(target)
             document
               .getElementById(`verse-${target.id}`)
               ?.scrollIntoView({ behavior: "smooth", block: "center" })
@@ -215,9 +215,49 @@ export function useScriptureSearch({
     }
   }, [applyNavigationSelection])
 
+  const selectBook = useCallback((book: Book) => {
+    setSelectedBook(book)
+    setSelectedVerseId(null)
+    const count = getChapterCount(book.book_number)
+    if (count === null || count === 1) {
+      setChapter(1)
+      setChapterPicked(true)
+      return
+    }
+    setChapterPicked(false)
+  }, [])
+
+  const selectChapter = useCallback((nextChapter: number) => {
+    setChapter(nextChapter)
+    setChapterPicked(true)
+    setSelectedVerseId(null)
+  }, [])
+
+  const showBooks = useCallback(() => {
+    setSelectedBook(null)
+    setChapterPicked(false)
+    setSelectedVerseId(null)
+  }, [])
+
+  const showChapters = useCallback(() => {
+    setChapterPicked(false)
+    setSelectedVerseId(null)
+  }, [])
+
+  const stepChapter = useCallback(
+    (delta: number) => {
+      const next = chapter + delta
+      if (next < 1 || (chapterCount !== null && next > chapterCount)) return
+      setChapter(next)
+      setSelectedVerseId(null)
+    },
+    [chapter, chapterCount]
+  )
+
   const handleVerseClick = useCallback((verse: Verse) => {
     setSelectedVerseId(verse.id)
     bibleActions.selectVerse(verse)
+    stageVerse(verse)
   }, [])
 
   const handleVerseDoubleClick = useCallback(
@@ -240,18 +280,15 @@ export function useScriptureSearch({
         event.target.closest("input, textarea, [contenteditable='true']")
       )
         return
+      if (pickerStage !== "verses") return
       if (event.key === "ArrowLeft") {
         event.preventDefault()
-        if (chapter > 1) {
-          setChapter((current) => current - 1)
-          setSelectedVerseId(null)
-        }
+        stepChapter(-1)
         return
       }
       if (event.key === "ArrowRight") {
         event.preventDefault()
-        setChapter((current) => current + 1)
-        setSelectedVerseId(null)
+        stepChapter(1)
         return
       }
       if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
@@ -273,11 +310,12 @@ export function useScriptureSearch({
       if (!nextVerse) return
       setSelectedVerseId(nextVerse.id)
       bibleActions.selectVerse(nextVerse)
+      stageVerse(nextVerse)
       document
         .getElementById(`verse-${nextVerse.id}`)
         ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
     },
-    [chapter, currentChapter, effectiveSelectedVerseId]
+    [currentChapter, effectiveSelectedVerseId, pickerStage, stepChapter]
   )
 
   const autocompleteResult = useMemo(
@@ -401,8 +439,11 @@ export function useScriptureSearch({
 
   return {
     activeSelectedBook,
+    activeTranslationAbbreviation,
     activeTranslationId,
+    books,
     chapter,
+    chapterCount,
     contextQuery: mode === "book" ? quickInput : contextQuery,
     showPhraseResults,
     currentChapter,
@@ -414,18 +455,23 @@ export function useScriptureSearch({
     handleVerseClick,
     handleVerseDoubleClick,
     hasAvailableScripture,
+    pickerStage,
     pinnedTranslations,
     queuedVerseKeys,
     quickInput,
     quickSuggestion,
     quickVersesList,
     ...contextSearch,
+    selectBook,
+    selectChapter,
     selectedBookLabel,
+    selectedVerse,
     setActiveTranslation,
-    setChapter,
     setQuickInput,
-    setSelectedVerseId,
     shouldShowVerseDropdown,
+    showBooks,
+    showChapters,
+    stepChapter,
     translations,
   }
 }

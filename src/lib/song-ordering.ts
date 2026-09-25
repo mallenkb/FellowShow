@@ -28,6 +28,7 @@ export function getSongSourceOrder(song: CopSong) {
   if (song.source === "theme-2025") return 2
   if (song.source === "pentecostal-book") return 3
   if (song.source === "easyworship") return 4
+  if (song.source === "custom") return 5
   return 0
 }
 

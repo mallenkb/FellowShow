@@ -9,12 +9,14 @@ import { cn } from "@/lib/utils"
 import {
   clampPresentationMediaTransform,
   movePresentationMedia,
+  presentationMediaVisibleSize,
   resizePresentationMedia,
   type PresentationMediaResizeHandle,
   type PresentationMediaTransform,
 } from "@/lib/presentation-media-transform"
 import type { PresentationLayer } from "@/lib/presentation-composition"
 import { PresentationMediaLayer } from "./presentation-media-layer"
+import { useMediaAspectRatio } from "./use-media-aspect-ratio"
 
 export interface PresentationMediaCanvasValue extends Required<PresentationMediaTransform> {
   name: string
@@ -79,6 +81,11 @@ export function PresentationMediaCanvas({
   const localFrameRef = useRef<HTMLDivElement | null>(null)
   const interactionRef = useRef<CanvasInteraction | null>(null)
   const [interaction, setInteraction] = useState<CanvasInteraction | null>(null)
+  const mediaAspect = useMediaAspectRatio(media?.url, media?.mediaType)
+  const visible = presentationMediaVisibleSize(
+    media?.fit ?? "contain",
+    mediaAspect
+  )
 
   const assignFrameRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -244,10 +251,10 @@ export function PresentationMediaCanvas({
         <div
           className="pointer-events-none absolute z-10 border border-white/60"
           style={{
-            width: `${media.scale * 100}%`,
-            height: `${media.scale * 100}%`,
-            left: `${(0.5 + media.offsetX - media.scale / 2) * 100}%`,
-            top: `${(0.5 + media.offsetY - media.scale / 2) * 100}%`,
+            width: `${media.scale * visible.width * 100}%`,
+            height: `${media.scale * visible.height * 100}%`,
+            left: `${(0.5 + media.offsetX - (media.scale * visible.width) / 2) * 100}%`,
+            top: `${(0.5 + media.offsetY - (media.scale * visible.height) / 2) * 100}%`,
           }}
         >
           {RESIZE_HANDLES.map(([handle, classes]) => (

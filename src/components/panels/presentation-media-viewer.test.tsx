@@ -125,7 +125,8 @@ describe("PresentationMediaViewer", () => {
     expect(
       screen.getByRole("button", { name: "Resize from SE handle" })
     ).toBeTruthy()
-    expect(screen.getByTitle("Fit media inside the frame")).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Fit" })).toBeTruthy()
+    expect(screen.queryByText("Test image")).toBeNull()
   })
 
   it("renders video in the same editor and updates zoom from the center toolbar", async () => {
@@ -173,15 +174,93 @@ describe("PresentationMediaViewer", () => {
       useBroadcastStore.getState().liveVerse?.presentationImage?.layers
     ).toHaveLength(2)
 
-    await user.click(screen.getByRole("button", { name: "2. Second image" }))
+    await user.click(screen.getByRole("button", { name: "Edit media 2" }))
     await user.click(screen.getByTitle("Zoom in"))
     expect(
       useBroadcastStore.getState().previewVerse?.presentationImage?.layers?.[1]
         .scale
-    ).toBe(0.6)
+    ).toBe(1.1)
     expect(
       useBroadcastStore.getState().liveVerse?.presentationImage?.layers?.[1]
         .scale
-    ).toBe(0.5)
+    ).toBe(1)
+  })
+
+  it("removes the selected media when the operator presses Delete", async () => {
+    const user = userEvent.setup()
+    usePresentationStore.getState().addSlideMedia(imageSlide.id, [
+      {
+        ...slideLayers(imageSlide)[0],
+        id: "second",
+        name: "Second image",
+        url: "/second.png",
+      },
+    ])
+    const composition = usePresentationStore.getState().slides[0]
+    render(<PresentationMediaViewer slide={composition} />)
+
+    await user.click(screen.getByRole("button", { name: "Edit media 2" }))
+    await user.keyboard("{Delete}")
+
+    const layers = usePresentationStore.getState().slides[0]?.layers ?? []
+    expect(layers.map((layer) => layer.id)).not.toContain("second")
+  })
+
+  it("deletes the right-clicked media from the canvas menu", async () => {
+    const user = userEvent.setup()
+    usePresentationStore.getState().addSlideMedia(imageSlide.id, [
+      {
+        ...slideLayers(imageSlide)[0],
+        id: "second",
+        name: "Second image",
+        url: "/second.png",
+      },
+    ])
+    const composition = usePresentationStore.getState().slides[0]
+    render(<PresentationMediaViewer slide={composition} />)
+
+    await user.click(screen.getByRole("button", { name: "Edit media 2" }))
+    fireEvent.contextMenu(
+      screen.getByRole("region", { name: "Test image editor canvas" })
+    )
+    await user.click(await screen.findByRole("menuitem", { name: "Delete" }))
+
+    const layers = usePresentationStore.getState().slides[0]?.layers ?? []
+    expect(layers.map((layer) => layer.id)).not.toContain("second")
+  })
+
+  it("deletes a single-item slide from the canvas menu", async () => {
+    const user = userEvent.setup()
+    render(<PresentationMediaViewer slide={imageSlide} />)
+
+    fireEvent.contextMenu(
+      screen.getByRole("region", { name: "Test image editor canvas" })
+    )
+    await user.click(
+      await screen.findByRole("menuitem", { name: "Delete slide" })
+    )
+
+    expect(usePresentationStore.getState().slides).toHaveLength(0)
+  })
+
+  it("resets size and position when Fit or Fill is chosen", async () => {
+    const user = userEvent.setup()
+    usePresentationStore.setState({
+      slides: [{ ...imageSlide, scale: 0.4, offsetX: 0.3, offsetY: -0.2 }],
+    })
+    render(
+      <PresentationMediaViewer
+        slide={usePresentationStore.getState().slides[0]}
+      />
+    )
+
+    await user.click(screen.getByRole("button", { name: "Fill" }))
+
+    expect(usePresentationStore.getState().slides[0]).toMatchObject({
+      fit: "cover",
+      scale: 1,
+      offsetX: 0,
+      offsetY: 0,
+    })
   })
 })

@@ -1,6 +1,6 @@
 use rusqlite::Connection;
 use serde::Serialize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -8,6 +8,63 @@ pub struct ImportedSong {
     id: String,
     title: String,
     lyrics: String,
+}
+
+/// Paths of the two databases that make up an `EasyWorship` song library.
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct EasyWorshipDatabases {
+    songs_db_path: String,
+    song_words_db_path: String,
+}
+
+/// How many folders deep to look below the folder the operator chose.
+const MAX_SEARCH_DEPTH: usize = 5;
+
+/// Finds `Songs.db` and `SongWords.db` inside a chosen folder, such as the
+/// `EasyWorship` profile folder or its `Databases/Data` folder, so the operator
+/// picks one folder instead of two files.
+#[tauri::command]
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "Tauri command arguments must be owned deserializable values"
+)]
+pub fn find_easyworship_databases(folder: String) -> Result<EasyWorshipDatabases, String> {
+    let mut pending = vec![(PathBuf::from(&folder), 0_usize)];
+    while let Some((directory, depth)) = pending.pop() {
+        let Ok(entries) = std::fs::read_dir(&directory) else {
+            continue;
+        };
+        let mut songs_db = None;
+        let mut song_words_db = None;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if depth < MAX_SEARCH_DEPTH {
+                    pending.push((path, depth + 1));
+                }
+                continue;
+            }
+            let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+                continue;
+            };
+            if name.eq_ignore_ascii_case("songs.db") {
+                songs_db = Some(path.to_string_lossy().into_owned());
+            } else if name.eq_ignore_ascii_case("songwords.db") {
+                song_words_db = Some(path.to_string_lossy().into_owned());
+            }
+        }
+        if let (Some(songs_db_path), Some(song_words_db_path)) = (songs_db, song_words_db) {
+            return Ok(EasyWorshipDatabases {
+                songs_db_path,
+                song_words_db_path,
+            });
+        }
+    }
+    Err(
+        "No EasyWorship song library found in that folder. Choose the folder that contains Songs.db and SongWords.db."
+            .to_owned(),
+    )
 }
 
 /// Imports lyrics from the paired `SQLite` databases used by `EasyWorship` 6.1.
@@ -161,6 +218,39 @@ mod tests {
     use super::*;
     use rusqlite::params;
     use tempfile::tempdir;
+
+    #[test]
+    fn find_easyworship_databases_searches_nested_folders() {
+        let directory = tempdir().expect("temporary directory");
+        let data = directory
+            .path()
+            .join("Profiles")
+            .join("Default")
+            .join("Databases")
+            .join("Data");
+        std::fs::create_dir_all(&data).expect("data folder");
+        std::fs::write(data.join("Songs.db"), b"").expect("songs file");
+        std::fs::write(data.join("SongWords.db"), b"").expect("words file");
+
+        let found = find_easyworship_databases(directory.path().to_string_lossy().into_owned())
+            .expect("databases found");
+
+        assert_eq!(
+            found,
+            EasyWorshipDatabases {
+                songs_db_path: data.join("Songs.db").to_string_lossy().into_owned(),
+                song_words_db_path: data.join("SongWords.db").to_string_lossy().into_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn find_easyworship_databases_reports_missing_library() {
+        let directory = tempdir().expect("temporary directory");
+        let error = find_easyworship_databases(directory.path().to_string_lossy().into_owned())
+            .expect_err("no library");
+        assert!(error.contains("No EasyWorship song library"));
+    }
 
     #[test]
     fn import_easyworship_songs_reads_titles_and_rtf_lyrics() {

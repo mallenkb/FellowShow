@@ -9,15 +9,13 @@ beforeEach(() => {
 })
 
 describe("song filters", () => {
-  it("restores the selected source and letter on a fresh load", async () => {
+  it("restores the selected source on a fresh load", async () => {
     const { useSongFilterStore } = await import("./song-filter-store")
     useSongFilterStore.getState().setSource("easyworship")
-    useSongFilterStore.getState().setLetter("G")
     vi.resetModules()
     const restored = await import("./song-filter-store")
     expect(restored.useSongFilterStore.getState()).toMatchObject({
       source: "easyworship",
-      letter: "G",
     })
   })
 
@@ -29,7 +27,6 @@ describe("song filters", () => {
     const { useSongFilterStore } = await import("./song-filter-store")
     expect(useSongFilterStore.getState()).toMatchObject({
       source: "all",
-      letter: "all",
     })
   })
 })

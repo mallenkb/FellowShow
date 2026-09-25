@@ -190,7 +190,7 @@ export function sermonQueueToPreview(
     (note) => note.source === "live" && queuedIds.has(note.id)
   )
   if (notes.length === 0) return null
-  return announcementDocumentToVerse(
+  const preview = announcementDocumentToVerse(
     {
       type: "doc",
       content: [
@@ -210,4 +210,5 @@ export function sermonQueueToPreview(
     },
     "Sermon Notes"
   )
+  return { ...preview, sermonSessionId: session.id }
 }

@@ -1,4 +1,3 @@
-import { UnlockSavedKeys } from "@/components/settings/unlock-saved-keys"
 import {
   lazy,
   Suspense,
@@ -11,8 +10,8 @@ import {
 import {
   AlertCircleIcon,
   BookOpenTextIcon,
-  CheckIcon,
   LoaderCircleIcon,
+  NotebookTextIcon,
   PlayIcon,
   RefreshCwIcon,
   SaveIcon,
@@ -23,12 +22,7 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select"
+import { PreachingSummarySessionBar } from "@/components/panels/preaching-summary-session-bar"
 import {
   announcementDocumentToVerse,
   announcementPlainText,
@@ -42,6 +36,7 @@ import {
 import { summaryToDocument } from "@/lib/sermon-actions"
 import { normalizeSummaryDocument } from "@/lib/scripture-format"
 import {
+  useAnnouncementStore,
   useBroadcastStore,
   useSettingsStore,
   useSermonStore,
@@ -53,6 +48,8 @@ const AnnouncementEditor = lazy(
   () => import("@/components/announcements/announcement-editor")
 )
 
+const SUMMARY_NOTES_SET = "Sermon summaries"
+
 const EMPTY_SUMMARY_DOCUMENT: AnnouncementDocument = {
   type: "doc",
   content: [{ type: "paragraph" }],
@@ -63,22 +60,6 @@ function formatTime(timestamp: number) {
     hour: "2-digit",
     minute: "2-digit",
   })
-}
-
-function formatSessionTimestamp(timestamp: number) {
-  return new Date(timestamp).toLocaleString([], {
-    dateStyle: "medium",
-    timeStyle: "short",
-  })
-}
-
-function formatDuration(startedAt: number, endedAt: number | null) {
-  if (!endedAt) return "In progress"
-  const totalSeconds = Math.max(0, Math.round((endedAt - startedAt) / 1_000))
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  if (minutes === 0) return `${seconds}s`
-  return `${minutes}m ${String(seconds).padStart(2, "0")}s`
 }
 
 function summaryDocumentFromBullets(
@@ -116,10 +97,7 @@ function DraftPreview({ draft }: { draft: SermonAiSummary }) {
     <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5">
       <div className="flex items-center gap-2">
         <SparklesIcon className="size-3 text-primary" />
-        <p className="text-[0.6875rem] font-semibold">AI draft ready</p>
-        <Badge variant="outline" className="ml-auto text-[0.5625rem]">
-          Review before applying
-        </Badge>
+        <p className="text-[0.6875rem] font-semibold">AI draft</p>
       </div>
       <p className="mt-2 text-xs font-medium">{draft.title}</p>
       <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-muted-foreground">
@@ -370,6 +348,13 @@ export function PreachingSummaryPanel() {
     store.setFinalSummary(session.id, summary, document)
     editorDocumentsRef.current.set(session.id, document)
     editorTitlesRef.current.set(session.id, title)
+    manualEditIdsRef.current.delete(session.id)
+    setManualEditIds((current) => {
+      if (!current.has(session.id)) return current
+      const next = new Set(current)
+      next.delete(session.id)
+      return next
+    })
     setEditorDocument(document)
     setEditorTitle(title)
     toast.success("Summary saved")
@@ -389,48 +374,61 @@ export function PreachingSummaryPanel() {
       .presentOnLive(announcementDocumentToVerse(document, heading), null)
   }, [draft, editorDocument, editorTitle, session])
 
+  const sendSummaryToNotes = useCallback(() => {
+    if (!session) return
+    const document = normalizeSummaryDocument(editorDocument)
+    if (!announcementPlainText(document)) return
+    const title =
+      editorTitle.trim() ||
+      draft?.title.trim() ||
+      session.summaryTitle ||
+      "Preaching summary"
+    useAnnouncementStore
+      .getState()
+      .addNoteFromDocument(SUMMARY_NOTES_SET, title, document)
+    toast.success(`Added to Notes › ${SUMMARY_NOTES_SET}`)
+  }, [draft, editorDocument, editorTitle, session])
+
   const hasSummaryContent = Boolean(announcementPlainText(editorDocument))
-  const canShowLive = hasSummaryContent
-  const saveLabel = draft && !hasManualEdits ? "Apply AI draft" : "Save edits"
+  const summaryStatus = hasManualEdits
+    ? "Unsaved changes"
+    : hasStoredSummary
+      ? "Saved"
+      : draft
+        ? "AI draft"
+        : "New"
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <UnlockSavedKeys />
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
-        <Select
-          value={session?.id ?? ""}
-          onValueChange={(value) =>
-            useSermonStore.getState().selectSession(value)
-          }
-          disabled={sessions.length === 0}
-        >
-          <SelectTrigger
-            size="sm"
-            className="min-w-0 flex-1 text-xs"
-            aria-label="Sermon session"
+      <PreachingSummarySessionBar
+        key={session?.id ?? "none"}
+        session={session}
+        sessions={sessions}
+      >
+        {session ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            disabled={!aiConfigured || !hasEnoughTranscript || isGenerating}
+            title={
+              !aiConfigured
+                ? "Set up or unlock an AI key in Settings to generate a summary"
+                : !hasEnoughTranscript
+                  ? "More transcript is needed for an AI summary"
+                  : "Generate an AI summary from the sermon transcript"
+            }
+            onClick={() => void refreshSummary(true).catch(() => undefined)}
           >
-            <span className="min-w-0 truncate">
-              {session?.title ?? "No sermons yet"}
-            </span>
-          </SelectTrigger>
-          <SelectContent position="popper" align="start">
-            {[...sessions].reverse().map((candidate) => (
-              <SelectItem
-                key={candidate.id}
-                value={candidate.id}
-                textValue={candidate.title}
-              >
-                <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                  <span className="min-w-0 truncate">{candidate.title}</span>
-                  <span className="shrink-0 text-[0.625rem] text-muted-foreground">
-                    {formatSessionTimestamp(candidate.startedAt)}
-                  </span>
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+            {isGenerating ? (
+              <LoaderCircleIcon className="size-3 animate-spin" />
+            ) : (
+              <RefreshCwIcon className="size-3" />
+            )}
+            {draft || hasStoredSummary ? "Regenerate" : "AI summary"}
+          </Button>
+        ) : null}
+      </PreachingSummarySessionBar>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {!session ? (
@@ -441,137 +439,31 @@ export function PreachingSummaryPanel() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            <section className="space-y-3 rounded-lg border border-border bg-background/30 p-3">
-              <header className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <Input
-                    value={session.title}
-                    aria-label="Sermon session title"
-                    className="h-8 px-2.5 text-sm font-medium"
-                    onChange={(event) =>
-                      useSermonStore
-                        .getState()
-                        .updateSessionTitle(session.id, event.target.value)
-                    }
-                  />
-                  <p className="mt-0.5 text-[0.625rem] text-muted-foreground">
-                    {formatTime(session.startedAt)}
-                    {session.endedAt
-                      ? ` – ${formatTime(session.endedAt)}`
-                      : " · In progress"}
-                  </p>
-                </div>
-                <Badge variant={session.endedAt ? "outline" : "secondary"}>
-                  {session.endedAt ? "Ended" : "Live"}
-                </Badge>
-              </header>
-              <div className="grid grid-cols-4 gap-3 border-t border-border/70 pt-3">
-                <div>
-                  <p className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
-                    Duration
-                  </p>
-                  <p className="mt-0.5 text-sm font-semibold tabular-nums">
-                    {formatDuration(session.startedAt, session.endedAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
-                    Time range
-                  </p>
-                  <p className="mt-0.5 text-sm font-semibold tabular-nums">
-                    {formatTime(session.startedAt)}
-                    {session.endedAt ? ` – ${formatTime(session.endedAt)}` : ""}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
-                    Transcript
-                  </p>
-                  <p className="mt-0.5 text-sm font-semibold tabular-nums">
-                    {sourceSegments.length} segments
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">
-                    Live notes
-                  </p>
-                  <p className="mt-0.5 text-sm font-semibold tabular-nums">
-                    {
-                      session.notes.filter((note) => note.source === "live")
-                        .length
-                    }
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+          <div className="space-y-3">
+            <section className="space-y-3 rounded-md border border-border bg-card p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex min-w-0 items-center gap-2">
-                  <SparklesIcon className="size-3.5 text-primary" />
-                  <h3 className="text-xs font-semibold">Preaching summary</h3>
+                  <h3 className="text-xs font-semibold">Summary</h3>
                   <Badge variant={hasManualEdits ? "outline" : "secondary"}>
-                    {hasManualEdits ? "Manual" : draft ? "AI draft" : "Saved"}
+                    {summaryStatus}
                   </Badge>
-                </div>
-                <div className="ml-auto flex flex-wrap items-center gap-1.5">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="xs"
-                    disabled={
-                      !aiConfigured || !hasEnoughTranscript || isGenerating
-                    }
-                    onClick={() =>
-                      void refreshSummary(true).catch(() => undefined)
-                    }
-                  >
-                    {isGenerating ? (
-                      <LoaderCircleIcon className="size-3 animate-spin" />
-                    ) : (
-                      <RefreshCwIcon className="size-3" />
-                    )}
-                    Regenerate
-                  </Button>
-                  <Button
-                    type="button"
-                    size="xs"
-                    disabled={!canShowLive}
-                    onClick={showSummaryLive}
-                  >
-                    <PlayIcon className="size-3" /> Show Live
-                  </Button>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.625rem] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] text-muted-foreground">
+                <SparklesIcon className="size-3 shrink-0 text-primary" />
                 <span>
                   {aiConfigured
-                    ? `AI model (${aiProviderName}): ${aiModel}`
-                    : "AI model not configured"}
+                    ? `AI summary · ${aiProviderName} · ${aiModel}`
+                    : "AI summary is off. Set up or unlock an AI key in Settings; manual editing still works."}
                 </span>
                 {lastGeneratedAt ? (
                   <span>Updated {formatTime(lastGeneratedAt)}</span>
                 ) : null}
+                {aiConfigured && !hasEnoughTranscript ? (
+                  <span>More transcript is needed to generate a draft.</span>
+                ) : null}
               </div>
-
-              {!aiConfigured ? (
-                <div className="flex items-start gap-2 rounded-md border border-dashed border-border p-2.5 text-xs text-muted-foreground">
-                  <AlertCircleIcon className="mt-0.5 size-3.5 shrink-0" />
-                  <p>
-                    Configure the selected provider in Settings → AI Model to
-                    generate summaries. You can still write and save this
-                    summary manually.
-                  </p>
-                </div>
-              ) : !hasEnoughTranscript ? (
-                <p className="text-xs text-muted-foreground">
-                  Keep transcribing to build an AI summary. It will refresh
-                  after enough transcript is available without changing the live
-                  transcript view.
-                </p>
-              ) : null}
 
               {generationError ? (
                 <div className="flex items-start justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive">
@@ -592,7 +484,14 @@ export function PreachingSummaryPanel() {
               ) : null}
 
               {draft && (hasManualEdits || hasStoredSummary) ? (
-                <DraftPreview draft={draft} />
+                <details className="rounded-md border border-border bg-muted/10">
+                  <summary className="cursor-pointer px-2.5 py-2 text-xs font-medium">
+                    View latest AI draft
+                  </summary>
+                  <div className="border-t border-border p-2">
+                    <DraftPreview draft={draft} />
+                  </div>
+                </details>
               ) : null}
 
               <label className="grid gap-1">
@@ -618,10 +517,7 @@ export function PreachingSummaryPanel() {
                 />
               </Suspense>
 
-              <div className="flex items-center gap-2 border-t border-border/70 pt-2">
-                <p className="mr-auto text-[0.625rem] text-muted-foreground">
-                  Edit the slide before applying or showing it live.
-                </p>
+              <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-border/70 pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -629,12 +525,24 @@ export function PreachingSummaryPanel() {
                   disabled={!hasSummaryContent}
                   onClick={saveSummary}
                 >
-                  {draft ? (
-                    <CheckIcon className="size-3" />
-                  ) : (
-                    <SaveIcon className="size-3" />
-                  )}
-                  {saveLabel}
+                  <SaveIcon className="size-3" /> Save summary
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  disabled={!hasSummaryContent}
+                  onClick={sendSummaryToNotes}
+                >
+                  <NotebookTextIcon className="size-3" /> Send to Notes
+                </Button>
+                <Button
+                  type="button"
+                  size="xs"
+                  disabled={!hasSummaryContent}
+                  onClick={showSummaryLive}
+                >
+                  <PlayIcon className="size-3" /> Show Live
                 </Button>
               </div>
             </section>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { UnlockSavedKeys } from "@/components/settings/unlock-saved-keys"
 import {
   CheckIcon,
   ListPlusIcon,
@@ -12,10 +11,12 @@ import {
   SendIcon,
   SquareIcon,
   TextIcon,
+  Trash2Icon,
   XIcon,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   Select,
   SelectContent,
@@ -52,6 +53,67 @@ function stageQueue(session: SermonSession) {
   useBroadcastStore
     .getState()
     .setPreviewOutput(sermonQueueToPreview(session), null)
+}
+
+function deleteLiveNotes(sessionId: string, noteId: string | null) {
+  const sermon = useSermonStore.getState()
+  const session = sermon.sessions.find(
+    (candidate) => candidate.id === sessionId
+  )
+  if (!session) return
+  const removedNotes = session.notes.filter(
+    (note) => note.source === "live" && (noteId === null || note.id === noteId)
+  )
+  if (removedNotes.length === 0) return
+
+  const removedIds = new Set(removedNotes.map((note) => note.id))
+  const broadcast = useBroadcastStore.getState()
+  const previewIsThisQueue =
+    broadcast.previewVerse?.sermonSessionId === sessionId
+  const liveIsThisQueue = broadcast.liveVerse?.sermonSessionId === sessionId
+  if (
+    removedNotes.some(
+      (note) =>
+        note.tickerMessageId &&
+        note.tickerMessageId === broadcast.activeOverlays.tickerMessageId
+    )
+  ) {
+    broadcast.stopTickerMessage()
+  }
+
+  const composer = useTickerComposerStore.getState()
+  if (
+    composer.sermonSource?.sessionId === sessionId &&
+    composer.sermonSource.noteIds.some((id) => removedIds.has(id))
+  ) {
+    composer.close()
+  }
+
+  if (noteId === null) sermon.clearLiveNotes(sessionId)
+  else sermon.removeLiveNote(sessionId, noteId)
+  if (noteId === null && sermon.activeSessionId === sessionId) {
+    sermon.markNotesProcessed(
+      sessionId,
+      useTranscriptStore.getState().segments.length
+    )
+  }
+
+  const updated = useSermonStore
+    .getState()
+    .sessions.find((candidate) => candidate.id === sessionId)
+  if (updated) {
+    const nextQueue = sermonQueueToPreview(updated)
+    if (previewIsThisQueue) broadcast.setPreviewOutput(nextQueue, null)
+    if (liveIsThisQueue) {
+      if (!nextQueue && broadcast.isLive) broadcast.setLive(false)
+      broadcast.setLiveVerse(nextQueue)
+    }
+  }
+  toast.success(
+    noteId === null
+      ? `${removedNotes.length} live note${removedNotes.length === 1 ? "" : "s"} cleared`
+      : "Live note deleted"
+  )
 }
 
 let sourceHighlightTimer: ReturnType<typeof setTimeout> | null = null
@@ -132,10 +194,12 @@ function NoteCard({
   session,
   note,
   transcriptSegments,
+  onRemove,
 }: {
   session: SermonSession
   note: SermonNote
   transcriptSegments: { id: string; text: string }[]
+  onRemove: (noteId: string) => void
 }) {
   const queued = session.queuedNoteIds.includes(note.id)
   const activeTickerMessageId = useBroadcastStore(
@@ -243,6 +307,17 @@ function NoteCard({
           )}
           {queued ? "Queued" : "Queue"}
         </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          className="text-destructive hover:text-destructive"
+          aria-label="Delete live note"
+          title="Delete live note"
+          onClick={() => onRemove(note.id)}
+        >
+          <Trash2Icon className="size-3" /> Delete
+        </Button>
       </div>
     </article>
   )
@@ -300,7 +375,10 @@ function NotesQueue({ session }: { session: SermonSession }) {
           aria-label="Clear notes queue"
           onClick={() => {
             useSermonStore.getState().clearQueue(session.id)
-            useBroadcastStore.getState().setPreviewOutput(null, null)
+            const broadcast = useBroadcastStore.getState()
+            if (broadcast.previewVerse?.sermonSessionId === session.id) {
+              broadcast.setPreviewOutput(null, null)
+            }
           }}
         >
           <XIcon className="size-3" />
@@ -360,7 +438,12 @@ export function LiveNotesPanel() {
   const [generationNotice, setGenerationNotice] = useState<string | null>(null)
   const [showManualComposer, setShowManualComposer] = useState(false)
   const [manualDraft, setManualDraft] = useState("")
+  const [pendingRemoval, setPendingRemoval] = useState<{
+    sessionId: string
+    noteId: string | null
+  } | null>(null)
   const generationRef = useRef<Promise<void> | null>(null)
+  const generationEpochRef = useRef(0)
   const session =
     sessions.find((candidate) => candidate.id === selectedSessionId) ??
     sessions.at(-1) ??
@@ -368,6 +451,7 @@ export function LiveNotesPanel() {
   const notes = session?.notes.filter((note) => note.source === "live") ?? []
 
   const runGeneration = useCallback(async (force: boolean) => {
+    const generationEpoch = generationEpochRef.current
     const currentState = useSermonStore.getState()
     const currentSession = currentState.sessions.find(
       (candidate) => candidate.id === currentState.activeSessionId
@@ -387,6 +471,7 @@ export function LiveNotesPanel() {
         ),
         force,
       })
+      if (generationEpoch !== generationEpochRef.current) return
 
       if (result.status === "not-configured") {
         setGenerationNotice(
@@ -418,6 +503,7 @@ export function LiveNotesPanel() {
         if (force) setGenerationNotice("No meaningful new moment found yet.")
       }
     } catch (error) {
+      if (generationEpoch !== generationEpochRef.current) return
       setGenerationNotice(
         error instanceof Error
           ? error.message
@@ -483,7 +569,6 @@ export function LiveNotesPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <UnlockSavedKeys />
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
         <Select
           value={session?.id ?? ""}
@@ -605,9 +690,24 @@ export function LiveNotesPanel() {
             <NotesQueue session={session} />
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold">Live notes</h3>
-              <span className="text-[0.625rem] text-muted-foreground">
-                {notes.length} note{notes.length === 1 ? "" : "s"}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[0.625rem] text-muted-foreground">
+                  {notes.length} note{notes.length === 1 ? "" : "s"}
+                </span>
+                {notes.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() =>
+                      setPendingRemoval({ sessionId: session.id, noteId: null })
+                    }
+                  >
+                    Clear all
+                  </Button>
+                ) : null}
+              </div>
             </div>
             {notes.length > 0 ? (
               notes.map((note) => (
@@ -616,6 +716,9 @@ export function LiveNotesPanel() {
                   session={session}
                   note={note}
                   transcriptSegments={transcriptSegments}
+                  onRemove={(noteId) =>
+                    setPendingRemoval({ sessionId: session.id, noteId })
+                  }
                 />
               ))
             ) : (
@@ -628,6 +731,28 @@ export function LiveNotesPanel() {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={pendingRemoval !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingRemoval(null)
+        }}
+        title={
+          pendingRemoval?.noteId ? "Delete live note?" : "Clear live notes?"
+        }
+        description={
+          pendingRemoval?.noteId
+            ? "This note will be removed from the sermon and its queue. This cannot be undone."
+            : "All live notes for this sermon will be removed. This cannot be undone."
+        }
+        confirmLabel={pendingRemoval?.noteId ? "Delete note" : "Clear all"}
+        destructive
+        onConfirm={() => {
+          if (!pendingRemoval) return
+          generationEpochRef.current += 1
+          setGenerationNotice(null)
+          deleteLiveNotes(pendingRemoval.sessionId, pendingRemoval.noteId)
+        }}
+      />
     </div>
   )
 }

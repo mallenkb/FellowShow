@@ -1,10 +1,11 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import {
   BookMarkedIcon,
-  CheckIcon,
   ListPlusIcon,
   PlayIcon,
+  SquareIcon,
   TextIcon,
+  Trash2Icon,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ import {
   useBroadcastStore,
   useDetectionStore,
   useQueueStore,
+  useSermonStore,
   useTranscriptStore,
 } from "@/stores"
 
@@ -117,16 +119,15 @@ async function queueScripture(reference: SermonDirectReference) {
   toast.success(reference.reference + " added to the queue")
 }
 
-function focusQueuedScripture(reference: SermonDirectReference) {
-  const queue = useQueueStore.getState()
-  const duplicateIndex = queue.findDuplicate(
-    reference.bookNumber,
-    reference.chapter,
-    reference.verse
-  )
-  if (duplicateIndex === -1) return
-  queue.flashItem(queue.items[duplicateIndex].id)
-  queue.setActive(duplicateIndex)
+function stopScriptureOnLive(reference: SermonDirectReference) {
+  const broadcast = useBroadcastStore.getState()
+  if (
+    !broadcast.isLive ||
+    broadcast.liveVerse?.scriptureKey !== reference.key
+  ) {
+    return
+  }
+  broadcast.setLive(false)
 }
 
 async function sendScriptureToScroll(reference: SermonDirectReference) {
@@ -145,9 +146,13 @@ async function sendScriptureToScroll(reference: SermonDirectReference) {
 function SermonScriptureRow({
   reference,
   isQueued,
+  isShowingLive,
+  onRemove,
 }: {
   reference: SermonDirectReference
   isQueued: boolean
+  isShowingLive: boolean
+  onRemove: (reference: SermonDirectReference) => void
 }) {
   return (
     <article
@@ -189,52 +194,59 @@ function SermonScriptureRow({
             </p>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={"Show " + reference.reference + " full screen"}
-            aria-label={"Show " + reference.reference + " full screen"}
-            onClick={(event) => {
-              event.stopPropagation()
-              void presentScripture(reference).catch((error: unknown) => {
-                reportScriptureActionFailure(reference, error)
-              })
-            }}
-          >
-            <PlayIcon className="size-3" />
-          </Button>
+        <div
+          className="flex shrink-0 items-center gap-0.5"
+          onDoubleClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
           <Button
             type="button"
             variant="ghost"
             size="icon-xs"
             title={
-              isQueued
-                ? reference.reference + " is already queued"
-                : "Add " + reference.reference + " to queue"
+              isShowingLive
+                ? "Stop showing " + reference.reference + " on Live"
+                : "Show " + reference.reference + " full screen"
             }
             aria-label={
-              isQueued
-                ? reference.reference + " is already queued"
-                : "Add " + reference.reference + " to queue"
+              isShowingLive
+                ? "Stop showing " + reference.reference + " on Live"
+                : "Show " + reference.reference + " full screen"
             }
             onClick={(event) => {
               event.stopPropagation()
-              if (isQueued) focusQueuedScripture(reference)
-              else {
+              if (isShowingLive) {
+                stopScriptureOnLive(reference)
+                return
+              }
+              void presentScripture(reference).catch((error: unknown) => {
+                reportScriptureActionFailure(reference, error)
+              })
+            }}
+          >
+            {isShowingLive ? (
+              <SquareIcon className="size-3 text-destructive" />
+            ) : (
+              <PlayIcon className="size-3" />
+            )}
+          </Button>
+          {!isQueued ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              title={"Add " + reference.reference + " to queue"}
+              aria-label={"Add " + reference.reference + " to queue"}
+              onClick={(event) => {
+                event.stopPropagation()
                 void queueScripture(reference).catch((error: unknown) => {
                   reportScriptureActionFailure(reference, error)
                 })
-              }
-            }}
-          >
-            {isQueued ? (
-              <CheckIcon className="size-3 text-ai-direct" />
-            ) : (
+              }}
+            >
               <ListPlusIcon className="size-3" />
-            )}
-          </Button>
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
@@ -250,6 +262,27 @@ function SermonScriptureRow({
           >
             <TextIcon className="size-3" />
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            title={
+              (isQueued ? "Remove " : "Dismiss ") +
+              reference.reference +
+              " from sermon scriptures"
+            }
+            aria-label={
+              (isQueued ? "Remove " : "Dismiss ") +
+              reference.reference +
+              " from sermon scriptures"
+            }
+            onClick={(event) => {
+              event.stopPropagation()
+              onRemove(reference)
+            }}
+          >
+            <Trash2Icon className="size-3" />
+          </Button>
         </div>
       </div>
     </article>
@@ -263,6 +296,16 @@ export function SermonScripturesPanel() {
     (state) => state.highlightedScriptures
   )
   const queueItems = useQueueStore((state) => state.items)
+  const activeSessionId = useSermonStore((state) => state.activeSessionId)
+  const liveScriptureKey = useBroadcastStore((state) =>
+    state.isLive ? (state.liveVerse?.scriptureKey ?? null) : null
+  )
+  const [dismissed, setDismissed] = useState<{
+    sessionId: string | null
+    keys: ReadonlySet<string>
+  }>({ sessionId: null, keys: new Set() })
+  const dismissedKeys =
+    dismissed.sessionId === activeSessionId ? dismissed.keys : null
 
   const directReferences = useMemo(
     () =>
@@ -313,8 +356,36 @@ export function SermonScripturesPanel() {
         evidence: "direct-detection",
       })
     }
-    return [...combined.values()]
-  }, [directReferences, queueItems])
+    return [...combined.values()].filter(
+      (reference) =>
+        !dismissedKeys?.has(reference.key) ||
+        queuedKeys.has(reference.key) ||
+        reference.key === liveScriptureKey
+    )
+  }, [
+    directReferences,
+    dismissedKeys,
+    liveScriptureKey,
+    queueItems,
+    queuedKeys,
+  ])
+
+  const removeScripture = (reference: SermonDirectReference) => {
+    const queue = useQueueStore.getState()
+    const index = queue.findDuplicate(
+      reference.bookNumber,
+      reference.chapter,
+      reference.verse
+    )
+    if (index !== -1) queue.removeItem(queue.items[index].id)
+    setDismissed((previous) => ({
+      sessionId: activeSessionId,
+      keys: new Set([
+        ...(previous.sessionId === activeSessionId ? previous.keys : []),
+        reference.key,
+      ]),
+    }))
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -346,6 +417,8 @@ export function SermonScripturesPanel() {
                 key={reference.key}
                 reference={reference}
                 isQueued={queuedKeys.has(reference.key)}
+                isShowingLive={liveScriptureKey === reference.key}
+                onRemove={removeScripture}
               />
             ))}
           </div>

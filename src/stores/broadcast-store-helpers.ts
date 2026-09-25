@@ -207,6 +207,8 @@ function verseRenderKey(verse: VerseRenderData | null): string {
   if (!verse) return "null"
   return JSON.stringify({
     sourceId: verse.sourceId ?? null,
+    scriptureKey: verse.scriptureKey ?? null,
+    sermonSessionId: verse.sermonSessionId ?? null,
     reference: verse.reference,
     themeSection: verse.themeSection ?? null,
     referenceMode: verse.referenceMode ?? null,

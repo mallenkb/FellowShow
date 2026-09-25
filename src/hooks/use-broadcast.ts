@@ -16,6 +16,7 @@ export function toVerseRenderData(
   }
 
   return {
+    scriptureKey: `${verse.book_number}:${verse.chapter}:${verse.verse}`,
     reference: formatBibleReference(
       verse.book_name,
       verse.book_number,

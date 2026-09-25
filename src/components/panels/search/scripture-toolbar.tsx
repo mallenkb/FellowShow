@@ -40,7 +40,7 @@ export function ScriptureToolbar({
   )
 
   return (
-    <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 py-3">
+    <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 pt-2.5 pb-3">
       <div className="flex min-w-0 items-center gap-2">
         {mode === "book" ? (
           <div className="relative min-w-0 flex-1">

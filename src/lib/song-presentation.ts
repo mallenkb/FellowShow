@@ -58,6 +58,9 @@ export function prepareSong(song: CopSong) {
     },
     "song"
   )
+  useBroadcastStore
+    .getState()
+    .setPreviewOutput(toVerseRenderData(verse, ""), null)
 
   return verse
 }

@@ -13,6 +13,7 @@ import {
   BookOpenIcon,
   BrainCircuitIcon,
   HelpCircleIcon,
+  LayoutGridIcon,
   MicIcon,
   RadioIcon,
   RefreshCwIcon,
@@ -30,6 +31,7 @@ import { HelpSection } from "@/components/settings/help-section"
 import { RemoteControlSection } from "@/components/settings/remote-control-section"
 import { SpeechSection } from "@/components/settings/speech-section"
 import { UpdatesSection } from "@/components/settings/updates-section"
+import { WorkspaceSection } from "@/components/settings/workspace-section"
 
 type NavSection =
   | "audio"
@@ -37,6 +39,7 @@ type NavSection =
   | "ai-model"
   | "bible"
   | "display"
+  | "workspace"
   | "remote"
   | "updates"
   | "help"
@@ -68,6 +71,11 @@ const navItems: { name: string; id: NavSection; icon: React.ReactNode }[] = [
     icon: <TvIcon strokeWidth={2} />,
   },
   {
+    name: "Workspace",
+    id: "workspace",
+    icon: <LayoutGridIcon strokeWidth={2} />,
+  },
+  {
     name: "Remote Control",
     id: "remote",
     icon: <RadioIcon strokeWidth={2} />,
@@ -90,6 +98,7 @@ const sectionTitles: Record<NavSection, string> = {
   "ai-model": "AI Model Provider",
   bible: "Scripture Translation",
   display: "Display Mode",
+  workspace: "Workspace",
   remote: "Remote Control",
   updates: "Updates",
   help: "Help",
@@ -101,6 +110,7 @@ const sectionComponents: Record<NavSection, React.FC> = {
   "ai-model": AiModelSection,
   bible: BibleSection,
   display: DisplayModeSection,
+  workspace: WorkspaceSection,
   remote: RemoteControlSection,
   updates: UpdatesSection,
   help: HelpSection,

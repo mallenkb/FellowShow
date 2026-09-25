@@ -136,3 +136,40 @@ describe("buildTranscriptHighlightParts", () => {
     ])
   })
 })
+
+describe("buildTranscriptHighlightParts with quotes", () => {
+  const john316Quote: TranscriptVerseAnnotation = {
+    id: "john-3-16-quote",
+    kind: "quote",
+    reference: "John 3:16",
+    bookName: "John",
+    bookNumber: 43,
+    chapter: 3,
+    verse: 16,
+    verseText:
+      "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+  }
+
+  it("keeps the spoken words of a quote and marks them", () => {
+    expect(
+      buildTranscriptHighlightParts(
+        "He said for God so loved the world that he gave.",
+        [john316Quote]
+      )
+    ).toEqual([
+      { type: "text", text: "He said " },
+      {
+        type: "quote",
+        text: "for God so loved the world that he gave",
+        annotation: john316Quote,
+      },
+      { type: "text", text: "." },
+    ])
+  })
+
+  it("leaves text alone when the quote is too short", () => {
+    expect(
+      buildTranscriptHighlightParts("God so loved us.", [john316Quote])
+    ).toEqual([{ type: "text", text: "God so loved us." }])
+  })
+})

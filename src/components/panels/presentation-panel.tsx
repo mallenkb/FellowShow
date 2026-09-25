@@ -32,6 +32,8 @@ import {
 import { useBroadcastStore, usePresentationStore } from "@/stores"
 import { PresentationDocumentViewer } from "@/components/panels/presentation-document-viewer"
 import { PresentationMediaViewer } from "@/components/panels/presentation-media-viewer"
+import { stageSlide } from "@/lib/preview-staging"
+import { usePresentationImport } from "./search/use-presentation-import"
 
 function VideoSlideThumbnail({
   src,
@@ -80,6 +82,8 @@ export function PresentationPanel() {
   const [renamingSlideId, setRenamingSlideId] = useState<string | null>(null)
   const [renamingSlideName, setRenamingSlideName] = useState("")
   const lastDragOverIdRef = useRef<string | null>(null)
+  const [isFileDropTarget, setIsFileDropTarget] = useState(false)
+  const { importFiles } = usePresentationImport(undefined, { pin: true })
   const pinnedSlides = useMemo(
     () => slides.filter((slide) => slide.pinned),
     [slides]
@@ -100,7 +104,47 @@ export function PresentationPanel() {
   return (
     <div
       data-slot="presentation-panel"
-      className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className={cn(
+        "flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
+        isFileDropTarget && "ring-2 ring-primary ring-inset"
+      )}
+      onDragOver={(event) => {
+        // Reordering pinned slides is handled by each card.
+        if (draggedId) return
+        const types = event.dataTransfer.types
+        if (
+          !types.includes("Files") &&
+          !types.includes("application/x-fellowshow-slide")
+        ) {
+          return
+        }
+        event.preventDefault()
+        event.dataTransfer.dropEffect = "copy"
+        setIsFileDropTarget(true)
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as Node | null))
+          return
+        setIsFileDropTarget(false)
+      }}
+      onDrop={(event) => {
+        if (draggedId) return
+        event.preventDefault()
+        setIsFileDropTarget(false)
+        if (event.dataTransfer.files.length > 0) {
+          void importFiles(event.dataTransfer.files).catch(console.error)
+          return
+        }
+        const slideId = event.dataTransfer.getData(
+          "application/x-fellowshow-slide"
+        )
+        const slide = usePresentationStore
+          .getState()
+          .slides.find((item) => item.id === slideId)
+        if (slide && !slide.pinned) {
+          usePresentationStore.getState().togglePin(slide.id)
+        }
+      }}
     >
       <PanelHeader title="Default">
         <Badge variant="outline">{pinnedSlides.length}</Badge>
@@ -116,7 +160,7 @@ export function PresentationPanel() {
               No default slides
             </p>
             <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-              Pin presentation images from the left panel to keep them here.
+              Drop images or videos here, or pin slides from the left panel.
               Drag pinned slides to set their order.
             </p>
           </div>
@@ -180,9 +224,10 @@ export function PresentationPanel() {
                     setDropTargetId(null)
                     lastDragOverIdRef.current = null
                   }}
-                  onClick={() =>
+                  onClick={() => {
                     usePresentationStore.getState().selectSlide(slide.id)
-                  }
+                    stageSlide(slide)
+                  }}
                   onDoubleClick={() => {
                     usePresentationStore.getState().selectSlide(slide.id)
                     const store = useBroadcastStore.getState()

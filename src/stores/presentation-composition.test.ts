@@ -50,8 +50,23 @@ describe("canvas media actions", () => {
       .getState()
       .updateSlideLayer(slide.id, second.id, { scale: 0.75 })
     const layers = usePresentationStore.getState().slides[0].layers
-    expect(layers?.map((item) => item.scale)).toEqual([0.5, 0.75])
-    expect(live.presentationImage?.layers?.[1].scale).toBe(0.5)
+    expect(layers?.map((item) => item.scale)).toEqual([1, 0.75])
+    expect(live.presentationImage?.layers?.[1].scale).toBe(1)
+  })
+
+  it("adds new media full frame with fit and leaves existing items in place", () => {
+    usePresentationStore
+      .getState()
+      .updateSlideLayer(slide.id, slide.id, { scale: 0.6, offsetX: 0.2 })
+    usePresentationStore.getState().addSlideMedia(slide.id, [second])
+    const layers = usePresentationStore.getState().slides[0].layers
+    expect(layers?.[0]).toMatchObject({ scale: 0.6, offsetX: 0.2 })
+    expect(layers?.[1]).toMatchObject({
+      fit: "contain",
+      scale: 1,
+      offsetX: 0,
+      offsetY: 0,
+    })
   })
 
   it("rejects uploads to locked, deleted, or full canvases", () => {

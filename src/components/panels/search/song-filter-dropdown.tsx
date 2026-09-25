@@ -5,25 +5,21 @@ import { CheckIcon, FunnelIcon } from "lucide-react"
 import type { CopSongSource } from "@/lib/cop-songs"
 
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
-const LYRIC_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
   { value: "all", label: "All songs" },
   { value: "theme-2026", label: "2026 Theme" },
   { value: "theme-2025", label: "2025 Theme" },
   { value: "pentecostal-book", label: "Pentecostal Book" },
   { value: "easyworship", label: "EasyWorship" },
+  { value: "custom", label: "My songs" },
 ]
 
 export function SongFilterDropdown({
   sourceValue,
-  letterValue,
   onSourceChange,
-  onLetterChange,
 }: {
   sourceValue: SongSourceFilter
-  letterValue: string
   onSourceChange: (value: SongSourceFilter) => void
-  onLetterChange: (value: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -33,19 +29,9 @@ export function SongFilterDropdown({
     top: 0,
     width: 260,
   })
-  const letterOptions = ["all", ...LYRIC_LETTERS]
-  const sourceLabel =
+  const label =
     songSourceOptions.find((option) => option.value === sourceValue)?.label ??
     "All songs"
-  const letterLabel = letterValue === "all" ? "All" : letterValue
-  const label =
-    sourceValue === "all" && letterValue === "all"
-      ? "All songs"
-      : sourceValue !== "all" && letterValue !== "all"
-        ? `${sourceLabel} · ${letterLabel}`
-        : sourceValue !== "all"
-          ? sourceLabel
-          : `${letterLabel} songs`
 
   const updateMenuPosition = useCallback(() => {
     const trigger = triggerRef.current
@@ -155,6 +141,7 @@ export function SongFilterDropdown({
                     aria-checked={isSelected}
                     onClick={() => {
                       onSourceChange(option.value)
+                      setOpen(false)
                     }}
                     className={cn(
                       "flex h-9 w-full items-center justify-between rounded-sm px-2 text-left text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
@@ -168,35 +155,6 @@ export function SongFilterDropdown({
                   </button>
                 )
               })}
-              <div className="my-1 h-px bg-border" />
-              <div className="px-2 py-1.5 text-[0.625rem] font-semibold tracking-wider text-muted-foreground uppercase">
-                Starts with
-              </div>
-              <div className="grid grid-cols-5 gap-1 p-1">
-                {letterOptions.map((option) => {
-                  const isSelected = option === letterValue
-                  const optionLabel = option === "all" ? "All" : option
-
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      role="menuitemradio"
-                      aria-selected={isSelected}
-                      aria-checked={isSelected}
-                      onClick={() => {
-                        onLetterChange(option)
-                      }}
-                      className={cn(
-                        "flex h-8 items-center justify-center rounded-sm px-2 text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
-                        isSelected && "bg-foreground/10 text-foreground"
-                      )}
-                    >
-                      {optionLabel}
-                    </button>
-                  )
-                })}
-              </div>
             </div>
           </div>,
           document.body

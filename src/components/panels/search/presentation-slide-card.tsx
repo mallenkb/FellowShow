@@ -21,6 +21,7 @@ import {
   type PresentationSlide,
   usePresentationStore,
 } from "@/stores/presentation-store"
+import { stageSlide } from "@/lib/preview-staging"
 
 interface PresentationSlideCardProps {
   slide: PresentationSlide
@@ -59,7 +60,10 @@ export function PresentationSlideCard({
       onDragOver={(event) => onDragOver(event, slide.id)}
       onDragEnter={(event) => onDragOver(event, slide.id)}
       onDrop={onDrop}
-      onClick={() => usePresentationStore.getState().selectSlide(slide.id)}
+      onClick={() => {
+        usePresentationStore.getState().selectSlide(slide.id)
+        stageSlide(slide)
+      }}
       onDoubleClick={() => onPresent(slide)}
       className={cn(
         "group relative cursor-pointer overflow-hidden rounded-lg border p-2 transition-colors select-none active:cursor-grabbing",

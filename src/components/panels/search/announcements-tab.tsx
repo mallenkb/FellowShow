@@ -1,6 +1,18 @@
-import { FilePlus2Icon, PlusIcon, Trash2Icon } from "lucide-react"
+import {
+  FilePlus2Icon,
+  FolderPlusIcon,
+  MoreHorizontalIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { AnnouncementNoteRow } from "@/components/panels/search/announcement-note-row"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Select,
   SelectContent,
@@ -8,8 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
-import { announcementPlainText } from "@/lib/announcements"
 import { useAnnouncementStore } from "@/stores"
 
 export function AnnouncementsTab() {
@@ -20,12 +30,12 @@ export function AnnouncementsTab() {
 
   if (sets.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-6 text-center">
+      <div className="flex h-full items-center justify-center border-t border-border p-6 text-center">
         <div className="max-w-xs">
           <FilePlus2Icon className="mx-auto mb-3 size-7 text-muted-foreground" />
-          <p className="text-sm font-medium">No announcements yet</p>
+          <p className="text-sm font-medium">No notes yet</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Create a set, then write and present it in the editor.
+            Create a set, then write and present notes from the editor.
           </p>
           <Button
             type="button"
@@ -42,19 +52,16 @@ export function AnnouncementsTab() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
-      <div className="flex items-center gap-2">
+    <>
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 pt-2.5 pb-3">
         <Select
           value={selectedSetId ?? ""}
           onValueChange={(value) =>
             useAnnouncementStore.getState().selectSet(value)
           }
         >
-          <SelectTrigger
-            className="min-w-0 flex-1"
-            aria-label="Announcement set"
-          >
-            <SelectValue placeholder="Choose an announcement set" />
+          <SelectTrigger className="min-w-0 flex-1" aria-label="Note set">
+            <SelectValue placeholder="Choose a set" />
           </SelectTrigger>
           <SelectContent position="popper" align="start">
             {sets.map((set) => (
@@ -67,105 +74,67 @@ export function AnnouncementsTab() {
         <Button
           type="button"
           variant="outline"
-          size="icon"
-          className="size-9 shrink-0"
-          onClick={() => useAnnouncementStore.getState().createSet()}
-          aria-label="New announcement set"
-        >
-          <PlusIcon className="size-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-9 shrink-0 text-destructive"
+          size="sm"
+          className="h-9 shrink-0"
           disabled={!selectedSet}
           onClick={() => {
             if (selectedSet) {
-              useAnnouncementStore.getState().deleteSet(selectedSet.id)
+              useAnnouncementStore.getState().addItem(selectedSet.id)
             }
           }}
-          aria-label="Delete announcement set"
         >
-          <Trash2Icon className="size-4" />
+          <PlusIcon className="size-4" />
+          Note
         </Button>
-      </div>
-
-      {selectedSet ? (
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              Announcement list
-            </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs"
-              onClick={() =>
-                useAnnouncementStore.getState().addItem(selectedSet.id)
-              }
+              size="icon"
+              className="size-9 shrink-0"
+              aria-label="Set options"
             >
-              <PlusIcon className="size-3.5" />
-              Add
+              <MoreHorizontalIcon className="size-4" />
             </Button>
-          </div>
-          {selectedSet.items.map((item) => {
-            const summary = announcementPlainText(item.content)
-            return (
-              <div
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              onSelect={() => useAnnouncementStore.getState().createSet()}
+            >
+              <FolderPlusIcon />
+              New set
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={!selectedSet}
+              onSelect={() => {
+                if (selectedSet) {
+                  useAnnouncementStore.getState().deleteSet(selectedSet.id)
+                }
+              }}
+            >
+              <Trash2Icon />
+              Delete set
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+        {selectedSet ? (
+          <div className="flex flex-col gap-2">
+            {selectedSet.items.map((item) => (
+              <AnnouncementNoteRow
                 key={item.id}
-                className={cn(
-                  "flex min-w-0 items-center gap-1 rounded-md border p-1.5 transition-colors",
-                  item.id === selectedItemId
-                    ? "border-primary bg-primary/10"
-                    : "border-border hover:bg-muted/50"
-                )}
-              >
-                <div className="min-w-0 flex-1">
-                  <Input
-                    value={item.title}
-                    onFocus={() =>
-                      useAnnouncementStore.getState().selectItem(item.id)
-                    }
-                    onChange={(event) =>
-                      useAnnouncementStore
-                        .getState()
-                        .renameItem(selectedSet.id, item.id, event.target.value)
-                    }
-                    className="h-7 border-transparent bg-transparent px-1.5 text-xs font-medium shadow-none hover:border-border focus-visible:border-primary"
-                    placeholder="Untitled announcement"
-                    aria-label="Announcement title"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      useAnnouncementStore.getState().selectItem(item.id)
-                    }
-                    className="block w-full truncate px-1.5 pt-0.5 text-left text-[0.6875rem] text-muted-foreground"
-                  >
-                    {summary || "Empty announcement"}
-                  </button>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
-                  onClick={() =>
-                    useAnnouncementStore
-                      .getState()
-                      .deleteItem(selectedSet.id, item.id)
-                  }
-                  aria-label={`Remove ${summary || "empty announcement"}`}
-                >
-                  <Trash2Icon className="size-3.5" />
-                </Button>
-              </div>
-            )
-          })}
-        </div>
-      ) : null}
-    </div>
+                item={item}
+                setId={selectedSet.id}
+                selected={item.id === selectedItemId}
+              />
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </>
   )
 }

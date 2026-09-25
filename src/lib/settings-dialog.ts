@@ -6,6 +6,7 @@ type SettingsSection =
   | "ai-model"
   | "bible"
   | "display"
+  | "workspace"
   | "remote"
   | "updates"
   | "help"

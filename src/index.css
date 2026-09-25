@@ -305,8 +305,22 @@
   container-type: inline-size;
 }
 
+/* Four tabs keep their labels; they tighten first and only drop to icons
+   when the panel is narrower than the labels can fit. */
+@container search-panel (max-width: 360px) {
+  .search-tab {
+    gap: 0.25rem;
+    padding-inline: 0.5rem;
+  }
+}
+
+@container search-panel (max-width: 280px) {
+  .search-tab-label {
+    display: none;
+  }
+}
+
 @container search-panel (max-width: 430px) {
-  .search-tab-label,
   .responsive-action-label,
   .song-filter-trigger > svg:last-child {
     display: none;

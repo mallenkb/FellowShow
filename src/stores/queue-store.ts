@@ -8,6 +8,7 @@ interface QueueState {
   highlightedId: string | null
 
   addItem: (item: QueueItem) => void
+  removeItem: (id: string) => void
   setActive: (index: number | null) => void
   clearQueue: () => void
   /** Flash-highlight a queue item briefly (1.5 s). */
@@ -35,6 +36,21 @@ export const useQueueStore = create<QueueState>((set, get) => ({
       )
       if (duplicate) return state
       return { items: [item, ...state.items] }
+    }),
+  removeItem: (id) =>
+    set((state) => {
+      const index = state.items.findIndex((item) => item.id === id)
+      if (index === -1) return state
+      return {
+        items: state.items.filter((item) => item.id !== id),
+        activeIndex:
+          state.activeIndex === null || state.activeIndex === index
+            ? null
+            : state.activeIndex > index
+              ? state.activeIndex - 1
+              : state.activeIndex,
+        highlightedId: state.highlightedId === id ? null : state.highlightedId,
+      }
     }),
   setActive: (activeIndex) => set({ activeIndex }),
   clearQueue: () => set({ items: [], activeIndex: null }),

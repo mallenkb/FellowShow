@@ -13,6 +13,7 @@ import {
   useTranscriptStore,
 } from "@/stores"
 import type { DetectionResult, TranscriptSegment, Verse } from "@/types"
+import { stageVerse } from "@/lib/preview-staging"
 
 const MAX_CONTEXT_SEGMENTS = 6
 const MAX_CONTEXT_CHARACTERS = 1_200
@@ -125,6 +126,7 @@ function resultAsVerse(result: DetectionResult): Verse {
 function selectScripture(result: DetectionResult) {
   const verse = resultAsVerse(result)
   bibleActions.selectVerse(verse)
+  stageVerse(verse)
   bibleActions.navigateToVerse(result.book_number, result.chapter, result.verse)
 }
 

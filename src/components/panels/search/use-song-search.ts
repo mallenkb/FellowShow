@@ -20,18 +20,21 @@ interface SongSearchResult {
 }
 
 const WORKER_SUPPORTED = typeof Worker !== "undefined"
+// One shared collator; localeCompare with options builds a new one per call.
+const TITLE_COLLATOR = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+})
 
 export function useSongSearch({
   songs,
   query,
   source,
-  letter,
   renderLimit,
 }: {
   songs: CopSong[]
   query: string
   source: string
-  letter: string
   renderLimit: number
 }): SongSearchResult {
   const orderedSongs = useMemo(
@@ -44,7 +47,7 @@ export function useSongSearch({
   )
   const deferredQuery = useDeferredValue(query)
   const isSearchActive = deferredQuery.trim().length > 0
-  const activeSearchKey = `${deferredQuery}\u0000${source}\u0000${letter}`
+  const activeSearchKey = `${deferredQuery}\u0000${source}`
   const workerRef = useRef<Worker | null>(null)
   const latestRequestIdRef = useRef(0)
   const [workerReady, setWorkerReady] = useState(false)
@@ -119,16 +122,9 @@ export function useSongSearch({
       searchKey: activeSearchKey,
       query: deferredQuery,
       source,
-      letter,
+      letter: "all",
     })
-  }, [
-    activeSearchKey,
-    deferredQuery,
-    isSearchActive,
-    letter,
-    source,
-    workerReady,
-  ])
+  }, [activeSearchKey, deferredQuery, isSearchActive, source, workerReady])
 
   const fallbackIndex = useMemo(
     () => (useSynchronousFallback ? createSongSearchIndex(orderedSongs) : null),
@@ -139,10 +135,7 @@ export function useSongSearch({
   const alphabetizedSongs = useMemo(
     () =>
       [...songs].sort((left, right) =>
-        left.title.localeCompare(right.title, undefined, {
-          numeric: true,
-          sensitivity: "base",
-        })
+        TITLE_COLLATOR.compare(left.title, right.title)
       ),
     [songs]
   )
@@ -150,14 +143,9 @@ export function useSongSearch({
   return useMemo(() => {
     if (!isSearchActive) {
       const filtered =
-        source === "all" && letter === "all"
+        source === "all"
           ? alphabetizedSongs
-          : alphabetizedSongs.filter(
-              (song) =>
-                (source === "all" || song.source === source) &&
-                (letter === "all" ||
-                  song.title.trim().toUpperCase().startsWith(letter))
-            )
+          : alphabetizedSongs.filter((song) => song.source === source)
       return {
         songs: filtered.slice(0, renderLimit),
         totalCount: filtered.length,
@@ -168,10 +156,7 @@ export function useSongSearch({
     }
 
     if (fallbackIndex) {
-      const matches = searchSongs(fallbackIndex, deferredQuery, {
-        source,
-        letter,
-      })
+      const matches = searchSongs(fallbackIndex, deferredQuery, { source })
       return {
         songs: matches.slice(0, renderLimit),
         totalCount: matches.length,
@@ -202,7 +187,6 @@ export function useSongSearch({
     deferredQuery,
     fallbackIndex,
     isSearchActive,
-    letter,
     renderLimit,
     songById,
     source,

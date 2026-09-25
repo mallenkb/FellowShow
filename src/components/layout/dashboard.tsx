@@ -252,6 +252,7 @@ export function Dashboard() {
   )
   const [searchMode, setSearchMode] = useState<SearchMode>("book")
   const middleRowRatios = middleRowRatiosByMode[searchMode]
+  const hideTranscript = searchMode === "songs"
 
   useEffect(() => {
     if (typeof window.localStorage === "undefined") return
@@ -434,14 +435,24 @@ export function Dashboard() {
                 : "grid min-h-0 *:min-h-0"
             }
             style={{
-              gridTemplateRows: `minmax(${ROW_MIN_HEIGHTS[0]}px, ${middleRowRatios[0]}fr) ${HANDLE_HEIGHT}px minmax(${ROW_MIN_HEIGHTS[1]}px, ${middleRowRatios[1]}fr)`,
+              gridTemplateRows: hideTranscript
+                ? "minmax(0, 1fr)"
+                : `minmax(${ROW_MIN_HEIGHTS[0]}px, ${middleRowRatios[0]}fr) ${HANDLE_HEIGHT}px minmax(${ROW_MIN_HEIGHTS[1]}px, ${middleRowRatios[1]}fr)`,
             }}
           >
-            <TranscriptPanel />
-            <RowResizeHandle
-              label="Resize transcript and queue rows"
-              onPointerDown={startMiddleRowResize}
-            />
+            {/* The transcript stays mounted on Songs: it also listens for
+                detected verses and the audio level. */}
+            <div
+              className={hideTranscript ? "hidden" : "grid min-h-0 *:min-h-0"}
+            >
+              <TranscriptPanel />
+            </div>
+            {hideTranscript ? null : (
+              <RowResizeHandle
+                label="Resize transcript and queue rows"
+                onPointerDown={startMiddleRowResize}
+              />
+            )}
             <QueuePanel
               mode={
                 searchMode === "songs" ||

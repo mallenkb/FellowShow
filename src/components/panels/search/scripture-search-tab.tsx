@@ -33,7 +33,7 @@ export function ScriptureSearchTab({
     >
       <ScriptureToolbar controller={controller} mode={mode} />
       {!controller.hasAvailableScripture ? (
-        <ScriptureDownloadPrompt />
+        <ScriptureDownloadPrompt className="border-t border-border" />
       ) : mode === "book" && !controller.showPhraseResults ? (
         <ScriptureBookResults controller={controller} />
       ) : (

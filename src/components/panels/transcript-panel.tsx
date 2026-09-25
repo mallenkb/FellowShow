@@ -15,59 +15,22 @@ import {
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { useTranscription } from "@/hooks/use-transcription"
 import { bibleActions } from "@/hooks/use-bible"
-import type { DetectionResult, ReadingAdvance, Verse } from "@/types"
+import type { DetectionResult, ReadingAdvance } from "@/types"
+import type { TranscriptVerseAnnotation } from "@/lib/transcript-verse-highlights"
 import {
-  buildTranscriptHighlightParts,
-  type TranscriptVerseAnnotation,
-} from "@/lib/transcript-verse-highlights"
+  annotationFromAdvance,
+  annotationFromDetection,
+  isHighlightedDetection,
+  isQuoteDetection,
+  selectAnnotation,
+} from "@/lib/transcript-annotations"
 import type { TranscriptSegment } from "@/types"
 import { endSermon } from "@/lib/sermon-actions"
+import { stageVerseInBackground } from "@/lib/preview-staging"
+import { HighlightedTranscriptText } from "./transcript-highlighted-text"
 
 const MAX_TRANSCRIPT_ANNOTATIONS = 120
 const SEGMENT_ANNOTATION_GRACE_MS = 2_000
-let annotationRequestId = 0
-
-function annotationFromDetection(
-  detection: DetectionResult
-): TranscriptVerseAnnotation {
-  return {
-    id: `${detection.verse_ref}-${Date.now()}-${Math.random()}`,
-    reference: detection.verse_ref,
-    bookName: detection.book_name,
-    bookNumber: detection.book_number,
-    chapter: detection.chapter,
-    verse: detection.verse,
-    verseText: detection.verse_text,
-    transcriptSnippet: detection.transcript_snippet,
-    timestamp: Date.now(),
-  }
-}
-
-function annotationFromAdvance(
-  advance: ReadingAdvance
-): TranscriptVerseAnnotation {
-  return {
-    id: `${advance.reference}-${Date.now()}-${Math.random()}`,
-    reference: advance.reference,
-    bookName: advance.book_name,
-    bookNumber: advance.book_number,
-    chapter: advance.chapter,
-    verse: advance.verse,
-    verseText: advance.verse_text,
-    timestamp: Date.now(),
-  }
-}
-
-function isHighlightedDetection(detection: DetectionResult): boolean {
-  return (
-    detection.source === "direct" &&
-    detection.book_number > 0 &&
-    detection.chapter > 0 &&
-    detection.verse > 0 &&
-    !detection.is_chapter_only
-  )
-}
-
 function annotationsForSegment(
   segment: TranscriptSegment,
   annotations: TranscriptVerseAnnotation[]
@@ -76,102 +39,6 @@ function annotationsForSegment(
     (annotation) =>
       !annotation.timestamp ||
       annotation.timestamp <= segment.timestamp + SEGMENT_ANNOTATION_GRACE_MS
-  )
-}
-
-function fallbackVerse(annotation: TranscriptVerseAnnotation): Verse {
-  return {
-    id: 0,
-    translation_id: useBibleStore.getState().activeTranslationId,
-    book_number: annotation.bookNumber,
-    book_name: annotation.bookName,
-    book_abbreviation: "",
-    chapter: annotation.chapter,
-    verse: annotation.verse,
-    text: annotation.verseText,
-  }
-}
-
-async function loadAnnotationVerse(annotation: TranscriptVerseAnnotation) {
-  const translationId = useBibleStore.getState().activeTranslationId
-  return (
-    (await bibleActions.fetchVerse(
-      annotation.bookNumber,
-      annotation.chapter,
-      annotation.verse,
-      translationId
-    )) ?? fallbackVerse(annotation)
-  )
-}
-
-function selectAnnotation(
-  annotation: TranscriptVerseAnnotation,
-  activate = true
-) {
-  const requestId = ++annotationRequestId
-  const { selectedVerse, activeTranslationId } = useBibleStore.getState()
-  const isCurrent = () => {
-    const state = useBibleStore.getState()
-    return (
-      requestId === annotationRequestId &&
-      state.activeTranslationId === activeTranslationId &&
-      state.selectedVerse === selectedVerse
-    )
-  }
-  bibleActions.navigateToVerse(
-    annotation.bookNumber,
-    annotation.chapter,
-    annotation.verse,
-    activate
-  )
-  void loadAnnotationVerse(annotation)
-    .then((verse) => {
-      if (isCurrent()) bibleActions.selectVerse(verse)
-    })
-    .catch((error: unknown) => {
-      console.error(
-        `[transcript] Failed to load ${annotation.reference}`,
-        error
-      )
-      if (isCurrent()) bibleActions.selectVerse(fallbackVerse(annotation))
-    })
-}
-
-function HighlightedTranscriptText({
-  text,
-  annotations,
-  className,
-  pulse,
-}: {
-  text: string
-  annotations: TranscriptVerseAnnotation[]
-  className: string
-  pulse?: boolean
-}) {
-  const parts = buildTranscriptHighlightParts(text, annotations)
-
-  return (
-    <p className={className}>
-      {parts.map((part, index) => {
-        if (part.type === "text") {
-          return <span key={`${index}-text`}>{part.text}</span>
-        }
-        return (
-          <button
-            key={`${index}-${part.annotation.id}`}
-            type="button"
-            onClick={() => selectAnnotation(part.annotation)}
-            className="mx-0.5 inline rounded-[6px] border border-yellow-500/35 bg-yellow-300/20 px-1.5 py-0.5 align-baseline text-[0.8125rem] leading-none font-semibold text-yellow-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-colors hover:bg-yellow-300/30 focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:outline-none dark:text-yellow-100"
-            title={`Load ${part.text}`}
-          >
-            {part.text}
-          </button>
-        )
-      })}
-      {pulse && (
-        <span className="ml-1 inline-block size-1.5 animate-pulse rounded-full bg-primary align-middle" />
-      )}
-    </p>
   )
 }
 
@@ -244,6 +111,27 @@ export function TranscriptPanel() {
     []
   )
 
+  // Quotes only mark the transcript. They never feed highlighted scriptures or the queue.
+  const addQuoteAnnotations = useCallback(
+    (annotations: TranscriptVerseAnnotation[]) => {
+      if (annotations.length === 0) return
+      const references = new Set(
+        annotations.map((annotation) => annotation.reference)
+      )
+      setTranscriptAnnotations((current) =>
+        [
+          ...annotations,
+          ...current.filter(
+            (annotation) =>
+              annotation.kind !== "quote" ||
+              !references.has(annotation.reference)
+          ),
+        ].slice(0, MAX_TRANSCRIPT_ANNOTATIONS)
+      )
+    },
+    []
+  )
+
   useTauriEvent<{ rms: number; peak: number }>("audio_level", (payload) => {
     useAudioStore.getState().setLevel(payload)
   })
@@ -261,7 +149,16 @@ export function TranscriptPanel() {
   useTauriEvent<DetectionResult[]>("verse_detections", (detections) => {
     useDetectionStore.getState().addDetections(detections)
     const highlightedDetections = detections.filter(isHighlightedDetection)
-    addTranscriptAnnotations(highlightedDetections.map(annotationFromDetection))
+    addTranscriptAnnotations(
+      highlightedDetections.map((detection) =>
+        annotationFromDetection(detection)
+      )
+    )
+    addQuoteAnnotations(
+      detections
+        .filter(isQuoteDetection)
+        .map((detection) => annotationFromDetection(detection, "quote"))
+    )
 
     // Auto-navigate book search + select verse for preview/live
     const directHit = highlightedDetections[0]
@@ -309,7 +206,7 @@ export function TranscriptPanel() {
   useTauriEvent<ReadingAdvance>("reading_mode_verse", (advance) => {
     if (advance.book_number > 0) {
       addTranscriptAnnotations([annotationFromAdvance(advance)])
-      bibleActions.selectVerse({
+      const verse = {
         id: 0,
         translation_id: useBibleStore.getState().activeTranslationId,
         book_number: advance.book_number,
@@ -318,7 +215,9 @@ export function TranscriptPanel() {
         chapter: advance.chapter,
         verse: advance.verse,
         text: advance.verse_text,
-      })
+      }
+      bibleActions.selectVerse(verse)
+      stageVerseInBackground(verse)
       useBibleStore.getState().setPendingNavigation({
         activate: false,
         bookNumber: advance.book_number,

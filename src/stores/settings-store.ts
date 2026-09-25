@@ -21,6 +21,16 @@ export function isAiProvider(value: unknown): value is AiProvider {
 
 export const DEFAULT_PINNED_TRANSLATION_IDS = [6, 2]
 
+/** Search tabs that stay hidden unless the operator turns them on in Settings. */
+const OPTIONAL_SEARCH_TABS = ["on-display", "timer"] as const
+export type OptionalSearchTab = (typeof OPTIONAL_SEARCH_TABS)[number]
+
+export function isOptionalSearchTab(
+  value: unknown
+): value is OptionalSearchTab {
+  return OPTIONAL_SEARCH_TABS.some((tab) => tab === value)
+}
+
 interface SettingsState {
   secretsUnlocked: boolean
   deepgramApiKey: string | null
@@ -43,6 +53,7 @@ interface SettingsState {
   hiddenTranslationIds: number[]
   pinnedTranslationIds: number[]
   defaultPinnedTranslationsApplied: boolean
+  extraSearchTabs: OptionalSearchTab[]
 
   setDeepgramApiKey: (key: string | null) => void
   setOpenaiApiKey: (key: string | null) => void
@@ -63,6 +74,7 @@ interface SettingsState {
   toggleHiddenTranslation: (id: number) => void
   setPinnedTranslationIds: (ids: number[]) => void
   togglePinnedTranslation: (id: number) => void
+  toggleExtraSearchTab: (tab: OptionalSearchTab) => void
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -87,6 +99,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   hiddenTranslationIds: [],
   pinnedTranslationIds: DEFAULT_PINNED_TRANSLATION_IDS,
   defaultPinnedTranslationsApplied: false,
+  extraSearchTabs: [],
 
   setDeepgramApiKey: (deepgramApiKey) => set({ deepgramApiKey }),
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
@@ -122,6 +135,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         ? state.pinnedTranslationIds.filter((pinnedId) => pinnedId !== id)
         : [...state.pinnedTranslationIds, id],
     })),
+  toggleExtraSearchTab: (tab) =>
+    set((state) => ({
+      extraSearchTabs: state.extraSearchTabs.includes(tab)
+        ? state.extraSearchTabs.filter((shownTab) => shownTab !== tab)
+        : [...state.extraSearchTabs, tab],
+    })),
 }))
 
 const PERSISTED_KEYS = [
@@ -139,6 +158,7 @@ const PERSISTED_KEYS = [
   "hiddenTranslationIds",
   "pinnedTranslationIds",
   "defaultPinnedTranslationsApplied",
+  "extraSearchTabs",
 ] as const satisfies readonly (keyof SettingsState)[]
 
 const SETTINGS_SCHEMA_VERSION = 1
@@ -355,6 +375,13 @@ async function loadValidatedSettings(
       case "defaultPinnedTranslationsApplied":
         if (typeof value === "boolean") {
           patch.defaultPinnedTranslationsApplied = value
+        }
+        break
+      case "extraSearchTabs":
+        if (Array.isArray(value)) {
+          patch.extraSearchTabs = [
+            ...new Set(value.filter(isOptionalSearchTab)),
+          ]
         }
         break
     }

@@ -12,6 +12,7 @@ import {
   usePresentationStore,
 } from "@/stores/presentation-store"
 import { usePresentationDocumentImport } from "./use-presentation-document-import"
+import { stageSlide } from "@/lib/preview-staging"
 
 const MEDIA_EXTENSIONS = [
   "png",
@@ -55,7 +56,11 @@ function createSlide(
   }
 }
 
-export function usePresentationImport(targetSlideId?: string) {
+export function usePresentationImport(
+  targetSlideId?: string,
+  options: { pin?: boolean } = {}
+) {
+  const pinImported = options.pin ?? false
   const inputRef = useRef<HTMLInputElement>(null)
   const { importPresentationDocuments, isImportingDocuments } =
     usePresentationDocumentImport()
@@ -69,12 +74,21 @@ export function usePresentationImport(targetSlideId?: string) {
           toast.error(
             "Could not add media. The canvas may be locked, deleted, or exceed 16 items."
           )
+          return
         }
+        const updated = usePresentationStore
+          .getState()
+          .slides.find((slide) => slide.id === targetSlideId)
+        if (updated) stageSlide(updated)
       } else {
-        store.addSlides(slides)
+        store.addSlides(
+          pinImported
+            ? slides.map((slide) => ({ ...slide, pinned: true }))
+            : slides
+        )
       }
     },
-    [targetSlideId]
+    [pinImported, targetSlideId]
   )
 
   const importFiles = useCallback(

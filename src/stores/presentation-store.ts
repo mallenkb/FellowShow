@@ -136,16 +136,22 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
     const slide = get().slides.find((item) => item.id === id)
     if (!slide || slide.locked || slideLayers(slide).length + media.length > 16)
       return false
+    // Existing items keep their placement; new media fits the full frame on top.
+    // Arrange grid stays a manual action.
     const layers = [
       ...slideLayers(slide),
       ...media.map((item) => ({
         ...item,
+        fit: "contain" as const,
+        scale: 1,
+        offsetX: 0,
+        offsetY: 0,
         playbackStartedAt: item.mediaType === "video" ? Date.now() : undefined,
       })),
     ]
     set((state) => ({
       slides: state.slides.map((item) =>
-        item.id === id ? { ...item, layers: arrangeMedia(layers) } : item
+        item.id === id ? { ...item, layers } : item
       ),
     }))
     return true

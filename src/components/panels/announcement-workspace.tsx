@@ -3,18 +3,16 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   FilePlus2Icon,
-  RadioIcon,
   TextIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { PanelHeader } from "@/components/ui/panel-header"
 import {
+  announcementPageIndexForItem,
   announcementPageToVerse,
   announcementPlainText,
   paginateAnnouncementSet,
 } from "@/lib/announcements"
-import type { AnnouncementMark, AnnouncementRenderData } from "@/types"
 import {
   useAnnouncementStore,
   useBroadcastStore,
@@ -24,56 +22,6 @@ import {
 const AnnouncementEditor = lazy(
   () => import("@/components/announcements/announcement-editor")
 )
-
-function markClassName(marks: AnnouncementMark[]): string {
-  return [
-    marks.includes("bold") ? "font-bold" : "",
-    marks.includes("italic") ? "italic" : "",
-    marks.includes("underline") ? "underline" : "",
-  ]
-    .filter(Boolean)
-    .join(" ")
-}
-
-function AnnouncementPagePreview({ page }: { page: AnnouncementRenderData }) {
-  return (
-    <div className="mt-3 space-y-2 text-sm leading-snug">
-      {page.items.map((item) => {
-        let number = 0
-        return item.blocks.map((block, blockIndex) => {
-          const prefix =
-            block.kind === "bullet"
-              ? "•"
-              : block.kind === "number"
-                ? `${++number}.`
-                : null
-          return (
-            <div
-              key={`${item.number}-${blockIndex}`}
-              className="flex min-w-0 items-start gap-2"
-            >
-              {prefix ? (
-                <span className="w-4 shrink-0 text-right font-bold">
-                  {prefix}
-                </span>
-              ) : null}
-              <p className="min-w-0 flex-1 wrap-break-word">
-                {block.runs.map((run, runIndex) => (
-                  <span
-                    key={`${item.number}-${blockIndex}-${runIndex}`}
-                    className={markClassName(run.marks)}
-                  >
-                    {run.text}
-                  </span>
-                ))}
-              </p>
-            </div>
-          )
-        })
-      })}
-    </div>
-  )
-}
 
 export function AnnouncementWorkspace() {
   const sets = useAnnouncementStore((state) => state.sets)
@@ -109,50 +57,50 @@ export function AnnouncementWorkspace() {
       )
   }
 
-  const showPage = (index: number) => {
-    if (!selectedSet || !pages[index]) return
-    setPageSelection({ setId: selectedSet.id, index })
+  // Edits stage the page with the note being edited, so Preview follows the text.
+  const stageEditedPage = (setId: string, itemId: string) => {
+    const set = useAnnouncementStore
+      .getState()
+      .sets.find((candidate) => candidate.id === setId)
+    if (!set) return
+    const nextPages = paginateAnnouncementSet(set)
+    const itemPage = announcementPageIndexForItem(set, nextPages, itemId)
+    const index =
+      itemPage >= 0 ? itemPage : Math.min(safePageIndex, nextPages.length - 1)
+    if (index < 0) return
+    setPageSelection({ setId, index })
     useBroadcastStore
       .getState()
-      .presentOnLive(announcementPageToVerse(selectedSet, pages[index]), null)
+      .setPreviewOutput(announcementPageToVerse(set, nextPages[index]), null)
   }
 
   return (
     <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card">
-      <PanelHeader title="Announcement editor" />
       {!selectedSet || !selectedItem ? (
         <div className="flex h-full items-center justify-center p-6 text-center">
           <div className="max-w-xs">
             <FilePlus2Icon className="mx-auto mb-3 size-7 text-muted-foreground" />
-            <p className="text-sm font-medium">Choose or create a set</p>
+            <p className="text-sm font-medium">Choose a note</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Announcement sets and items are managed in the left panel.
+              Pick or add a note in the Notes list on the left.
             </p>
           </div>
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
-          <label className="shrink-0 space-y-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              Announcement title
-            </span>
-            <Input
-              className="h-9"
-              value={selectedItem.title}
-              onChange={(event) =>
-                useAnnouncementStore
-                  .getState()
-                  .renameItem(
-                    selectedSet.id,
-                    selectedItem.id,
-                    event.target.value
-                  )
-              }
-              placeholder="Announcement title"
-            />
-          </label>
-
-          <div className="mt-3">
+          <Input
+            value={selectedSet.heading}
+            onChange={(event) => {
+              useAnnouncementStore
+                .getState()
+                .setHeading(selectedSet.id, event.target.value)
+              stageEditedPage(selectedSet.id, selectedItem.id)
+            }}
+            placeholder="Slide heading (leave empty to hide)"
+            aria-label="Slide heading"
+            className="mb-2 h-10 shrink-0 border-transparent bg-transparent px-2 text-base font-semibold shadow-none hover:border-border focus-visible:border-primary"
+          />
+          <div className="min-h-0 flex-1">
             <Suspense
               fallback={
                 <div className="h-40 animate-pulse rounded-md bg-muted/40" />
@@ -161,60 +109,30 @@ export function AnnouncementWorkspace() {
               <AnnouncementEditor
                 key={selectedItem.id}
                 content={selectedItem.content}
-                onChange={(content) =>
+                onChange={(content) => {
                   useAnnouncementStore
                     .getState()
                     .updateItem(selectedSet.id, selectedItem.id, content)
-                }
+                  stageEditedPage(selectedSet.id, selectedItem.id)
+                }}
               />
             </Suspense>
-            <div className="mt-1 flex items-center justify-between gap-2">
-              <span className="text-[0.6875rem] text-muted-foreground">
-                {announcementPlainText(selectedItem.content).length} characters
-              </span>
-              <span className="flex items-center gap-1">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 text-[0.6875rem] text-muted-foreground hover:text-foreground disabled:opacity-40"
-                  disabled={!announcementPlainText(selectedItem.content)}
-                  onClick={() =>
-                    useTickerComposerStore
-                      .getState()
-                      .open(announcementPlainText(selectedItem.content))
-                  }
-                >
-                  <TextIcon className="size-3" /> Send to scroll
-                </button>
-                <span className="text-muted-foreground/40">·</span>
-                <button
-                  type="button"
-                  className="text-[0.6875rem] text-muted-foreground hover:text-destructive disabled:opacity-40"
-                  disabled={selectedSet.items.length <= 1}
-                  onClick={() =>
-                    useAnnouncementStore
-                      .getState()
-                      .deleteItem(selectedSet.id, selectedItem.id)
-                  }
-                >
-                  Remove item
-                </button>
-              </span>
-            </div>
           </div>
 
-          <div className="mt-4 rounded-md border border-border bg-muted/20 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium">
-                {pages.length > 0
-                  ? `Page ${safePageIndex + 1} of ${pages.length}`
-                  : "Add text to create a page"}
-              </span>
-              <div className="flex gap-1">
+          <div className="mt-4 flex items-center gap-1 border-t border-border pt-3">
+            <span className="mr-auto text-xs text-muted-foreground tabular-nums">
+              {pages.length > 0
+                ? `Page ${safePageIndex + 1} of ${pages.length}`
+                : "Add text to create a page"}
+            </span>
+            {pages.length > 1 ? (
+              <>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="size-7"
+                  aria-label="Previous page"
                   disabled={safePageIndex <= 0}
                   onClick={() => stagePage(safePageIndex - 1)}
                 >
@@ -225,35 +143,38 @@ export function AnnouncementWorkspace() {
                   variant="ghost"
                   size="icon"
                   className="size-7"
+                  aria-label="Next page"
                   disabled={safePageIndex >= pages.length - 1}
                   onClick={() => stagePage(safePageIndex + 1)}
                 >
                   <ChevronRightIcon className="size-4" />
                 </Button>
-              </div>
-            </div>
-            {selectedPage ? (
-              <button
-                type="button"
-                className="mt-2 w-full rounded bg-[#101084] p-4 text-left text-white"
-                onClick={() => stagePage(safePageIndex)}
-                onDoubleClick={() => showPage(safePageIndex)}
-              >
-                <span className="block text-center text-xl font-bold text-[#F1E600]">
-                  Announcements
-                </span>
-                <AnnouncementPagePreview page={selectedPage} />
-              </button>
+              </>
             ) : null}
             <Button
               type="button"
+              variant="ghost"
               size="sm"
-              className="mt-2 w-full"
-              disabled={!selectedPage}
-              onClick={() => showPage(safePageIndex)}
+              className="ml-1 h-7"
+              disabled={!announcementPlainText(selectedItem.content)}
+              onClick={() =>
+                useTickerComposerStore
+                  .getState()
+                  .open(announcementPlainText(selectedItem.content))
+              }
             >
-              <RadioIcon className="size-3.5" />
-              Show page on Live
+              <TextIcon className="size-3.5" />
+              Send to scroll
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7"
+              disabled={!selectedPage}
+              onClick={() => stagePage(safePageIndex)}
+            >
+              Preview
             </Button>
           </div>
         </div>

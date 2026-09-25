@@ -10,8 +10,9 @@ const sources: readonly string[] = [
   "theme-2025",
   "pentecostal-book",
   "easyworship",
+  "custom",
 ]
-const defaults = { source: "all" as SongSourceFilter, letter: "all" }
+const defaults = { source: "all" as SongSourceFilter }
 
 function readFilters(): typeof defaults {
   try {
@@ -30,12 +31,6 @@ function readFilters(): typeof defaults {
         sources.includes(value.source)
           ? (value.source as SongSourceFilter)
           : "all",
-      letter:
-        "letter" in value &&
-        typeof value.letter === "string" &&
-        /^(all|[A-Z])$/.test(value.letter)
-          ? value.letter
-          : "all",
     }
   } catch {
     return defaults
@@ -45,17 +40,15 @@ function readFilters(): typeof defaults {
 export const useSongFilterStore = create<
   typeof defaults & {
     setSource: (source: SongSourceFilter) => void
-    setLetter: (letter: string) => void
   }
 >((set) => ({
   ...readFilters(),
   setSource: (source) => set({ source }),
-  setLetter: (letter) => set({ letter }),
 }))
 
-useSongFilterStore.subscribe(({ source, letter }) => {
+useSongFilterStore.subscribe(({ source }) => {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ version: 1, source, letter }))
+    localStorage.setItem(KEY, JSON.stringify({ version: 1, source }))
   } catch {
     toast.error("Song filters could not be saved on this device.")
   }

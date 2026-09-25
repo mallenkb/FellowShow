@@ -19,6 +19,10 @@ interface VerseSegment {
 export interface VerseRenderData {
   /** Stable content identity used to keep live song navigation scoped. */
   sourceId?: number
+  /** Canonical book:chapter:verse identity, independent of translation. */
+  scriptureKey?: string
+  /** Sermon queue identity so edits only update their own output. */
+  sermonSessionId?: string
   reference: string
   segments: VerseSegment[]
   themeSection?: BroadcastThemeSection

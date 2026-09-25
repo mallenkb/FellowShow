@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { bibleActions } from "@/hooks/use-bible"
-import { toVerseRenderData } from "@/hooks/use-broadcast"
-import { slideRenderData } from "@/lib/presentation-composition"
+import { stageVerse } from "@/lib/preview-staging"
 import {
   getOverlayOutputMode,
   resolveOutputThemeId,
@@ -23,46 +22,44 @@ import {
   useBibleStore,
   useBroadcastStore,
   usePresenterTimerStore,
-  usePresentationStore,
-  useQueueStore,
 } from "@/stores"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
+import { hasSameProgramPayload } from "@/stores/broadcast-store-helpers"
 import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
 import { sectionFromMode, type ThemeAwareMode } from "./preview-panel-shared"
 
 export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const isOverlayPreview = mode === "on-display"
   const [isShowingOverlayLive, setIsShowingOverlayLive] = useState(false)
-  const isPresentationMode = mode === "presentation"
-  const isSongMode = mode === "songs"
-  const isAnnouncementMode = mode === "announcements"
-  const selectedVerse = useBibleStore((s) => s.selectedVerse)
-  const translations = useBibleStore((s) => s.translations)
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
-  const slides = usePresentationStore((s) => s.slides)
-  const selectedSlideId = usePresentationStore((s) => s.selectedSlideId)
-  const selectedSongVerse = useQueueStore((state) =>
-    isSongMode
-      ? (state.items.find((item) => item.lyricKind === "song")?.verse ?? null)
-      : null
-  )
 
-  // When translation changes, re-fetch the selected verse in the new translation
+  // When the translation changes, reload the selected verse in the new
+  // translation, and restage it if Preview is still showing that verse.
   useEffect(() => {
     const verse = useBibleStore.getState().selectedVerse
     if (
-      verse &&
-      verse.book_number > 0 &&
-      verse.chapter > 0 &&
-      verse.verse > 0
+      !verse ||
+      verse.book_number <= 0 ||
+      verse.chapter <= 0 ||
+      verse.verse <= 0
     ) {
-      bibleActions
-        .fetchVerse(verse.book_number, verse.chapter, verse.verse)
-        .then((v) => {
-          if (v) bibleActions.selectVerse(v)
-        })
-        .catch(() => {})
+      return
     }
+    const staged = useBroadcastStore.getState().previewVerse
+    const previewShowsVerse =
+      staged?.themeSection === "bible" &&
+      staged.segments[0]?.verseNumber === verse.verse &&
+      staged.segments[0]?.text === verse.text
+    void bibleActions
+      .fetchVerse(verse.book_number, verse.chapter, verse.verse)
+      .then((next) => {
+        if (!next) return
+        bibleActions.selectVerse(next)
+        if (previewShowsVerse) stageVerse(next)
+      })
+      .catch((error: unknown) => {
+        console.error("[preview] Failed to reload verse", error)
+      })
   }, [activeTranslationId])
   const themes = useBroadcastStore((s) => s.themes)
   const outputs = useBroadcastStore((s) => s.outputs)
@@ -73,6 +70,8 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
   const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const isProgramLive = useBroadcastStore((s) => s.isLive)
+  const liveVerse = useBroadcastStore((s) => s.liveVerse)
+  const presenterTimer = useBroadcastStore((s) => s.presenterTimer)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
   const liveOverlayOutputIds = useBroadcastStore((s) => s.liveOverlayOutputIds)
@@ -84,12 +83,6 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const timerBackgroundOptions = usePresenterTimerStore(
     (s) => s.backgroundOptions
   )
-
-  const selectedSlide =
-    slides.find((slide) => slide.id === selectedSlideId) ?? null
-  const translation =
-    translations.find((t) => t.id === activeTranslationId)?.abbreviation ??
-    "Scripture"
 
   const timer = useMemo(() => {
     if (!timerIsRunning && timerRemaining === timerTotal) return null
@@ -175,48 +168,15 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
 
   useEffect(() => {
     if (isOverlayPreview) return
-    if (isSongMode) {
-      setPreview(
-        selectedSongVerse
-          ? toVerseRenderData(selectedSongVerse, translation)
-          : null,
-        null
-      )
-      return
-    }
-
-    if (!isPresentationMode && !isAnnouncementMode) {
-      if (!selectedVerse) return
-      setPreview(toVerseRenderData(selectedVerse, translation), null)
-      return
-    }
-
-    if (selectedSlide) {
-      setPreview(slideRenderData(selectedSlide), null)
-      return
-    }
-
-    const store = useBroadcastStore.getState()
-    if (!store.previewVerse && !store.previewTimer) {
-      setPreview(null, null)
-    }
-  }, [
-    isPresentationMode,
-    isAnnouncementMode,
-    isSongMode,
-    selectedSlide,
-    selectedSongVerse,
-    selectedVerse,
-    translation,
-    setPreview,
-    isOverlayPreview,
-  ])
-
-  useEffect(() => {
-    if (isOverlayPreview) return
     if (!previewTimer) return
     setPreview(previewVerse, timer)
   }, [previewTimer, timer, previewVerse, setPreview, isOverlayPreview])
+
+  // When Preview already matches Program, the only useful action is to stop.
+  const previewIsOnAir =
+    isProgramLive &&
+    Boolean(previewVerse || previewTimer) &&
+    hasSameProgramPayload(previewVerse, previewTimer, liveVerse, presenterTimer)
 
   const sendPreviewLive = () => {
     if (isOverlayPreview) return
@@ -340,17 +300,37 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
         </div>
       ) : (
         <div className="relative z-10 border-t border-border bg-card px-3 py-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="h-auto min-h-8 w-full justify-center gap-2 py-2 text-center whitespace-normal"
-            onClick={sendPreviewLive}
-            disabled={!previewVerse && !previewTimer}
-          >
-            <RadioIcon className="size-3.5 shrink-0" />
-            Show on Live
-          </Button>
+          <div className="flex gap-2">
+            {previewIsOnAir ? null : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="h-auto min-h-8 flex-1 justify-center gap-2 py-2 text-center whitespace-normal"
+                onClick={sendPreviewLive}
+                disabled={!previewVerse && !previewTimer}
+              >
+                <RadioIcon className="size-3.5 shrink-0" />
+                Show on Live
+              </Button>
+            )}
+            {isProgramLive ? (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className={
+                  previewIsOnAir
+                    ? "h-auto min-h-8 flex-1 justify-center gap-2 py-2"
+                    : "h-auto min-h-8 shrink-0 gap-2 py-2"
+                }
+                onClick={() => useBroadcastStore.getState().setLive(false)}
+              >
+                <SquareIcon className="size-3.5 shrink-0" />
+                {previewIsOnAir ? "Stop Live" : "Stop"}
+              </Button>
+            ) : null}
+          </div>
         </div>
       )}
     </div>
