@@ -30,6 +30,10 @@ export type {
   AnnouncementRenderItem,
   AnnouncementSet,
   AnnouncementTextRun,
+  GivingAccount,
+  GivingDetails,
+  GivingNetwork,
+  SlideBackgroundChoice,
 } from "./announcements"
 export {
   type ActiveOverlayState,

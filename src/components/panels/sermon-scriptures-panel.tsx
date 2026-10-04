@@ -24,18 +24,10 @@ import {
   useSermonStore,
   useTranscriptStore,
 } from "@/stores"
+import { activeTranslationAbbreviation } from "@/lib/preview-staging"
 
 function scriptureKey(bookNumber: number, chapter: number, verse: number) {
   return `${bookNumber}:${chapter}:${verse}`
-}
-
-function activeTranslationAbbreviation() {
-  const bible = useBibleStore.getState()
-  return (
-    bible.translations.find(
-      (translation) => translation.id === bible.activeTranslationId
-    )?.abbreviation ?? "Scripture"
-  )
 }
 
 async function resolveScripture(reference: SermonDirectReference) {
@@ -389,16 +381,6 @@ export function SermonScripturesPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 border-b border-border px-3 py-2">
-        <p className="text-[0.6875rem] text-muted-foreground">
-          Explicit scriptures from the live Deepgram transcript
-        </p>
-        <p className="text-[0.5625rem] text-muted-foreground/75">
-          Spoken book, chapter, and verse references · quoted matches stay in
-          Related scriptures
-        </p>
-      </div>
-
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {references.length === 0 ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">

@@ -98,4 +98,14 @@ describe("song library storage", () => {
       added.id
     )
   })
+
+  it("does not let a load that started before a save hide the new song", async () => {
+    const { createCustomSong, loadAllSongs } = await import("./songs-data")
+
+    const earlier = loadAllSongs()
+    const added = await createCustomSong("Quick song", "Hallelujah")
+    await earlier
+
+    expect((await loadAllSongs()).map((song) => song.id)).toContain(added.id)
+  })
 })

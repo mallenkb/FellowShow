@@ -22,11 +22,15 @@ const createCustomSong = vi.fn<
   (title: string, lyrics: string) => Promise<CopSong>
 >(() => Promise.resolve(saved))
 const prepareSong = vi.fn<(song: CopSong) => void>()
+const updateSong = vi.fn<
+  (song: CopSong, title: string, lyrics: string) => Promise<CopSong>
+>((song) => Promise.resolve(song))
 
 vi.mock("@/lib/songs-data", () => ({
   createCustomSong: (title: string, lyrics: string) =>
     createCustomSong(title, lyrics),
-  updateSong: vi.fn(),
+  updateSong: (song: CopSong, title: string, lyrics: string) =>
+    updateSong(song, title, lyrics),
   resetSongEdits: vi.fn(),
   deleteCustomSong: vi.fn(),
   loadAllSongs: vi.fn(() => Promise.resolve([saved])),
@@ -41,6 +45,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 describe("SongEditorDialog", () => {
   beforeEach(() => {
     createCustomSong.mockClear()
+    updateSong.mockClear()
     prepareSong.mockClear()
     useSongEditorStore.setState({ open: false, catalogVersion: 0 })
   })
@@ -83,5 +88,30 @@ describe("SongEditorDialog", () => {
     const lyrics = screen.getByRole("textbox", { name: "Lyrics" })
     expect((lyrics as HTMLTextAreaElement).value).toContain("\n\n")
     expect(screen.getByRole("button", { name: "Delete song" })).toBeTruthy()
+  })
+
+  it("keeps the stored lyrics when only the title changes", async () => {
+    const user = userEvent.setup()
+    render(<SongEditorDialog />)
+    act(() => useSongEditorStore.getState().openEdit(saved.id))
+
+    const title = await screen.findByDisplayValue("Quick song")
+    await user.clear(title)
+    await user.type(title, "Quick hymn")
+    await user.click(screen.getByRole("button", { name: "Save" }))
+
+    expect(updateSong).toHaveBeenCalledWith(saved, "Quick hymn", saved.lyrics)
+  })
+
+  it("saves nothing when the song is unchanged", async () => {
+    const user = userEvent.setup()
+    render(<SongEditorDialog />)
+    act(() => useSongEditorStore.getState().openEdit(saved.id))
+
+    await screen.findByDisplayValue("Quick song")
+    await user.click(screen.getByRole("button", { name: "Save" }))
+
+    expect(updateSong).not.toHaveBeenCalled()
+    expect(useSongEditorStore.getState().open).toBe(false)
   })
 })

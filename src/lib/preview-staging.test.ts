@@ -94,12 +94,19 @@ describe("preview staging", () => {
     )
   })
 
-  it("lets a background verse replace staged scripture", () => {
-    stageVerse({ ...john316, verse: 15, text: "That whosoever believeth" })
+  it("lets a background verse replace one the app staged", () => {
+    stageVerseInBackground({ ...john316, verse: 15, text: "That whosoever" })
     stageVerseInBackground(john316)
     expect(useBroadcastStore.getState().previewVerse?.reference).toBe(
       "John 3:16 (KJV)"
     )
+  })
+
+  it("keeps a verse the operator staged when a background verse arrives", () => {
+    stageVerse({ ...john316, verse: 15, text: "That whosoever" })
+    const staged = useBroadcastStore.getState().previewVerse
+    stageVerseInBackground(john316)
+    expect(useBroadcastStore.getState().previewVerse).toBe(staged)
   })
 
   it.each([

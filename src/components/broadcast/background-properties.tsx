@@ -1,6 +1,7 @@
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { pickThemeBackgroundMedia } from "@/lib/theme-designer-files"
 import { SliderField } from "@/components/ui/slider-field"
+import { BackgroundFramingFields } from "@/components/broadcast/background-framing-fields"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -343,6 +344,19 @@ function ImageSection() {
             <SelectItem value="stretch">Stretch</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Size and crop */}
+      <div className="flex flex-col gap-3 border-t pt-3">
+        <h4 className="text-xs font-semibold">Size and crop</h4>
+        <BackgroundFramingFields
+          framing={image}
+          onChange={(patch, key) =>
+            update((background) => {
+              if (background.image) Object.assign(background.image, patch)
+            }, `image.${key}`)
+          }
+        />
       </div>
 
       {/* Effects */}

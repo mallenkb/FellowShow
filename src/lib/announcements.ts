@@ -7,16 +7,19 @@ import type {
   AnnouncementRenderItem,
   AnnouncementSet,
   AnnouncementTextRun,
+  BroadcastTheme,
   VerseRenderData,
 } from "@/types"
+import {
+  resolveSlideBackground,
+  sanitizeSlideBackground,
+} from "@/lib/slide-background"
 
 const EMPTY_ANNOUNCEMENT_DOCUMENT: AnnouncementDocument = {
   type: "doc",
   content: [{ type: "paragraph" }],
 }
 
-const PAGE_CHARACTER_BUDGET = 520
-const PAGE_ITEM_LIMIT = 5
 const ANNOUNCEMENT_NODE_TYPES: ReadonlySet<string> = new Set([
   "paragraph",
   "text",
@@ -169,48 +172,40 @@ function renderItem(
   return { number, blocks: announcementBlocks(item.content) }
 }
 
-function itemWeight(item: AnnouncementRenderItem): number {
-  return (
-    item.blocks.reduce(
-      (total, block) =>
-        total + block.runs.reduce((sum, run) => sum + run.text.length, 0) + 28,
-      0
-    ) + 35
-  )
+const SHOW_UNTIL_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+function localDateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${date.getFullYear()}-${month}-${day}`
 }
 
+/** A note is expired the day after its show-until date, in local time. */
+export function isAnnouncementExpired(
+  item: AnnouncementItem,
+  now: Date = new Date()
+): boolean {
+  return item.showUntil !== undefined && item.showUntil < localDateKey(now)
+}
+
+/** Every current note gets a slide of its own, shown one at a time. */
 export function paginateAnnouncementSet(
-  set: AnnouncementSet
+  set: AnnouncementSet,
+  now: Date = new Date()
 ): AnnouncementRenderData[] {
-  const renderItems = set.items
-    .map((item, index) => renderItem(item, index + 1))
-    .filter((item) => item.blocks.length > 0)
-  if (renderItems.length === 0) return []
-
-  const pages: AnnouncementRenderItem[][] = []
-  let page: AnnouncementRenderItem[] = []
-  let pageWeight = 0
-  for (const item of renderItems) {
-    const weight = itemWeight(item)
-    if (
-      page.length > 0 &&
-      (page.length >= PAGE_ITEM_LIMIT ||
-        pageWeight + weight > PAGE_CHARACTER_BUDGET)
-    ) {
-      pages.push(page)
-      page = []
-      pageWeight = 0
-    }
-    page.push(item)
-    pageWeight += weight
-  }
-  if (page.length > 0) pages.push(page)
-
-  return pages.map((items, index) => ({
-    heading: set.heading,
+  // Numbers keep each note's position in the set, so expired notes leave gaps.
+  const slides = set.items
+    .map((item, index) => ({ item, render: renderItem(item, index + 1) }))
+    .filter(
+      ({ item, render }) =>
+        render.blocks.length > 0 && !isAnnouncementExpired(item, now)
+    )
+  return slides.map(({ item, render }, index) => ({
+    heading: item.title,
     pageNumber: index + 1,
-    pageCount: pages.length,
-    items,
+    pageCount: slides.length,
+    items: [render],
+    ...(item.background ? { background: item.background } : {}),
   }))
 }
 
@@ -229,9 +224,12 @@ export function announcementPageIndexForItem(
 
 export function announcementPageToVerse(
   set: AnnouncementSet,
-  page: AnnouncementRenderData
+  page: AnnouncementRenderData,
+  themes: readonly BroadcastTheme[] = []
 ): VerseRenderData {
+  const slideBackground = resolveSlideBackground(page.background, themes)
   return {
+    ...(slideBackground ? { slideBackground } : {}),
     sourceId: page.pageNumber,
     reference: page.heading,
     themeSection: "announcements",
@@ -242,7 +240,35 @@ export function announcementPageToVerse(
     })),
     announcement: page,
     announcementSetName: set.name,
+    announcementItemIds: page.items.flatMap((item) => {
+      const id = set.items[item.number - 1]?.id
+      return id ? [id] : []
+    }),
   }
+}
+
+/** One note with its own title, for Preview or Live. */
+export function announcementItemToVerse(
+  set: AnnouncementSet,
+  itemId: string,
+  themes: readonly BroadcastTheme[] = []
+): VerseRenderData | null {
+  const index = set.items.findIndex((item) => item.id === itemId)
+  const item = set.items[index]
+  if (!item) return null
+  const render = renderItem(item, index + 1)
+  if (render.blocks.length === 0) return null
+  return announcementPageToVerse(
+    set,
+    {
+      heading: item.title,
+      pageNumber: 1,
+      pageCount: 1,
+      items: [render],
+      ...(item.background ? { background: item.background } : {}),
+    },
+    themes
+  )
 }
 
 export function sanitizeAnnouncementDocument(
@@ -290,9 +316,16 @@ function sanitizeAnnouncementNode(
         })
         .filter((mark): mark is AnnouncementDocumentMarkNode => mark !== null)
     : undefined
+  const start =
+    node.type === "orderedList" ? recordValue(node.attrs)?.start : undefined
+  const attrs =
+    typeof start === "number" && Number.isSafeInteger(start) && start > 0
+      ? { start }
+      : undefined
 
   return {
     type: node.type,
+    ...(attrs ? { attrs } : {}),
     ...(typeof node.text === "string" ? { text: node.text } : {}),
     ...(content && content.length > 0 ? { content } : {}),
     ...(marks && marks.length > 0 ? { marks } : {}),
@@ -309,6 +342,7 @@ export function sanitizeAnnouncementSets(value: unknown): AnnouncementSet[] {
     const items = rawItems.flatMap((raw, index): AnnouncementItem[] => {
       const item = recordValue(raw)
       if (!item || typeof item.id !== "string") return []
+      const background = sanitizeSlideBackground(item.background)
       return [
         {
           id: item.id,
@@ -317,6 +351,11 @@ export function sanitizeAnnouncementSets(value: unknown): AnnouncementSet[] {
               ? item.title.trim()
               : `Announcement ${index + 1}`,
           content: sanitizeAnnouncementDocument(item.content),
+          ...(background ? { background } : {}),
+          ...(typeof item.showUntil === "string" &&
+          SHOW_UNTIL_PATTERN.test(item.showUntil)
+            ? { showUntil: item.showUntil }
+            : {}),
         },
       ]
     })

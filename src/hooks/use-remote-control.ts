@@ -7,7 +7,10 @@ import { useBibleStore } from "@/stores/bible-store"
 import { useQueueStore } from "@/stores/queue-store"
 import { useSettingsStore } from "@/stores/settings-store"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
-import { stageVerseInBackground } from "@/lib/preview-staging"
+import {
+  activeTranslationAbbreviation,
+  stageVerseInBackground,
+} from "@/lib/preview-staging"
 
 /**
  * Listens for remote control events from the Rust backend (OSC / HTTP API)
@@ -173,10 +176,7 @@ async function presentQueueItem(index: number) {
     const verseToPresent = fullVerse ?? verse
 
     const bibleState = useBibleStore.getState()
-    const translation =
-      bibleState.translations.find(
-        (t) => t.id === bibleState.activeTranslationId
-      )?.abbreviation ?? "Scripture"
+    const translation = activeTranslationAbbreviation()
 
     bibleState.selectVerse(verseToPresent)
     stageVerseInBackground(verseToPresent)

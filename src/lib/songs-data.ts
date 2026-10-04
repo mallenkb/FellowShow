@@ -3,12 +3,20 @@ import type { CopSong } from "./cop-songs"
 import copSongsUrl from "./cop-songs.json?url"
 import importedSongsUrl from "./imported-songs.json?url"
 
+// Bundled and EasyWorship songs rarely change, so they are cached apart from
+// the operator's own songs and edits; saving a song only rebuilds the latter.
+let basePromise: Promise<CopSong[]> | null = null
 let cache: CopSong[] | null = null
 let inflight: Promise<CopSong[]> | null = null
+// Bumped on every write so a load that started earlier cannot overwrite the
+// cache with songs from before the write.
+let generation = 0
 // Older builds kept EasyWorship songs in localStorage, which caps out near
 // 5 MB. They now live in an app-data file with no practical size limit.
 const LEGACY_EASYWORSHIP_STORAGE_KEY = "fellowshow.easyworship-songs.v1"
 const SONG_LIBRARY_FILE = "song-library.json"
+const SONG_LIBRARY_VERSION = 1
+const VERSION_KEY = "version"
 const EASYWORSHIP_KEY = "easyworshipSongs"
 const CUSTOM_SONGS_KEY = "customSongs"
 // Title and lyric changes to built-in or imported songs, keyed by song id, so
@@ -23,8 +31,43 @@ interface SongEdit {
 let libraryStore: Promise<Store> | null = null
 
 function getLibraryStore(): Promise<Store> {
-  libraryStore ??= load(SONG_LIBRARY_FILE, { autoSave: false, defaults: {} })
+  // A failed load is not kept, so the next read or write tries again.
+  libraryStore ??= load(SONG_LIBRARY_FILE, {
+    autoSave: false,
+    defaults: {},
+  }).catch((error: unknown) => {
+    libraryStore = null
+    throw error
+  })
   return libraryStore
+}
+
+/** Reads from the library file, ignoring files written by a newer version. */
+async function readLibraryValue(key: string): Promise<unknown> {
+  try {
+    const store = await getLibraryStore()
+    const version = await store.get<unknown>(VERSION_KEY)
+    if (typeof version === "number" && version > SONG_LIBRARY_VERSION) {
+      return undefined
+    }
+    return await store.get<unknown>(key)
+  } catch {
+    return undefined
+  }
+}
+
+function invalidateSongs() {
+  generation += 1
+  cache = null
+  inflight = null
+}
+
+async function writeLibraryValue(key: string, value: unknown): Promise<void> {
+  const store = await getLibraryStore()
+  await store.set(key, value)
+  await store.set(VERSION_KEY, SONG_LIBRARY_VERSION)
+  await store.save()
+  invalidateSongs()
 }
 
 function isSong(value: unknown): value is CopSong {
@@ -77,13 +120,14 @@ function readLegacyEasyWorshipSongs(): CopSong[] {
 
 async function loadEasyWorshipSongs(): Promise<CopSong[]> {
   try {
-    const store = await getLibraryStore()
-    const stored = await store.get<unknown>(EASYWORSHIP_KEY)
+    const stored = await readLibraryValue(EASYWORSHIP_KEY)
     if (Array.isArray(stored)) return stored.filter(isSong)
 
     const legacy = readLegacyEasyWorshipSongs()
     if (legacy.length > 0) {
+      const store = await getLibraryStore()
       await store.set(EASYWORSHIP_KEY, legacy)
+      await store.set(VERSION_KEY, SONG_LIBRARY_VERSION)
       await store.save()
       localStorage.removeItem(LEGACY_EASYWORSHIP_STORAGE_KEY)
     }
@@ -95,11 +139,9 @@ async function loadEasyWorshipSongs(): Promise<CopSong[]> {
 }
 
 export async function saveEasyWorshipSongs(songs: CopSong[]): Promise<void> {
-  const store = await getLibraryStore()
-  await store.set(EASYWORSHIP_KEY, songs)
-  await store.save()
+  await writeLibraryValue(EASYWORSHIP_KEY, songs)
   localStorage.removeItem(LEGACY_EASYWORSHIP_STORAGE_KEY)
-  cache = null
+  basePromise = null
 }
 
 function sanitizeSongEdits(value: unknown): Record<string, SongEdit> {
@@ -113,22 +155,6 @@ function sanitizeSongEdits(value: unknown): Record<string, SongEdit> {
     }
   }
   return edits
-}
-
-async function readLibraryValue(key: string): Promise<unknown> {
-  try {
-    const store = await getLibraryStore()
-    return await store.get<unknown>(key)
-  } catch {
-    return undefined
-  }
-}
-
-async function writeLibraryValue(key: string, value: unknown): Promise<void> {
-  const store = await getLibraryStore()
-  await store.set(key, value)
-  await store.save()
-  cache = null
 }
 
 async function loadCustomSongs(): Promise<CopSong[]> {
@@ -207,6 +233,24 @@ export async function deleteCustomSong(songId: string): Promise<void> {
   )
 }
 
+function loadBaseSongs(): Promise<CopSong[]> {
+  basePromise ??= Promise.all([
+    loadCatalog(copSongsUrl),
+    loadCatalog(importedSongsUrl),
+    loadEasyWorshipSongs(),
+  ])
+    .then(([cop, imported, easyWorship]) => [
+      ...cop,
+      ...imported,
+      ...easyWorship,
+    ])
+    .catch((error: unknown) => {
+      basePromise = null
+      throw error
+    })
+  return basePromise
+}
+
 /**
  * Lazily load the full song catalog. The data is split into separate async
  * JSON assets so it stays out of executable JavaScript and is fetched locally
@@ -217,23 +261,20 @@ export async function loadAllSongs(): Promise<CopSong[]> {
   if (cache) return cache
   if (inflight) return inflight
 
-  inflight = Promise.all([
-    loadCatalog(copSongsUrl),
-    loadCatalog(importedSongsUrl),
-    loadEasyWorshipSongs(),
+  const startedAt = generation
+  const request = Promise.all([
+    loadBaseSongs(),
     loadCustomSongs(),
     loadSongEdits(),
   ])
-    .then(([cop, imported, easyWorship, custom, edits]) => {
-      cache = applySongEdits(
-        [...cop, ...imported, ...easyWorship, ...custom],
-        edits
-      )
-      return cache
+    .then(([base, custom, edits]) => {
+      const songs = applySongEdits([...base, ...custom], edits)
+      if (startedAt === generation) cache = songs
+      return songs
     })
     .finally(() => {
-      inflight = null
+      if (inflight === request) inflight = null
     })
-
-  return inflight
+  inflight = request
+  return request
 }

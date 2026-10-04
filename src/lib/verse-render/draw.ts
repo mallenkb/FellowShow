@@ -263,7 +263,14 @@ export function drawBackground(
         break
       }
 
+      const opacity = Math.min(100, Math.max(0, bg.image.opacity ?? 100))
+      if (opacity < 100) {
+        ctx.fillStyle = bg.color
+        ctx.fillRect(0, 0, width, height)
+      }
+
       ctx.save()
+      ctx.globalAlpha = opacity / 100
 
       if (bg.image.blur > 0) {
         ctx.filter = `blur(${bg.image.blur}px) brightness(${bg.image.brightness / 100})`
@@ -271,8 +278,6 @@ export function drawBackground(
         ctx.filter = `brightness(${bg.image.brightness / 100})`
       }
 
-      let drawX = 0
-      let drawY = 0
       let drawW = width
       let drawH = height
 
@@ -285,32 +290,38 @@ export function drawBackground(
       const imgRatio = mediaWidth / mediaHeight
       const canvasRatio = width / height
 
+      // Cover fills the screen; contain shows the whole picture. Position comes below.
       switch (bg.image.fit) {
         case "cover":
           if (imgRatio > canvasRatio) {
             drawH = height
             drawW = height * imgRatio
-            drawX = (width - drawW) / 2
           } else {
             drawW = width
             drawH = width / imgRatio
-            drawY = (height - drawH) / 2
           }
           break
         case "contain":
           if (imgRatio > canvasRatio) {
             drawW = width
             drawH = width / imgRatio
-            drawY = (height - drawH) / 2
           } else {
             drawH = height
             drawW = height * imgRatio
-            drawX = (width - drawW) / 2
           }
           break
         case "stretch":
           break
       }
+
+      // Zoom from the fitted size, then pan within whatever overflows (the crop).
+      const zoom = Math.min(4, Math.max(1, bg.image.scale ?? 1))
+      drawW *= zoom
+      drawH *= zoom
+      const panX = Math.min(1, Math.max(-1, bg.image.offsetX ?? 0))
+      const panY = Math.min(1, Math.max(-1, bg.image.offsetY ?? 0))
+      const drawX = ((width - drawW) / 2) * (1 + panX)
+      const drawY = ((height - drawH) / 2) * (1 + panY)
 
       ctx.drawImage(media, drawX, drawY, drawW, drawH)
       ctx.restore()

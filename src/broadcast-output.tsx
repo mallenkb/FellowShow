@@ -3,6 +3,7 @@ import "./index.css"
 import { createRoot } from "react-dom/client"
 import { useRef, useEffect, useCallback, useState } from "react"
 import { invoke, sendNdiFrame } from "@/lib/ipc"
+import { withSlideBackground } from "@/lib/slide-background"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { renderVerse } from "@/lib/verse-renderer"
 import { presentationMedia } from "@/lib/presentation-composition"
@@ -691,7 +692,17 @@ function BroadcastCanvas() {
     logDebug("Listener registration started", { label: currentWindow.label })
     const unlisten = currentWindow.listen<BroadcastPayload>(
       "broadcast:verse-update",
-      (event) => {
+      (incoming) => {
+        // A slide's own background replaces the theme's for that slide only.
+        const event = {
+          payload: {
+            ...incoming.payload,
+            theme: withSlideBackground(
+              incoming.payload.theme,
+              incoming.payload.verse
+            ),
+          },
+        }
         const previousData = latestData.current
         latestData.current = event.payload
         setLatestOverlayMode(event.payload.overlayMode)

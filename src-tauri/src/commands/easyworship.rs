@@ -20,18 +20,29 @@ pub struct EasyWorshipDatabases {
 
 /// How many folders deep to look below the folder the operator chose.
 const MAX_SEARCH_DEPTH: usize = 5;
+/// Stops a search through a very large folder, such as a home folder picked
+/// by mistake, from running for minutes.
+const MAX_DIRECTORIES_VISITED: usize = 5_000;
 
 /// Finds `Songs.db` and `SongWords.db` inside a chosen folder, such as the
 /// `EasyWorship` profile folder or its `Databases/Data` folder, so the operator
-/// picks one folder instead of two files.
+/// picks one folder instead of two files. The search runs off the main thread
+/// so the window stays responsive.
 #[tauri::command]
-#[expect(
-    clippy::needless_pass_by_value,
-    reason = "Tauri command arguments must be owned deserializable values"
-)]
-pub fn find_easyworship_databases(folder: String) -> Result<EasyWorshipDatabases, String> {
-    let mut pending = vec![(PathBuf::from(&folder), 0_usize)];
+pub async fn find_easyworship_databases(folder: String) -> Result<EasyWorshipDatabases, String> {
+    tauri::async_runtime::spawn_blocking(move || search_easyworship_databases(&folder))
+        .await
+        .map_err(|error| format!("Could not search that folder: {error}"))?
+}
+
+fn search_easyworship_databases(folder: &str) -> Result<EasyWorshipDatabases, String> {
+    let mut pending = vec![(PathBuf::from(folder), 0_usize)];
+    let mut visited = 0_usize;
     while let Some((directory, depth)) = pending.pop() {
+        visited += 1;
+        if visited > MAX_DIRECTORIES_VISITED {
+            break;
+        }
         let Ok(entries) = std::fs::read_dir(&directory) else {
             continue;
         };
@@ -232,7 +243,7 @@ mod tests {
         std::fs::write(data.join("Songs.db"), b"").expect("songs file");
         std::fs::write(data.join("SongWords.db"), b"").expect("words file");
 
-        let found = find_easyworship_databases(directory.path().to_string_lossy().into_owned())
+        let found = search_easyworship_databases(&directory.path().to_string_lossy())
             .expect("databases found");
 
         assert_eq!(
@@ -247,7 +258,7 @@ mod tests {
     #[test]
     fn find_easyworship_databases_reports_missing_library() {
         let directory = tempdir().expect("temporary directory");
-        let error = find_easyworship_databases(directory.path().to_string_lossy().into_owned())
+        let error = search_easyworship_databases(&directory.path().to_string_lossy())
             .expect_err("no library");
         assert!(error.contains("No EasyWorship song library"));
     }

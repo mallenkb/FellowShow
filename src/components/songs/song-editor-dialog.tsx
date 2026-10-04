@@ -51,6 +51,8 @@ function SongEditorForm({
   const [song, setSong] = useState<CopSong | null>(null)
   const [title, setTitle] = useState(initialTitle)
   const [lyrics, setLyrics] = useState("")
+  // The lyrics as first shown, so an unchanged song keeps its stored text.
+  const [openedLyrics, setOpenedLyrics] = useState("")
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
@@ -62,7 +64,9 @@ function SongEditorForm({
         const found = songs.find((candidate) => candidate.id === songId) ?? null
         setSong(found)
         setTitle(found?.title ?? "")
-        setLyrics(lyricsForEditing(found?.lyrics ?? ""))
+        const shown = lyricsForEditing(found?.lyrics ?? "")
+        setLyrics(shown)
+        setOpenedLyrics(shown)
       })
       .catch(() => toast.error("Could not open the song."))
     return () => {
@@ -95,8 +99,18 @@ function SongEditorForm({
 
   const save = () =>
     run(async () => {
-      if (song) finish(await updateSong(song, title, lyrics), "Song saved")
-      else finish(await createCustomSong(title, lyrics), "Song added")
+      if (!song) {
+        finish(await createCustomSong(title, lyrics), "Song added")
+        return
+      }
+      const lyricsChanged = lyrics !== openedLyrics
+      if (!lyricsChanged && title.trim() === song.title) {
+        useSongEditorStore.getState().close()
+        return
+      }
+      // Spacing added for editing is only saved when the lyrics were changed.
+      const savedLyrics = lyricsChanged ? lyrics : song.lyrics
+      finish(await updateSong(song, title, savedLyrics), "Song saved")
     })
 
   const reset = () =>

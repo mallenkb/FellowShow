@@ -371,6 +371,30 @@ function parseBackgroundImage(
       image.tint === null
         ? null
         : stringValue(image.tint, "theme.background.image.tint"),
+    opacity: optionalNumberValue(
+      image.opacity,
+      "theme.background.image.opacity",
+      0,
+      100
+    ),
+    scale: optionalNumberValue(
+      image.scale,
+      "theme.background.image.scale",
+      1,
+      4
+    ),
+    offsetX: optionalNumberValue(
+      image.offsetX,
+      "theme.background.image.offsetX",
+      -1,
+      1
+    ),
+    offsetY: optionalNumberValue(
+      image.offsetY,
+      "theme.background.image.offsetY",
+      -1,
+      1
+    ),
   }
 }
 

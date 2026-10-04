@@ -188,11 +188,10 @@ export function SearchPanel({
     }
   }, [])
 
-  // Enter prepares the highlighted song; Enter again on the prepared song takes it live.
+  // Clicking only prepares a song. Taking it live is a deliberate second Enter.
   const openSong = (song: CopSong, index: number) => {
     setSongHighlight(index)
-    if (activeSongItem?.id === `song:${song.id}`) presentSong(song)
-    else prepareSong(song)
+    prepareSong(song)
   }
 
   const handleSongKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -209,7 +208,9 @@ export function SearchPanel({
     } else if (event.key === "Enter") {
       event.preventDefault()
       const song = visibleSongs[songHighlight]
-      if (song) openSong(song, songHighlight)
+      if (!song) return
+      if (activeSongItem?.id === `song:${song.id}`) presentSong(song)
+      else prepareSong(song)
     } else if (event.key === "Escape" && songQuery) {
       event.preventDefault()
       setSongQuery("")

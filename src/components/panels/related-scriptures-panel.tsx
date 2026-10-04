@@ -13,7 +13,10 @@ import {
   useTranscriptStore,
 } from "@/stores"
 import type { DetectionResult, TranscriptSegment, Verse } from "@/types"
-import { stageVerse } from "@/lib/preview-staging"
+import {
+  activeTranslationAbbreviation,
+  stageVerse,
+} from "@/lib/preview-staging"
 
 const MAX_CONTEXT_SEGMENTS = 6
 const MAX_CONTEXT_CHARACTERS = 1_200
@@ -131,11 +134,7 @@ function selectScripture(result: DetectionResult) {
 }
 
 function presentScripture(result: DetectionResult) {
-  const bible = useBibleStore.getState()
-  const abbreviation =
-    bible.translations.find(
-      (translation) => translation.id === bible.activeTranslationId
-    )?.abbreviation ?? "Scripture"
+  const abbreviation = activeTranslationAbbreviation()
   useBroadcastStore
     .getState()
     .presentOnLive(toVerseRenderData(resultAsVerse(result), abbreviation), null)
@@ -297,16 +296,6 @@ export function RelatedScripturesPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 border-b border-border px-3 py-2">
-        <p className="text-[0.6875rem] text-muted-foreground">
-          Scripture matches from the live Deepgram transcript
-        </p>
-        <p className="text-[0.5625rem] text-muted-foreground/75">
-          Quoted or closely matching text is checked against the local Bible ·
-          direct references stay in Sermon
-        </p>
-      </div>
-
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {!hasTranscript ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">

@@ -86,14 +86,14 @@ function PreparedSongPanel({ lyricItem }: { lyricItem: QueueItem }) {
     selectLyricBlock(playOrder[safePosition] ?? 0)
   }
 
-  // Clicking or jumping to a block moves to its nearest place in the play order.
-  const positionOfBlock = (blockIndex: number) => {
+  // The nearest place a block holds in the play order, counted from anchor.
+  const positionOfBlock = (blockIndex: number, anchor: number) => {
     let best = -1
     playOrder.forEach((candidate, position) => {
       if (candidate !== blockIndex) return
       if (
         best === -1 ||
-        Math.abs(position - playPosition) < Math.abs(best - playPosition)
+        Math.abs(position - anchor) < Math.abs(best - anchor)
       ) {
         best = position
       }
@@ -101,8 +101,15 @@ function PreparedSongPanel({ lyricItem }: { lyricItem: QueueItem }) {
     return Math.max(best, 0)
   }
 
+  // The stored position is trusted only while it still points at the active
+  // block; re-preparing the song or toggling Repeat chorus re-derives it.
+  const currentPosition =
+    playOrder[playPosition] === activeBlockIndex
+      ? playPosition
+      : positionOfBlock(activeBlockIndex, playPosition)
+
   const selectBlock = (blockIndex: number) => {
-    setPlayPosition(positionOfBlock(blockIndex))
+    setPlayPosition(positionOfBlock(blockIndex, currentPosition))
     selectLyricBlock(blockIndex)
   }
 
@@ -122,10 +129,10 @@ function PreparedSongPanel({ lyricItem }: { lyricItem: QueueItem }) {
         if (event.metaKey || event.ctrlKey || event.altKey) return
         if (event.key === "ArrowDown" || event.key === "ArrowRight") {
           event.preventDefault()
-          selectAtPosition(playPosition + 1)
+          selectAtPosition(currentPosition + 1)
         } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
           event.preventDefault()
-          selectAtPosition(playPosition - 1)
+          selectAtPosition(currentPosition - 1)
         } else if (event.key === "Enter") {
           event.preventDefault()
           presentBlock(activeBlockIndex)

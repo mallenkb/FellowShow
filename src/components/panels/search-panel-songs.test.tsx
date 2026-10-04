@@ -97,4 +97,16 @@ describe("Songs tab keyboard", () => {
     useSongFilterStore.setState({ source: "pentecostal-book" })
     expect(await screen.findByText("#12")).toBeTruthy()
   })
+
+  it("never takes a song live from a click, even when it is prepared", async () => {
+    const user = userEvent.setup()
+    render(<SearchPanel />)
+    await user.click(screen.getByRole("button", { name: "Songs" }))
+
+    await user.click(await screen.findByText("Amazing Grace"))
+    await user.click(screen.getByText("Amazing Grace"))
+
+    expect(useQueueStore.getState().items[0]?.id).toBe("song:amazing")
+    expect(useBroadcastStore.getState().isLive).toBe(false)
+  })
 })

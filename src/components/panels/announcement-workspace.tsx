@@ -7,6 +7,9 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { GivingWorkspace } from "@/components/announcements/giving-workspace"
+import { NoteShowUntilField } from "@/components/announcements/note-show-until-field"
+import { SlideBackgroundPicker } from "@/components/announcements/slide-background-picker"
 import {
   announcementPageIndexForItem,
   announcementPageToVerse,
@@ -27,10 +30,12 @@ export function AnnouncementWorkspace() {
   const sets = useAnnouncementStore((state) => state.sets)
   const selectedSetId = useAnnouncementStore((state) => state.selectedSetId)
   const selectedItemId = useAnnouncementStore((state) => state.selectedItemId)
+  const givingSelected = useAnnouncementStore((state) => state.givingSelected)
   const [pageSelection, setPageSelection] = useState<{
     setId: string | null
+    itemId: string | null
     index: number
-  }>({ setId: null, index: 0 })
+  }>({ setId: null, itemId: null, index: 0 })
   const selectedSet = sets.find((set) => set.id === selectedSetId) ?? null
   const selectedItem =
     selectedSet?.items.find((item) => item.id === selectedItemId) ?? null
@@ -39,7 +44,15 @@ export function AnnouncementWorkspace() {
     [selectedSet]
   )
   const requestedPageIndex =
-    pageSelection.setId === selectedSetId ? pageSelection.index : 0
+    pageSelection.setId === selectedSetId &&
+    pageSelection.itemId === selectedItemId
+      ? pageSelection.index
+      : selectedSet && selectedItemId
+        ? Math.max(
+            0,
+            announcementPageIndexForItem(selectedSet, pages, selectedItemId)
+          )
+        : 0
   const safePageIndex = Math.min(
     requestedPageIndex,
     Math.max(0, pages.length - 1)
@@ -48,11 +61,15 @@ export function AnnouncementWorkspace() {
 
   const stagePage = (index: number) => {
     if (!selectedSet || !pages[index]) return
-    setPageSelection({ setId: selectedSet.id, index })
+    setPageSelection({ setId: selectedSet.id, itemId: selectedItemId, index })
     useBroadcastStore
       .getState()
       .setPreviewOutput(
-        announcementPageToVerse(selectedSet, pages[index]),
+        announcementPageToVerse(
+          selectedSet,
+          pages[index],
+          useBroadcastStore.getState().themes
+        ),
         null
       )
   }
@@ -68,11 +85,20 @@ export function AnnouncementWorkspace() {
     const index =
       itemPage >= 0 ? itemPage : Math.min(safePageIndex, nextPages.length - 1)
     if (index < 0) return
-    setPageSelection({ setId, index })
+    setPageSelection({ setId, itemId, index })
     useBroadcastStore
       .getState()
-      .setPreviewOutput(announcementPageToVerse(set, nextPages[index]), null)
+      .setPreviewOutput(
+        announcementPageToVerse(
+          set,
+          nextPages[index],
+          useBroadcastStore.getState().themes
+        ),
+        null
+      )
   }
+
+  if (givingSelected) return <GivingWorkspace />
 
   return (
     <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card">
@@ -89,17 +115,37 @@ export function AnnouncementWorkspace() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
           <Input
-            value={selectedSet.heading}
+            value={selectedItem.title}
             onChange={(event) => {
               useAnnouncementStore
                 .getState()
-                .setHeading(selectedSet.id, event.target.value)
+                .renameItem(selectedSet.id, selectedItem.id, event.target.value)
               stageEditedPage(selectedSet.id, selectedItem.id)
             }}
-            placeholder="Slide heading (leave empty to hide)"
-            aria-label="Slide heading"
+            placeholder="Note title"
+            aria-label="Note title"
             className="mb-2 h-10 shrink-0 border-transparent bg-transparent px-2 text-base font-semibold shadow-none hover:border-border focus-visible:border-primary"
           />
+          <NoteShowUntilField
+            setId={selectedSet.id}
+            item={selectedItem}
+            onChange={() => stageEditedPage(selectedSet.id, selectedItem.id)}
+          />
+          <div className="mb-2 shrink-0 px-2">
+            <SlideBackgroundPicker
+              value={selectedItem.background}
+              onChange={(background) => {
+                useAnnouncementStore
+                  .getState()
+                  .setItemBackground(
+                    selectedSet.id,
+                    selectedItem.id,
+                    background
+                  )
+                stageEditedPage(selectedSet.id, selectedItem.id)
+              }}
+            />
+          </div>
           <div className="min-h-0 flex-1">
             <Suspense
               fallback={

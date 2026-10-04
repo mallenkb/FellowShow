@@ -215,6 +215,7 @@ function verseRenderKey(verse: VerseRenderData | null): string {
     segments: verse.segments,
     announcement: verse.announcement ?? null,
     announcementSetName: verse.announcementSetName ?? null,
+    slideBackground: verse.slideBackground ?? null,
     presentationImage: verse.presentationImage ?? null,
     tickerText: verse.tickerText ?? null,
   })

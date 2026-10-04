@@ -1,8 +1,9 @@
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { splitLyricBlocks } from "@/lib/lyrics"
 import type { CopSong } from "@/lib/cop-songs"
-import { useBibleStore, useBroadcastStore, useQueueStore } from "@/stores"
+import { useBroadcastStore, useQueueStore } from "@/stores"
 import type { Verse } from "@/types"
+import { activeTranslationAbbreviation } from "@/lib/preview-staging"
 
 function hashString(value: string) {
   let hash = 0
@@ -67,11 +68,7 @@ export function prepareSong(song: CopSong) {
 
 export function presentSong(song: CopSong) {
   const verse = prepareSong(song)
-  const bible = useBibleStore.getState()
-  const translation =
-    bible.translations.find(
-      (candidate) => candidate.id === bible.activeTranslationId
-    )?.abbreviation ?? "Scripture"
+  const translation = activeTranslationAbbreviation()
 
   useBroadcastStore
     .getState()

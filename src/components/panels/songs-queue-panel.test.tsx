@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { SongsQueuePanel } from "./songs-queue-panel"
 import { useBroadcastStore } from "@/stores/broadcast-store"
@@ -87,5 +87,19 @@ describe("SongsQueuePanel", () => {
     expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(
       "When I survey the wondrous cross"
     )
+  })
+
+  it("steps from the active section after the song is prepared again", async () => {
+    const user = userEvent.setup()
+    useSongPlayStore.setState({ repeatChorusSongIds: [song.id] })
+    render(<SongsQueuePanel />)
+    await user.keyboard("{ArrowDown}{ArrowDown}")
+    expect(previewText()).toBe("Forbid it, Lord, that I should boast")
+
+    // Re-preparing resets the song to its first section.
+    act(() => useQueueStore.setState({ items: [{ ...song }] }))
+    await user.keyboard("{ArrowDown}{ArrowDown}")
+
+    expect(previewText()).toBe("Forbid it, Lord, that I should boast")
   })
 })

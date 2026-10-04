@@ -41,6 +41,10 @@ export function useScriptureSearch({
   const [chapterPicked, setChapterPicked] = useState(false)
   const [chapter, setChapter] = useState(1)
   const [selectedVerseId, setSelectedVerseId] = useState<number | null>(null)
+  const [chapterLoadResult, setChapterLoadResult] = useState<{
+    key: string
+    error: boolean
+  } | null>(null)
   const [contextQuery, setContextQuery] = useState("")
   const [quickInput, setQuickInput] = useState("")
   const [quickVersesList, setQuickVersesList] = useState<Verse[]>([])
@@ -50,7 +54,7 @@ export function useScriptureSearch({
   const {
     translations,
     books,
-    currentChapter,
+    currentChapter: loadedChapter,
     activeTranslationId,
     selectedVerse,
   } = useBible()
@@ -75,6 +79,23 @@ export function useScriptureSearch({
       selectedBook)
     : null
   const selectedBookNumber = activeSelectedBook?.book_number
+  const chapterKey = `${activeTranslationId}:${selectedBookNumber}:${chapter}`
+  const chapterLoadMessage =
+    chapterLoadResult?.key !== chapterKey
+      ? "Loading verses..."
+      : chapterLoadResult.error
+        ? "Could not load verses. Choose the chapter again to retry."
+        : "No verses available in this translation."
+  const currentChapter = useMemo(
+    () =>
+      loadedChapter.filter(
+        (verse) =>
+          verse.translation_id === activeTranslationId &&
+          verse.book_number === selectedBookNumber &&
+          verse.chapter === chapter
+      ),
+    [activeTranslationId, chapter, loadedChapter, selectedBookNumber]
+  )
   const chapterCount = selectedBookNumber
     ? getChapterCount(selectedBookNumber)
     : null
@@ -110,10 +131,27 @@ export function useScriptureSearch({
   }, [activeTranslationId])
 
   useEffect(() => {
-    if (selectedBookNumber && chapterPicked && chapter >= 1) {
-      bibleActions.loadChapter(selectedBookNumber, chapter).catch(console.error)
+    if (!selectedBookNumber || !chapterPicked || chapter < 1) return
+    let cancelled = false
+    void bibleActions
+      .loadChapter(selectedBookNumber, chapter, activeTranslationId)
+      .then(() => {
+        if (!cancelled) setChapterLoadResult({ key: chapterKey, error: false })
+      })
+      .catch((error: unknown) => {
+        console.error(error)
+        if (!cancelled) setChapterLoadResult({ key: chapterKey, error: true })
+      })
+    return () => {
+      cancelled = true
     }
-  }, [activeTranslationId, chapter, chapterPicked, selectedBookNumber])
+  }, [
+    activeTranslationId,
+    chapter,
+    chapterKey,
+    chapterPicked,
+    selectedBookNumber,
+  ])
 
   const effectiveSelectedVerseId = useMemo(() => {
     if (!selectedVerseId || currentChapter.length === 0) return null
@@ -241,6 +279,10 @@ export function useScriptureSearch({
 
   const showChapters = useCallback(() => {
     setChapterPicked(false)
+    setSelectedVerseId(null)
+  }, [])
+
+  const showVerses = useCallback(() => {
     setSelectedVerseId(null)
   }, [])
 
@@ -444,6 +486,7 @@ export function useScriptureSearch({
     books,
     chapter,
     chapterCount,
+    chapterLoadMessage,
     contextQuery: mode === "book" ? quickInput : contextQuery,
     showPhraseResults,
     currentChapter,
@@ -471,6 +514,7 @@ export function useScriptureSearch({
     shouldShowVerseDropdown,
     showBooks,
     showChapters,
+    showVerses,
     stepChapter,
     translations,
   }

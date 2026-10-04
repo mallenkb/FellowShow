@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, memo } from "react"
+import { useRef, useEffect, useState, useMemo, memo } from "react"
 import { renderVerse } from "@/lib/verse-renderer"
 import { presentationMedia } from "@/lib/presentation-composition"
 import { pruneVideoCache } from "@/lib/media-cache"
@@ -23,6 +23,7 @@ import type {
   VerseRenderData,
 } from "@/types"
 import { cn } from "@/lib/utils"
+import { withSlideBackground } from "@/lib/slide-background"
 
 interface CanvasVerseProps {
   theme: BroadcastTheme
@@ -37,7 +38,7 @@ interface CanvasVerseProps {
 }
 
 export const CanvasVerse = memo(function CanvasVerse({
-  theme,
+  theme: baseTheme,
   verse,
   timer,
   lowerThird,
@@ -47,6 +48,11 @@ export const CanvasVerse = memo(function CanvasVerse({
   fillContainer = false,
   fit = fillContainer ? "cover" : "width",
 }: CanvasVerseProps) {
+  // A slide's own background replaces the theme's for that slide only.
+  const theme = useMemo(
+    () => withSlideBackground(baseTheme, verse),
+    [baseTheme, verse]
+  )
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())

@@ -30,6 +30,10 @@ export interface VerseRenderData {
   referenceMode?: "default" | "lyric-footer"
   announcement?: AnnouncementRenderData
   announcementSetName?: string
+  /** Ids of the notes on this slide, so the Notes list can mark what is live. */
+  announcementItemIds?: string[]
+  /** Replaces the theme background for this slide only. */
+  slideBackground?: BroadcastTheme["background"]
   presentationImage?: PresentationMediaItem & {
     layers?: PresentationMediaItem[]
   }
@@ -100,6 +104,13 @@ export interface BroadcastTheme {
       blur: number
       brightness: number
       tint: string | null
+      /** 0-100; below 100 the background color shows through. Default 100. */
+      opacity?: number
+      /** Zoom on top of the fit, 1-4. Default 1. */
+      scale?: number
+      /** Which part shows when the picture is larger than the screen, -1 (left/top) to 1 (right/bottom). Default 0. */
+      offsetX?: number
+      offsetY?: number
     } | null
   }
   textBox: {

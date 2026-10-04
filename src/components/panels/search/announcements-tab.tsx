@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   FilePlus2Icon,
   FolderPlusIcon,
@@ -6,7 +7,10 @@ import {
   Trash2Icon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { GivingRow } from "@/components/panels/search/giving-row"
 import { AnnouncementNoteRow } from "@/components/panels/search/announcement-note-row"
+import { PreServiceLoop } from "@/components/panels/search/pre-service-loop"
+import { useNextAnnouncementId } from "@/components/panels/search/use-announcement-live"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,12 +30,16 @@ export function AnnouncementsTab() {
   const sets = useAnnouncementStore((state) => state.sets)
   const selectedSetId = useAnnouncementStore((state) => state.selectedSetId)
   const selectedItemId = useAnnouncementStore((state) => state.selectedItemId)
+  const givingSelected = useAnnouncementStore((state) => state.givingSelected)
+  const [drag, setDrag] = useState<{ from: number; over: number } | null>(null)
   const selectedSet = sets.find((set) => set.id === selectedSetId) ?? null
+  const nextItemId = useNextAnnouncementId(selectedSet)
 
   if (sets.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center border-t border-border p-6 text-center">
-        <div className="max-w-xs">
+      <div className="flex h-full flex-col border-t border-border p-3">
+        <GivingRow />
+        <div className="m-auto max-w-xs p-3 text-center">
           <FilePlus2Icon className="mx-auto mb-3 size-7 text-muted-foreground" />
           <p className="text-sm font-medium">No notes yet</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -122,16 +130,48 @@ export function AnnouncementsTab() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
+        <div className="mb-4">
+          <GivingRow />
+        </div>
         {selectedSet ? (
           <div className="flex flex-col gap-2">
-            {selectedSet.items.map((item) => (
+            <p className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              Notes
+            </p>
+            {selectedSet.items.map((item, index) => (
               <AnnouncementNoteRow
                 key={item.id}
                 item={item}
                 setId={selectedSet.id}
-                selected={item.id === selectedItemId}
+                index={index}
+                itemCount={selectedSet.items.length}
+                selected={!givingSelected && item.id === selectedItemId}
+                isNext={item.id === nextItemId}
+                isDropTarget={
+                  drag !== null && drag.over === index && drag.from !== index
+                }
+                onDragStart={() => setDrag({ from: index, over: index })}
+                onDragEnter={() =>
+                  setDrag((current) =>
+                    current ? { ...current, over: index } : current
+                  )
+                }
+                onDrop={() => {
+                  if (drag) {
+                    useAnnouncementStore
+                      .getState()
+                      .moveItem(selectedSet.id, drag.from, index)
+                  }
+                  setDrag(null)
+                }}
+                onDragEnd={() => setDrag(null)}
               />
             ))}
+          </div>
+        ) : null}
+        {selectedSet ? (
+          <div className="mt-4 flex flex-1 flex-col">
+            <PreServiceLoop set={selectedSet} />
           </div>
         ) : null}
       </div>
