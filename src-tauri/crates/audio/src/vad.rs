@@ -105,7 +105,7 @@ impl Vad {
                         self.utterance_frames = 0;
 
                         // Flush pre-buffer + current frame
-                        let mut frames: Vec<AudioFrame> = self.pre_buffer.drain(..).collect();
+                        let mut frames = std::mem::take(&mut self.pre_buffer);
                         frames.push(frame.clone());
                         self.utterance_frames += frames.len();
 
