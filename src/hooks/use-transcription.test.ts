@@ -21,16 +21,27 @@ async function loadModules() {
   vi.resetModules()
   const transcriptMod = await import("@/stores/transcript-store")
   const settingsMod = await import("@/stores/settings-store")
+  // Startup hydration and keychain access have their own store tests. Keep
+  // this unit test focused on transcription using the configured settings.
+  const hydrateSettings = vi
+    .spyOn(settingsMod, "hydrateSettings")
+    .mockResolvedValue(undefined)
+  const unlockSecureSettings = vi
+    .spyOn(settingsMod, "unlockSecureSettings")
+    .mockResolvedValue(undefined)
   const hookMod = await import("./use-transcription")
   return {
     useTranscriptStore: transcriptMod.useTranscriptStore,
     useSettingsStore: settingsMod.useSettingsStore,
     transcriptionActions: hookMod.transcriptionActions,
+    hydrateSettings,
+    unlockSecureSettings,
   }
 }
 
 describe("use-transcription", () => {
   beforeEach(() => {
+    vi.restoreAllMocks()
     mockInvoke.mockReset()
     mockToastError.mockReset()
   })
@@ -38,7 +49,12 @@ describe("use-transcription", () => {
   describe("transcriptionActions.start", () => {
     it("invokes start_transcription with settings-derived params for whisper", async () => {
       mockInvoke.mockResolvedValue(undefined)
-      const { useSettingsStore, transcriptionActions } = await loadModules()
+      const {
+        useSettingsStore,
+        transcriptionActions,
+        hydrateSettings,
+        unlockSecureSettings,
+      } = await loadModules()
 
       useSettingsStore.setState({
         sttProvider: "whisper",
@@ -49,6 +65,8 @@ describe("use-transcription", () => {
 
       await transcriptionActions.start()
 
+      expect(hydrateSettings).toHaveBeenCalledTimes(1)
+      expect(unlockSecureSettings).not.toHaveBeenCalled()
       expect(mockInvoke).toHaveBeenCalledWith("start_transcription", {
         apiKey: "", // whisper path never forwards the key
         deviceId: "dev-42",
@@ -59,7 +77,8 @@ describe("use-transcription", () => {
 
     it("forwards the Deepgram key when provider is deepgram", async () => {
       mockInvoke.mockResolvedValue(undefined)
-      const { useSettingsStore, transcriptionActions } = await loadModules()
+      const { useSettingsStore, transcriptionActions, unlockSecureSettings } =
+        await loadModules()
 
       useSettingsStore.setState({
         sttProvider: "deepgram",
@@ -70,6 +89,7 @@ describe("use-transcription", () => {
 
       await transcriptionActions.start()
 
+      expect(unlockSecureSettings).toHaveBeenCalledTimes(1)
       expect(mockInvoke).toHaveBeenCalledWith(
         "start_transcription",
         expect.objectContaining({
@@ -125,7 +145,7 @@ describe("use-transcription", () => {
       )
     })
 
-    it("sets connectionStatus to 'connecting' before invoke resolves and 'isTranscribing' after", async () => {
+    it("marks transcription as starting while the start command is pending", async () => {
       let resolveInvoke: () => void = () => {}
       mockInvoke.mockReturnValue(
         new Promise<void>((resolve) => {
@@ -142,7 +162,7 @@ describe("use-transcription", () => {
           "connecting"
         )
       })
-      expect(useTranscriptStore.getState().isTranscribing).toBe(false)
+      expect(useTranscriptStore.getState().isTranscribing).toBe(true)
 
       resolveInvoke()
       await pending

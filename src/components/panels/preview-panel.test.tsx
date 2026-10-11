@@ -16,6 +16,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(() => Promise.resolve(null)),
+  isTauri: () => false,
 }))
 
 vi.mock("@/components/ui/canvas-verse", () => ({

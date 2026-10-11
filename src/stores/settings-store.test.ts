@@ -285,13 +285,13 @@ describe("settings store", () => {
 
   it("persist handles save rejection gracefully", async () => {
     mockGet.mockResolvedValue(null)
-    mockSave.mockRejectedValue(new Error("disk error"))
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
     await hydrateSettings()
 
+    mockSave.mockRejectedValue(new Error("disk error"))
     useSettingsStore.getState().setAutoMode(true)
     await flushSave()
 

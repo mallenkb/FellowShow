@@ -17,13 +17,6 @@ import {
   ZoomOutIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import {
@@ -88,7 +81,6 @@ export function PresentationDocumentViewer({
 }: {
   document: PresentationDocument
 }) {
-  const documents = usePresentationStore((state) => state.documents)
   const selectedPageId = usePresentationStore((state) => state.selectedPageId)
   const frameRef = useRef<HTMLDivElement>(null)
   const navigationModeRef = useRef<"preview" | "live">("preview")
@@ -250,24 +242,6 @@ export function PresentationDocumentViewer({
       className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card"
     >
       <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border p-2">
-        <Select
-          value={document.id}
-          onValueChange={(id) =>
-            usePresentationStore.getState().selectDocument(id)
-          }
-        >
-          <SelectTrigger size="sm" className="min-w-0 flex-1 sm:max-w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {documents.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                {item.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
         <div className="flex items-center rounded-md border border-border bg-background/40">
           <Button
             type="button"
@@ -318,6 +292,8 @@ export function PresentationDocumentViewer({
             usePresentationStore.getState().removeDocument(document.id)
           }
           disabled={document.status === "importing"}
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          aria-label="Remove document"
           title="Remove document"
         >
           <TrashIcon />
@@ -325,10 +301,11 @@ export function PresentationDocumentViewer({
         <Button
           type="button"
           size="sm"
+          className="ml-auto"
           disabled={!selectedPage}
           onClick={() => selectedPage && takePageLive(selectedPage)}
         >
-          Take Live
+          Show on Live
         </Button>
       </div>
 

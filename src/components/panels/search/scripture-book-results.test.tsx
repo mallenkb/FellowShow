@@ -52,11 +52,13 @@ const verses: Verse[] = [2, 4].map((verse) => ({
   text: `Text for verse ${verse}`,
 }))
 
+const requestBookMode = vi.fn()
+
 function Picker() {
   const controller = useScriptureSearch({
     mode: "book",
     isActive: true,
-    onRequestMode: () => undefined,
+    onRequestMode: requestBookMode,
   })
   return (
     <div onKeyDown={controller.handleKeyDown}>

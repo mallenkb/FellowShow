@@ -169,7 +169,7 @@ describe("PresentationMediaViewer", () => {
     const composition = usePresentationStore.getState().slides[0]
     render(<PresentationMediaViewer slide={composition} />)
 
-    await user.click(screen.getByRole("button", { name: "Take Live" }))
+    await user.click(screen.getByRole("button", { name: "Show on Live" }))
     expect(
       useBroadcastStore.getState().liveVerse?.presentationImage?.layers
     ).toHaveLength(2)
@@ -262,5 +262,25 @@ describe("PresentationMediaViewer", () => {
       offsetX: 0,
       offsetY: 0,
     })
+  })
+
+  it.each([false, true])("reset icon respects locked=%s", async (locked) => {
+    const user = userEvent.setup()
+    const slide = {
+      ...imageSlide,
+      locked,
+      fit: "cover" as const,
+      scale: 0.4,
+      offsetX: 0.3,
+      offsetY: -0.2,
+    }
+    usePresentationStore.setState({ slides: [slide] })
+    render(<PresentationMediaViewer slide={slide} />)
+
+    await user.click(screen.getByRole("button", { name: "Reset media" }))
+
+    expect(usePresentationStore.getState().slides[0]).toMatchObject(
+      locked ? slide : { fit: "contain", scale: 1, offsetX: 0, offsetY: 0 }
+    )
   })
 })

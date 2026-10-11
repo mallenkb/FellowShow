@@ -3,6 +3,7 @@ import { toast } from "sonner"
 import {
   Grid2X2Icon,
   PlusIcon,
+  RotateCcwIcon,
   TrashIcon,
   ZoomInIcon,
   ZoomOutIcon,
@@ -75,6 +76,11 @@ export function PresentationMediaViewer({
     if (slide.locked || !hasMultipleLayers) return
     usePresentationStore.getState().removeSlideLayer(slide.id, selected.id)
     syncPreview()
+  }
+
+  function resetSelectedLayer() {
+    if (slide.locked) return
+    updateLayer({ fit: "contain", scale: 1, offsetX: 0, offsetY: 0 })
   }
 
   // With one item left, deleting from the menu removes the whole slide.
@@ -173,9 +179,7 @@ export function PresentationMediaViewer({
           title="Reset to 100%"
           aria-label={`Zoom ${Math.round(selected.scale * 100)}%. Reset to 100%`}
           disabled={slide.locked}
-          onClick={() =>
-            updateLayer({ fit: "contain", scale: 1, offsetX: 0, offsetY: 0 })
-          }
+          onClick={resetSelectedLayer}
         >
           {Math.round(selected.scale * 100)}%
         </button>
@@ -220,6 +224,17 @@ export function PresentationMediaViewer({
             </Button>
           ))}
         </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          title="Reset media to fit, 100% zoom, and center"
+          aria-label="Reset media"
+          disabled={slide.locked}
+          onClick={resetSelectedLayer}
+        >
+          <RotateCcwIcon />
+        </Button>
         {hasMultipleLayers ? (
           <Button
             type="button"
@@ -227,6 +242,7 @@ export function PresentationMediaViewer({
             size="icon-sm"
             title="Remove this media (Delete)"
             aria-label="Remove this media"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             disabled={slide.locked}
             onClick={removeSelectedLayer}
           >
@@ -261,7 +277,7 @@ export function PresentationMediaViewer({
             <PlusIcon /> Add media
           </Button>
           <Button type="button" size="sm" onClick={takeLive}>
-            Take Live
+            Show on Live
           </Button>
         </div>
       </div>
@@ -355,7 +371,7 @@ export function PresentationMediaViewer({
         <span>
           {slide.locked
             ? "Locked"
-            : `${layers.length}/16 items · edits stay in preview until Take Live`}
+            : `${layers.length}/16 items · edits stay in preview until Show on Live`}
         </span>
       </div>
     </section>
