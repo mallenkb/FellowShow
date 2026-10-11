@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn test_fuzzy_filipians() {
         let matches = fuzzy_find_books("in Filipians chapter 4");
-        assert!(!matches.is_empty());
+        assert_ne!(matches.len(), 0);
         assert_eq!(matches[0].book_name, "Philippians");
     }
 
@@ -181,7 +181,7 @@ mod tests {
     fn test_fuzzy_revelations() {
         // Common misspelling: "Revelations" (extra 's' but that's just 1 edit from "Revelation")
         let matches = fuzzy_find_books("Revelations 21:1");
-        assert!(!matches.is_empty());
+        assert_ne!(matches.len(), 0);
         assert_eq!(matches[0].book_name, "Revelation");
     }
 
@@ -189,13 +189,13 @@ mod tests {
     fn test_fuzzy_no_false_positive() {
         // A totally unrelated word should not match any book
         let matches = fuzzy_find_books("programming is fun");
-        assert!(matches.is_empty());
+        assert_eq!(matches.len(), 0);
     }
 
     #[test]
     fn test_fuzzy_hebrews_misspelled() {
         let matches = fuzzy_find_books("in Hebrws chapter 11");
-        assert!(!matches.is_empty());
+        assert_ne!(matches.len(), 0);
         assert_eq!(matches[0].book_name, "Hebrews");
     }
 }

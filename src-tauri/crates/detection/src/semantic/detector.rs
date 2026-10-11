@@ -228,7 +228,7 @@ mod tests {
     fn test_stub_returns_empty() {
         let mut detector = SemanticDetector::stub();
         let results = detector.detect("for God so loved the world");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
@@ -263,7 +263,7 @@ mod tests {
             detector.detect("for God so loved the world that he gave his only begotten son");
 
         // Should include the high-similarity result but not the 0.20 one
-        assert!(!detections.is_empty());
+        assert_ne!(detections.len(), 0);
         for d in &detections {
             assert!(d.confidence >= 0.35);
             assert!(matches!(d.source, DetectionSource::Semantic { .. }));
@@ -286,12 +286,12 @@ mod tests {
 
         // Default threshold is 0.50 — should include 0.60
         let detections = detector.detect("for God so loved the world that he gave his son");
-        assert!(!detections.is_empty());
+        assert_ne!(detections.len(), 0);
 
         // Raise threshold above the result's similarity
         detector.set_confidence_threshold(0.70);
         let detections =
             detector.detect("whoever believes in him shall not perish but have everlasting life");
-        assert!(detections.is_empty());
+        assert_eq!(detections.len(), 0);
     }
 }

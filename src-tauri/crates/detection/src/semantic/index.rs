@@ -49,7 +49,6 @@ mod tests {
     #[test]
     fn test_stub_index_is_empty() {
         let index = StubIndex;
-        assert!(index.is_empty());
         assert_eq!(index.len(), 0);
     }
 
@@ -57,6 +56,6 @@ mod tests {
     fn test_stub_index_returns_empty() {
         let index = StubIndex;
         let results = index.search(&[0.0; 128], 5).unwrap();
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 }

@@ -190,7 +190,7 @@ mod tests {
     fn test_pipeline_direct_only() {
         let mut pipeline = DetectionPipeline::new();
         let results = pipeline.process("Jesus said in John 3:16 that God loved the world");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].detection.verse_ref.book_name, "John");
         assert_eq!(results[0].detection.verse_ref.chapter, 3);
         assert_eq!(results[0].detection.verse_ref.verse_start, 16);
@@ -200,7 +200,7 @@ mod tests {
     fn test_pipeline_no_match() {
         let mut pipeline = DetectionPipeline::new();
         let results = pipeline.process("The weather is nice today");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
@@ -221,7 +221,7 @@ mod tests {
     fn test_pipeline_auto_queue_for_direct() {
         let mut pipeline = DetectionPipeline::new();
         let results = pipeline.process("John 3:16");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         // Direct references have confidence >= 0.90 which is above the
         // default auto_queue_threshold (0.80), so should be auto-queued.
         assert!(results[0].auto_queued);

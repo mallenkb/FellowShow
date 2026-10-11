@@ -335,6 +335,6 @@ mod tests {
     fn test_merger_empty_inputs() {
         let mut merger = DetectionMerger::new();
         let results = merger.merge(vec![], vec![]);
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 }

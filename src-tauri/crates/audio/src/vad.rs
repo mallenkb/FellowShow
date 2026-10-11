@@ -242,7 +242,7 @@ mod tests {
     fn test_silence_gates_audio() {
         let mut vad = Vad::new(VadConfig::default());
         let result = vad.process(&silent_frame());
-        assert!(result.frames.is_empty());
+        assert_eq!(result.frames.len(), 0);
         assert!(result.transition.is_none());
     }
 
@@ -256,12 +256,12 @@ mod tests {
 
         // First voiced frame: not enough yet
         let result = vad.process(&voiced_frame());
-        assert!(result.frames.is_empty());
+        assert_eq!(result.frames.len(), 0);
         assert_eq!(vad.state(), VadState::Silence);
 
         // Second voiced frame: transition to Speech
         let result = vad.process(&voiced_frame());
-        assert!(!result.frames.is_empty());
+        assert_ne!(result.frames.len(), 0);
         assert_eq!(vad.state(), VadState::Speech);
         assert_eq!(result.transition, Some(VadTransition::SpeechStarted));
     }

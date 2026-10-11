@@ -258,7 +258,7 @@ mod tests {
     #[test]
     fn test_extract_concepts_empty() {
         let concepts = extract_concepts("the weather is nice today");
-        assert!(concepts.is_empty());
+        assert_eq!(concepts.len(), 0);
     }
 
     #[test]

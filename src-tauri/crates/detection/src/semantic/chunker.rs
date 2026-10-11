@@ -113,7 +113,7 @@ mod tests {
         let chunks = chunker.chunk(text);
 
         // Should produce single-sentence, two-sentence, and three-sentence windows
-        assert!(!chunks.is_empty());
+        assert_ne!(chunks.len(), 0);
 
         // The first single sentence should be present
         assert!(chunks.iter().any(|c| c.contains("God so loved the world")));
@@ -130,7 +130,7 @@ mod tests {
         let text = "The first sentence is right here\nThe second sentence is right here\nThe third sentence is right here";
         let chunks = chunker.chunk(text);
 
-        assert!(!chunks.is_empty());
+        assert_ne!(chunks.len(), 0);
         // Newlines act as sentence boundaries, so single-sentence windows appear
         assert!(chunks
             .iter()
@@ -150,7 +150,7 @@ mod tests {
 
         // Both individual sentences are fewer than 5 words, but the
         // combined window "Hi Bye" is still only 2 words => all filtered
-        assert!(chunks.is_empty());
+        assert_eq!(chunks.len(), 0);
     }
 
     #[test]
@@ -166,7 +166,7 @@ mod tests {
     #[test]
     fn test_empty_text() {
         let chunker = Chunker::new();
-        assert!(chunker.chunk("").is_empty());
+        assert_eq!(chunker.chunk("").len(), 0);
     }
 
     #[test]

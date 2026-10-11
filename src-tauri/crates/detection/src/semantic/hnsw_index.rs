@@ -209,9 +209,9 @@ mod tests {
     #[test]
     fn test_empty_index() {
         let index = HnswVectorIndex::from_vecs(vec![], vec![], 4).unwrap();
-        assert!(index.is_empty());
+        assert_eq!(index.len(), 0);
         let results = index.search(&[0.0; 4], 5).unwrap();
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]

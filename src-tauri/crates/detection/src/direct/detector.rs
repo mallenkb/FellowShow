@@ -835,7 +835,7 @@ mod tests {
     fn test_basic_reference() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Jesus said in John 3:16 that God loved the world");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "John");
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 16);
@@ -844,7 +844,7 @@ mod tests {
     #[test]
     fn test_split_chapter_colon_reference() {
         let mut detector = DirectDetector::new();
-        assert!(detector.detect("John chapter").is_empty());
+        assert_eq!(detector.detect("John chapter").len(), 0);
 
         let results = detector.detect("1:14");
         assert_eq!(results.len(), 1);
@@ -858,7 +858,7 @@ mod tests {
     fn test_spoken_reference() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("David in Psalm thirty two verse one now says");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Psalms");
         assert_eq!(results[0].verse_ref.chapter, 32);
         assert_eq!(results[0].verse_ref.verse_start, 1);
@@ -868,7 +868,7 @@ mod tests {
     fn test_verse_range() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Let's read Romans 8:28-30 together");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Romans");
         assert_eq!(results[0].verse_ref.chapter, 8);
         assert_eq!(results[0].verse_ref.verse_start, 28);
@@ -879,7 +879,7 @@ mod tests {
     fn test_numbered_book() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Paul wrote in 1 Corinthians 13:4 about love");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "1 Corinthians");
         assert_eq!(results[0].verse_ref.chapter, 13);
         assert_eq!(results[0].verse_ref.verse_start, 4);
@@ -890,7 +890,7 @@ mod tests {
         // Chapter-only references are NOT emitted — just held as incomplete for refinement
         let mut detector = DirectDetector::new();
         let results = detector.detect("Genesis 3 is about the fall of man");
-        assert!(results.is_empty()); // No emission
+        assert_eq!(results.len(), 0); // No emission
         assert!(detector.incomplete.is_some()); // Held for refinement
         let inc = detector.incomplete.as_ref().unwrap();
         assert_eq!(inc.verse_ref.book_name, "Genesis");
@@ -902,12 +902,12 @@ mod tests {
         // Same book+chapter in a subsequent call — still held, no emission
         let mut detector = DirectDetector::new();
         let results = detector.detect("Genesis 3");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.is_some());
 
         // Same text again — still held
         let results = detector.detect("Genesis 3");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.is_some());
     }
 
@@ -917,7 +917,7 @@ mod tests {
         let mut detector = DirectDetector::new();
         // First: chapter-only — held as incomplete, not emitted
         let results = detector.detect("Genesis 3");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.is_some());
 
         // Second: verse continuation — refines the detection
@@ -935,13 +935,13 @@ mod tests {
         // EDGE-01: a new book/chapter replaces the pending incomplete cleanly
         let mut detector = DirectDetector::new();
         let results = detector.detect("Genesis 3");
-        assert!(results.is_empty()); // chapter-only, not emitted
+        assert_eq!(results.len(), 0); // chapter-only, not emitted
         assert!(detector.incomplete.is_some());
 
         // Different book — supersedes Genesis 3
         let results = detector.detect("let's look at John 1");
-        assert!(results.is_empty()); // also chapter-only, not emitted
-                                     // Incomplete now tracks John 1, not Genesis 3
+        assert_eq!(results.len(), 0); // also chapter-only, not emitted
+                                      // Incomplete now tracks John 1, not Genesis 3
         let inc = detector.incomplete.as_ref().unwrap();
         assert_eq!(inc.verse_ref.book_name, "John");
     }
@@ -951,7 +951,7 @@ mod tests {
         // EDGE-02: after timeout, incomplete is cleaned up without re-emission
         let mut detector = DirectDetector::new();
         let results = detector.detect("Genesis 3");
-        assert!(results.is_empty()); // chapter-only, not emitted
+        assert_eq!(results.len(), 0); // chapter-only, not emitted
         assert!(detector.incomplete.is_some());
 
         // Simulate timeout by replacing with an expired timestamp (exceeds 45s)
@@ -965,7 +965,7 @@ mod tests {
 
         // Next detect call should clean up without emitting
         let results = detector.detect("something unrelated");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.is_none());
     }
 
@@ -974,11 +974,11 @@ mod tests {
         let mut detector = DirectDetector::new();
         // First detect a verse
         let results = detector.detect("John 3:16");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
 
         // Then ask for "previous verse"
         let results = detector.detect("can you show me the last verse");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "John");
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 16);
@@ -989,21 +989,21 @@ mod tests {
         let mut detector = DirectDetector::new();
         // No previous detection — should return empty
         let results = detector.detect("go back to that verse");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
     fn test_no_reference() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("The weather is nice today");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
     }
 
     #[test]
     fn test_spoken_chapter_verse_keywords() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Isaiah chapter fifty three verse five");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Isaiah");
         assert_eq!(results[0].verse_ref.chapter, 53);
         assert_eq!(results[0].verse_ref.verse_start, 5);
@@ -1023,7 +1023,7 @@ mod tests {
     fn test_confidence_range() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("John 3:16");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert!(results[0].confidence >= 0.90);
         assert!(results[0].confidence <= 1.0);
     }
@@ -1032,7 +1032,7 @@ mod tests {
     fn test_detection_source() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("John 3:16");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert!(matches!(
             results[0].source,
             DetectionSource::DirectReference
@@ -1043,7 +1043,7 @@ mod tests {
     fn test_clean_transcript() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Please open your bibles to Ephesians chapter 6 verse 10");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Ephesians");
     }
 
@@ -1051,7 +1051,7 @@ mod tests {
     fn test_clean_transcript_lets_turn_to() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Let's turn to Romans 8:28 and read together");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Romans");
         assert_eq!(results[0].verse_ref.chapter, 8);
         assert_eq!(results[0].verse_ref.verse_start, 28);
@@ -1061,7 +1061,7 @@ mod tests {
     fn test_clean_transcript_the_bible_says_in() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("The bible says in John 3:16 that God loved the world");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "John");
     }
 
@@ -1069,7 +1069,7 @@ mod tests {
     fn test_clean_transcript_look_at() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Now look at Genesis 1:1 for the beginning");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Genesis");
     }
 
@@ -1077,7 +1077,7 @@ mod tests {
     fn test_fuzzy_fallback_filipians() {
         let mut detector = DirectDetector::new();
         let results = detector.detect("Filipians chapter 4 verse 13");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Philippians");
         assert_eq!(results[0].verse_ref.chapter, 4);
         assert_eq!(results[0].verse_ref.verse_start, 13);
@@ -1444,7 +1444,7 @@ mod tests {
 
         // Segment 1: Book-only "Acts"
         let results = detector.detect("God had put in his mouth. Acts");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.is_some());
         let inc = detector.incomplete.as_ref().unwrap();
         assert_eq!(inc.verse_ref.book_name, "Acts");
@@ -1452,7 +1452,7 @@ mod tests {
 
         // Segment 2: Chapter continuation
         let results = detector.detect("chapter three, and I'm reading from verse");
-        assert!(results.is_empty()); // ChapterOnly — still waiting for verse
+        assert_eq!(results.len(), 0); // ChapterOnly — still waiting for verse
         assert!(detector.incomplete.is_some());
         let inc = detector.incomplete.as_ref().unwrap();
         assert_eq!(inc.verse_ref.chapter, 3);
@@ -1460,7 +1460,7 @@ mod tests {
 
         // Segment 3: Verse completion via bare number
         let results = detector.detect("22. Acts three, for Moses truly");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Acts");
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 22);
@@ -1472,10 +1472,10 @@ mod tests {
         let mut detector = DirectDetector::new();
 
         let results = detector.detect("let's read Acts");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
 
         let results = detector.detect("chapter 3 verse 22");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.book_name, "Acts");
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 22);
@@ -1487,18 +1487,18 @@ mod tests {
         let mut detector = DirectDetector::new();
 
         let results = detector.detect("turn to Acts");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.as_ref().unwrap().chapter_is_default);
 
         // Bare "3" = chapter (because book-only)
         let results = detector.detect("3");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         let inc = detector.incomplete.as_ref().unwrap();
         assert_eq!(inc.verse_ref.chapter, 3);
 
         // Bare "22" = verse (chapter already set)
         let results = detector.detect("22");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 22);
     }
@@ -1509,10 +1509,10 @@ mod tests {
         let mut detector = DirectDetector::new();
 
         let results = detector.detect("Genesis 3");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
 
         let results = detector.detect("and I'm reading from verse 15");
-        assert!(!results.is_empty());
+        assert_ne!(results.len(), 0);
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 15);
     }
@@ -1522,7 +1522,7 @@ mod tests {
         let mut detector = DirectDetector::new();
 
         let results = detector.detect("I'm thinking of Psalm 56");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.is_some());
         let inc = detector.incomplete.as_ref().unwrap();
         assert_eq!(inc.verse_ref.book_name, "Psalms");
@@ -1542,7 +1542,7 @@ mod tests {
         let mut detector = DirectDetector::new();
 
         let results = detector.detect("Psalm 56 verse");
-        assert!(results.is_empty());
+        assert_eq!(results.len(), 0);
         assert!(detector.incomplete.is_some());
         assert_eq!(detector.incomplete.as_ref().unwrap().verse_ref.chapter, 56);
 
