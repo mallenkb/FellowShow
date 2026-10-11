@@ -344,8 +344,11 @@ impl ActiveNdiSession {
             self.frame_buffer.resize(expected, 0);
         }
 
+        // The validated frame length is always a multiple of four bytes, so
+        // every chunk is a complete pixel. `chunks` keeps compatibility with
+        // the workspace's Rust 1.77 minimum version.
         // Convert RGBA -> BGRA for NDIlib_FourCC_type_BGRA.
-        for (idx, px) in rgba_data.chunks_exact(4).enumerate() {
+        for (idx, px) in rgba_data.chunks(4).enumerate() {
             let offset = idx * 4;
             let (red, green, blue, alpha) = match self.info.alpha_mode {
                 NdiAlphaMode::NoneOpaque => (px[0], px[1], px[2], 255),
@@ -408,7 +411,7 @@ impl ActiveNdiSession {
 
 fn premultiply_alpha(channel: u8, alpha: u8) -> u8 {
     let scaled = (u16::from(channel) * u16::from(alpha) + 127) / 255;
-    u8::try_from(scaled).map_or(u8::MAX, std::convert::identity)
+    u8::try_from(scaled).unwrap_or(u8::MAX)
 }
 
 impl Drop for ActiveNdiSession {

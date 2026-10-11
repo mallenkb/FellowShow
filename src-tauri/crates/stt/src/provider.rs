@@ -14,6 +14,9 @@ use crate::types::TranscriptEvent;
 /// Both Deepgram (cloud) and Whisper (local) implement this trait so the
 /// command layer can select a provider at runtime without changing the
 /// downstream detection pipeline.
+// async_trait's boxed Future and the Result output are both must-use; keep
+// Clippy from treating the generated pair as a redundant annotation.
+#[allow(clippy::double_must_use)]
 #[async_trait::async_trait]
 pub trait SttProvider: Send + Sync {
     /// Start the provider, consuming raw 16 kHz mono i16 audio from `audio_rx`
