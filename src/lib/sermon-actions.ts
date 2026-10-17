@@ -2,7 +2,6 @@ import { toast } from "sonner"
 import { transcriptionActions } from "@/hooks/use-transcription"
 import { invoke } from "@/lib/ipc"
 import { waitForStartup } from "@/lib/startup-ready"
-import { announcementDocumentToVerse } from "@/lib/announcements"
 import { normalizePreachingSummary } from "@/lib/scripture-format"
 import { flushSermonSessions, useSermonStore } from "@/stores/sermon-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
@@ -10,7 +9,6 @@ import type {
   AnnouncementDocument,
   PreachingSummary,
   SermonSession,
-  VerseRenderData,
 } from "@/types"
 
 let noteGenerationPromise: Promise<void> | null = null
@@ -202,35 +200,4 @@ export async function endSermon(): Promise<void> {
   })
 
   return endSermonPromise
-}
-
-export function sermonQueueToPreview(
-  session: SermonSession
-): VerseRenderData | null {
-  const queuedIds = new Set(session.queuedNoteIds)
-  const notes = session.notes.filter(
-    (note) => note.source === "live" && queuedIds.has(note.id)
-  )
-  if (notes.length === 0) return null
-  const preview = announcementDocumentToVerse(
-    {
-      type: "doc",
-      content: [
-        {
-          type: "bulletList",
-          content: notes.map((note) => ({
-            type: "listItem",
-            content: [
-              {
-                type: "paragraph",
-                content: [{ type: "text", text: note.text.trim() }],
-              },
-            ],
-          })),
-        },
-      ],
-    },
-    "Sermon Notes"
-  )
-  return { ...preview, sermonSessionId: session.id }
 }

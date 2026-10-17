@@ -5,6 +5,7 @@ import {
   resolveOverlaySelection,
   sanitizeBarAppearance,
   sanitizeOverlayConfiguration,
+  upsertById,
 } from "@/lib/overlays"
 import type { ActiveOverlayState, OverlayConfiguration } from "@/types"
 import type {
@@ -89,10 +90,14 @@ export function createOverlayStagingActions(
         if (staged.barId === id) {
           return { ...staged, barId: null, barStartedAt: null }
         }
+        const now = Date.now()
+        // Swapping one bar for another keeps the bar in place and fades the words.
+        const swapping = staged.barId !== null && staged.barStartedAt !== null
         return {
           ...staged,
           barId: id,
-          barStartedAt: Date.now(),
+          barStartedAt: swapping ? staged.barStartedAt : now,
+          barChangedAt: swapping ? now : null,
           lowerThird: null,
           tickerMessageId: null,
           tickerStartedAt: null,
@@ -138,17 +143,24 @@ export function createOverlayStagingActions(
       if (!get().overlayConfig.bars.some((bar) => bar.id === id)) return
       if (get().activeOverlays.lowerThird) get().clearLowerThirdOverlay()
       if (get().activeOverlays.tickerMessageId) get().stopTickerMessage()
-      const startedAt = Date.now()
+      const now = Date.now()
+      const active = get().activeOverlays
+      // Swapping one bar for another keeps the bar in place and fades the words.
+      const swapping = active.barId !== null && active.barStartedAt !== null
+      const startedAt = swapping ? (active.barStartedAt ?? now) : now
+      const changedAt = swapping ? now : null
       set((s) => ({
         activeOverlays: {
           ...s.activeOverlays,
           barId: id,
           barStartedAt: startedAt,
+          barChangedAt: changedAt,
         },
         stagedOverlays: {
           ...s.stagedOverlays,
           barId: id,
           barStartedAt: startedAt,
+          barChangedAt: changedAt,
           lowerThird: null,
           tickerMessageId: null,
           tickerStartedAt: null,
@@ -175,17 +187,18 @@ export function createOverlayStagingActions(
           overlayConfig: sanitizeOverlayConfiguration(
             {
               ...s.overlayConfig,
-              bars: [
-                ...s.overlayConfig.bars.filter((item) => item.id !== id),
-                {
-                  ...bar,
-                  id,
-                  targetOutputIds:
-                    bar.targetOutputIds ?? existing?.targetOutputIds,
-                  createdAt: existing?.createdAt ?? now,
-                  updatedAt: now,
-                },
-              ],
+              bars: upsertById(s.overlayConfig.bars, {
+                ...bar,
+                id,
+                targetOutputIds:
+                  bar.targetOutputIds ??
+                  existing?.targetOutputIds ??
+                  s.outputs.map((output) => output.id),
+                // Editing a sent bar keeps it under Sent.
+                sent: bar.sent ?? existing?.sent,
+                createdAt: existing?.createdAt ?? now,
+                updatedAt: now,
+              }),
             },
             s.outputs.map((output) => output.id)
           ),

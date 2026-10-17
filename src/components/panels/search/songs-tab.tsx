@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/context-menu"
 import { cn } from "@/lib/utils"
 import type { CopSong } from "@/lib/cop-songs"
+import { SendToOverlayMenuItems } from "@/components/on-display/send-to-overlay"
+import { type OverlayContent } from "@/components/on-display/overlay-content"
 import { HighlightedText } from "./highlighted-text"
 
 interface SongsTabProps {
@@ -33,6 +35,17 @@ function firstLyricLine(lyrics: string): string {
     if (line.trim()) return line.trim()
   }
   return ""
+}
+
+/** A song as overlay content: its first stanza, on one line. */
+function songContent(song: CopSong, heading: string): OverlayContent | null {
+  const stanza = song.lyrics.trim().split(/\n\s*\n/)[0] ?? ""
+  const text = stanza
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(" / ")
+  return text ? { heading, text, source: "text" } : null
 }
 
 function songMeta(song: CopSong, showSource: boolean): string {
@@ -152,11 +165,14 @@ export function SongsTab({
                   </p>
                 </article>
               </ContextMenuTrigger>
-              <ContextMenuContent>
+              <ContextMenuContent className="w-auto min-w-48 whitespace-nowrap">
                 <ContextMenuItem onSelect={() => onEditSong(song)}>
                   <PencilIcon />
                   Edit song
                 </ContextMenuItem>
+                <SendToOverlayMenuItems
+                  getContent={() => songContent(song, formatReference(song))}
+                />
               </ContextMenuContent>
             </ContextMenu>
           )

@@ -1,5 +1,7 @@
 import { useMemo } from "react"
-import { BookMarkedIcon, ListPlusIcon, PlayIcon, TextIcon } from "lucide-react"
+import { BookMarkedIcon, ListPlusIcon, PlayIcon } from "lucide-react"
+import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
+import { verseContent } from "@/components/on-display/overlay-content"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -140,16 +142,6 @@ function presentScripture(result: DetectionResult) {
     .presentOnLive(toVerseRenderData(resultAsVerse(result), abbreviation), null)
 }
 
-function sendScriptureToScroll(result: DetectionResult) {
-  const broadcast = useBroadcastStore.getState()
-  const id = broadcast.saveTickerMessage({
-    text: result.verse_ref + ": " + result.verse_text,
-    targetOutputIds: broadcast.outputs.map((output) => output.id),
-  })
-  broadcast.showTickerMessage(id)
-  toast.success(result.verse_ref + " is scrolling live")
-}
-
 function queueScripture(result: DetectionResult) {
   const queue = useQueueStore.getState()
   const duplicateIndex = queue.findDuplicate(
@@ -175,7 +167,6 @@ function queueScripture(result: DetectionResult) {
 
 function RelatedScriptureRow({ result }: { result: DetectionResult }) {
   const tier = confidenceTier(result.confidence)
-  const reviewRequired = tier !== "high"
 
   return (
     <article
@@ -246,27 +237,10 @@ function RelatedScriptureRow({ result }: { result: DetectionResult }) {
           >
             <ListPlusIcon className="size-3" />
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={
-              reviewRequired
-                ? "Review then send " + result.verse_ref + " to scrolling text"
-                : "Send " + result.verse_ref + " to scrolling text"
-            }
-            aria-label={
-              reviewRequired
-                ? "Review then send " + result.verse_ref + " to scrolling text"
-                : "Send " + result.verse_ref + " to scrolling text"
-            }
-            onClick={(event) => {
-              event.stopPropagation()
-              sendScriptureToScroll(result)
-            }}
-          >
-            <TextIcon className="size-3" />
-          </Button>
+          <SendToOverlayButton
+            label={result.verse_ref}
+            getContent={() => verseContent(resultAsVerse(result))}
+          />
         </div>
       </div>
     </article>

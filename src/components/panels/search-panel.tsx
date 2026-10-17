@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { toast } from "sonner"
+import { DskOutputControls } from "@/components/on-display/dsk-output-controls"
 import { OnDisplayOverview } from "@/components/on-display/on-display-overview"
 import { AnnouncementsTab } from "@/components/panels/search/announcements-tab"
 import { PresentationSearchTab } from "@/components/panels/search/presentation-search-tab"
@@ -311,9 +312,10 @@ export function SearchPanel({
         ) : activeTab === "timer" ? (
           <TabDescription>Timer controls</TabDescription>
         ) : activeTab === "on-display" ? (
-          <TabDescription>
-            Video Overlays · Looks, logos, bars, scrolling text, lower thirds
-          </TabDescription>
+          // The graphics output and keying replace a caption here.
+          <div className="flex h-10 items-center">
+            <DskOutputControls />
+          </div>
         ) : null}
       </div>
 

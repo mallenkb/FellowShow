@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import {
   DEFAULT_BAR_APPEARANCE,
   getBarPreviewPayload,
@@ -18,8 +17,9 @@ import { useBroadcastStore } from "@/stores"
 import type { BarAppearance, BarOverlayItem } from "@/types"
 import { BarAppearanceFields } from "./bar-appearance-fields"
 import { BarContentFields, type BarContentDraft } from "./bar-content-fields"
+import { DeleteGraphicButton } from "./delete-graphic-button"
 import { OutputTargetSelector } from "./output-target-selector"
-import { OverlayVideoCanvas } from "./overlay-video-canvas"
+import { OverlayDesignPreview } from "./overlay-design-preview"
 
 interface BarDraft extends BarContentDraft, BarAppearance {
   name: string
@@ -34,6 +34,8 @@ function appearanceOf(source: BarAppearance): BarAppearance {
     backgroundImageUrl: source.backgroundImageUrl,
     backgroundDimPercent: source.backgroundDimPercent,
     textColor: source.textColor,
+    design: source.design,
+    accentColor: source.accentColor,
     padding: source.padding,
   }
 }
@@ -51,7 +53,7 @@ function draftFrom(
       heading: "",
       badge: "",
       text: "",
-      showBadge: true,
+      showBadge: false,
       targetOutputIds: defaultTargets,
     }
   }
@@ -67,8 +69,8 @@ function draftFrom(
   }
 }
 
+/** Bars are named after what they say, so the pad always matches. */
 function defaultName(draft: BarDraft): string {
-  if (draft.name.trim()) return draft.name.trim()
   if (draft.source === "live-verse") return "Scripture bar"
   return draft.heading.trim() || draft.text.trim().slice(0, 28) || "Bar"
 }
@@ -126,8 +128,8 @@ export function BarOverlayDialog({
     if (draft.source !== "live-verse" && !draft.text.trim()) {
       setError(
         draft.source === "verse"
-          ? "Choose a verse or type the verse text."
-          : "Type the words you want people to see."
+          ? "Insert a verse or type its words."
+          : "Type the words people should see."
       )
       return
     }
@@ -148,24 +150,15 @@ export function BarOverlayDialog({
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{barId ? "Edit bar" : "Add bar"}</DialogTitle>
-          <DialogDescription>
-            A bar runs along the bottom of the screen and shows on its own,
-            without a lower third or scrolling text. Saving puts it in Preview.
+          <DialogDescription className="sr-only">
+            Write the bar, pick a design, then save it to Preview.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="overflow-hidden rounded-lg border border-border">
+          <OverlayDesignPreview overlays={preview} />
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
           <div className="grid content-start gap-3">
-            <label className="grid gap-1 text-xs font-medium">
-              Bar name
-              <Input
-                value={draft.name}
-                maxLength={40}
-                placeholder={defaultName({ ...draft, name: "" })}
-                onChange={(event) =>
-                  setDraft({ ...draft, name: event.target.value })
-                }
-              />
-            </label>
             <BarContentFields
               value={draft}
               onChange={(content) => {
@@ -188,22 +181,22 @@ export function BarOverlayDialog({
               </p>
             ) : null}
           </div>
-          <div className="grid content-start gap-3">
-            <OverlayVideoCanvas overlays={preview} />
-            <h3 className="text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase">
-              Appearance
-            </h3>
-            <BarAppearanceFields
-              value={draft}
-              onChange={(appearance) => setDraft({ ...draft, ...appearance })}
-            />
-          </div>
+          <BarAppearanceFields
+            value={draft}
+            content={{
+              heading: draft.heading,
+              badge: draft.showBadge ? draft.badge : "",
+              text: draft.text,
+            }}
+            onChange={(appearance) => setDraft({ ...draft, ...appearance })}
+          />
         </div>
         <DialogFooter className="items-center sm:justify-between">
           {barId ? (
-            <Button type="button" variant="ghost" onClick={remove}>
-              Delete bar
-            </Button>
+            <DeleteGraphicButton
+              name={bar?.name ?? "this bar"}
+              onDelete={remove}
+            />
           ) : (
             <span />
           )}

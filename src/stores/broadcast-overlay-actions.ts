@@ -2,6 +2,7 @@ import {
   clampLowerThirdDuration,
   isFullWidthLowerThird,
   sanitizeOverlayConfiguration,
+  upsertById,
 } from "@/lib/overlays"
 import type { ActiveOverlayState, TickerMessage } from "@/types"
 import type {
@@ -120,23 +121,24 @@ export function createOverlayActions(
         const existing = s.overlayConfig.tickerMessages.find(
           (item) => item.id === id
         )
+        const saved = {
+          ...message,
+          id,
+          speed: message.speed ?? s.overlayConfig.ticker.speed,
+          // Editing a sent message keeps it under Sent.
+          sent: message.sent ?? existing?.sent,
+          targetOutputIds:
+            message.targetOutputIds ??
+            existing?.targetOutputIds ??
+            s.outputs.map((output) => output.id),
+          createdAt: existing?.createdAt ?? now,
+          updatedAt: now,
+        }
+        // An edited message keeps its place, so its pad does not move.
+        const tickerMessages = upsertById(s.overlayConfig.tickerMessages, saved)
         return {
           overlayConfig: sanitizeOverlayConfiguration(
-            {
-              ...s.overlayConfig,
-              tickerMessages: [
-                ...s.overlayConfig.tickerMessages.filter(
-                  (item) => item.id !== id
-                ),
-                {
-                  ...message,
-                  id,
-                  speed: message.speed ?? s.overlayConfig.ticker.speed,
-                  createdAt: existing?.createdAt ?? now,
-                  updatedAt: now,
-                },
-              ],
-            },
+            { ...s.overlayConfig, tickerMessages },
             s.outputs.map((output) => output.id)
           ),
         }
@@ -229,18 +231,13 @@ export function createOverlayActions(
         const overlayConfig = sanitizeOverlayConfiguration(
           {
             ...s.overlayConfig,
-            lowerThirdPresets: [
-              ...s.overlayConfig.lowerThirdPresets.filter(
-                (item) => item.id !== id
-              ),
-              {
-                ...preset,
-                durationMs: clampLowerThirdDuration(preset.durationMs),
-                id,
-                createdAt: existing?.createdAt ?? now,
-                updatedAt: now,
-              },
-            ],
+            lowerThirdPresets: upsertById(s.overlayConfig.lowerThirdPresets, {
+              ...preset,
+              durationMs: clampLowerThirdDuration(preset.durationMs),
+              id,
+              createdAt: existing?.createdAt ?? now,
+              updatedAt: now,
+            }),
           },
           s.outputs.map((output) => output.id)
         )

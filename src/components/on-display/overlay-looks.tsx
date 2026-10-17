@@ -91,14 +91,19 @@ export function OverlayLooks({
         >
           Saved Looks
         </h3>
-        <Button type="button" variant="ghost" size="sm" onClick={onSave}>
-          <BookmarkPlusIcon /> Save Preview as a Look
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          title="Save what is in Preview as a Look"
+          onClick={onSave}
+        >
+          <BookmarkPlusIcon /> Save Look
         </Button>
       </div>
       {config.looks.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs leading-relaxed text-muted-foreground">
-          No Looks yet. Tap pads to build Preview, then save it as a Look for
-          each part of the service, like Welcome or Sermon.
+          No Looks yet
         </p>
       ) : (
         <div className="grid gap-1">

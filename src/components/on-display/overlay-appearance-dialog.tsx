@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -16,21 +15,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SliderField } from "@/components/ui/slider-field"
-import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DEFAULT_BAR_APPEARANCE, getBarPreviewPayload } from "@/lib/overlays"
+import { DEFAULT_BAR_APPEARANCE } from "@/lib/overlays"
 import { useBroadcastStore } from "@/stores"
 import {
   LOWER_THIRD_STYLE_OPTIONS,
-  TICKER_SPEED_OPTIONS,
   type BarAppearance,
   type LowerThirdStyle,
   type OverlayPosition,
   type TickerOverlayConfig,
 } from "@/types/overlays"
 import { BarAppearanceFields } from "./bar-appearance-fields"
-import { OverlayColorField } from "./overlay-fields"
-import { OverlayVideoCanvas } from "./overlay-video-canvas"
+import { LowerThirdStylePicker } from "./lower-third-style-picker"
+import { TickerDesignFields } from "./ticker-design-fields"
 
 const LOGO_CORNERS: Record<
   OverlayPosition,
@@ -90,6 +87,24 @@ export function OverlayAppearanceDialog({
         updatedAt: startedAt,
       }
 
+  const styleOption = LOWER_THIRD_STYLE_OPTIONS.find(
+    (item) => item.value === style
+  )
+  const sampleLowerThird = {
+    id: "sample",
+    theme: firstPreset?.theme ?? ("preacher" as const),
+    style,
+    title: firstPreset?.title ?? "Pastor Daniel Mensah",
+    subtitle: firstPreset?.subtitle ?? "The God who restores",
+    backgroundColor: styleOption?.defaultBackgroundColor ?? "#ffffff",
+    textColor: styleOption?.defaultTextColor ?? "#0f172a",
+    widthPercent: 60,
+    xPercent: 50,
+    yPercent: 50,
+    durationMs: 14_000,
+    startedAt: 0,
+  }
+
   const applyLowerThirds = () => {
     const store = useBroadcastStore.getState()
     const option = LOWER_THIRD_STYLE_OPTIONS.find(
@@ -148,10 +163,15 @@ export function OverlayAppearanceDialog({
             <TabsTrigger value="logo">Logos</TabsTrigger>
           </TabsList>
           <TabsContent value="bar" className="grid gap-3 pt-2">
-            <OverlayVideoCanvas
-              overlays={getBarPreviewPayload(sampleBar, null, startedAt)}
+            <BarAppearanceFields
+              value={bar}
+              content={{
+                heading: sampleBar.heading,
+                badge: sampleBar.badge,
+                text: sampleBar.text,
+              }}
+              onChange={setBar}
             />
-            <BarAppearanceFields value={bar} onChange={setBar} />
             <Button
               type="button"
               disabled={config.bars.length === 0}
@@ -171,95 +191,24 @@ export function OverlayAppearanceDialog({
             )}
           </TabsContent>
           <TabsContent value="ticker" className="grid gap-3 pt-2">
-            <OverlayVideoCanvas
-              overlays={{
-                logos: [],
-                lowerThird: null,
-                bar: null,
-                ticker: {
-                  ...ticker,
-                  id: "sample",
-                  text:
-                    config.tickerMessages[0]?.text ??
-                    "Youth camp registration closes on Sunday.",
-                  startedAt,
-                },
-              }}
+            <TickerDesignFields
+              value={ticker}
+              sampleText={config.tickerMessages[0]?.text ?? ""}
+              onChange={setTicker}
             />
-            <div className="grid grid-cols-2 gap-3">
-              <OverlayColorField
-                label="Bar color"
-                value={ticker.backgroundColor}
-                onChange={(backgroundColor) =>
-                  setTicker({ ...ticker, backgroundColor })
-                }
-              />
-              <OverlayColorField
-                label="Text color"
-                value={ticker.textColor}
-                onChange={(textColor) => setTicker({ ...ticker, textColor })}
-              />
-              <OverlayColorField
-                label="Label color"
-                value={ticker.labelBackgroundColor}
-                onChange={(labelBackgroundColor) =>
-                  setTicker({ ...ticker, labelBackgroundColor })
-                }
-              />
-              <OverlayColorField
-                label="Label text color"
-                value={ticker.labelTextColor}
-                onChange={(labelTextColor) =>
-                  setTicker({ ...ticker, labelTextColor })
-                }
-              />
-            </div>
-            <label className="flex items-center justify-between gap-3 text-xs font-medium">
-              Show a label at the start
-              <Switch
-                checked={ticker.showLabel}
-                onCheckedChange={(showLabel) =>
-                  setTicker({ ...ticker, showLabel })
-                }
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-medium">
-              Label text
-              <Input
-                value={ticker.labelText}
-                maxLength={32}
-                onChange={(event) =>
-                  setTicker({ ...ticker, labelText: event.target.value })
-                }
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-medium">
-              Scroll speed
-              <Select
-                value={ticker.speed}
-                onValueChange={(speed) =>
-                  setTicker({
-                    ...ticker,
-                    speed: speed as TickerOverlayConfig["speed"],
-                  })
-                }
-              >
-                <SelectTrigger size="sm" aria-label="Scroll speed">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TICKER_SPEED_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
             <Button
               type="button"
               onClick={() => {
-                useBroadcastStore.getState().updateTickerOverlay(ticker)
+                const store = useBroadcastStore.getState()
+                store.updateTickerOverlay(ticker)
+                // Drop each message's own look so the new one reaches all of them.
+                for (const message of store.overlayConfig.tickerMessages) {
+                  store.saveTickerMessage({
+                    id: message.id,
+                    text: message.text,
+                    targetOutputIds: message.targetOutputIds,
+                  })
+                }
                 setApplied("ticker")
               }}
             >
@@ -268,24 +217,11 @@ export function OverlayAppearanceDialog({
             {appliedNote("ticker", config.tickerMessages.length, "message")}
           </TabsContent>
           <TabsContent value="lower" className="grid gap-3 pt-2">
-            <label className="grid gap-1 text-xs font-medium">
-              Style
-              <Select
-                value={style}
-                onValueChange={(next) => setStyle(next as LowerThirdStyle)}
-              >
-                <SelectTrigger size="sm" aria-label="Lower third style">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOWER_THIRD_STYLE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
+            <LowerThirdStylePicker
+              value={style}
+              graphic={sampleLowerThird}
+              onChange={setStyle}
+            />
             <SliderField
               label="Hide after"
               min={10}

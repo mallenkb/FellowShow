@@ -144,7 +144,11 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const overlayOutputIsLive = useOverlayOutputLive(overlayOutput?.id ?? null)
   // Video Overlays Preview shows what is staged, not what is on air.
   const resolvedStaged = resolveOverlaySelection(overlayConfig, stagedOverlays)
-  const overlayPreviewPayload = overlayOutput
+  // Every tab's Preview shows the graphics in Preview, so a bar or scrolling
+  // text sent from Sermon, Notes or Songs is visible here too.
+  const graphicsOutput =
+    overlayOutput ?? resolveOverlayOutput(outputs, selectedOverlayOutputId)
+  const overlayPreviewPayload = graphicsOutput
     ? getOverlayPreviewPayload(overlayConfig, resolvedStaged, undefined, {
         scripture: getCurrentOverlayScripture({
           isLive: isProgramLive,
@@ -244,7 +248,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
             verse={isOverlayPreview ? null : previewVerse}
             timer={isOverlayPreview ? null : previewTimer}
             overlays={
-              isOverlayPreview
+              isOverlayPreview || overlayPreviewPayload
                 ? overlayPreviewPayload
                 : isProgramLive
                   ? getOverlayPayloadForOutput(
@@ -302,15 +306,12 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
               </Button>
             ) : null}
           </div>
-          <p className="mt-1.5 text-center text-[0.625rem] leading-relaxed text-muted-foreground">
-            {!overlayOutput
-              ? "Add a Video Overlays output in Displays to enable Show on Live."
-              : overlayChangesPending
-                ? "Preview has changes. Update Live sends them to the graphics output."
-                : overlayOutputIsLive
-                  ? "These graphics are live. Changes you make stay in Preview until you press Update Live."
-                  : "Preview only. Show on Live sends these graphics to the selected output. Program is not affected."}
-          </p>
+          {/* The buttons say what happens; only a missing output needs words. */}
+          {!overlayOutput ? (
+            <p className="mt-1.5 text-center text-[0.625rem] leading-relaxed text-muted-foreground">
+              Add a Video Overlays output in Displays to enable Show on Live.
+            </p>
+          ) : null}
         </div>
       ) : (
         <div className="relative z-10 border-t border-border bg-card px-3 py-2">

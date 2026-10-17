@@ -5,6 +5,11 @@ import { cn } from "@/lib/utils"
 import { ScriptureBookGrid } from "./scripture-book-grid"
 import { ScriptureNumberGrid } from "./scripture-number-grid"
 import { VerseQueueAction } from "./verse-queue-action"
+import {
+  SendToOverlayButton,
+  VerseOverlayMenu,
+} from "@/components/on-display/send-to-overlay"
+import { verseContent } from "@/components/on-display/overlay-content"
 import type { ScriptureSearchController } from "./use-scripture-search"
 
 const CRUMB_BUTTON_CLASS =
@@ -174,34 +179,51 @@ export function ScriptureBookResults({
               const isSelected =
                 verse.id === controller.effectiveSelectedVerseId
               return (
-                <div
+                <VerseOverlayMenu
                   key={verse.id}
-                  id={`verse-${verse.id}`}
-                  aria-current={isSelected ? "true" : undefined}
-                  tabIndex={0}
-                  onClick={() => controller.handleVerseClick(verse)}
-                  onDoubleClick={() => controller.handleVerseDoubleClick(verse)}
-                  className={cn(
-                    "group flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                    isSelected
-                      ? "border border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                      : "border border-transparent hover:bg-muted/50"
-                  )}
+                  verse={verse}
+                  translation={controller.activeTranslationAbbreviation}
                 >
-                  <span className="w-6 shrink-0 text-right text-sm font-semibold text-[#101084] dark:text-[#F1E600]">
-                    {verse.verse}
-                  </span>
-                  <p className="flex-1 text-sm leading-relaxed text-foreground/80">
-                    {verse.text}
-                  </p>
-                  <VerseQueueAction
-                    verse={verse}
-                    reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
-                    confidence={1}
-                    isQueued={controller.queuedVerseKeys.has(verseKey)}
-                    isSelected={isSelected}
-                  />
-                </div>
+                  <div
+                    id={`verse-${verse.id}`}
+                    aria-current={isSelected ? "true" : undefined}
+                    tabIndex={0}
+                    onClick={() => controller.handleVerseClick(verse)}
+                    onDoubleClick={() =>
+                      controller.handleVerseDoubleClick(verse)
+                    }
+                    className={cn(
+                      "group flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                      isSelected
+                        ? "border border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
+                        : "border border-transparent hover:bg-muted/50"
+                    )}
+                  >
+                    <span className="w-6 shrink-0 text-right text-sm font-semibold text-[#101084] dark:text-[#F1E600]">
+                      {verse.verse}
+                    </span>
+                    <p className="flex-1 text-sm leading-relaxed text-foreground/80">
+                      {verse.text}
+                    </p>
+                    <SendToOverlayButton
+                      label={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
+                      getContent={() =>
+                        verseContent(
+                          verse,
+                          controller.activeTranslationAbbreviation
+                        )
+                      }
+                      className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                    />
+                    <VerseQueueAction
+                      verse={verse}
+                      reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
+                      confidence={1}
+                      isQueued={controller.queuedVerseKeys.has(verseKey)}
+                      isSelected={isSelected}
+                    />
+                  </div>
+                </VerseOverlayMenu>
               )
             })}
           </div>

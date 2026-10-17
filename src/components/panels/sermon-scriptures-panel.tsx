@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   BookMarkedIcon,
   ListPlusIcon,
   PlayIcon,
   SquareIcon,
-  TextIcon,
   Trash2Icon,
 } from "lucide-react"
+import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
+import { verseContent } from "@/components/on-display/overlay-content"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { bibleActions } from "@/hooks/use-bible"
@@ -122,17 +123,6 @@ function stopScriptureOnLive(reference: SermonDirectReference) {
   broadcast.setLive(false)
 }
 
-async function sendScriptureToScroll(reference: SermonDirectReference) {
-  const verse = await resolveScripture(reference)
-  const broadcast = useBroadcastStore.getState()
-  const id = broadcast.saveTickerMessage({
-    text: reference.reference + ": " + verse.text,
-    targetOutputIds: broadcast.outputs.map((output) => output.id),
-  })
-  broadcast.showTickerMessage(id)
-  toast.success(reference.reference + " is scrolling live")
-}
-
 function SermonScriptureRow({
   reference,
   isQueued,
@@ -237,21 +227,12 @@ function SermonScriptureRow({
               <ListPlusIcon className="size-3" />
             </Button>
           ) : null}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={"Send " + reference.reference + " to scrolling text"}
-            aria-label={"Send " + reference.reference + " to scrolling text"}
-            onClick={(event) => {
-              event.stopPropagation()
-              void sendScriptureToScroll(reference).catch((error: unknown) => {
-                reportScriptureActionFailure(reference, error)
-              })
-            }}
-          >
-            <TextIcon className="size-3" />
-          </Button>
+          <SendToOverlayButton
+            label={reference.reference}
+            getContent={async () =>
+              verseContent(await resolveScripture(reference))
+            }
+          />
           <Button
             type="button"
             variant="ghost"
@@ -306,6 +287,33 @@ export function SermonScripturesPanel() {
       }),
     [detections, highlightedReferences, segments]
   )
+  // A newly detected scripture goes straight into Preview, ready for Live.
+  // References already listed when the panel opens are left alone.
+  const seenKeys = useRef<{
+    sessionId: string | null
+    keys: Set<string>
+  } | null>(null)
+  useEffect(() => {
+    const seen = seenKeys.current
+    if (!seen || seen.sessionId !== activeSessionId) {
+      seenKeys.current = {
+        sessionId: activeSessionId,
+        keys: new Set(directReferences.map((reference) => reference.key)),
+      }
+      return
+    }
+    const fresh = directReferences.filter(
+      (reference) => !seen.keys.has(reference.key)
+    )
+    for (const reference of fresh) seen.keys.add(reference.key)
+    // Several at once arrive sorted by confidence, so the first is the surest.
+    const next = fresh.find((reference) => !dismissedKeys?.has(reference.key))
+    if (!next) return
+    void previewScripture(next).catch((error: unknown) => {
+      reportScriptureActionFailure(next, error)
+    })
+  }, [activeSessionId, directReferences, dismissedKeys])
+
   const queuedKeys = useMemo(
     () =>
       new Set(

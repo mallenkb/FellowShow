@@ -23,6 +23,18 @@ import {
   type TickerOverlayConfig,
   type TickerMessage,
 } from "@/types/overlays"
+import {
+  BAR_DESIGN_OPTIONS,
+  DEFAULT_BAR_DESIGN,
+  isBarDesign,
+  type BarDesign,
+} from "@/types/bar-designs"
+import {
+  DEFAULT_TICKER_STYLE,
+  TICKER_DESIGN_OPTIONS,
+  isTickerStyle,
+  type TickerStyle,
+} from "@/types/ticker-designs"
 import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
 
 const DEFAULT_OVERLAY_OUTPUT_ID = "main"
@@ -36,6 +48,8 @@ const MAX_LOWER_THIRD_DURATION_MS = 90_000
 // Keep lower thirds responsive on air while retaining a subtle fade.
 const LOWER_THIRD_FADE_MS = 600
 export const BAR_ENTRANCE_MS = 450
+/** How long new words take to fade in on a bar already on screen. */
+export const BAR_TEXT_FADE_MS = 350
 const DEFAULT_LOWER_THIRD_X_PERCENT = 14
 const DEFAULT_LOWER_THIRD_Y_PERCENT = 82
 const DEFAULT_LOWER_THIRD_WIDTH_PERCENT = 50
@@ -53,52 +67,48 @@ const BAR_BACKGROUND_TYPES: ReadonlySet<string> = new Set([
   "image",
 ])
 
-export const BAR_PRESETS = [
-  {
-    id: "classic",
-    label: "Classic purple",
-    backgroundType: "gradient",
-    backgroundColor: "#9a4a6e",
-    backgroundColorEnd: "#46288a",
-    textColor: "#ffffff",
-  },
-  {
-    id: "navy",
-    label: "Navy",
-    backgroundType: "solid",
-    backgroundColor: "#0b1b3a",
-    backgroundColorEnd: "#0b1b3a",
-    textColor: "#ffffff",
-  },
-  {
-    id: "forest",
-    label: "Forest",
-    backgroundType: "gradient",
-    backgroundColor: "#1f4d3a",
-    backgroundColorEnd: "#10201a",
-    textColor: "#ffffff",
-  },
-  {
-    id: "light",
-    label: "Light",
-    backgroundType: "solid",
-    backgroundColor: "#fcfcf8",
-    backgroundColorEnd: "#fcfcf8",
-    textColor: "#1d242e",
-  },
-] as const satisfies ReadonlyArray<
-  Pick<
-    BarAppearance,
-    "backgroundType" | "backgroundColor" | "backgroundColorEnd" | "textColor"
-  > & { id: string; label: string }
->
+/** The colors a scrolling text design starts from. */
+export function tickerDesignColors(style: TickerStyle) {
+  const option =
+    TICKER_DESIGN_OPTIONS.find((item) => item.value === style) ??
+    TICKER_DESIGN_OPTIONS[0]
+  return {
+    style: option.value,
+    backgroundColor: option.backgroundColor,
+    textColor: option.textColor,
+    labelBackgroundColor: option.labelBackgroundColor,
+    labelTextColor: option.labelTextColor,
+  }
+}
+
+/** The colors a bar design starts from; operators can change each one. */
+export function barDesignAppearance(
+  design: BarDesign
+): Pick<
+  BarAppearance,
+  | "design"
+  | "backgroundType"
+  | "backgroundColor"
+  | "backgroundColorEnd"
+  | "textColor"
+  | "accentColor"
+> {
+  const option =
+    BAR_DESIGN_OPTIONS.find((item) => item.value === design) ??
+    BAR_DESIGN_OPTIONS[0]
+  return {
+    design: option.value,
+    backgroundType: option.backgroundType,
+    backgroundColor: option.backgroundColor,
+    backgroundColorEnd: option.backgroundColorEnd,
+    textColor: option.textColor,
+    accentColor: option.accentColor,
+  }
+}
 
 export const DEFAULT_BAR_APPEARANCE: BarAppearance = {
-  backgroundType: BAR_PRESETS[0].backgroundType,
-  backgroundColor: BAR_PRESETS[0].backgroundColor,
-  backgroundColorEnd: BAR_PRESETS[0].backgroundColorEnd,
+  ...barDesignAppearance(DEFAULT_BAR_DESIGN),
   backgroundDimPercent: 35,
-  textColor: BAR_PRESETS[0].textColor,
   padding: "padded",
 }
 
@@ -145,6 +155,7 @@ export function createDefaultOverlayConfiguration(): OverlayConfiguration {
       labelText: "NOTICE",
       showLabel: true,
       speed: DEFAULT_TICKER_SPEED,
+      style: DEFAULT_TICKER_STYLE,
     },
     tickerMessages: [],
     lowerThirdPresets: [],
@@ -204,6 +215,8 @@ export function hasAnimatingOverlay(
   return Boolean(
     overlays?.ticker ||
     (overlays?.bar && now < overlays.bar.startedAt + BAR_ENTRANCE_MS) ||
+    (overlays?.bar?.changedAt !== undefined &&
+      now < overlays.bar.changedAt + BAR_TEXT_FADE_MS) ||
     (overlays?.lowerThird &&
       now < overlays.lowerThird.startedAt + overlays.lowerThird.durationMs)
   )
@@ -369,6 +382,21 @@ function sanitizeTickerMessage(
     ...(typeof record.showLabel === "boolean"
       ? { showLabel: record.showLabel }
       : {}),
+    ...(isTickerStyle(record.style) ? { style: record.style } : {}),
+    ...(record.sent === true ? { sent: true } : {}),
+    ...Object.fromEntries(
+      (
+        [
+          "backgroundColor",
+          "textColor",
+          "labelBackgroundColor",
+          "labelTextColor",
+        ] as const
+      ).flatMap((key) => {
+        const color = sanitizeOptionalColor(record[key])
+        return color ? [[key, color]] : []
+      })
+    ),
     speed: isTickerSpeed(record.speed) ? record.speed : DEFAULT_TICKER_SPEED,
     targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
     createdAt:
@@ -415,6 +443,7 @@ function sanitizeTickerConfig(
       : isTickerSpeed(legacy?.speed)
         ? legacy.speed
         : DEFAULT_TICKER_SPEED,
+    style: isTickerStyle(record?.style) ? record.style : DEFAULT_TICKER_STYLE,
   }
 }
 
@@ -581,6 +610,14 @@ export function sanitizeBarAppearance(
       fallback.backgroundDimPercent
     ),
     textColor: sanitizeColor(record.textColor, fallback.textColor),
+    // Bars saved before designs existed keep their colors on the first design.
+    design: isBarDesign(record.design) ? record.design : fallback.design,
+    accentColor: sanitizeColor(
+      record.accentColor,
+      isBarDesign(record.design)
+        ? barDesignAppearance(record.design).accentColor
+        : fallback.accentColor
+    ),
     padding: record.padding === "none" ? "none" : "padded",
   }
 }
@@ -617,6 +654,7 @@ function sanitizeBar(
     source,
     heading,
     ...(badge ? { badge } : {}),
+    ...(record.sent === true ? { sent: true } : {}),
     text: source === "live-verse" ? "" : text,
     showBadge: record.showBadge !== false,
     targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
@@ -781,6 +819,8 @@ function buildBarPayload(
       : {}),
     backgroundDimPercent: bar.backgroundDimPercent,
     textColor: bar.textColor,
+    design: bar.design,
+    accentColor: bar.accentColor,
     padding: bar.padding,
   }
   if (bar.source === "live-verse") {
@@ -845,9 +885,13 @@ function buildOverlayPayload(
           (outputId === null || bar.targetOutputIds.includes(outputId))
       )
     : undefined
-  const bar = barItem
+  const builtBar = barItem
     ? buildBarPayload(barItem, active.barStartedAt ?? now, extras)
     : null
+  const bar =
+    builtBar && active.barChangedAt
+      ? { ...builtBar, changedAt: active.barChangedAt }
+      : builtBar
   const ticker = config.tickerMessages.find(
     (message) =>
       message.id === active.tickerMessageId &&
@@ -916,13 +960,17 @@ function buildOverlayPayload(
         ? {
             id: ticker.id,
             text: ticker.text,
-            backgroundColor: config.ticker.backgroundColor,
-            textColor: config.ticker.textColor,
-            labelBackgroundColor: config.ticker.labelBackgroundColor,
-            labelTextColor: config.ticker.labelTextColor,
+            backgroundColor:
+              ticker.backgroundColor ?? config.ticker.backgroundColor,
+            textColor: ticker.textColor ?? config.ticker.textColor,
+            labelBackgroundColor:
+              ticker.labelBackgroundColor ?? config.ticker.labelBackgroundColor,
+            labelTextColor:
+              ticker.labelTextColor ?? config.ticker.labelTextColor,
             labelText: ticker.labelText ?? config.ticker.labelText,
             showLabel: ticker.showLabel ?? config.ticker.showLabel,
             speed: ticker.speed ?? config.ticker.speed ?? DEFAULT_TICKER_SPEED,
+            style: ticker.style ?? config.ticker.style,
             startedAt: active.tickerStartedAt ?? now,
           }
         : null,
@@ -999,6 +1047,7 @@ export function resolveOverlaySelection(
         : null,
     barId: barExists ? selection.barId : null,
     barStartedAt: barExists ? selection.barStartedAt : null,
+    barChangedAt: barExists ? (selection.barChangedAt ?? null) : null,
   }
 }
 
@@ -1046,4 +1095,11 @@ export function getBarPreviewPayload(
     ticker: null,
     bar: buildBarPayload(bar, startedAt, { scripture, holdForPreview: true }),
   }
+}
+
+/** Replaces the item with the same id where it sits, or adds it at the end. */
+export function upsertById<T extends { id: string }>(items: T[], item: T): T[] {
+  return items.some((existing) => existing.id === item.id)
+    ? items.map((existing) => (existing.id === item.id ? item : existing))
+    : [...items, item]
 }

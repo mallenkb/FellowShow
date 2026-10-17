@@ -261,3 +261,45 @@ describe("bar overlays", () => {
     ).toBe(true)
   })
 })
+
+describe("scrolling text designs per message", () => {
+  it("uses a message's own design and colors, else the shared look", () => {
+    const config = sanitizeOverlayConfiguration(
+      {
+        ticker: { style: "classic", backgroundColor: "#f8fafc" },
+        tickerMessages: [
+          {
+            id: "own",
+            text: "Prayer night on Friday",
+            style: "chevron",
+            backgroundColor: "#18181b",
+            labelBackgroundColor: "not-a-color",
+          },
+          { id: "shared", text: "Youth camp closes Sunday" },
+        ],
+      },
+      ["main"]
+    )
+    const payloadFor = (id: string) =>
+      getOverlayPayloadForOutput(
+        config,
+        {
+          ...createInactiveOverlayState(),
+          tickerMessageId: id,
+          tickerStartedAt: 0,
+        },
+        "main",
+        100
+      ).ticker
+    expect(payloadFor("own")).toMatchObject({
+      style: "chevron",
+      backgroundColor: "#18181b",
+      // An invalid saved color falls back to the shared look.
+      labelBackgroundColor: config.ticker.labelBackgroundColor,
+    })
+    expect(payloadFor("shared")).toMatchObject({
+      style: "classic",
+      backgroundColor: "#f8fafc",
+    })
+  })
+})

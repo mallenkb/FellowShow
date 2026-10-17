@@ -29,6 +29,8 @@ async function loadStore() {
     backgroundColor: "#9a4a6e",
     backgroundColorEnd: "#46288a",
     backgroundDimPercent: 35,
+    design: "classic-split",
+    accentColor: "#ffffff",
     textColor: "#ffffff",
     padding: "padded",
   })
@@ -83,6 +85,38 @@ describe("Video Overlays staging", () => {
     const active = useBroadcastStore.getState().activeOverlays
     expect(active.barId).toBe(barId)
     expect(active.tickerMessageId).toBeNull()
+  })
+
+  it("swaps one live bar for another without replaying its entrance", async () => {
+    const { useBroadcastStore, barId } = await loadStore()
+    const { getOverlayPayloadForOutput } = await import("@/lib/overlays")
+    const store = useBroadcastStore.getState()
+    const nextId = store.saveBarOverlay({
+      ...store.overlayConfig.bars[0],
+      id: undefined,
+      name: "John 3:17",
+      source: "verse",
+      heading: "John 3:17",
+      text: "For God sent not his Son into the world to condemn the world",
+    })
+    vi.setSystemTime(1_000)
+    store.toggleStagedBar(barId)
+    store.commitStagedOverlays()
+    const first = useBroadcastStore.getState().activeOverlays
+    expect(first.barChangedAt ?? null).toBeNull()
+
+    vi.setSystemTime(5_000)
+    store.toggleStagedBar(nextId)
+    store.commitStagedOverlays()
+    const active = useBroadcastStore.getState().activeOverlays
+    expect(active.barId).toBe(nextId)
+    expect(active.barStartedAt).toBe(first.barStartedAt)
+    expect(active.barChangedAt).toBe(5_000)
+    const config = useBroadcastStore.getState().overlayConfig
+    const outputId =
+      config.bars.find((bar) => bar.id === nextId)?.targetOutputIds[0] ?? ""
+    const payload = getOverlayPayloadForOutput(config, active, outputId)
+    expect(payload.bar).toMatchObject({ startedAt: 1_000, changedAt: 5_000 })
   })
 
   it("swaps scrolling text and a full-width lower third in Preview", async () => {

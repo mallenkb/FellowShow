@@ -3,12 +3,8 @@ import { LayersIcon, PaletteIcon, VideoIcon } from "lucide-react"
 import { OverlaySamplePreviewDialog } from "@/components/on-display/overlay-sample-preview-dialog"
 import { Button } from "@/components/ui/button"
 import { PanelHeader } from "@/components/ui/panel-header"
-import { BarOverlayDialog } from "@/components/on-display/bar-overlay-dialog"
 import { AddGraphicDialog } from "@/components/on-display/add-graphic-dialog"
-import {
-  OverlayEditorDialog,
-  type OverlayEditorKind,
-} from "@/components/on-display/overlay-editor-dialog"
+import { OverlayEditorDialog } from "@/components/on-display/overlay-editor-dialog"
 import { OverlayAppearanceDialog } from "@/components/on-display/overlay-appearance-dialog"
 import {
   OverlayPads,
@@ -16,38 +12,23 @@ import {
 } from "@/components/on-display/overlay-pads"
 
 interface EditorState {
-  open: boolean
+  kind: OverlayPadKind
+  /** The graphic being edited; null adds a new one. */
   id: string | null
   /** Remounts the editor so every opening starts from saved values. */
   key: number
 }
 
-const CLOSED: EditorState = { open: false, id: null, key: 0 }
-
 export function OnDisplayPanel() {
   const [samplePreviewOpen, setSamplePreviewOpen] = useState(false)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const [appearanceKey, setAppearanceKey] = useState(0)
-  const [barEditor, setBarEditor] = useState<EditorState>(CLOSED)
-  const [editor, setEditor] = useState<{
-    kind: OverlayEditorKind
-    id: string | null
-    key: number
-  } | null>(null)
+  const [editor, setEditor] = useState<EditorState | null>(null)
+  const [editorKey, setEditorKey] = useState(0)
   const [addOpen, setAddOpen] = useState(false)
-  const openEditor = (kind: OverlayEditorKind, id: string | null) =>
-    setEditor((state) => ({ kind, id, key: (state?.key ?? 0) + 1 }))
-
-  const openBar = (id: string | null) =>
-    setBarEditor((state) => ({ open: true, id, key: state.key + 1 }))
-
-  const editPad = (kind: OverlayPadKind, id: string) => {
-    if (kind === "bar") openBar(id)
-    else openEditor(kind, id)
-  }
-  const addGraphic = (kind: OverlayPadKind) => {
-    if (kind === "bar") openBar(null)
-    else openEditor(kind, null)
+  const openEditor = (kind: OverlayPadKind, id: string | null) => {
+    setEditorKey((key) => key + 1)
+    setEditor({ kind, id, key: editorKey + 1 })
   }
 
   return (
@@ -94,27 +75,24 @@ export function OnDisplayPanel() {
         onOpenChange={setAppearanceOpen}
       />
       <div className="min-h-0 flex-1 [scrollbar-width:thin] space-y-3 overflow-y-auto p-3">
-        <OverlayPads onAddRequest={() => setAddOpen(true)} onEdit={editPad} />
+        <OverlayPads
+          onAddRequest={() => setAddOpen(true)}
+          onEdit={openEditor}
+        />
       </div>
       <AddGraphicDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        onPick={addGraphic}
+        onPick={(kind) => openEditor(kind, null)}
       />
-      <OverlayEditorDialog
-        key={`editor-${editor?.key ?? 0}`}
-        kind={editor?.kind ?? null}
-        editId={editor?.id ?? null}
-        onOpenChange={(open) => {
-          if (!open) setEditor(null)
-        }}
-      />
-      <BarOverlayDialog
-        key={`bar-${barEditor.key}`}
-        barId={barEditor.id}
-        open={barEditor.open}
-        onOpenChange={(open) => setBarEditor((state) => ({ ...state, open }))}
-      />
+      {editor ? (
+        <OverlayEditorDialog
+          key={editor.key}
+          kind={editor.kind}
+          id={editor.id}
+          onClose={() => setEditor(null)}
+        />
+      ) : null}
     </div>
   )
 }

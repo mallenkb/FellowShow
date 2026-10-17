@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PreachingSummarySessionBar } from "@/components/panels/preaching-summary-session-bar"
+import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
 import {
   announcementDocumentToVerse,
   announcementPlainText,
@@ -536,6 +537,22 @@ export function PreachingSummaryPanel() {
                 >
                   <NotebookTextIcon className="size-3" /> Send to Notes
                 </Button>
+                {hasSummaryContent ? (
+                  <SendToOverlayButton
+                    label="the summary"
+                    className="size-6"
+                    getContent={() => ({
+                      heading:
+                        editorTitle.trim() ||
+                        session?.summaryTitle ||
+                        "Preaching summary",
+                      text: announcementPlainText(
+                        normalizeSummaryDocument(editorDocument)
+                      ),
+                      source: "text",
+                    })}
+                  />
+                ) : null}
                 <Button
                   type="button"
                   size="xs"

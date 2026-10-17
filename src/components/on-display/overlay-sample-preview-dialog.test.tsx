@@ -62,6 +62,7 @@ function createOverlayConfig(appearance?: LowerThirdAppearanceSettings) {
     labelText: "GLOBAL NOTICE",
     showLabel: true,
     speed: "fast",
+    style: "classic",
   }
   config.tickerMessages = [
     {

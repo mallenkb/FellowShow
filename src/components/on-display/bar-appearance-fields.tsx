@@ -1,23 +1,19 @@
 import { useRef, useState, type ChangeEvent } from "react"
-import { ImagePlusIcon, Trash2Icon } from "lucide-react"
+import { ChevronDownIcon, ImagePlusIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { SliderField } from "@/components/ui/slider-field"
-import { BAR_PRESETS } from "@/lib/overlays"
+import { barDesignAppearance } from "@/lib/overlays"
 import { cachePresentationMedia } from "@/lib/presentation-media"
-import type { BarAppearance } from "@/types"
+import type { BarAppearance, BroadcastOverlayPayload } from "@/types"
+import { BAR_DESIGN_OPTIONS, type BarDesign } from "@/types/bar-designs"
+import { OverlayDesignPicker } from "./overlay-design-picker"
+import { OverlayDesignPreview } from "./overlay-design-preview"
 import { OverlayChoice, OverlayColorField } from "./overlay-fields"
 
 const BACKGROUND_OPTIONS = [
   { value: "gradient", label: "Gradient" },
-  { value: "solid", label: "Solid color" },
+  { value: "solid", label: "Solid" },
   { value: "image", label: "Image" },
 ] as const
 
@@ -26,29 +22,46 @@ const PADDING_OPTIONS = [
   { value: "none", label: "No padding" },
 ] as const
 
-function presetFor(appearance: BarAppearance): string {
-  return (
-    BAR_PRESETS.find(
-      (preset) =>
-        preset.backgroundType === appearance.backgroundType &&
-        preset.backgroundColor === appearance.backgroundColor &&
-        preset.backgroundColorEnd === appearance.backgroundColorEnd &&
-        preset.textColor === appearance.textColor
-    )?.id ?? "custom"
-  )
+/** What the bar says, used so design thumbnails show the operator's words. */
+export interface BarSampleContent {
+  heading: string
+  badge?: string
+  text: string
 }
 
-/** Background, text color and padding for a bar, shared by every bar editor. */
+function previewPayload(
+  appearance: BarAppearance,
+  content: BarSampleContent
+): BroadcastOverlayPayload {
+  return {
+    logos: [],
+    lowerThird: null,
+    ticker: null,
+    bar: {
+      ...appearance,
+      id: "preview",
+      heading: content.heading || "John 3:16",
+      badge: content.badge || "KJV",
+      text:
+        content.text ||
+        "For God so loved the world, that he gave his only begotten Son.",
+      startedAt: 0,
+    },
+  }
+}
+
+/** Design, colors and the less common options for a bar. */
 export function BarAppearanceFields({
   value,
+  content,
   onChange,
 }: {
   value: BarAppearance
+  content: BarSampleContent
   onChange: (value: BarAppearance) => void
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const preset = presetFor(value)
   const update = (patch: Partial<BarAppearance>) =>
     onChange({ ...value, ...patch })
 
@@ -74,138 +87,125 @@ export function BarAppearanceFields({
   }
 
   return (
-    <div className="grid gap-3">
-      <label className="grid gap-1 text-xs font-medium">
-        Start from a preset
-        <Select
-          value={preset}
-          onValueChange={(id) => {
-            const next = BAR_PRESETS.find((item) => item.id === id)
-            if (!next) return
-            update({
-              backgroundType: next.backgroundType,
-              backgroundColor: next.backgroundColor,
-              backgroundColorEnd: next.backgroundColorEnd,
-              textColor: next.textColor,
-            })
-          }}
-        >
-          <SelectTrigger size="sm" aria-label="Bar preset">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {preset === "custom" ? (
-              <SelectItem value="custom" disabled>
-                Custom
-              </SelectItem>
-            ) : null}
-            {BAR_PRESETS.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </label>
-      <OverlayChoice
-        label="Background"
-        value={value.backgroundType}
-        options={BACKGROUND_OPTIONS}
-        onChange={(backgroundType) => update({ backgroundType })}
+    <div className="grid content-start gap-3">
+      <OverlayDesignPicker<BarDesign>
+        label="Design"
+        value={value.design}
+        options={BAR_DESIGN_OPTIONS}
+        onChange={(design) => update(barDesignAppearance(design))}
+        renderThumbnail={(design) => (
+          <OverlayDesignPreview
+            overlays={previewPayload(
+              design === value.design
+                ? value
+                : { ...value, ...barDesignAppearance(design) },
+              content
+            )}
+          />
+        )}
       />
-      {value.backgroundType === "gradient" ? (
-        <div className="grid grid-cols-2 gap-3">
-          <OverlayColorField
-            label="Left color"
-            value={value.backgroundColor}
-            onChange={(backgroundColor) => update({ backgroundColor })}
-          />
-          <OverlayColorField
-            label="Right color"
-            value={value.backgroundColorEnd}
-            onChange={(backgroundColorEnd) => update({ backgroundColorEnd })}
-          />
-        </div>
-      ) : null}
-      {value.backgroundType === "solid" ? (
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <OverlayColorField
-          label="Color"
+          label={value.backgroundType === "gradient" ? "Left" : "Background"}
           value={value.backgroundColor}
           onChange={(backgroundColor) => update({ backgroundColor })}
         />
-      ) : null}
-      {value.backgroundType === "image" ? (
-        <div className="grid gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="hidden"
-            onChange={(event) => void handleImage(event)}
+        {value.backgroundType === "gradient" ? (
+          <OverlayColorField
+            label="Right"
+            value={value.backgroundColorEnd}
+            onChange={(backgroundColorEnd) => update({ backgroundColorEnd })}
           />
-          <div className="flex items-center gap-2">
-            {value.backgroundImageUrl ? (
-              <img
-                src={value.backgroundImageUrl}
-                alt="Bar background"
-                className="h-12 w-24 rounded border border-border bg-black/60 object-contain p-0.5"
+        ) : null}
+        <OverlayColorField
+          label="Text"
+          value={value.textColor}
+          onChange={(textColor) => update({ textColor })}
+        />
+        <OverlayColorField
+          label="Accent"
+          value={value.accentColor}
+          onChange={(accentColor) => update({ accentColor })}
+        />
+      </div>
+      <details className="group rounded-lg border border-border">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-xs font-medium">
+          More options
+          <ChevronDownIcon className="size-3.5 text-muted-foreground transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid gap-3 border-t border-border p-3">
+          <OverlayChoice
+            label="Background"
+            value={value.backgroundType}
+            options={BACKGROUND_OPTIONS}
+            onChange={(backgroundType) => update({ backgroundType })}
+          />
+          {value.backgroundType === "image" ? (
+            <div className="grid gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(event) => void handleImage(event)}
               />
-            ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <ImagePlusIcon />
-              {value.backgroundImageUrl ? "Replace image" : "Upload image"}
-            </Button>
-            {value.backgroundImageUrl ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Remove background image"
-                onClick={() =>
-                  update({
-                    backgroundType: "gradient",
-                    backgroundImageUrl: undefined,
-                  })
+              <div className="flex items-center gap-2">
+                {value.backgroundImageUrl ? (
+                  <img
+                    src={value.backgroundImageUrl}
+                    alt="Bar background"
+                    className="h-12 w-24 rounded border border-border bg-black/60 object-contain p-0.5"
+                  />
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <ImagePlusIcon />
+                  {value.backgroundImageUrl ? "Replace image" : "Upload image"}
+                </Button>
+                {value.backgroundImageUrl ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Remove background image"
+                    onClick={() =>
+                      update({
+                        backgroundType: "gradient",
+                        backgroundImageUrl: undefined,
+                      })
+                    }
+                  >
+                    <Trash2Icon />
+                  </Button>
+                ) : null}
+              </div>
+              <SliderField
+                label="Darken image"
+                min={0}
+                max={80}
+                step={5}
+                value={value.backgroundDimPercent}
+                unit="%"
+                defaultValue={35}
+                onChange={(backgroundDimPercent) =>
+                  update({ backgroundDimPercent })
                 }
-              >
-                <Trash2Icon />
-              </Button>
-            ) : null}
-          </div>
-          <p className="text-[0.6875rem] text-muted-foreground">
-            A wide image works best, about 1920 × 300.
-          </p>
-          <SliderField
-            label="Darken image so text stays readable"
-            min={0}
-            max={80}
-            step={5}
-            value={value.backgroundDimPercent}
-            unit="%"
-            defaultValue={35}
-            onChange={(backgroundDimPercent) =>
-              update({ backgroundDimPercent })
-            }
+              />
+            </div>
+          ) : null}
+          <OverlayChoice
+            label="Padding"
+            value={value.padding}
+            options={PADDING_OPTIONS}
+            onChange={(padding) => update({ padding })}
           />
         </div>
-      ) : null}
-      <OverlayColorField
-        label="Text color"
-        value={value.textColor}
-        onChange={(textColor) => update({ textColor })}
-      />
-      <OverlayChoice
-        label="Padding inside the bar"
-        value={value.padding}
-        options={PADDING_OPTIONS}
-        onChange={(padding) => update({ padding })}
-      />
+      </details>
     </div>
   )
 }

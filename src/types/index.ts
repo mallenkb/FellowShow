@@ -53,7 +53,6 @@ export {
   type OverlayPosition,
   type TickerMessage,
   type TickerOverlayConfig,
-  TICKER_SPEED_OPTIONS,
 } from "./overlays"
 export type {
   NdiAlphaMode,

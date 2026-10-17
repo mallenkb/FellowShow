@@ -29,8 +29,8 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock("./lower-third-overlay-section", () => ({
   LowerThirdOverlaySection: () => null,
 }))
-vi.mock("./ticker-overlay-section", () => ({
-  TickerOverlaySection: () => null,
+vi.mock("./ticker-message-dialog", () => ({
+  TickerMessageDialog: () => <div role="dialog">Scrolling text editor</div>,
 }))
 
 function logo(id: string, name: string): LogoOverlayItem {
@@ -75,14 +75,11 @@ describe("single logo editor dialog", () => {
   it("selects the requested logo, edits it in place, and retains saved controls on reopen", async () => {
     const user = userEvent.setup()
     const view = render(
-      <OverlayEditorDialog
-        kind="logo"
-        editId="second"
-        onOpenChange={() => {}}
-      />
+      <OverlayEditorDialog kind="logo" id={null} onClose={() => {}} />
     )
     expect(screen.getAllByRole("dialog")).toHaveLength(1)
-    expect(screen.queryByRole("heading", { name: "Logo" })).toBeNull()
+    expect(screen.getByRole("heading", { name: "Edit logos" })).toBeTruthy()
+    await user.click(screen.getByRole("button", { name: "Edit Second Logo" }))
     expect(screen.getByAltText("Logo output preview").getAttribute("src")).toBe(
       "asset://second.png"
     )
@@ -123,9 +120,7 @@ describe("single logo editor dialog", () => {
       logo("second", "Second Logo")
     )
     view.unmount()
-    render(
-      <OverlayEditorDialog kind="logo" editId="first" onOpenChange={() => {}} />
-    )
+    render(<OverlayEditorDialog kind="logo" id={null} onClose={() => {}} />)
     expect(
       screen.getByRole<HTMLInputElement>("slider", { name: "Size" }).value
     ).toBe("22")
@@ -133,21 +128,15 @@ describe("single logo editor dialog", () => {
     expect(screen.getAllByRole("dialog")).toHaveLength(1)
   })
 
-  it("keeps logo toggles in Preview without activating Live graphics", async () => {
+  it("hides one logo without touching Preview or Live", async () => {
     const user = userEvent.setup()
-    render(
-      <OverlayEditorDialog
-        kind="logo"
-        editId="second"
-        onOpenChange={() => {}}
-      />
-    )
+    render(<OverlayEditorDialog kind="logo" id={null} onClose={() => {}} />)
     const active = structuredClone(useBroadcastStore.getState().activeOverlays)
-    await user.click(
-      screen.getByRole("switch", { name: "Show logos in Preview" })
-    )
+    // The pad adds logos to Preview, so the editor has no second switch.
+    expect(
+      screen.queryByRole("switch", { name: "Show logos in Preview" })
+    ).toBeNull()
     await user.click(screen.getByRole("switch", { name: "Show Second Logo" }))
-    expect(useBroadcastStore.getState().stagedOverlays.logoVisible).toBe(true)
     expect(
       useBroadcastStore.getState().overlayConfig.logo.logos[1].visible
     ).toBe(false)
@@ -159,24 +148,14 @@ describe("single logo editor dialog", () => {
 
   it("recovers after deleting the selected and last logo, then accepts multiple new logos", async () => {
     const user = userEvent.setup()
-    render(
-      <OverlayEditorDialog
-        kind="logo"
-        editId="second"
-        onOpenChange={() => {}}
-      />
-    )
+    render(<OverlayEditorDialog kind="logo" id={null} onClose={() => {}} />)
     await user.click(screen.getByRole("button", { name: "Remove Second Logo" }))
     expect(screen.getByAltText("Logo output preview").getAttribute("src")).toBe(
       "asset://first.png"
     )
     await user.click(screen.getByRole("button", { name: "Remove First Logo" }))
     expect(screen.queryByAltText("Logo output preview")).toBeNull()
-    expect(
-      screen
-        .getByRole("switch", { name: "Show logos in Preview" })
-        .hasAttribute("disabled")
-    ).toBe(true)
+    expect(screen.getByRole("heading", { name: "Add logo" })).toBeTruthy()
     await user.upload(screen.getByLabelText("Logo images"), [
       new File(["png"], "one.png", { type: "image/png" }),
       new File(["svg"], "two.svg", { type: "image/svg+xml" }),
@@ -198,5 +177,23 @@ describe("single logo editor dialog", () => {
     )
     expect(screen.getAllByRole("dialog")).toHaveLength(1)
     expect(useBroadcastStore.getState().activeOverlays.logoVisible).toBe(false)
+  })
+
+  it("deletes all logos from the footer after confirming", async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    render(<OverlayEditorDialog kind="logo" id={null} onClose={onClose} />)
+    await user.click(screen.getByRole("button", { name: "Delete logos" }))
+    await user.click(screen.getByRole("button", { name: "Delete" }))
+    expect(useBroadcastStore.getState().overlayConfig.logo.logos).toEqual([])
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+})
+
+describe("graphic editor routing", () => {
+  it("opens scrolling text straight in its own editor, with no wrapper dialog", () => {
+    render(<OverlayEditorDialog kind="ticker" id={null} onClose={() => {}} />)
+    expect(screen.getAllByRole("dialog")).toHaveLength(1)
+    expect(screen.getByText("Scrolling text editor")).toBeTruthy()
   })
 })

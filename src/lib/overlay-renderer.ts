@@ -1,23 +1,13 @@
-import { BAR_ENTRANCE_MS, getLowerThirdOpacity } from "@/lib/overlays"
+import { getLowerThirdOpacity } from "@/lib/overlays"
+import { drawBarDesign } from "./bar-design-renderer"
+import { drawTickerDesign } from "./ticker-design-renderer"
 import { drawLowerThirdDesign } from "./lower-third-design-renderer"
 import { isLowerThirdDesignStyle } from "@/types/lower-third-designs"
-import { drawTickerTextTrack, getTickerTextTrack } from "./ticker-text-track"
 import {
   DEFAULT_LOWER_THIRD_STYLE,
-  DEFAULT_TICKER_SPEED,
-  TICKER_SPEED_OPTIONS,
   type BroadcastOverlayPayload,
   type LowerThirdStyle,
-  type TickerSpeed,
 } from "@/types/overlays"
-
-function getTickerScrollSpeed(speed: TickerSpeed | undefined): number {
-  return (
-    TICKER_SPEED_OPTIONS.find(
-      (option) => option.value === (speed ?? DEFAULT_TICKER_SPEED)
-    )?.pixelsPerSecond ?? 112.5
-  )
-}
 
 interface OverlayRenderOptions {
   /**
@@ -896,273 +886,6 @@ function drawLowerThird(
   ctx.restore()
 }
 
-function drawTicker(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  overlays: BroadcastOverlayPayload,
-  options: OverlayRenderOptions
-): void {
-  const ticker = overlays.ticker
-  if (!ticker?.text.trim()) return
-  const scale = options.scale ?? 1
-  const offsetX = options.offsetX ?? 0
-  const offsetY = options.offsetY ?? 0
-  const laneHeight = 78 * scale
-  const labelWidth = ticker.showLabel ? 210 * scale : 0
-  const now = options.now ?? Date.now()
-  const entranceProgress = Math.min(
-    1,
-    Math.max(0, (now - ticker.startedAt) / 450)
-  )
-  const easedEntrance = 1 - Math.pow(1 - entranceProgress, 3)
-  const y =
-    offsetY + height - laneHeight + (1 - easedEntrance) * laneHeight * 0.85
-  const padding = 34 * scale
-  const fontSize = 30 * scale
-  const message = ticker.text.trim()
-  const separator = "\u00A0\u00A0•\u00A0\u00A0"
-
-  // Graphics keep the operator's colors on every output, including a luma
-  // DSK, so what Preview shows is what goes to air.
-  const backgroundColor = ticker.backgroundColor
-  const textColor = ticker.textColor
-  const labelBackgroundColor = ticker.labelBackgroundColor
-  const labelTextColor = ticker.labelTextColor
-
-  ctx.save()
-  ctx.globalAlpha = easedEntrance
-  ctx.beginPath()
-  ctx.rect(offsetX, y, width, laneHeight)
-  ctx.clip()
-  ctx.fillStyle = backgroundColor
-  ctx.fillRect(offsetX, y, width, laneHeight)
-  if (ticker.showLabel) {
-    ctx.fillStyle = labelBackgroundColor
-    ctx.fillRect(offsetX, y, labelWidth, laneHeight)
-    const label = ticker.labelText.trim().toLocaleUpperCase() || "NOTICE"
-    const labelMaxWidth = labelWidth - 24 * scale
-    let labelFontSize = fontSize
-    ctx.font = `700 ${labelFontSize}px "Inter Variable", sans-serif`
-    while (
-      labelFontSize > 14 * scale &&
-      ctx.measureText(label).width > labelMaxWidth
-    ) {
-      labelFontSize -= scale
-      ctx.font = `700 ${labelFontSize}px "Inter Variable", sans-serif`
-    }
-    ctx.textBaseline = "middle"
-    ctx.textAlign = "center"
-    ctx.fillStyle = labelTextColor
-    ctx.fillText(label, offsetX + labelWidth / 2, y + laneHeight / 2)
-  }
-
-  const textX = offsetX + labelWidth + padding
-  const textWidth = Math.max(1, width - labelWidth - padding * 2)
-  ctx.beginPath()
-  ctx.rect(textX, y, textWidth, laneHeight)
-  ctx.clip()
-  ctx.textAlign = "left"
-  ctx.fillStyle = textColor
-  ctx.textBaseline = "middle"
-  ctx.font = `600 ${fontSize}px "Inter Variable", sans-serif`
-  const track = getTickerTextTrack(ctx, {
-    message,
-    separator,
-    minimumWidth: textWidth * 1.3,
-    lineHeight: laneHeight,
-    font: ctx.font,
-    color: textColor,
-  })
-  const gap = 54 * scale
-  const loopWidth = track.width + gap
-  const elapsedSeconds = Math.max(0, now - ticker.startedAt - 300) / 1000
-  const startX =
-    textX -
-    ((elapsedSeconds * getTickerScrollSpeed(ticker.speed) * scale) % loopWidth)
-  for (
-    let x = startX - loopWidth;
-    x < textX + textWidth + loopWidth;
-    x += loopWidth
-  ) {
-    drawTickerTextTrack(ctx, track, x, y + laneHeight / 2)
-  }
-  ctx.restore()
-}
-
-const SUPERSCRIPT_DIGITS = "⁰¹²³⁴⁵⁶⁷⁸⁹"
-
-function superscriptNumber(value: number): string {
-  return String(value)
-    .split("")
-    .map((digit) => SUPERSCRIPT_DIGITS[Number(digit)] ?? digit)
-    .join("")
-}
-
-function barBodyText(bar: NonNullable<BroadcastOverlayPayload["bar"]>): string {
-  const segments = bar.segments ?? []
-  if (segments.length < 2) return bar.text.trim()
-  return segments
-    .map((segment) =>
-      segment.verseNumber === undefined
-        ? segment.text.trim()
-        : `${superscriptNumber(segment.verseNumber)}\u2009${segment.text.trim()}`
-    )
-    .join(" ")
-}
-
-/** Full-width bar flush with the left, right and bottom edges. */
-function drawBar(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  overlays: BroadcastOverlayPayload,
-  options: OverlayRenderOptions
-): void {
-  const bar = overlays.bar
-  if (!bar) return
-  const body = barBodyText(bar)
-  if (!body && !bar.heading.trim()) return
-  const scale = options.scale ?? 1
-  const offsetX = options.offsetX ?? 0
-  const offsetY = options.offsetY ?? 0
-  const now = options.now ?? Date.now()
-  const padded = bar.padding === "padded"
-  const textColor = bar.textColor
-  const padX = (padded ? 56 : 48) * scale
-  const padTop = (padded ? 26 : 20) * scale
-  const padBottom = (padded ? 30 : 24) * scale
-  const bodyInsetX = padded ? 26 * scale : 0
-  const bodyInsetY = padded ? 18 * scale : 6 * scale
-  const headingSize = 42 * scale
-  const badgeSize = 22 * scale
-  const hasHeading = Boolean(bar.heading.trim() || bar.badge)
-  const headingBlock = hasHeading ? headingSize * 1.25 + 14 * scale : 0
-  const innerWidth = width - padX * 2
-  const textWidth = Math.max(1, innerWidth - bodyInsetX * 2)
-
-  // Shrink long passages until they fit in at most five lines.
-  let bodySize = 36 * scale
-  let lines: string[]
-  const maxLines = 5
-  for (;;) {
-    ctx.font = `500 ${bodySize}px "Inter Variable", sans-serif`
-    lines = body ? wrapText(ctx, body, textWidth, 99, 400) : []
-    if (lines.length <= maxLines || bodySize <= 24 * scale) break
-    bodySize -= 2 * scale
-  }
-  if (lines.length > maxLines) {
-    lines = body ? wrapText(ctx, body, textWidth, maxLines, 400) : []
-  }
-  const lineHeight = bodySize * 1.4
-  const bodyHeight = lines.length
-    ? lines.length * lineHeight + bodyInsetY * 2
-    : 0
-  const barHeight =
-    padTop +
-    headingBlock +
-    (hasHeading && lines.length ? 12 * scale : 0) +
-    bodyHeight +
-    padBottom
-
-  const progress = Math.min(
-    1,
-    Math.max(0, (now - bar.startedAt) / BAR_ENTRANCE_MS)
-  )
-  const eased = 1 - Math.pow(1 - progress, 3)
-  const x = offsetX
-  const y = offsetY + height - barHeight + (1 - eased) * barHeight * 0.6
-
-  ctx.save()
-  ctx.globalAlpha = eased
-  ctx.beginPath()
-  ctx.rect(x, y, width, barHeight)
-  ctx.clip()
-
-  {
-    const image =
-      bar.backgroundType === "image" && bar.backgroundImageUrl
-        ? options.imageCache?.get(bar.backgroundImageUrl)
-        : undefined
-    if (image && image.naturalWidth > 0 && image.naturalHeight > 0) {
-      drawCoverImage(ctx, image, x, y, width, barHeight)
-      ctx.fillStyle = `rgba(0, 0, 0, ${bar.backgroundDimPercent / 100})`
-      ctx.fillRect(x, y, width, barHeight)
-    } else if (bar.backgroundType === "solid") {
-      ctx.fillStyle = bar.backgroundColor
-      ctx.fillRect(x, y, width, barHeight)
-    } else {
-      const gradient = ctx.createLinearGradient(x, y, x + width, y + barHeight)
-      gradient.addColorStop(0, bar.backgroundColor)
-      gradient.addColorStop(1, bar.backgroundColorEnd)
-      ctx.fillStyle = gradient
-      ctx.fillRect(x, y, width, barHeight)
-    }
-    ctx.fillStyle = "rgba(255, 255, 255, 0.14)"
-    ctx.fillRect(x, y, width, 3 * scale)
-  }
-
-  let cursorY = y + padTop
-  ctx.fillStyle = textColor
-  ctx.strokeStyle = textColor
-  if (hasHeading) {
-    const ruleY = cursorY + headingSize * 1.25
-    let badgeWidth = 0
-    if (bar.badge) {
-      ctx.font = `italic 500 ${badgeSize}px "Inter Variable", sans-serif`
-      const badgeText = bar.badge.trim()
-      badgeWidth = ctx.measureText(badgeText).width + 22 * scale
-      const badgeHeight = badgeSize * 1.5
-      const badgeX = x + width - padX - badgeWidth
-      const badgeY = ruleY - badgeHeight - 6 * scale
-      ctx.lineWidth = 2 * scale
-      ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight)
-      ctx.fillRect(badgeX, badgeY, 4 * scale, badgeHeight)
-      ctx.textBaseline = "middle"
-      ctx.textAlign = "center"
-      ctx.fillText(
-        badgeText,
-        badgeX + badgeWidth / 2 + 2 * scale,
-        badgeY + badgeHeight / 2
-      )
-    }
-    ctx.font = `500 ${headingSize}px "Inter Variable", sans-serif`
-    if ("fontVariantCaps" in ctx) ctx.fontVariantCaps = "small-caps"
-    ctx.textBaseline = "alphabetic"
-    ctx.textAlign = "left"
-    clippedText(
-      ctx,
-      bar.heading.trim(),
-      x + padX + 4 * scale,
-      ruleY - 10 * scale,
-      Math.max(1, innerWidth - badgeWidth - 24 * scale)
-    )
-    if ("fontVariantCaps" in ctx) ctx.fontVariantCaps = "normal"
-    ctx.fillRect(x + padX, ruleY, innerWidth, 2 * scale)
-    cursorY = ruleY + 14 * scale + (lines.length ? 12 * scale : 0)
-  }
-
-  if (lines.length) {
-    if (padded) {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.2)"
-      roundedRect(ctx, x + padX, cursorY, innerWidth, bodyHeight, 6 * scale)
-      ctx.fill()
-    }
-    ctx.fillStyle = textColor
-    ctx.font = `500 ${bodySize}px "Inter Variable", sans-serif`
-    ctx.textBaseline = "top"
-    ctx.textAlign = "left"
-    drawTextLines(
-      ctx,
-      lines,
-      x + padX + bodyInsetX,
-      cursorY + bodyInsetY + (lineHeight - bodySize) / 2,
-      lineHeight
-    )
-  }
-  ctx.restore()
-}
-
 /** Draws master overlays in z-order: logo, lower third, bar, ticker. */
 export function drawBroadcastOverlays(
   ctx: CanvasRenderingContext2D,
@@ -1176,6 +899,10 @@ export function drawBroadcastOverlays(
   const height = resolution.height * scale
   drawLogo(ctx, width, height, overlays, options)
   drawLowerThird(ctx, width, height, overlays, options)
-  drawBar(ctx, width, height, overlays, options)
-  drawTicker(ctx, width, height, overlays, options)
+  if (overlays.bar) {
+    drawBarDesign(ctx, width, height, overlays.bar, options)
+  }
+  if (overlays.ticker) {
+    drawTickerDesign(ctx, width, height, overlays.ticker, options)
+  }
 }

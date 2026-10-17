@@ -5,6 +5,8 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
+import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
+import { resolveOverlayOutput } from "@/lib/overlay-live"
 import { getOverlayPayloadForOutput } from "@/lib/overlays"
 
 type LiveOutputMode =
@@ -24,6 +26,15 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   const lowerThird = useBroadcastStore((s) => s.lowerThird)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
+  const outputs = useBroadcastStore((s) => s.outputs)
+  const selectedOverlayOutputId = useBroadcastStore(
+    (s) => s.selectedOverlayOutputId
+  )
+  // Graphics sent from any tab show here while their output is on air, so
+  // the operator sees that something went live.
+  const graphicsOutput = resolveOverlayOutput(outputs, selectedOverlayOutputId)
+  const graphicsLive = useOverlayOutputLive(graphicsOutput?.id ?? null)
+  const showsSomething = isLive || graphicsLive
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
   const liveTimer = useBroadcastStore((s) => s.presenterTimer)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
@@ -103,7 +114,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
               isLive ? "text-red-400" : "text-muted-foreground"
             )}
           >
-            {isLive ? "Live" : "Off air"}
+            {isLive ? "Live" : graphicsLive ? "Graphics live" : "Off air"}
           </span>
           <Switch
             checked={isLive}
@@ -116,7 +127,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
       <div
         className={cn(
           "relative z-0 aspect-video w-full shrink-0 overflow-hidden transition-opacity",
-          !isLive && "opacity-40"
+          !showsSomething && "opacity-40"
         )}
       >
         <CanvasVerse
@@ -125,20 +136,30 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           timer={liveTimer}
           lowerThird={isLive ? lowerThird : null}
           overlays={
-            isLive
+            graphicsLive && graphicsOutput
               ? getOverlayPayloadForOutput(
                   overlayConfig,
                   activeOverlays,
-                  "main",
-                  { verse: liveVerse, timer: liveTimer }
+                  graphicsOutput.id,
+                  {
+                    verse: isLive ? liveVerse : null,
+                    timer: isLive ? liveTimer : null,
+                  }
                 )
-              : null
+              : isLive
+                ? getOverlayPayloadForOutput(
+                    overlayConfig,
+                    activeOverlays,
+                    "main",
+                    { verse: liveVerse, timer: liveTimer }
+                  )
+                : null
           }
           className="h-full"
           fillContainer
           fit="contain"
         />
-        {!isLive && (
+        {!showsSomething && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span className="rounded bg-background/70 px-2 py-0.5 text-[0.6875rem] font-semibold tracking-widest text-muted-foreground uppercase">
               Off air

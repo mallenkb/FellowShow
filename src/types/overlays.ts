@@ -1,3 +1,5 @@
+import type { BarDesign } from "./bar-designs"
+import type { TickerStyle } from "./ticker-designs"
 import {
   LOWER_THIRD_DESIGN_OPTIONS,
   type LowerThirdDesignStyle,
@@ -48,11 +50,19 @@ export interface LogoOverlayConfig {
 export interface TickerMessage {
   id: string
   text: string
+  /** Sent from Sermon, Notes or Songs, so its pad sits under Sent. */
+  sent?: boolean
   /** Optional per-message label so sermon notes do not change the global ticker label. */
   labelText?: string
   showLabel?: boolean
   /** Optional for legacy records; sanitized messages default to Standard. */
   speed?: TickerSpeed
+  /** A message's own design and colors; missing values use the shared look. */
+  style?: TickerStyle
+  backgroundColor?: string
+  textColor?: string
+  labelBackgroundColor?: string
+  labelTextColor?: string
   targetOutputIds: string[]
   createdAt: number
   updatedAt: number
@@ -67,6 +77,8 @@ export interface TickerOverlayConfig {
   showLabel: boolean
   /** Default for newly saved messages without an explicit speed. */
   speed: TickerSpeed
+  /** One of the fifteen scrolling text designs. */
+  style: TickerStyle
 }
 
 export type LowerThirdTheme = "preacher" | "speaker" | "notice"
@@ -277,6 +289,10 @@ export interface BarAppearance {
   /** 0-80; darkens an image background so text stays readable. */
   backgroundDimPercent: number
   textColor: string
+  /** One of the fifteen bar layouts; colors above start from its palette. */
+  design: BarDesign
+  /** Tabs, rules, highlights and numbers in the design. */
+  accentColor: string
   padding: BarPadding
 }
 
@@ -284,6 +300,8 @@ export interface BarAppearance {
 export interface BarOverlayItem extends BarAppearance {
   id: string
   name: string
+  /** Sent from Sermon, Notes or Songs, so its pad sits under Sent. */
+  sent?: boolean
   source: BarSource
   /** Reference for verse bars, or the heading for text bars. */
   heading: string
@@ -330,6 +348,8 @@ export interface ActiveOverlayState {
   lowerThird: ActiveLowerThirdOverlay | null
   barId: string | null
   barStartedAt: number | null
+  /** When one bar replaced another already on screen; only its text fades in. */
+  barChangedAt?: number | null
 }
 
 interface LogoOverlayPayload {
@@ -350,6 +370,7 @@ interface TickerOverlayPayload {
   labelText: string
   showLabel: boolean
   speed: TickerSpeed
+  style?: TickerStyle
   startedAt: number
 }
 
@@ -387,6 +408,8 @@ export interface BarOverlayPayload extends BarAppearance {
   /** Verse numbers shown before each segment of a multi-verse passage. */
   segments?: { verseNumber?: number; text: string }[]
   startedAt: number
+  /** When the words changed on a bar already on screen. */
+  changedAt?: number
 }
 
 export interface BroadcastOverlayPayload {

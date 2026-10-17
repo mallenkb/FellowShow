@@ -3,11 +3,17 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   FilePlus2Icon,
+  PanelBottomIcon,
   TextIcon,
 } from "lucide-react"
+import {
+  sendToBar,
+  sendToScroll,
+  type OverlayContent,
+} from "@/components/on-display/overlay-content"
+import type { AnnouncementItem } from "@/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GivingWorkspace } from "@/components/announcements/giving-workspace"
 import { NoteShowUntilField } from "@/components/announcements/note-show-until-field"
 import { SlideBackgroundPicker } from "@/components/announcements/slide-background-picker"
 import {
@@ -16,21 +22,25 @@ import {
   announcementPlainText,
   paginateAnnouncementSet,
 } from "@/lib/announcements"
-import {
-  useAnnouncementStore,
-  useBroadcastStore,
-  useTickerComposerStore,
-} from "@/stores"
+import { useAnnouncementStore, useBroadcastStore } from "@/stores"
 
 const AnnouncementEditor = lazy(
   () => import("@/components/announcements/announcement-editor")
 )
 
+/** A note as bar or scrolling text: its title, then its words. */
+function noteContent(item: AnnouncementItem): OverlayContent {
+  return {
+    heading: item.title || "Notice",
+    text: announcementPlainText(item.content),
+    source: "text",
+  }
+}
+
 export function AnnouncementWorkspace() {
   const sets = useAnnouncementStore((state) => state.sets)
   const selectedSetId = useAnnouncementStore((state) => state.selectedSetId)
   const selectedItemId = useAnnouncementStore((state) => state.selectedItemId)
-  const givingSelected = useAnnouncementStore((state) => state.givingSelected)
   const [pageSelection, setPageSelection] = useState<{
     setId: string | null
     itemId: string | null
@@ -97,8 +107,6 @@ export function AnnouncementWorkspace() {
         null
       )
   }
-
-  if (givingSelected) return <GivingWorkspace />
 
   return (
     <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card">
@@ -203,11 +211,18 @@ export function AnnouncementWorkspace() {
               size="sm"
               className="ml-1 h-7"
               disabled={!announcementPlainText(selectedItem.content)}
-              onClick={() =>
-                useTickerComposerStore
-                  .getState()
-                  .open(announcementPlainText(selectedItem.content))
-              }
+              onClick={() => sendToBar(noteContent(selectedItem))}
+            >
+              <PanelBottomIcon className="size-3.5" />
+              Send to bar
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7"
+              disabled={!announcementPlainText(selectedItem.content)}
+              onClick={() => sendToScroll(noteContent(selectedItem))}
             >
               <TextIcon className="size-3.5" />
               Send to scroll

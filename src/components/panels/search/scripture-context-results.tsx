@@ -5,6 +5,11 @@ import type { Verse } from "@/types"
 import { HighlightedText } from "./highlighted-text"
 import { VerseQueueAction } from "./verse-queue-action"
 import type { ScriptureSearchController } from "./use-scripture-search"
+import {
+  SendToOverlayButton,
+  VerseOverlayMenu,
+} from "@/components/on-display/send-to-overlay"
+import { verseContent } from "@/components/on-display/overlay-content"
 import { stageVerse } from "@/lib/preview-staging"
 
 export function ScriptureContextResults({
@@ -52,41 +57,51 @@ export function ScriptureContextResults({
           const reference = `${result.book_name} ${result.chapter}:${result.verse}`
           const verseKey = `${result.book_number}:${result.chapter}:${result.verse}`
           return (
-            <div
+            <VerseOverlayMenu
               key={`${verseKey}:${index}`}
-              onClick={() => {
-                bibleActions.selectVerse(verse)
-                stageVerse(verse)
-              }}
-              onDoubleClick={() =>
-                useBroadcastStore
-                  .getState()
-                  .presentOnLive(toVerseRenderData(verse, translation), null)
-              }
-              className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
+              verse={verse}
+              translation={translation}
             >
-              <div className="flex shrink-0 flex-row items-start gap-2">
-                <span className="text-xs font-semibold">
-                  {reference} · {translation}
-                </span>
-                <span className="mt-0.5 text-[0.625rem] font-semibold text-green-600 dark:text-green-400">
-                  {Math.round(result.similarity * 100)}%
-                </span>
-              </div>
-              <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
-                <HighlightedText
-                  text={result.verse_text}
-                  query={controller.contextQuery}
+              <div
+                onClick={() => {
+                  bibleActions.selectVerse(verse)
+                  stageVerse(verse)
+                }}
+                onDoubleClick={() =>
+                  useBroadcastStore
+                    .getState()
+                    .presentOnLive(toVerseRenderData(verse, translation), null)
+                }
+                className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
+              >
+                <div className="flex shrink-0 flex-row items-start gap-2">
+                  <span className="text-xs font-semibold">
+                    {reference} · {translation}
+                  </span>
+                  <span className="mt-0.5 text-[0.625rem] font-semibold text-green-600 dark:text-green-400">
+                    {Math.round(result.similarity * 100)}%
+                  </span>
+                </div>
+                <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
+                  <HighlightedText
+                    text={result.verse_text}
+                    query={controller.contextQuery}
+                  />
+                </p>
+                <SendToOverlayButton
+                  label={reference}
+                  getContent={() => verseContent(verse, translation)}
+                  className="absolute top-1/2 right-9 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
                 />
-              </p>
-              <VerseQueueAction
-                verse={verse}
-                reference={reference}
-                confidence={result.similarity}
-                isQueued={controller.queuedVerseKeys.has(verseKey)}
-                overlay
-              />
-            </div>
+                <VerseQueueAction
+                  verse={verse}
+                  reference={reference}
+                  confidence={result.similarity}
+                  isQueued={controller.queuedVerseKeys.has(verseKey)}
+                  overlay
+                />
+              </div>
+            </VerseOverlayMenu>
           )
         })}
       </div>

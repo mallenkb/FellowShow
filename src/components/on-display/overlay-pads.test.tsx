@@ -1,11 +1,19 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
 import {
   createDefaultOverlayConfiguration,
   createInactiveOverlayState,
 } from "@/lib/overlays"
+import userEvent from "@testing-library/user-event"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { OverlayPads } from "./overlay-pads"
 import { showOverlayPreviewOnLive } from "@/lib/overlay-live"
@@ -188,6 +196,8 @@ describe("OverlayPads", () => {
             backgroundColor: "#9a4a6e",
             backgroundColorEnd: "#46288a",
             backgroundDimPercent: 35,
+            design: "classic-split",
+            accentColor: "#ffffff",
             textColor: "#ffffff",
             padding: "padded",
             targetOutputIds: ["main"],
@@ -223,6 +233,40 @@ describe("OverlayPads", () => {
     render(<OverlayPads onAddRequest={vi.fn()} onEdit={vi.fn()} />)
     const buttons = screen.getAllByRole("button")
     expect(buttons.at(-1)?.textContent).toContain("Add graphic")
+  })
+
+  it("lists sent graphics in their own section and clears them after confirming", async () => {
+    const user = userEvent.setup()
+    const config = useBroadcastStore.getState().overlayConfig
+    useBroadcastStore.setState({
+      overlayConfig: {
+        ...config,
+        tickerMessages: [
+          ...config.tickerMessages,
+          {
+            id: "sent-1",
+            text: "John 3:16 — For God so loved the world",
+            sent: true,
+            targetOutputIds: ["overlay-output"],
+            createdAt: 2,
+            updatedAt: 2,
+          },
+        ],
+      },
+    })
+    render(<OverlayPads onAddRequest={vi.fn()} onEdit={vi.fn()} />)
+    const sent = screen.getByRole("region", {
+      name: "Sent from Sermon, Notes and Songs",
+    })
+    expect(within(sent).getByText(/John 3:16/)).toBeTruthy()
+    expect(within(sent).queryByText("Youth camp closes Sunday")).toBeNull()
+    await user.click(within(sent).getByRole("button", { name: "Clear" }))
+    await user.click(screen.getByRole("button", { name: "Clear" }))
+    expect(
+      useBroadcastStore
+        .getState()
+        .overlayConfig.tickerMessages.map((message) => message.id)
+    ).toEqual(["ticker-1"])
   })
 
   it("shows the Live tag only while the graphics output is on air", () => {

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ChevronDownIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DialogFooter } from "@/components/ui/dialog"
@@ -19,8 +20,9 @@ import {
   type LowerThirdTheme,
   type BroadcastOverlayPayload,
 } from "@/types/overlays"
+import { DeleteGraphicButton } from "./delete-graphic-button"
 import { OutputTargetSelector } from "./output-target-selector"
-import { OverlayVideoCanvas } from "./overlay-video-canvas"
+import { OverlayDesignPreview } from "./overlay-design-preview"
 import { LowerThirdStylePicker } from "./lower-third-style-picker"
 import { LowerThirdAppearanceFields } from "./lower-third-appearance-fields"
 import { isLowerThirdDesignStyle } from "@/types/lower-third-designs"
@@ -165,8 +167,11 @@ export function LowerThirdOverlaySection({
   }
   return (
     <>
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-        <div className="grid content-start gap-4">
+      <div className="overflow-hidden rounded-lg border border-border">
+        <OverlayDesignPreview overlays={preview} />
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid content-start gap-3">
           <div className="grid grid-cols-2 gap-3">
             <label className="grid gap-1 text-xs font-medium">
               Theme
@@ -240,42 +245,49 @@ export function LowerThirdOverlaySection({
               onChange={(targetOutputIds) => update({ targetOutputIds })}
             />
           </div>
-          <details className="group border-t border-border pt-3">
-            <summary className="cursor-pointer text-sm font-medium">
-              Colors, images and position
-            </summary>
-            <div className="mt-4">
-              <LowerThirdAppearanceFields value={draft} onChange={update} />
-            </div>
-          </details>
           {error ? (
             <p role="alert" className="text-xs text-destructive">
               {error}
             </p>
           ) : null}
         </div>
-        <div className="grid min-w-0 content-start gap-3">
-          <p className="text-xs font-medium">Preview</p>
-          <div className="w-full max-w-[min(100%,calc(28dvh*1.7778))]">
-            <OverlayVideoCanvas overlays={preview} />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Changes appear here as you edit. Save to add them to Preview.
-          </p>
+        <div className="grid content-start gap-3">
           <LowerThirdStylePicker
             value={draft.style ?? DEFAULT_LOWER_THIRD_STYLE}
             graphic={preview.lowerThird!}
             onChange={chooseStyle}
           />
+          <details className="group rounded-lg border border-border">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 text-xs font-medium">
+              More options
+              <ChevronDownIcon className="size-3.5 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="border-t border-border p-3">
+              <LowerThirdAppearanceFields value={draft} onChange={update} />
+            </div>
+          </details>
         </div>
       </div>
-      <DialogFooter className="border-t border-border pt-4">
-        <Button type="button" variant="outline" onClick={onDone}>
-          Cancel
-        </Button>
-        <Button type="button" disabled={!draft.title.trim()} onClick={save}>
-          Save to Preview
-        </Button>
+      <DialogFooter className="items-center sm:justify-between">
+        {initialEditId ? (
+          <DeleteGraphicButton
+            name={draft.title.trim() || "this lower third"}
+            onDelete={() => {
+              useBroadcastStore.getState().deleteLowerThirdPreset(initialEditId)
+              onDone?.()
+            }}
+          />
+        ) : (
+          <span />
+        )}
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={onDone}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={!draft.title.trim()} onClick={save}>
+            Save to Preview
+          </Button>
+        </div>
       </DialogFooter>
     </>
   )

@@ -34,7 +34,7 @@ export function LowerThirdStyleThumbnail({
       if (!active) return
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.fillStyle = "#252a35"
-      ctx.fillRect(0, 0, 640, 200)
+      ctx.fillRect(0, 0, 640, 120)
       if (isLowerThirdDesignStyle(style) && sceneContext) {
         sceneContext.clearRect(0, 0, 1920, 1080)
         const bounds = drawLowerThirdDesign(
@@ -64,10 +64,10 @@ export function LowerThirdStyleThumbnail({
           { now: 2_500 }
         )
         if (bounds) {
-          const padding = 55
+          const padding = 30
           const cropWidth = bounds.width + padding * 2
           const cropHeight = bounds.height + padding * 2
-          const scale = Math.min(620 / cropWidth, 184 / cropHeight)
+          const scale = Math.min(620 / cropWidth, 108 / cropHeight)
           const targetWidth = cropWidth * scale
           const targetHeight = cropHeight * scale
           ctx.drawImage(
@@ -77,7 +77,7 @@ export function LowerThirdStyleThumbnail({
             cropWidth,
             cropHeight,
             (640 - targetWidth) / 2,
-            (200 - targetHeight) / 2,
+            (120 - targetHeight) / 2,
             targetWidth,
             targetHeight
           )
@@ -88,7 +88,7 @@ export function LowerThirdStyleThumbnail({
       ctx.scale(0.5, 0.5)
       drawBroadcastOverlays(
         ctx,
-        { width: 1280, height: 400 },
+        { width: 1280, height: 240 },
         {
           logos: [],
           ticker: null,
@@ -128,9 +128,9 @@ export function LowerThirdStyleThumbnail({
     <canvas
       ref={ref}
       width={640}
-      height={200}
+      height={120}
       aria-hidden="true"
-      className="block aspect-[3.2/1] w-full"
+      className="block aspect-[640/120] w-full"
     />
   )
 }

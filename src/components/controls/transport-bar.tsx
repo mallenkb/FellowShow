@@ -31,7 +31,6 @@ import {
   generateLiveSermonNotes,
   startSermon,
 } from "@/lib/sermon-actions"
-import { TickerComposerDialog } from "@/components/on-display/ticker-composer-dialog"
 
 const SettingsDialog = lazy(() =>
   import("@/components/settings-dialog").then((module) => ({
@@ -231,7 +230,6 @@ export function TransportBar() {
           service="Deepgram"
           description="Live transcription needs an API key. Add it in settings so the app can start listening."
         />
-        <TickerComposerDialog />
       </div>
     </div>
   )

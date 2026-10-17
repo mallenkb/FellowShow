@@ -34,11 +34,3 @@ export function useNextAnnouncementId(
   const next = order[index + 1] ?? order[0]
   return next && next !== liveId ? next : null
 }
-
-/** True while any note or the offering slide is on Live. */
-export function useIsAnyAnnouncementLive(): boolean {
-  return useBroadcastStore(
-    (state) =>
-      state.isLive && (state.liveVerse?.announcementItemIds?.length ?? 0) > 0
-  )
-}

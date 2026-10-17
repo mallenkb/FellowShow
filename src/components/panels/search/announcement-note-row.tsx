@@ -5,6 +5,7 @@ import {
   PencilIcon,
   Trash2Icon,
 } from "lucide-react"
+import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -212,6 +213,17 @@ export function AnnouncementNoteRow({
       ) : (
         <>
           {isNext ? <NextTag /> : null}
+          {hasText && !isEditing ? (
+            <SendToOverlayButton
+              label={label}
+              className="size-7"
+              getContent={() => ({
+                heading: label,
+                text: announcementPlainText(item.content),
+                source: "text",
+              })}
+            />
+          ) : null}
           <ShowOnLiveButton
             label={label}
             disabled={!hasText || isEditing}

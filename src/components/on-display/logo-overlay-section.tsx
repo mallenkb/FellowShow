@@ -46,22 +46,13 @@ function selectedPositionFor(
   )
 }
 
-export function LogoOverlaySection({
-  initialEditId,
-}: {
-  /** Selects the requested logo within the editor. */
-  initialEditId?: string
-} = {}) {
+/** Adds, removes and places logos. Changes save as you make them. */
+export function LogoOverlaySection() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [settingsLogoId, setSettingsLogoId] = useState<string | null>(
-    () =>
-      initialEditId ??
-      useBroadcastStore.getState().overlayConfig.logo.logos[0]?.id ??
-      null
+    () => useBroadcastStore.getState().overlayConfig.logo.logos[0]?.id ?? null
   )
   const logos = useBroadcastStore((state) => state.overlayConfig.logo.logos)
-  // The switch builds the Video Overlays Preview; Show on Live sends it.
-  const visible = useBroadcastStore((state) => state.stagedOverlays.logoVisible)
   const addLogos = useBroadcastStore((state) => state.addLogoOverlays)
   const updateLogo = useBroadcastStore((state) => state.updateLogoOverlay)
   const removeLogo = useBroadcastStore((state) => state.removeLogoOverlay)
@@ -114,15 +105,6 @@ export function LogoOverlaySection({
 
   return (
     <div className="space-y-4">
-      <label className="flex items-center justify-end gap-3 text-xs text-muted-foreground">
-        <span>Show logos in Preview</span>
-        <Switch
-          aria-label="Show logos in Preview"
-          checked={visible}
-          disabled={logos.length === 0}
-          onCheckedChange={setVisible}
-        />
-      </label>
       <input
         ref={fileInputRef}
         type="file"

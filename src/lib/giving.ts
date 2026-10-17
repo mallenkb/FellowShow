@@ -25,7 +25,7 @@ export const GIVING_NETWORKS = Object.keys(
 
 const GIVING_SET_NAME = "Offering"
 /** Stands in for a note id so the offering row can show when it is live. */
-export const GIVING_ITEM_ID = "offering"
+const GIVING_ITEM_ID = "offering"
 const MAX_ACCOUNTS = 6
 const MAX_FIELD_LENGTH = 120
 

@@ -30,29 +30,6 @@ export type OverlayOutputMode = "dsk-luma" | "chroma-key"
 
 export const DEFAULT_OVERLAY_OUTPUT_MODE: OverlayOutputMode = "dsk-luma"
 
-export const OVERLAY_OUTPUT_MODE_OPTIONS: Array<{
-  value: OverlayOutputMode
-  label: string
-  shortLabel: "DSK" | "CMK"
-  description: string
-  backgroundColor: "#000000" | "#00ff00"
-}> = [
-  {
-    value: "dsk-luma",
-    label: "DSK / Luma Key",
-    shortLabel: "DSK",
-    description: "Black background for a luma-keyed downstream graphics layer.",
-    backgroundColor: "#000000",
-  },
-  {
-    value: "chroma-key",
-    label: "Chroma Key",
-    shortLabel: "CMK",
-    description: "Pure green background for a chroma-keyed graphics layer.",
-    backgroundColor: "#00ff00",
-  },
-]
-
 export function isOverlayOutputMode(
   value: unknown
 ): value is OverlayOutputMode {

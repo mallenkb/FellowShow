@@ -14,8 +14,12 @@ vi.mock("@/stores", async () => ({
 vi.mock("./lower-third-style-thumbnail", () => ({
   LowerThirdStyleThumbnail: () => <span>Style thumbnail</span>,
 }))
-vi.mock("./overlay-video-canvas", () => ({
-  OverlayVideoCanvas: ({ overlays }: { overlays: BroadcastOverlayPayload }) => (
+vi.mock("./overlay-design-preview", () => ({
+  OverlayDesignPreview: ({
+    overlays,
+  }: {
+    overlays: BroadcastOverlayPayload
+  }) => (
     <output aria-label="Draft preview">
       {JSON.stringify(overlays.lowerThird)}
     </output>
@@ -33,19 +37,28 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+/** Opens the design dropdown and picks one design. */
+function pickDesign(name: string) {
+  fireEvent.click(screen.getByRole("button", { name: /^Design:/ }))
+  fireEvent.click(screen.getByRole("option", { name }))
+}
+
 describe("lower-third modal draft", () => {
   it("updates the visual draft as text and style change without saving or going live", () => {
     render(<LowerThirdOverlaySection />)
-    expect(screen.getAllByText("Style thumbnail")).toHaveLength(
+    fireEvent.click(screen.getByRole("button", { name: /^Design:/ }))
+    expect(screen.getAllByRole("option")).toHaveLength(
       LOWER_THIRD_STYLE_OPTIONS.length
     )
+    // The dropdown is modal, so it closes with Escape like a menu.
+    fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" })
     fireEvent.change(screen.getByRole("textbox", { name: "Preacher's name" }), {
       target: { value: "Daniel Mensah" },
     })
     fireEvent.change(screen.getByRole("textbox", { name: "Sermon title" }), {
       target: { value: "Guest speaker" },
     })
-    fireEvent.click(screen.getByRole("button", { name: "15 / Centered" }))
+    pickDesign("15 / Centered")
     expect(preview()).toMatchObject({
       title: "Daniel Mensah",
       subtitle: "Guest speaker",
@@ -69,7 +82,7 @@ describe("lower-third modal draft", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Preacher's name" }), {
       target: { value: "Daniel Mensah" },
     })
-    fireEvent.click(screen.getByRole("button", { name: "01 / Clean white" }))
+    pickDesign("01 / Clean white")
     fireEvent.click(screen.getByRole("button", { name: "Save to Preview" }))
     const state = useBroadcastStore.getState()
     expect(state.overlayConfig.lowerThirdPresets).toHaveLength(1)
@@ -102,7 +115,7 @@ describe("lower-third modal draft", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Speaker's name" }), {
       target: { value: "Unsaved name" },
     })
-    fireEvent.click(screen.getByRole("button", { name: "09 / Angled" }))
+    pickDesign("09 / Angled")
     expect(preview()).toMatchObject({ title: "Unsaved name", style: "angled" })
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
     expect(
@@ -125,7 +138,7 @@ describe("lower-third modal draft", () => {
       durationMs: 14_000,
     })
     render(<LowerThirdOverlaySection initialEditId={id} />)
-    fireEvent.click(screen.getByRole("button", { name: "08 / Ivory serif" }))
+    pickDesign("08 / Ivory serif")
     fireEvent.click(screen.getByRole("button", { name: "Save to Preview" }))
     const state = useBroadcastStore.getState()
     expect(state.overlayConfig.lowerThirdPresets).toHaveLength(1)

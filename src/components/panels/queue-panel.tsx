@@ -1,34 +1,17 @@
 import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
 import { XIcon } from "lucide-react"
-import { useQueueStore, useBroadcastStore, useSermonStore } from "@/stores"
+import { useQueueStore } from "@/stores"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PreachingSummaryPanel } from "@/components/panels/preaching-summary-panel"
-import { LiveNotesPanel } from "@/components/panels/live-notes-panel"
 import { RelatedScripturesPanel } from "@/components/panels/related-scriptures-panel"
 import { SermonScripturesPanel } from "@/components/panels/sermon-scriptures-panel"
 import { SongsQueuePanel } from "@/components/panels/songs-queue-panel"
 
-type QueuePanelTab = "sermon" | "related" | "notes" | "summary"
+type QueuePanelTab = "sermon" | "related" | "summary"
 
 type QueuePanelMode = "book" | "context" | "songs" | "presentation" | "timer"
 
 export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
-  const activeTickerMessageId = useBroadcastStore(
-    (state) => state.activeOverlays.tickerMessageId
-  )
-  const scrollingLiveNoteCount = useSermonStore((state) =>
-    state.sessions.reduce(
-      (count, session) =>
-        count +
-        session.notes.filter(
-          (note) =>
-            note.source === "live" &&
-            note.tickerMessageId === activeTickerMessageId
-        ).length,
-      0
-    )
-  )
   const [activeTab, setActiveTab] = useState<QueuePanelTab>("sermon")
   if (mode === "songs") return <SongsQueuePanel />
 
@@ -55,17 +38,6 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
             className="h-7 flex-none rounded-md border border-border bg-background px-2.5 text-xs text-muted-foreground after:hidden hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40 data-active:border-[#101084]/50 data-active:bg-[#101084]/15 data-active:text-[#101084] dark:data-active:border-[#F1E600]/50 dark:data-active:bg-[#F1E600]/15 dark:data-active:text-[#F1E600]"
           >
             Related scriptures
-          </TabsTrigger>
-          <TabsTrigger
-            value="notes"
-            className="h-7 flex-none rounded-md border border-border bg-background px-2.5 text-xs text-muted-foreground after:hidden hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40 data-active:border-[#101084]/50 data-active:bg-[#101084]/15 data-active:text-[#101084] dark:data-active:border-[#F1E600]/50 dark:data-active:bg-[#F1E600]/15 dark:data-active:text-[#F1E600]"
-          >
-            Live notes
-            {scrollingLiveNoteCount > 0 ? (
-              <Badge className="ml-1 h-5 min-w-5 bg-red-500 px-1 text-[0.5625rem] text-white">
-                {scrollingLiveNoteCount} live
-              </Badge>
-            ) : null}
           </TabsTrigger>
           <TabsTrigger
             value="summary"
@@ -102,14 +74,6 @@ export function QueuePanel({ mode }: { mode: QueuePanelMode }) {
         className="flex min-h-0 flex-1 data-[state=inactive]:hidden"
       >
         <RelatedScripturesPanel />
-      </TabsContent>
-
-      <TabsContent
-        value="notes"
-        forceMount
-        className="flex min-h-0 flex-1 data-[state=inactive]:hidden"
-      >
-        <LiveNotesPanel />
       </TabsContent>
 
       <TabsContent
