@@ -54,7 +54,7 @@ serde.workspace = true
 log.workspace = true
 tokio.workspace = true
 thiserror.workspace = true
-tauri = { version = "2.10.3", features = ["protocol-asset"] }
+tauri = { version = "2.12.4", features = ["protocol-asset"] }
 tauri-plugin-log = "2"
 tauri-plugin-store = "2"
 fellowshow-audio = { path = "crates/audio" }

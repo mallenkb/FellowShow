@@ -860,7 +860,7 @@ mod tests {
     #[test]
     fn short_alias_in_a_partial_transcript_does_not_capture_the_next_reference() {
         let mut detector = DirectDetector::new();
-        assert!(detector.detect("For God so").is_empty());
+        assert_eq!(detector.detect("For God so"), Vec::new());
         let results = detector.detect("loved the world. John chapter three verse sixteen.");
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].verse_ref.book_number, 43);

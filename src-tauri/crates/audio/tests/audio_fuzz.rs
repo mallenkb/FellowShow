@@ -60,12 +60,13 @@ fn randomized_voice_activity_sequences_allow_zero_prebuffer_and_reset_cleanly() 
         }
         vad.reset();
         assert_eq!(vad.state(), VadState::Silence);
-        assert!(vad
-            .process(&AudioFrame {
+        assert_eq!(
+            vad.process(&AudioFrame {
                 samples: vec![],
                 timestamp_ms: 100
             })
-            .frames
-            .is_empty());
+            .frames,
+            Vec::new()
+        );
     }
 }
