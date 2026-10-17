@@ -22,6 +22,15 @@ pub fn parse_reference(text: &str, book_match: &BookMatch) -> Option<VerseRef> {
     // Tokenize the text after the book name for easier parsing
     let tokens = tokenize(after_trimmed);
 
+    // Short aliases such as "So", "Is", and "Am" are also ordinary speech.
+    // Require an immediate reference instead of searching later prose for numbers.
+    if text[book_match.start..book_match.end].chars().count() <= 2
+        && consume_number(&tokens, 0).is_none()
+        && !matches!(tokens.first(), Some(Token::Word(word)) if matches!(word.as_str(), "chapter" | "verse" | "verses"))
+    {
+        return None;
+    }
+
     // Pattern: Book name only (no chapter/verse) → chapter-only, held for refinement
     // e.g., "Genesis" on a partial transcript — wait for chapter:verse to follow
     if tokens.is_empty() {

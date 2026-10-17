@@ -8,7 +8,11 @@ import {
   isLowerThirdStyle,
   isLowerThirdLogoPosition,
   type ActiveOverlayState,
+  type BarAppearance,
+  type BarOverlayItem,
+  type BarOverlayPayload,
   type BroadcastOverlayPayload,
+  type OverlayLook,
   type LogoOverlayConfig,
   type LogoOverlayItem,
   type LowerThirdAppearanceSettings,
@@ -31,11 +35,79 @@ const MIN_LOWER_THIRD_DURATION_MS = 10_000
 const MAX_LOWER_THIRD_DURATION_MS = 90_000
 // Keep lower thirds responsive on air while retaining a subtle fade.
 const LOWER_THIRD_FADE_MS = 600
+export const BAR_ENTRANCE_MS = 450
 const DEFAULT_LOWER_THIRD_X_PERCENT = 14
 const DEFAULT_LOWER_THIRD_Y_PERCENT = 82
 const DEFAULT_LOWER_THIRD_WIDTH_PERCENT = 50
 const DEFAULT_LOWER_THIRD_BACKGROUND_COLOR = "#0a101a"
 const DEFAULT_LOWER_THIRD_TEXT_COLOR = "#ffffff"
+
+const BAR_SOURCES: ReadonlySet<string> = new Set([
+  "live-verse",
+  "verse",
+  "text",
+])
+const BAR_BACKGROUND_TYPES: ReadonlySet<string> = new Set([
+  "gradient",
+  "solid",
+  "image",
+])
+
+export const BAR_PRESETS = [
+  {
+    id: "classic",
+    label: "Classic purple",
+    backgroundType: "gradient",
+    backgroundColor: "#9a4a6e",
+    backgroundColorEnd: "#46288a",
+    textColor: "#ffffff",
+  },
+  {
+    id: "navy",
+    label: "Navy",
+    backgroundType: "solid",
+    backgroundColor: "#0b1b3a",
+    backgroundColorEnd: "#0b1b3a",
+    textColor: "#ffffff",
+  },
+  {
+    id: "forest",
+    label: "Forest",
+    backgroundType: "gradient",
+    backgroundColor: "#1f4d3a",
+    backgroundColorEnd: "#10201a",
+    textColor: "#ffffff",
+  },
+  {
+    id: "light",
+    label: "Light",
+    backgroundType: "solid",
+    backgroundColor: "#fcfcf8",
+    backgroundColorEnd: "#fcfcf8",
+    textColor: "#1d242e",
+  },
+] as const satisfies ReadonlyArray<
+  Pick<
+    BarAppearance,
+    "backgroundType" | "backgroundColor" | "backgroundColorEnd" | "textColor"
+  > & { id: string; label: string }
+>
+
+export const DEFAULT_BAR_APPEARANCE: BarAppearance = {
+  backgroundType: BAR_PRESETS[0].backgroundType,
+  backgroundColor: BAR_PRESETS[0].backgroundColor,
+  backgroundColorEnd: BAR_PRESETS[0].backgroundColorEnd,
+  backgroundDimPercent: 35,
+  textColor: BAR_PRESETS[0].textColor,
+  padding: "padded",
+}
+
+/** The verse a live-verse bar follows: what Program shows, else Preview. */
+export interface OverlayScripture {
+  heading: string
+  badge?: string
+  segments: { verseNumber?: number; text: string }[]
+}
 
 const OVERLAY_POSITIONS: ReadonlySet<string> = new Set([
   "top-left",
@@ -76,7 +148,19 @@ export function createDefaultOverlayConfiguration(): OverlayConfiguration {
     },
     tickerMessages: [],
     lowerThirdPresets: [],
+    bars: [],
+    looks: [],
   }
+}
+
+/**
+ * A full-width lower third reads as a bar on screen, so like a bar it never
+ * shares the bottom of the screen with scrolling text.
+ */
+export function isFullWidthLowerThird(
+  preset: { style?: LowerThirdPreset["style"] } | null | undefined
+): boolean {
+  return preset?.style === "full-width-banner"
 }
 
 export function createInactiveOverlayState(): ActiveOverlayState {
@@ -85,6 +169,8 @@ export function createInactiveOverlayState(): ActiveOverlayState {
     tickerMessageId: null,
     tickerStartedAt: null,
     lowerThird: null,
+    barId: null,
+    barStartedAt: null,
   }
 }
 
@@ -117,6 +203,7 @@ export function hasAnimatingOverlay(
 ): boolean {
   return Boolean(
     overlays?.ticker ||
+    (overlays?.bar && now < overlays.bar.startedAt + BAR_ENTRANCE_MS) ||
     (overlays?.lowerThird &&
       now < overlays.lowerThird.startedAt + overlays.lowerThird.durationMs)
   )
@@ -166,11 +253,10 @@ function sanitizeTargets(
     : []
   const uniqueTargets = [...new Set(targets)]
   if (uniqueTargets.length > 0) return uniqueTargets
-  return [
-    validOutputIds.has(DEFAULT_OVERLAY_OUTPUT_ID)
-      ? DEFAULT_OVERLAY_OUTPUT_ID
-      : (validOutputIds.values().next().value ?? DEFAULT_OVERLAY_OUTPUT_ID),
-  ]
+  // A graphic with no chosen outputs shows on all of them.
+  return validOutputIds.size > 0
+    ? [...validOutputIds]
+    : [DEFAULT_OVERLAY_OUTPUT_ID]
 }
 
 function sanitizePositionPercent(value: unknown, fallback: number): number {
@@ -285,8 +371,14 @@ function sanitizeTickerMessage(
       : {}),
     speed: isTickerSpeed(record.speed) ? record.speed : DEFAULT_TICKER_SPEED,
     targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
-    createdAt: typeof record.createdAt === "number" ? record.createdAt : now,
-    updatedAt: typeof record.updatedAt === "number" ? record.updatedAt : now,
+    createdAt:
+      typeof record.createdAt === "number" && Number.isFinite(record.createdAt)
+        ? record.createdAt
+        : now,
+    updatedAt:
+      typeof record.updatedAt === "number" && Number.isFinite(record.updatedAt)
+        ? record.updatedAt
+        : now,
   }
 }
 
@@ -372,6 +464,10 @@ function sanitizeLowerThirdPreset(
       : DEFAULT_LOWER_THIRD_LOGO_POSITION,
     logoSizePercent: sanitizeSizePercent(record.logoSizePercent, 50, 160, 100),
     sizePercent: sanitizeSizePercent(record.sizePercent, 60, 150, 100),
+    anchor:
+      record.anchor === "bottom-left" || record.anchor === "bottom-center"
+        ? record.anchor
+        : "center",
     widthPercent:
       typeof record.widthPercent === "number" &&
       Number.isFinite(record.widthPercent)
@@ -392,8 +488,14 @@ function sanitizeLowerThirdPreset(
         : DEFAULT_LOWER_THIRD_DURATION_MS
     ),
     targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
-    createdAt: typeof record.createdAt === "number" ? record.createdAt : now,
-    updatedAt: typeof record.updatedAt === "number" ? record.updatedAt : now,
+    createdAt:
+      typeof record.createdAt === "number" && Number.isFinite(record.createdAt)
+        ? record.createdAt
+        : now,
+    updatedAt:
+      typeof record.updatedAt === "number" && Number.isFinite(record.updatedAt)
+        ? record.updatedAt
+        : now,
   }
 }
 
@@ -419,6 +521,10 @@ function sanitizeLowerThirdAppearance(
       : DEFAULT_LOWER_THIRD_LOGO_POSITION,
     logoSizePercent: sanitizeSizePercent(record.logoSizePercent, 50, 160, 100),
     sizePercent: sanitizeSizePercent(record.sizePercent, 60, 150, 100),
+    anchor:
+      record.anchor === "bottom-left" || record.anchor === "bottom-center"
+        ? record.anchor
+        : "center",
     widthPercent:
       typeof record.widthPercent === "number" &&
       Number.isFinite(record.widthPercent)
@@ -442,6 +548,124 @@ function sanitizeLowerThirdAppearance(
   }
 }
 
+export function sanitizeBarAppearance(
+  value: unknown,
+  fallback: BarAppearance = DEFAULT_BAR_APPEARANCE
+): BarAppearance {
+  const record = asRecord(value) ?? {}
+  const backgroundImageUrl = sanitizeOptionalImageUrl(record.backgroundImageUrl)
+  const requestedType =
+    typeof record.backgroundType === "string" &&
+    BAR_BACKGROUND_TYPES.has(record.backgroundType)
+      ? (record.backgroundType as BarAppearance["backgroundType"])
+      : fallback.backgroundType
+  return {
+    // An image background without an image falls back to the gradient.
+    backgroundType:
+      requestedType === "image" && !backgroundImageUrl
+        ? "gradient"
+        : requestedType,
+    backgroundColor: sanitizeColor(
+      record.backgroundColor,
+      fallback.backgroundColor
+    ),
+    backgroundColorEnd: sanitizeColor(
+      record.backgroundColorEnd,
+      fallback.backgroundColorEnd
+    ),
+    ...(backgroundImageUrl ? { backgroundImageUrl } : {}),
+    backgroundDimPercent: sanitizeSizePercent(
+      record.backgroundDimPercent,
+      0,
+      80,
+      fallback.backgroundDimPercent
+    ),
+    textColor: sanitizeColor(record.textColor, fallback.textColor),
+    padding: record.padding === "none" ? "none" : "padded",
+  }
+}
+
+function sanitizeBar(
+  value: unknown,
+  validOutputIds: ReadonlySet<string>
+): BarOverlayItem | null {
+  const record = asRecord(value)
+  if (!record) return null
+  if (typeof record.id !== "string" || !record.id.trim()) return null
+  const source =
+    typeof record.source === "string" && BAR_SOURCES.has(record.source)
+      ? (record.source as BarOverlayItem["source"])
+      : "text"
+  const heading =
+    typeof record.heading === "string" ? record.heading.trim().slice(0, 80) : ""
+  const text =
+    typeof record.text === "string" ? record.text.trim().slice(0, 1200) : ""
+  // Stored bars need words to show; live-verse bars borrow the verse on screen.
+  if (source !== "live-verse" && !text) return null
+  const now = Date.now()
+  const badge =
+    typeof record.badge === "string" && record.badge.trim()
+      ? record.badge.trim().slice(0, 24)
+      : undefined
+  return {
+    ...sanitizeBarAppearance(record),
+    id: record.id,
+    name:
+      typeof record.name === "string" && record.name.trim()
+        ? record.name.trim().slice(0, 40)
+        : heading || "Bar",
+    source,
+    heading,
+    ...(badge ? { badge } : {}),
+    text: source === "live-verse" ? "" : text,
+    showBadge: record.showBadge !== false,
+    targetOutputIds: sanitizeTargets(record.targetOutputIds, validOutputIds),
+    createdAt:
+      typeof record.createdAt === "number" && Number.isFinite(record.createdAt)
+        ? record.createdAt
+        : now,
+    updatedAt:
+      typeof record.updatedAt === "number" && Number.isFinite(record.updatedAt)
+        ? record.updatedAt
+        : now,
+  }
+}
+
+function sanitizeLook(
+  value: unknown,
+  ids: {
+    lowerThirds: ReadonlySet<string>
+    fullWidthLowerThirds: ReadonlySet<string>
+    tickers: ReadonlySet<string>
+    bars: ReadonlySet<string>
+  }
+): OverlayLook | null {
+  const record = asRecord(value)
+  if (!record) return null
+  if (typeof record.id !== "string" || !record.id.trim()) return null
+  if (typeof record.name !== "string" || !record.name.trim()) return null
+  const ref = (candidate: unknown, valid: ReadonlySet<string>) =>
+    typeof candidate === "string" && valid.has(candidate) ? candidate : null
+  const barId = ref(record.barId, ids.bars)
+  // A bar fills the bottom of the screen, so it never shares it. A
+  // full-width lower third behaves the same way with scrolling text.
+  const lowerThirdPresetId = barId
+    ? null
+    : ref(record.lowerThirdPresetId, ids.lowerThirds)
+  const bannerShown =
+    lowerThirdPresetId !== null &&
+    ids.fullWidthLowerThirds.has(lowerThirdPresetId)
+  return {
+    id: record.id,
+    name: record.name.trim().slice(0, 40),
+    logo: record.logo === true,
+    lowerThirdPresetId,
+    tickerMessageId:
+      barId || bannerShown ? null : ref(record.tickerMessageId, ids.tickers),
+    barId,
+  }
+}
+
 export function sanitizeOverlayConfiguration(
   value: unknown,
   outputIds: readonly string[]
@@ -461,6 +685,27 @@ export function sanitizeOverlayConfiguration(
         .filter((preset): preset is LowerThirdPreset => preset !== null)
     : []
 
+  const bars = Array.isArray(record.bars)
+    ? record.bars
+        .map((bar) => sanitizeBar(bar, validOutputIds))
+        .filter((bar): bar is BarOverlayItem => bar !== null)
+    : []
+  const lookIds = {
+    lowerThirds: new Set(lowerThirdPresets.map((preset) => preset.id)),
+    fullWidthLowerThirds: new Set(
+      lowerThirdPresets
+        .filter((preset) => isFullWidthLowerThird(preset))
+        .map((preset) => preset.id)
+    ),
+    tickers: new Set(tickerMessages.map((message) => message.id)),
+    bars: new Set(bars.map((bar) => bar.id)),
+  }
+  const looks = Array.isArray(record.looks)
+    ? record.looks
+        .map((look) => sanitizeLook(look, lookIds))
+        .filter((look): look is OverlayLook => look !== null)
+    : []
+
   return {
     version: OVERLAY_CONFIGURATION_VERSION,
     logo: sanitizeLogo(record.logo, validOutputIds),
@@ -470,9 +715,103 @@ export function sanitizeOverlayConfiguration(
     ),
     tickerMessages,
     lowerThirdPresets,
+    bars,
+    looks,
     lastLowerThirdAppearance: sanitizeLowerThirdAppearance(
       record.lastLowerThirdAppearance
     ),
+  }
+}
+
+interface OverlayPayloadExtras {
+  /** Verse that live-verse bars follow. */
+  scripture?: OverlayScripture | null
+  /**
+   * Preview keeps timed graphics on screen and shows a placeholder for a
+   * live-verse bar with no verse, so the operator can see what they staged.
+   */
+  holdForPreview?: boolean
+}
+
+const REFERENCE_WITH_TRANSLATION = /^(.*?)\s*\(([^)]+)\)\s*$/
+
+/** The verse live-verse bars follow: Program while it is live, else Preview. */
+export function getCurrentOverlayScripture(state: {
+  isLive: boolean
+  liveVerse: VerseRenderData | null
+  previewVerse: VerseRenderData | null
+}): OverlayScripture | null {
+  return (
+    (state.isLive ? getOverlayScripture(state.liveVerse) : null) ??
+    getOverlayScripture(state.previewVerse)
+  )
+}
+
+/** The scripture a live-verse bar follows, from a Program or Preview verse. */
+export function getOverlayScripture(
+  verse: VerseRenderData | null | undefined
+): OverlayScripture | null {
+  if (verse?.themeSection !== "bible" || verse.segments.length === 0) {
+    return null
+  }
+  const match = REFERENCE_WITH_TRANSLATION.exec(verse.reference)
+  return {
+    heading: (match?.[1] ?? verse.reference).trim(),
+    ...(match?.[2] ? { badge: match[2].trim() } : {}),
+    segments: verse.segments.map((segment) => ({
+      ...(segment.verseNumber !== undefined
+        ? { verseNumber: segment.verseNumber }
+        : {}),
+      text: segment.text,
+    })),
+  }
+}
+
+function buildBarPayload(
+  bar: BarOverlayItem,
+  startedAt: number,
+  extras: OverlayPayloadExtras
+): BarOverlayPayload | null {
+  const appearance: BarAppearance = {
+    backgroundType: bar.backgroundType,
+    backgroundColor: bar.backgroundColor,
+    backgroundColorEnd: bar.backgroundColorEnd,
+    ...(bar.backgroundImageUrl
+      ? { backgroundImageUrl: bar.backgroundImageUrl }
+      : {}),
+    backgroundDimPercent: bar.backgroundDimPercent,
+    textColor: bar.textColor,
+    padding: bar.padding,
+  }
+  if (bar.source === "live-verse") {
+    const scripture = extras.scripture
+    if (!scripture) {
+      if (!extras.holdForPreview) return null
+      return {
+        ...appearance,
+        id: bar.id,
+        heading: "Verse on screen",
+        text: "The verse on Program, or staged in Preview, appears here.",
+        startedAt,
+      }
+    }
+    return {
+      ...appearance,
+      id: bar.id,
+      heading: scripture.heading,
+      ...(bar.showBadge && scripture.badge ? { badge: scripture.badge } : {}),
+      text: scripture.segments.map((segment) => segment.text).join(" "),
+      segments: scripture.segments,
+      startedAt,
+    }
+  }
+  return {
+    ...appearance,
+    id: bar.id,
+    heading: bar.heading,
+    ...(bar.showBadge && bar.badge ? { badge: bar.badge } : {}),
+    text: bar.text,
+    startedAt,
   }
 }
 
@@ -486,7 +825,8 @@ function buildOverlayPayload(
         timer: PresenterTimerRenderData | null
       }
     | number,
-  requestedNow = Date.now()
+  requestedNow = Date.now(),
+  extras: OverlayPayloadExtras = {}
 ): BroadcastOverlayPayload {
   const program = typeof programOrNow === "number" ? undefined : programOrNow
   const now = typeof programOrNow === "number" ? programOrNow : requestedNow
@@ -496,17 +836,30 @@ function buildOverlayPayload(
     program?.verse?.themeSection === "songs" ||
     program?.verse?.themeSection === "announcements"
   if (hidesMasterOverlays) {
-    return { logos: [], lowerThird: null, ticker: null }
+    return { logos: [], lowerThird: null, ticker: null, bar: null }
   }
+  const barItem = active.barId
+    ? config.bars.find(
+        (bar) =>
+          bar.id === active.barId &&
+          (outputId === null || bar.targetOutputIds.includes(outputId))
+      )
+    : undefined
+  const bar = barItem
+    ? buildBarPayload(barItem, active.barStartedAt ?? now, extras)
+    : null
   const ticker = config.tickerMessages.find(
     (message) =>
       message.id === active.tickerMessageId &&
       (outputId === null || message.targetOutputIds.includes(outputId))
   )
-  const lowerThird = active.lowerThird
+  // A bar fills the bottom of the screen, so it replaces both of these.
+  const lowerThird = bar ? null : active.lowerThird
+  const holdLowerThird = extras.holdForPreview === true
   const isLowerThirdActive =
     lowerThird !== null &&
-    now < lowerThird.startedAt + lowerThird.preset.durationMs &&
+    (holdLowerThird ||
+      now < lowerThird.startedAt + lowerThird.preset.durationMs) &&
     (outputId === null || lowerThird.preset.targetOutputIds.includes(outputId))
 
   return {
@@ -543,28 +896,36 @@ function buildOverlayPayload(
           logoPosition: lowerThird.preset.logoPosition,
           logoSizePercent: lowerThird.preset.logoSizePercent,
           sizePercent: lowerThird.preset.sizePercent,
+          anchor: lowerThird.preset.anchor,
           widthPercent: lowerThird.preset.widthPercent,
           maxWidthEnabled: lowerThird.preset.maxWidthEnabled !== false,
           xPercent: lowerThird.preset.xPercent,
           yPercent: lowerThird.preset.yPercent,
-          durationMs: lowerThird.preset.durationMs,
-          startedAt: lowerThird.startedAt,
+          // Preview holds the graphic on screen instead of timing it out.
+          durationMs: holdLowerThird
+            ? Number.MAX_SAFE_INTEGER
+            : lowerThird.preset.durationMs,
+          startedAt: holdLowerThird ? now - 1_000 : lowerThird.startedAt,
         }
       : null,
-    ticker: ticker
-      ? {
-          id: ticker.id,
-          text: ticker.text,
-          backgroundColor: config.ticker.backgroundColor,
-          textColor: config.ticker.textColor,
-          labelBackgroundColor: config.ticker.labelBackgroundColor,
-          labelTextColor: config.ticker.labelTextColor,
-          labelText: ticker.labelText ?? config.ticker.labelText,
-          showLabel: ticker.showLabel ?? config.ticker.showLabel,
-          speed: ticker.speed ?? config.ticker.speed ?? DEFAULT_TICKER_SPEED,
-          startedAt: active.tickerStartedAt ?? now,
-        }
-      : null,
+    bar,
+    ticker:
+      ticker &&
+      !bar &&
+      !(isLowerThirdActive && isFullWidthLowerThird(lowerThird?.preset))
+        ? {
+            id: ticker.id,
+            text: ticker.text,
+            backgroundColor: config.ticker.backgroundColor,
+            textColor: config.ticker.textColor,
+            labelBackgroundColor: config.ticker.labelBackgroundColor,
+            labelTextColor: config.ticker.labelTextColor,
+            labelText: ticker.labelText ?? config.ticker.labelText,
+            showLabel: ticker.showLabel ?? config.ticker.showLabel,
+            speed: ticker.speed ?? config.ticker.speed ?? DEFAULT_TICKER_SPEED,
+            startedAt: active.tickerStartedAt ?? now,
+          }
+        : null,
   }
 }
 
@@ -578,14 +939,16 @@ export function getOverlayPayloadForOutput(
         timer: PresenterTimerRenderData | null
       }
     | number,
-  requestedNow = Date.now()
+  requestedNow = Date.now(),
+  scripture: OverlayScripture | null = null
 ): BroadcastOverlayPayload {
   return buildOverlayPayload(
     config,
     active,
     outputId,
     programOrNow,
-    requestedNow
+    requestedNow,
+    { scripture }
   )
 }
 
@@ -593,7 +956,94 @@ export function getOverlayPayloadForOutput(
 export function getOverlayPreviewPayload(
   config: OverlayConfiguration,
   active: ActiveOverlayState,
-  requestedNow = Date.now()
+  requestedNow = Date.now(),
+  extras: OverlayPayloadExtras = {}
 ): BroadcastOverlayPayload {
-  return buildOverlayPayload(config, active, null, undefined, requestedNow)
+  return buildOverlayPayload(
+    config,
+    active,
+    null,
+    undefined,
+    requestedNow,
+    extras
+  )
+}
+
+/**
+ * Points an overlay selection at the current saved graphics: refreshes a
+ * lower third that was edited and drops graphics that were deleted.
+ */
+export function resolveOverlaySelection(
+  config: OverlayConfiguration,
+  selection: ActiveOverlayState
+): ActiveOverlayState {
+  const preset = selection.lowerThird
+    ? config.lowerThirdPresets.find(
+        (item) => item.id === selection.lowerThird?.preset.id
+      )
+    : undefined
+  // Scrolling text never shares the screen with a full-width lower third.
+  const tickerExists =
+    !isFullWidthLowerThird(preset) &&
+    config.tickerMessages.some(
+      (message) => message.id === selection.tickerMessageId
+    )
+  const barExists = config.bars.some((bar) => bar.id === selection.barId)
+  return {
+    logoVisible: selection.logoVisible && config.logo.logos.length > 0,
+    tickerMessageId: tickerExists ? selection.tickerMessageId : null,
+    tickerStartedAt: tickerExists ? selection.tickerStartedAt : null,
+    lowerThird:
+      preset && selection.lowerThird
+        ? { preset, startedAt: selection.lowerThird.startedAt }
+        : null,
+    barId: barExists ? selection.barId : null,
+    barStartedAt: barExists ? selection.barStartedAt : null,
+  }
+}
+
+/** True when two selections show the same graphics, ignoring start times. */
+export function overlaySelectionsMatch(
+  a: ActiveOverlayState,
+  b: ActiveOverlayState
+): boolean {
+  return (
+    a.logoVisible === b.logoVisible &&
+    a.tickerMessageId === b.tickerMessageId &&
+    (a.lowerThird?.preset.id ?? null) === (b.lowerThird?.preset.id ?? null) &&
+    a.barId === b.barId
+  )
+}
+
+/** The selection a saved Look puts into Preview. */
+export function overlaySelectionFromLook(
+  config: OverlayConfiguration,
+  look: OverlayLook,
+  now = Date.now()
+): ActiveOverlayState {
+  const preset = config.lowerThirdPresets.find(
+    (item) => item.id === look.lowerThirdPresetId
+  )
+  return resolveOverlaySelection(config, {
+    logoVisible: look.logo,
+    tickerMessageId: look.tickerMessageId,
+    tickerStartedAt: look.tickerMessageId ? now : null,
+    lowerThird: preset ? { preset, startedAt: now } : null,
+    barId: look.barId,
+    barStartedAt: look.barId ? now : null,
+  })
+}
+
+/** A payload with only this bar, for editor previews. */
+export function getBarPreviewPayload(
+  bar: BarOverlayItem,
+  scripture: OverlayScripture | null,
+  startedAt: number
+): BroadcastOverlayPayload {
+  return {
+    logos: [],
+    lowerThird: null,
+    ticker: null,
+    bar: buildBarPayload(bar, startedAt, { scripture, holdForPreview: true }),
+  }
 }

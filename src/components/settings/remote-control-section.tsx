@@ -1,130 +1,88 @@
 import { invoke } from "@/lib/ipc"
-import { useEffect, useRef, useState } from "react"
+import { useEffect } from "react"
+import {
+  refreshRemoteControlStatus,
+  useRemoteControlStore,
+} from "@/stores/remote-control-store"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 import { PortInput, StatusDot } from "./shared"
 
-interface RemoteStatus {
-  running: boolean
-  port: number | null
-}
-
-interface CommandLogEntry {
-  id: number
-  timestamp: string
-  source: "OSC" | "HTTP"
-  command: string
-}
-
 export function RemoteControlSection() {
-  const [oscPort, setOscPort] = useState("8000")
-  const [httpPort, setHttpPort] = useState("8080")
-  const [oscStatus, setOscStatus] = useState<RemoteStatus>({
-    running: false,
-    port: null,
-  })
-  const [httpStatus, setHttpStatus] = useState<RemoteStatus>({
-    running: false,
-    port: null,
-  })
-  const [oscError, setOscError] = useState<string | null>(null)
-  const [httpError, setHttpError] = useState<string | null>(null)
-  const [commandLog, setCommandLog] = useState<CommandLogEntry[]>([])
-  const logIdRef = useRef(0)
+  const {
+    oscPort,
+    httpPort,
+    oscStatus,
+    httpStatus,
+    oscStatusKnown,
+    httpStatusKnown,
+    oscError,
+    httpError,
+    oscPending,
+    httpPending,
+    commandLog,
+  } = useRemoteControlStore()
 
   // Poll statuses
   useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const osc = await invoke("get_osc_status")
-        setOscStatus(osc)
-        if (osc.running) setOscError(null)
-      } catch {
-        /* ignore */
-      }
-      try {
-        const http = await invoke("get_http_status")
-        setHttpStatus(http)
-        if (http.running) setHttpError(null)
-      } catch {
-        /* ignore */
-      }
+    const pollStatuses = () =>
+      void refreshRemoteControlStatus().catch(console.error)
+    pollStatuses()
+    const interval = setInterval(() => {
+      pollStatuses()
     }, 2000)
     return () => clearInterval(interval)
   }, [])
 
-  // Listen for remote commands to populate the log
-  useEffect(() => {
-    let cancelled = false
-    const unlisteners: (() => void)[] = []
-
-    async function setup() {
-      const { listen } = await import("@tauri-apps/api/event")
-
-      const remoteEvents = [
-        "remote:next",
-        "remote:prev",
-        "remote:theme",
-        "remote:opacity",
-        "remote:on_air",
-        "remote:show",
-        "remote:hide",
-        "remote:confidence",
-      ]
-
-      for (const event of remoteEvents) {
-        const unlisten = await listen(event, () => {
-          if (cancelled) return
-          const entry: CommandLogEntry = {
-            id: logIdRef.current++,
-            timestamp: new Date().toLocaleTimeString(),
-            source: "OSC", // We can't distinguish source at event level; default to OSC
-            command: event.replace("remote:", ""),
-          }
-          setCommandLog((prev) => [entry, ...prev].slice(0, 50))
-        })
-        unlisteners.push(unlisten)
-      }
-    }
-
-    void setup().catch(console.error)
-    return () => {
-      cancelled = true
-      unlisteners.forEach((fn) => fn())
-    }
-  }, [])
-
   const handleOscToggle = async () => {
+    useRemoteControlStore.setState({ oscPending: true })
     try {
       if (oscStatus.running) {
         await invoke("stop_osc")
-        setOscError(null)
+        useRemoteControlStore.setState({
+          oscStatus: { running: false, port: null },
+          oscError: null,
+        })
       } else {
         const port = parseInt(oscPort) || 8000
         const boundPort = await invoke("start_osc", { port })
-        setOscPort(String(boundPort))
-        setOscError(null)
+        useRemoteControlStore.setState({
+          oscPort: String(boundPort),
+          oscStatus: { running: true, port: boundPort },
+          oscError: null,
+        })
       }
     } catch (e) {
-      setOscError(String(e))
+      useRemoteControlStore.setState({ oscError: String(e) })
+    } finally {
+      useRemoteControlStore.setState({ oscPending: false })
     }
   }
 
   const handleHttpToggle = async () => {
+    useRemoteControlStore.setState({ httpPending: true })
     try {
       if (httpStatus.running) {
         await invoke("stop_http")
-        setHttpError(null)
+        useRemoteControlStore.setState({
+          httpStatus: { running: false, port: null },
+          httpError: null,
+        })
       } else {
         const port = parseInt(httpPort) || 8080
         const boundPort = await invoke("start_http", { port })
-        setHttpPort(String(boundPort))
-        setHttpError(null)
+        useRemoteControlStore.setState({
+          httpPort: String(boundPort),
+          httpStatus: { running: true, port: boundPort },
+          httpError: null,
+        })
       }
     } catch (e) {
-      setHttpError(String(e))
+      useRemoteControlStore.setState({ httpError: String(e) })
+    } finally {
+      useRemoteControlStore.setState({ httpPending: false })
     }
   }
 
@@ -140,15 +98,22 @@ export function RemoteControlSection() {
             <label className="text-xs text-muted-foreground">Port</label>
             <PortInput
               value={oscPort}
-              onChange={setOscPort}
-              disabled={oscStatus.running}
+              onChange={(oscPort) =>
+                useRemoteControlStore.setState({ oscPort })
+              }
+              disabled={oscStatus.running || oscPending || !oscStatusKnown}
             />
           </div>
-          <StatusDot running={oscStatus.running} />
+          {oscStatusKnown ? (
+            <StatusDot running={oscStatus.running} />
+          ) : (
+            <span className="text-xs text-muted-foreground">Checking...</span>
+          )}
           <Button
             size="sm"
             variant={oscStatus.running ? "destructive" : "default"}
             onClick={() => void handleOscToggle()}
+            disabled={oscPending || !oscStatusKnown}
             className="text-xs"
           >
             {oscStatus.running ? "Stop" : "Start"}
@@ -176,15 +141,22 @@ export function RemoteControlSection() {
             <label className="text-xs text-muted-foreground">Port</label>
             <PortInput
               value={httpPort}
-              onChange={setHttpPort}
-              disabled={httpStatus.running}
+              onChange={(httpPort) =>
+                useRemoteControlStore.setState({ httpPort })
+              }
+              disabled={httpStatus.running || httpPending || !httpStatusKnown}
             />
           </div>
-          <StatusDot running={httpStatus.running} />
+          {httpStatusKnown ? (
+            <StatusDot running={httpStatus.running} />
+          ) : (
+            <span className="text-xs text-muted-foreground">Checking...</span>
+          )}
           <Button
             size="sm"
             variant={httpStatus.running ? "destructive" : "default"}
             onClick={() => void handleHttpToggle()}
+            disabled={httpPending || !httpStatusKnown}
             className="text-xs"
           >
             {httpStatus.running ? "Stop" : "Start"}
@@ -225,7 +197,7 @@ export function RemoteControlSection() {
               variant="ghost"
               size="sm"
               className="h-5 px-1.5 text-[0.5rem]"
-              onClick={() => setCommandLog([])}
+              onClick={() => useRemoteControlStore.setState({ commandLog: [] })}
             >
               Clear
             </Button>

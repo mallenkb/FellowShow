@@ -9,6 +9,13 @@ use tokio::sync::mpsc;
 use crate::error::SttError;
 use crate::types::TranscriptEvent;
 
+/// Wait without blocking the runtime that also delivers transcript and stop events.
+pub(crate) async fn wait_for_stop(stopped: &std::sync::atomic::AtomicBool) {
+    while !stopped.load(std::sync::atomic::Ordering::SeqCst) {
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+}
+
 /// A speech-to-text provider that consumes audio and emits transcript events.
 ///
 /// Both Deepgram (cloud) and Whisper (local) implement this trait so the
@@ -23,6 +30,7 @@ pub trait SttProvider: Send + Sync {
     /// and emitting [`TranscriptEvent`]s to `event_tx`.
     ///
     /// Runs until cancelled, audio source disconnects, or an unrecoverable error.
+    /// Each session uses a new provider instance. A stopped provider stays stopped.
     async fn start(
         &self,
         audio_rx: Receiver<Vec<i16>>,

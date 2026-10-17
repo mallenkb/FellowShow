@@ -5,6 +5,8 @@ import {
   resolveHorizontalAlign,
   resolveTextTransform,
 } from "./draw"
+import { lyricDisplayLines } from "@/lib/lyrics"
+import { splitOversizedWord } from "./word-wrap"
 export function buildScaledTheme(
   theme: BroadcastTheme,
   scale: number
@@ -63,11 +65,19 @@ export function buildScaledTheme(
   }
 }
 
+/** Lyrics keep their written lines on every screen; other text wraps freely. */
+export function shouldPreserveLineBreaks(verse: VerseRenderData): boolean {
+  return (
+    verse.referenceMode === "lyric-footer" || verse.themeSection === "songs"
+  )
+}
+
 export function measureVerseHeight(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
   verse: VerseRenderData,
-  textRectWidth: number
+  textRectWidth: number,
+  preserveLineBreaks = false
 ): { height: number; maxLineWidth: number } {
   const vt = theme.verseText
   const vn = theme.verseNumbers
@@ -96,37 +106,71 @@ export function measureVerseHeight(
   const lineWidths: number[] = []
   let currentLineHasToken = false
   let currentWidth = 0
-  for (const segment of verse.segments) {
-    const tokenWidths: number[] = []
-    if (vn.visible && segment.verseNumber !== undefined) {
-      tokenWidths.push(measure(String(segment.verseNumber), true))
+  const flushLine = (includeEmpty = false) => {
+    if (currentLineHasToken || includeEmpty) lineWidths.push(currentWidth)
+    currentLineHasToken = false
+    currentWidth = 0
+  }
+  const appendText = (text: string) => {
+    if (preserveLineBreaks) {
+      if (text) {
+        currentWidth += (currentLineHasToken ? spaceWidth : 0) + measure(text)
+        currentLineHasToken = true
+      }
+      return
     }
-    const transformed = applyTextTransform(
-      segment.text,
-      resolveTextTransform(vt.textTransform)
-    )
-    tokenWidths.push(
-      ...transformed
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((word) => measure(word))
-    )
-
-    for (const tokenWidth of tokenWidths) {
+    for (const word of text.split(/\s+/).filter(Boolean)) {
+      for (const [index, part] of splitOversizedWord(
+        word,
+        textRectWidth,
+        measure
+      ).entries()) {
+        if (index > 0) flushLine()
+        const tokenWidth = measure(part)
+        const nextWidth = currentLineHasToken
+          ? currentWidth + spaceWidth + tokenWidth
+          : tokenWidth
+        if (nextWidth > textRectWidth && currentLineHasToken) {
+          flushLine()
+          currentWidth = tokenWidth
+          currentLineHasToken = true
+        } else {
+          currentWidth = nextWidth
+          currentLineHasToken = true
+        }
+      }
+    }
+  }
+  for (const segment of verse.segments) {
+    if (vn.visible && segment.verseNumber !== undefined) {
+      const numberWidth = measure(String(segment.verseNumber), true)
       const nextWidth = currentLineHasToken
-        ? currentWidth + spaceWidth + tokenWidth
-        : tokenWidth
+        ? currentWidth + spaceWidth + numberWidth
+        : numberWidth
       if (nextWidth > textRectWidth && currentLineHasToken) {
-        lineWidths.push(currentWidth)
-        currentWidth = tokenWidth
+        flushLine()
+        currentWidth = numberWidth
         currentLineHasToken = true
       } else {
         currentWidth = nextWidth
         currentLineHasToken = true
       }
     }
+    const transformed = applyTextTransform(
+      segment.text,
+      resolveTextTransform(vt.textTransform)
+    )
+    const lines = preserveLineBreaks
+      ? lyricDisplayLines(transformed)
+      : [transformed]
+    for (const [lineIndex, line] of lines.entries()) {
+      if (preserveLineBreaks && lineIndex > 0) flushLine(true)
+      appendText(line)
+    }
   }
-  if (currentLineHasToken) lineWidths.push(currentWidth)
+  if (currentLineHasToken || (preserveLineBreaks && lineWidths.length > 0)) {
+    flushLine(preserveLineBreaks)
+  }
   const lineCount = Math.max(1, lineWidths.length)
   let maxLineWidth = 0
   for (const [index, lineWidth] of lineWidths.entries()) {
@@ -183,7 +227,8 @@ function measureStandardBlockHeight(
     ctx,
     theme,
     verse,
-    textRectWidth
+    textRectWidth,
+    shouldPreserveLineBreaks(verse)
   ).height
   if (!hasReference) return verseHeight
 
@@ -247,7 +292,8 @@ export function fitStandardVerseTheme(
       ctx,
       candidate,
       verse,
-      textRectWidth
+      textRectWidth,
+      shouldPreserveLineBreaks(verse)
     )
     return (
       verseMetrics.maxLineWidth <= textRectWidth &&
@@ -273,7 +319,8 @@ export function lyricPresentationTheme(
   theme: BroadcastTheme,
   verse: VerseRenderData,
   textRectWidth: number,
-  textRectHeight: number
+  textRectHeight: number,
+  preserveLineBreaks = false
 ): BroadcastTheme {
   const baseTheme: BroadcastTheme = {
     ...theme,
@@ -284,17 +331,26 @@ export function lyricPresentationTheme(
     },
   }
   const baseFontSize = baseTheme.verseText.fontSize
-  const minScale = 0.68
+  const minScale = preserveLineBreaks ? 0 : 0.68
   const maxScale = 1
   const buildCandidate = (scale: number): BroadcastTheme => ({
     ...baseTheme,
     verseText: {
       ...baseTheme.verseText,
-      fontSize: Math.max(18, baseFontSize * scale),
+      fontSize: Math.max(preserveLineBreaks ? 0.01 : 18, baseFontSize * scale),
+      letterSpacing: preserveLineBreaks
+        ? baseTheme.verseText.letterSpacing * scale
+        : baseTheme.verseText.letterSpacing,
     },
   })
   const fits = (candidate: BroadcastTheme): boolean => {
-    const metrics = measureVerseHeight(ctx, candidate, verse, textRectWidth)
+    const metrics = measureVerseHeight(
+      ctx,
+      candidate,
+      verse,
+      textRectWidth,
+      preserveLineBreaks
+    )
     return (
       metrics.maxLineWidth <= textRectWidth && metrics.height <= textRectHeight
     )

@@ -94,6 +94,13 @@ pub fn run() {
                 return;
             }
             let app = window.app_handle();
+            if let Some(clocks) =
+                app.try_state::<commands::ndi_frame_clock::NdiFrameClocks>()
+            {
+                if let Err(error) = clocks.stop_all() {
+                    log::warn!("Failed to stop NDI frame clocks during app close: {error}");
+                }
+            }
             if let Some(runtime) =
                 app.try_state::<Mutex<fellowshow_broadcast::ndi::NdiRuntime>>()
             {
@@ -113,6 +120,7 @@ pub fn run() {
         .manage(Mutex::new(state::AppState::new()))
         .manage(Mutex::new(fellowshow_detection::DetectionPipeline::new()))
         .manage(Mutex::new(fellowshow_broadcast::ndi::NdiRuntime::default()))
+        .manage(commands::ndi_frame_clock::NdiFrameClocks::default())
         .manage(Mutex::new(fellowshow_detection::DirectDetector::new()))
         .manage(Mutex::new(fellowshow_detection::DetectionMerger::new()))
         .manage(Mutex::new(fellowshow_detection::ReadingMode::new()))
@@ -154,6 +162,7 @@ pub fn run() {
             commands::broadcast::start_ndi,
             commands::broadcast::stop_ndi,
             commands::broadcast::get_ndi_status,
+            commands::broadcast::report_broadcast_diagnostic,
             commands::broadcast::push_ndi_frame,
             commands::remote::start_osc,
             commands::remote::stop_osc,

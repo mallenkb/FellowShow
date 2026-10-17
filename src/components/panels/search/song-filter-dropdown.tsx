@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
-import { CheckIcon, FunnelIcon } from "lucide-react"
+import { CheckIcon, FunnelIcon, Trash2Icon } from "lucide-react"
 import type { CopSongSource } from "@/lib/cop-songs"
 
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
@@ -17,9 +17,12 @@ const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
 export function SongFilterDropdown({
   sourceValue,
   onSourceChange,
+  onRemoveEasyWorship,
 }: {
   sourceValue: SongSourceFilter
   onSourceChange: (value: SongSourceFilter) => void
+  /** Shown only when an EasyWorship library has been imported. */
+  onRemoveEasyWorship?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -131,28 +134,50 @@ export function SongFilterDropdown({
               </div>
               {songSourceOptions.map((option) => {
                 const isSelected = option.value === sourceValue
+                const canRemove =
+                  option.value === "easyworship" && onRemoveEasyWorship
 
                 return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="menuitemradio"
-                    aria-selected={isSelected}
-                    aria-checked={isSelected}
-                    onClick={() => {
-                      onSourceChange(option.value)
-                      setOpen(false)
-                    }}
-                    className={cn(
-                      "flex h-9 w-full items-center justify-between rounded-sm px-2 text-left text-sm transition-colors hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
-                      isSelected && "bg-foreground/10 text-foreground"
+                  <div key={option.value} className="group relative">
+                    <button
+                      type="button"
+                      role="menuitemradio"
+                      aria-selected={isSelected}
+                      aria-checked={isSelected}
+                      onClick={() => {
+                        onSourceChange(option.value)
+                        setOpen(false)
+                      }}
+                      className={cn(
+                        "flex h-9 w-full items-center justify-between rounded-sm px-2 text-left text-sm transition-colors group-hover:bg-foreground/10 focus-visible:bg-foreground/10 focus-visible:outline-none",
+                        isSelected && "bg-foreground/10 text-foreground",
+                        canRemove && (isSelected ? "pr-2" : "pr-10")
+                      )}
+                    >
+                      <span>{option.label}</span>
+                      {isSelected && (
+                        <CheckIcon className="size-4 text-[#101084] dark:text-[#F1E600]" />
+                      )}
+                    </button>
+                    {canRemove && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setOpen(false)
+                          onRemoveEasyWorship()
+                        }}
+                        className={cn(
+                          "absolute top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground opacity-0 transition-[opacity,color,background-color] group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-destructive/15 hover:text-destructive focus-visible:bg-destructive/15 focus-visible:text-destructive focus-visible:opacity-100 focus-visible:outline-none",
+                          isSelected ? "right-8" : "right-1"
+                        )}
+                        title="Remove EasyWorship songs from FellowShow"
+                        aria-label="Remove EasyWorship songs from FellowShow"
+                      >
+                        <Trash2Icon className="size-4" />
+                      </button>
                     )}
-                  >
-                    <span>{option.label}</span>
-                    {isSelected && (
-                      <CheckIcon className="size-4 text-[#101084] dark:text-[#F1E600]" />
-                    )}
-                  </button>
+                  </div>
                 )
               })}
             </div>

@@ -37,3 +37,6 @@ pub use types::{SttConfig, TranscriptEvent, Word};
 
 #[cfg(feature = "whisper")]
 pub use whisper::WhisperProvider;
+
+#[cfg(test)]
+mod e2e_support;

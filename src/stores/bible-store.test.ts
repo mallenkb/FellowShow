@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const mockGet = vi.fn()
 const mockSet = vi.fn()
@@ -13,6 +13,11 @@ vi.mock("@tauri-apps/plugin-store", () => ({
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: (...args: unknown[]) => mockInvoke(...args),
 }))
+
+afterEach(() => {
+  vi.useRealTimers()
+  vi.restoreAllMocks()
+})
 
 describe("bible store persistence", () => {
   beforeEach(async () => {
@@ -144,6 +149,22 @@ describe("bible store persistence", () => {
       expect(mockSet).toHaveBeenCalledTimes(1)
       expect(mockSet).toHaveBeenCalledWith("activeTranslationId", 4)
       vi.useRealTimers()
+    })
+
+    it("reports failed saves without leaving an unhandled promise rejection", async () => {
+      vi.useFakeTimers()
+      const error = new Error("disk unavailable")
+      mockSave.mockRejectedValue(error)
+      const warning = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const { initBiblePersistence, useBibleStore } =
+        await import("./bible-store")
+      await initBiblePersistence()
+      useBibleStore.getState().setActiveTranslation(6)
+      await vi.advanceTimersByTimeAsync(500)
+      expect(warning).toHaveBeenCalledWith(
+        "[bible] Failed to persist active translation",
+        error
+      )
     })
 
     it("handles store load failure gracefully without throwing", async () => {

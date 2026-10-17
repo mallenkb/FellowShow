@@ -79,8 +79,10 @@ export function createOutputActions(
     },
     setActiveTheme: (themeId, section) => {
       const targetSection = section ?? get().selectedThemeSection
+      const selectedTheme = get().themes.find((theme) => theme.id === themeId)
       const resolvedThemeId =
-        targetSection === "announcements"
+        targetSection === "announcements" &&
+        selectedTheme?.section !== "announcements"
           ? DEFAULT_ANNOUNCEMENT_THEME_ID
           : themeId
       set((s) => ({
@@ -188,8 +190,16 @@ export function createOutputActions(
         return { previewVerse: nextPreviewVerse, previewTimer }
       })
       if (previewChanged) {
+        // A live-verse bar on air follows the staged verse while Program is off.
+        const barFollowsVerse = get().overlayConfig.bars.some(
+          (bar) =>
+            bar.id === get().activeOverlays.barId && bar.source === "live-verse"
+        )
         for (const output of get().outputs) {
-          if (output.content === "songs") {
+          if (
+            output.content === "songs" ||
+            (barFollowsVerse && output.content === "overlays")
+          ) {
             get().syncBroadcastOutputFor(output.id)
           }
         }
@@ -247,7 +257,7 @@ export function createOutputActions(
       const output = get().outputs.find(
         (candidate) => candidate.id === outputId
       )
-      if (!output || output.content !== "overlays") return
+      if (live && (!output || output.content !== "overlays")) return
       set((s) => ({
         liveOverlayOutputIds: live
           ? s.liveOverlayOutputIds.includes(outputId)

@@ -6,6 +6,8 @@ import type {
 } from "@/lib/broadcast-outputs"
 import type {
   ActiveOverlayState,
+  BarAppearance,
+  BarOverlayItem,
   BroadcastTheme,
   BroadcastThemeSection,
   LogoOverlayConfig,
@@ -13,6 +15,7 @@ import type {
   LowerThirdRenderData,
   LowerThirdPreset,
   OverlayConfiguration,
+  OverlayLook,
   PresenterTimerRenderData,
   TickerMessage,
   TickerOverlayConfig,
@@ -37,6 +40,8 @@ export interface BroadcastState {
   lowerThird: LowerThirdRenderData | null
   overlayConfig: OverlayConfiguration
   activeOverlays: ActiveOverlayState
+  /** Graphics staged in the Video Overlays Preview, waiting for Show on Live. */
+  stagedOverlays: ActiveOverlayState
   outputOpacity: number
   selectedOverlayOutputId: string | null
   /** Video Overlays outputs explicitly sent live from the overlay workflow. */
@@ -125,6 +130,29 @@ export interface BroadcastState {
   deleteLowerThirdPreset: (id: string) => void
   showLowerThirdOverlay: (id: string) => void
   clearLowerThirdOverlay: () => void
+  stageOverlayLook: (id: string) => void
+  toggleStagedLogos: () => void
+  toggleStagedLowerThird: (id: string) => void
+  toggleStagedTicker: (id: string) => void
+  toggleStagedBar: (id: string) => void
+  clearStagedOverlays: () => void
+  /** Sends the Preview selection to the live graphics. */
+  commitStagedOverlays: () => void
+  showBarOverlay: (id: string) => void
+  clearBarOverlay: () => void
+  saveBarOverlay: (
+    bar: Omit<
+      BarOverlayItem,
+      "id" | "createdAt" | "updatedAt" | "targetOutputIds"
+    > & {
+      id?: string
+      targetOutputIds?: string[]
+    }
+  ) => string
+  deleteBarOverlay: (id: string) => void
+  applyBarAppearanceToAll: (appearance: BarAppearance) => void
+  saveOverlayLook: (look: Omit<OverlayLook, "id"> & { id?: string }) => string
+  deleteOverlayLook: (id: string) => void
   syncBroadcastOutput: () => void
   syncBroadcastOutputFor: (outputId: string) => void
   setSelectedOverlayOutputId: (outputId: string | null) => void
@@ -192,6 +220,22 @@ type OverlayActionKeys =
   | "showLowerThirdOverlay"
   | "clearLowerThirdOverlay"
 
+type OverlayStagingActionKeys =
+  | "stageOverlayLook"
+  | "toggleStagedLogos"
+  | "toggleStagedLowerThird"
+  | "toggleStagedTicker"
+  | "toggleStagedBar"
+  | "clearStagedOverlays"
+  | "commitStagedOverlays"
+  | "showBarOverlay"
+  | "clearBarOverlay"
+  | "saveBarOverlay"
+  | "deleteBarOverlay"
+  | "applyBarAppearanceToAll"
+  | "saveOverlayLook"
+  | "deleteOverlayLook"
+
 type DesignerActionKeys =
   | "setDesignerOpen"
   | "startEditing"
@@ -204,12 +248,20 @@ type DesignerActionKeys =
   | "setSelectedElement"
 
 type BroadcastActionKeys =
-  ThemeActionKeys | OutputActionKeys | OverlayActionKeys | DesignerActionKeys
+  | ThemeActionKeys
+  | OutputActionKeys
+  | OverlayActionKeys
+  | OverlayStagingActionKeys
+  | DesignerActionKeys
 
 export type BroadcastDataState = Omit<BroadcastState, BroadcastActionKeys>
 export type ThemeActions = Pick<BroadcastState, ThemeActionKeys>
 export type OutputActions = Pick<BroadcastState, OutputActionKeys>
 export type OverlayActions = Pick<BroadcastState, OverlayActionKeys>
+export type OverlayStagingActions = Pick<
+  BroadcastState,
+  OverlayStagingActionKeys
+>
 export type DesignerActions = Pick<BroadcastState, DesignerActionKeys>
 export type BroadcastSet = Parameters<StateCreator<BroadcastState>>[0]
 export type BroadcastGet = Parameters<StateCreator<BroadcastState>>[1]

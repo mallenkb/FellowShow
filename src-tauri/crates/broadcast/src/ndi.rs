@@ -121,6 +121,10 @@ pub enum NdiError {
     InitializeFailed,
     #[error("failed to create NDI sender instance")]
     SenderCreateFailed,
+    #[error(
+        "another output is already sending NDI as \"{0}\". Give this output a different NDI name, or switch it to a display"
+    )]
+    DuplicateSourceName(String),
     #[error("NDI session is not active")]
     SessionNotActive,
     #[error(
@@ -167,6 +171,17 @@ impl NdiRuntime {
         if let Some(existing) = self.sessions.remove(&session_id) {
             log::info!("NDI[{session_id}]: shutting down existing session before restart");
             drop(existing);
+        }
+
+        // The NDI SDK refuses a second sender with a name already in use.
+        let requested_name = request.source_name.trim();
+        if source_name_in_use(
+            self.sessions
+                .values()
+                .map(|session| session.info.source_name.as_str()),
+            requested_name,
+        ) {
+            return Err(NdiError::DuplicateSourceName(requested_name.to_string()));
         }
 
         log::info!(
@@ -248,6 +263,7 @@ impl ActiveNdiSession {
         if source_name.is_empty() {
             return Err(NdiError::EmptySourceName);
         }
+        let name = CString::new(source_name.clone()).map_err(|_| NdiError::EmptySourceName)?;
 
         let library_path = resolve_library_path()?;
         // SAFETY: library_path was validated to exist by resolve_library_path()
@@ -279,7 +295,6 @@ impl ActiveNdiSession {
             return Err(NdiError::InitializeFailed);
         }
 
-        let name = CString::new(source_name.clone()).map_err(|_| NdiError::EmptySourceName)?;
         let create = NdiSendCreate {
             p_ndi_name: name.as_ptr(),
             p_groups: std::ptr::null(),
@@ -378,8 +393,8 @@ impl ActiveNdiSession {
             xres: width as i32,
             yres: height as i32,
             fourcc: u32::from_le_bytes(*b"BGRA"),
-            frame_rate_n: (self.info.fps * 1000) as i32,
-            frame_rate_d: 1001,
+            frame_rate_n: self.info.fps as i32,
+            frame_rate_d: 1,
             picture_aspect_ratio: (width as f32) / (height as f32),
             frame_format_type: 1, // NDIlib_frame_format_type_progressive
             timecode: i64::MAX,   // NDIlib_send_timecode_synthesize
@@ -505,9 +520,30 @@ fn load_symbol<'a, T>(
     })
 }
 
+/// NDI source names are matched without regard to case or surrounding spaces.
+fn source_name_in_use<'a>(mut active: impl Iterator<Item = &'a str>, candidate: &str) -> bool {
+    let candidate = candidate.trim();
+    !candidate.is_empty() && active.any(|name| name.trim().eq_ignore_ascii_case(candidate))
+}
+
+#[cfg(test)]
+#[path = "ndi_transport_test.rs"]
+mod transport_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn detects_a_source_name_already_broadcasting() {
+        let active = ["FellowShow Program", "Stage Display"];
+        assert!(source_name_in_use(
+            active.into_iter(),
+            "fellowshow program "
+        ));
+        assert!(!source_name_in_use(active.into_iter(), "NDI Input"));
+        assert!(!source_name_in_use(active.into_iter(), "   "));
+    }
 
     #[test]
     fn windows_library_candidates_prefer_installed_runtime_and_executable_directory() {

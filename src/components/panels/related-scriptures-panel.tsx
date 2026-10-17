@@ -144,9 +144,7 @@ function sendScriptureToScroll(result: DetectionResult) {
   const broadcast = useBroadcastStore.getState()
   const id = broadcast.saveTickerMessage({
     text: result.verse_ref + ": " + result.verse_text,
-    targetOutputIds: broadcast.overlayConfig.logo.logos[0]?.targetOutputIds ?? [
-      "main",
-    ],
+    targetOutputIds: broadcast.outputs.map((output) => output.id),
   })
   broadcast.showTickerMessage(id)
   toast.success(result.verse_ref + " is scrolling live")

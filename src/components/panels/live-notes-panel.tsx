@@ -150,20 +150,30 @@ function viewNoteSource(
   )
   const start = note.sourceSegmentStartIndex
   const end = note.sourceSegmentEndIndex ?? start
-  const indexedTargets =
-    typeof start === "number" && start >= 0
-      ? paragraphs.slice(start, Math.max(start + 1, (end ?? start) + 1))
-      : []
-  const sourceTexts = (note.sourceSegmentIds ?? [])
-    .map((id) => transcriptSegments.find((segment) => segment.id === id)?.text)
-    .filter((text): text is string => Boolean(text?.trim()))
-    .map((text) => text.trim())
-  const targets =
-    indexedTargets.length > 0
-      ? indexedTargets
-      : paragraphs.filter((paragraph) =>
-          sourceTexts.includes(paragraph.textContent?.trim() ?? "")
-        )
+  const sourceIds = note.sourceSegmentIds ?? []
+  let sourceIndexes = sourceIds
+    .map((id) => transcriptSegments.findIndex((segment) => segment.id === id))
+    .filter((index) => index >= 0)
+  if (
+    sourceIds.length === 0 &&
+    typeof start === "number" &&
+    Number.isSafeInteger(start) &&
+    start >= 0 &&
+    typeof end === "number" &&
+    Number.isSafeInteger(end) &&
+    end >= start
+  ) {
+    const indexedSource = transcriptSegments.slice(start, end + 1)
+    if (
+      indexedSource.map((segment) => segment.text.trim()).join(" ") ===
+      note.sourceContext.trim()
+    ) {
+      sourceIndexes = indexedSource.map((_, index) => start + index)
+    }
+  }
+  const targets = sourceIndexes
+    .map((index) => paragraphs[index])
+    .filter((paragraph): paragraph is HTMLElement => Boolean(paragraph))
 
   if (targets.length === 0) {
     toast.info("The source transcript segment is no longer visible")

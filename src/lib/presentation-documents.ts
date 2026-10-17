@@ -51,11 +51,11 @@ export async function renderPdfPresentationPages(
   ).href
 
   const loadingTask = pdfjs.getDocument({ data: new Uint8Array(pdfData) })
-  const document = await loadingTask.promise
   const baseName = presentationDocumentName(documentName)
   const pages: PresentationPage[] = []
 
   try {
+    const document = await loadingTask.promise
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
       const pdfPage = await document.getPage(pageNumber)
       const naturalViewport = pdfPage.getViewport({ scale: 1 })
@@ -73,6 +73,8 @@ export async function renderPdfPresentationPages(
         await pdfPage.render({
           canvas,
           viewport,
+          // Cached page export must keep running when the app is covered.
+          intent: "print",
           background: "rgb(255,255,255)",
         }).promise
 

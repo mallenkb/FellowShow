@@ -320,7 +320,7 @@ fn resample(input: &[i16], from_rate: u32, to_rate: u32) -> Vec<i16> {
 
 #[cfg(test)]
 mod tests {
-    use super::downmix_strongest_channel;
+    use super::{downmix_strongest_channel, process_and_send};
 
     #[test]
     fn downmix_uses_only_channel_for_multichannel_interfaces() {
@@ -340,5 +340,16 @@ mod tests {
             downmix_strongest_channel(&samples, 2),
             vec![1200, -900, 600]
         );
+    }
+
+    #[test]
+    fn generated_stereo_pcm_is_downmixed_resampled_and_gain_limited_for_transcription() {
+        let samples: Vec<i16> = (0..48_000).flat_map(|_| [0, 20_000]).collect();
+        let (sender, receiver) = crossbeam_channel::bounded(1);
+        process_and_send(&samples, 2, 48_000, 16_000, 2.0, &sender);
+        let frame = receiver.recv().expect("processed PCM frame");
+        assert_eq!(frame.samples.len(), 16_000);
+        assert!(frame.samples.iter().all(|sample| *sample == i16::MAX));
+        assert!(frame.timestamp_ms > 0);
     }
 }

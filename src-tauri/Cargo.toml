@@ -4,6 +4,7 @@ members = [
     "crates/audio",
     "crates/stt",
     "crates/bible",
+    "crates/songs",
     "crates/detection",
     "crates/broadcast",
     "crates/api",
@@ -28,13 +29,13 @@ missing_panics_doc = "allow"
 
 [package]
 name = "fellowshow"
-version = "0.1.47"
+version = "0.1.48"
 description = "Fellow Show - Real-Time AI Bible Verse Detection"
 authors = ["Faithful"]
 license = "MIT"
 repository = "https://github.com/openbezal/fellowshow"
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.90"
 
 [lib]
 name = "fellowshow_lib"
@@ -58,6 +59,7 @@ tauri-plugin-log = "2"
 tauri-plugin-store = "2"
 fellowshow-audio = { path = "crates/audio" }
 fellowshow-bible = { path = "crates/bible" }
+fellowshow-songs = { path = "crates/songs" }
 fellowshow-stt = { path = "crates/stt" }
 fellowshow-broadcast = { path = "crates/broadcast" }
 fellowshow-detection = { path = "crates/detection", features = ["onnx", "vector-search"] }
@@ -71,7 +73,8 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-process = "2"
-tauri-plugin-updater = "2"
+# Pin the upstream ZIP 9 security update until it is published to crates.io.
+tauri-plugin-updater = { version = "2.14.0", git = "https://github.com/tauri-apps/plugins-workspace", rev = "f36ba7ba48695776bc11cce0bfdc45678ec24f72" }
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
 
 [features]

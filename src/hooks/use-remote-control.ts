@@ -6,6 +6,7 @@ import { useBroadcastStore } from "@/stores/broadcast-store"
 import { useBibleStore } from "@/stores/bible-store"
 import { useQueueStore } from "@/stores/queue-store"
 import { useSettingsStore } from "@/stores/settings-store"
+import { recordRemoteCommand } from "@/stores/remote-control-store"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import {
   activeTranslationAbbreviation,
@@ -118,6 +119,15 @@ export function useRemoteControl() {
         useSettingsStore.getState().setConfidenceThreshold(value)
       })
       unlisteners.push(u8)
+
+      const receiptListener = await listen<unknown>(
+        "remote:received",
+        ({ payload }) => {
+          if (!cancelled) recordRemoteCommand(payload)
+        }
+      )
+      if (cancelled) receiptListener()
+      else unlisteners.push(receiptListener)
     }
 
     void setup().catch((error) => {

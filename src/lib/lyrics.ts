@@ -4,13 +4,10 @@ export interface LyricBlock {
 }
 
 const SECTION_RE =
-  /^(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus)(\s+\d+)?\b[:\s-]*/i
+  /^\[?(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus|other)(\s+\d+)?\]?\s*[:-]\s*/i
 const SECTION_ONLY_RE =
-  /^(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus)(\s+\d+)?\s*:?\s*$/i
-const NUMBERED_LINE_RE = /^(\d+)[.)]?\s+(.+)/
-const MAX_PRESENTATION_LINES = 6
-const MAX_PRESENTATION_ROWS = 8
-const ESTIMATED_PRESENTATION_CHARS_PER_ROW = 34
+  /^\[?(verse|chorus|refrain|bridge|tag|ending|intro|outro|pre-chorus|pre chorus|other)(\s+\d+)?\]?\s*:?\s*$/i
+const NUMBERED_LINE_RE = /^(\d+)[.)]*\s+(.+)/
 
 export function splitLyricBlocks(lyrics: string): LyricBlock[] {
   const normalized = lyrics
@@ -26,10 +23,7 @@ export function splitLyricBlocks(lyrics: string): LyricBlock[] {
     .map((block) => block.trim())
     .filter(Boolean)
 
-  const sourceBlocks =
-    paragraphs.length > 1
-      ? mergeParagraphSections(paragraphs)
-      : splitLineSections(normalized)
+  const sourceBlocks = mergeParagraphSections(paragraphs)
 
   const cleanedBlocks = sourceBlocks
     .map(({ label, text }, index) => ({
@@ -38,7 +32,7 @@ export function splitLyricBlocks(lyrics: string): LyricBlock[] {
     }))
     .filter((block) => block.text.length > 0)
 
-  return cleanedBlocks.flatMap(splitOversizedBlock)
+  return cleanedBlocks
 }
 
 function defaultVerseLabel(index: number): string {
@@ -46,53 +40,14 @@ function defaultVerseLabel(index: number): string {
 }
 
 function mergeParagraphSections(paragraphs: string[]): LyricBlock[] {
-  const blocks: LyricBlock[] = []
-  let pendingLabel: string | null = null
-
-  for (const paragraph of paragraphs) {
-    if (isMetadataBlock(paragraph, blocks.length === 0 && !pendingLabel)) {
-      continue
-    }
-
-    const lines = paragraph
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-    const firstLine = lines[0] ?? ""
-
-    if (SECTION_ONLY_RE.test(firstLine) && lines.length === 1) {
-      pendingLabel = normalizeSectionLabel(firstLine)
-      continue
-    }
-
-    if (SECTION_RE.test(firstLine) && lines.length > 1) {
-      blocks.push({
-        label: normalizeSectionLabel(firstLine),
-        text: lines.slice(1).join("\n"),
-      })
-      pendingLabel = null
-      continue
-    }
-
-    if (pendingLabel) {
-      blocks.push({ label: pendingLabel, text: paragraph })
-      pendingLabel = null
-      continue
-    }
-
-    blocks.push(labelBlock(paragraph, blocks.length))
-  }
-
-  return blocks.length > 0
-    ? blocks
-    : [{ label: defaultVerseLabel(0), text: paragraphs.join("\n\n") }]
+  const lyricParagraphs = paragraphs.filter(
+    (paragraph, index) => !isMetadataBlock(paragraph, index === 0)
+  )
+  return splitLineSections(lyricParagraphs.join("\n\n"))
 }
 
 function splitLineSections(lyrics: string): LyricBlock[] {
-  const lines = lyrics
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
+  const lines = lyrics.split("\n").map((line) => line.trim())
   const blocks: LyricBlock[] = []
   let currentLabel: string | null = null
   let currentLines: string[] = []
@@ -108,11 +63,24 @@ function splitLineSections(lyrics: string): LyricBlock[] {
   }
 
   for (const line of lines) {
+    if (!line) {
+      flush()
+      continue
+    }
     if (isSourceCreditLine(line) && currentLines.length > 0) continue
 
     if (SECTION_ONLY_RE.test(line)) {
       flush()
       currentLabel = normalizeSectionLabel(line)
+      continue
+    }
+
+    const section = line.match(SECTION_RE)
+    if (section) {
+      flush()
+      currentLabel = normalizeSectionLabel(section[0])
+      const inlineText = line.slice(section[0].length).trim()
+      if (inlineText) currentLines.push(inlineText)
       continue
     }
 
@@ -129,99 +97,12 @@ function splitLineSections(lyrics: string): LyricBlock[] {
 
   flush()
 
-  return blocks.length > 0 ? blocks : chunkLines(lines)
-}
-
-function chunkLines(lines: string[]): LyricBlock[] {
-  const blocks: LyricBlock[] = []
-
-  for (let i = 0; i < lines.length; i += 4) {
-    blocks.push({
-      label: defaultVerseLabel(blocks.length),
-      text: lines.slice(i, i + 4).join("\n"),
-    })
-  }
-
   return blocks
-}
-
-function splitOversizedBlock(block: LyricBlock): LyricBlock[] {
-  const lines = block.text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-  const estimatedRows = estimatePresentationRows(lines)
-  if (!isOversizedPresentationBlock(lines, estimatedRows)) return [block]
-
-  const chunks: string[][] = []
-  const chunkCount = Math.max(
-    2,
-    Math.ceil(
-      Math.max(
-        lines.length / MAX_PRESENTATION_LINES,
-        estimatedRows / MAX_PRESENTATION_ROWS
-      )
-    )
-  )
-  const targetLinesPerChunk = Math.ceil(lines.length / chunkCount)
-
-  for (let i = 0; i < lines.length; i += targetLinesPerChunk) {
-    chunks.push(lines.slice(i, i + targetLinesPerChunk))
-  }
-
-  if (chunks.length <= 1) return [block]
-
-  return chunks.map((chunk) => ({
-    label: block.label,
-    text: chunk.join("\n"),
-  }))
-}
-
-function isOversizedPresentationBlock(
-  lines: string[],
-  estimatedRows = estimatePresentationRows(lines)
-): boolean {
-  if (lines.length > MAX_PRESENTATION_LINES) return true
-
-  return estimatedRows > MAX_PRESENTATION_ROWS
-}
-
-function estimatePresentationRows(lines: string[]): number {
-  return lines.reduce((total, line) => {
-    return (
-      total +
-      Math.max(1, Math.ceil(line.length / ESTIMATED_PRESENTATION_CHARS_PER_ROW))
-    )
-  }, 0)
-}
-
-function labelBlock(block: string, index: number): LyricBlock {
-  const firstLine = block.split("\n").find(Boolean)?.trim() ?? ""
-  const sectionMatch = firstLine.match(SECTION_RE)
-  const numberedMatch = firstLine.match(NUMBERED_LINE_RE)
-
-  if (sectionMatch) {
-    return {
-      label: normalizeSectionLabel(sectionMatch[0]),
-      text: block.replace(SECTION_RE, "").trim(),
-    }
-  }
-
-  if (numberedMatch) {
-    return {
-      label: `Verse ${numberedMatch[1]}`,
-      text: block.replace(NUMBERED_LINE_RE, "$2").trim(),
-    }
-  }
-
-  return {
-    label: defaultVerseLabel(index),
-    text: block,
-  }
 }
 
 function normalizeSectionLabel(label: string): string {
   return label
+    .replace(/[[\]]/g, "")
     .replace(/[:\s-]+$/, "")
     .replace(/\s+/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase())
@@ -256,7 +137,7 @@ function isMetadataBlock(block: string, isFirstBlock: boolean): boolean {
 }
 
 function isSourceCreditLine(line: string): boolean {
-  return /^([A-Z][A-Za-z'.-]*(?:\s+[A-Z][A-Za-z'.-]*){0,3},\s*)?(PH|RH|BBC songs|Blessings|Golden Bells|Living songs|P ANT)\b[.\s-]*\d*/i.test(
+  return /^([A-Z][A-Za-z'.-]*(?:\s+[A-Z][A-Za-z'.-]*){0,3},\s*)?(PH|RH|BBC songs|Blessings|Golden Bells|Living songs|P\s*AN\s*T|PAN\s*\([TF]\))[.\s-]*\d+/i.test(
     line
   )
 }
@@ -280,4 +161,9 @@ function isLikelyCreditLine(
     (candidate) => !isMetadataLine(candidate) && candidate !== line
   )
   return lyricLines.length > 0
+}
+
+/** Keep authored lyric line breaks and spacing identical on every output. */
+export function lyricDisplayLines(text: string): string[] {
+  return text.replace(/\r\n?/g, "\n").split("\n")
 }

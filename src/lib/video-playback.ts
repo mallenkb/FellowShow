@@ -30,17 +30,30 @@ export function playVideoSafely(video: HTMLVideoElement): void {
   }
 }
 
+export function isVideoFrameReady(video: HTMLVideoElement): boolean {
+  return (
+    video.readyState >= 2 &&
+    !video.seeking &&
+    video.videoWidth > 0 &&
+    video.videoHeight > 0
+  )
+}
+
 export function syncVideoToPlaybackClock(
   video: HTMLVideoElement,
   playbackStartedAt: number | undefined
 ): void {
+  // A seek invalidates the decoded frame. Do not restart it while WebKit is
+  // still waiting for video output, or ask for one before the first frame.
+  if (!isVideoFrameReady(video)) return
   const position = videoPositionForPlaybackClock(
     playbackStartedAt,
     video.duration
   )
-  if (position === null || Math.abs(video.currentTime - position) < 0.1) {
-    return
-  }
+  if (position === null) return
+  const difference = Math.abs(video.currentTime - position)
+  const drift = Math.min(difference, Math.abs(video.duration - difference))
+  if (drift < 0.1) return
 
   try {
     video.currentTime = position

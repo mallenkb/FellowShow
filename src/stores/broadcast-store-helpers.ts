@@ -15,6 +15,7 @@ import {
   type BroadcastOutputConfig,
 } from "@/lib/broadcast-outputs"
 import {
+  getCurrentOverlayScripture,
   getOverlayPayloadForOutput,
   getOverlayPreviewPayload,
 } from "@/lib/overlays"
@@ -147,13 +148,21 @@ export function getOutputOverlayPayload(
   // Video Overlays is the master graphics bus: its preview and live output
   // intentionally share the same all-active overlay payload. Per-output
   // targeting remains in effect for normal program outputs.
+  const scripture = getCurrentOverlayScripture(state)
   return output.content === "overlays"
-    ? getOverlayPreviewPayload(state.overlayConfig, state.activeOverlays)
+    ? getOverlayPreviewPayload(
+        state.overlayConfig,
+        state.activeOverlays,
+        Date.now(),
+        { scripture }
+      )
     : getOverlayPayloadForOutput(
         state.overlayConfig,
         state.activeOverlays,
         output.id,
-        { verse, timer }
+        { verse, timer },
+        Date.now(),
+        scripture
       )
 }
 

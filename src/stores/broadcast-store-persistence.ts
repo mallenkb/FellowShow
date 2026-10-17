@@ -24,7 +24,7 @@ import {
 import { useBroadcastStore } from "./broadcast-store"
 import type { BroadcastState } from "./broadcast-store-types"
 
-const BROADCAST_STORE_SCHEMA_VERSION = 1
+const BROADCAST_STORE_SCHEMA_VERSION = 2
 
 let tauriStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
@@ -126,6 +126,13 @@ export function hydrateBroadcastThemes(): Promise<void> {
         storedSongTheme?.section === "songs"
           ? storedSongTheme.id
           : DEFAULT_SONG_THEME_ID
+      const storedAnnouncementTheme = nextThemes.find(
+        (theme) => theme.id === sectionThemeIds?.announcements
+      )
+      const announcementThemeId =
+        storedAnnouncementTheme?.section === "announcements"
+          ? storedAnnouncementTheme.id
+          : DEFAULT_ANNOUNCEMENT_THEME_ID
 
       if (customThemes.length > 0) {
         patch.themes = nextThemes
@@ -152,7 +159,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
         bible: resolveThemeId(activeId ?? DEFAULT_SECTION_THEME_IDS.bible),
         ...sectionThemeIds,
         songs: resolveThemeId(songThemeId),
-        announcements: resolveThemeId(DEFAULT_ANNOUNCEMENT_THEME_ID),
+        announcements: resolveThemeId(announcementThemeId),
       }
       patch.sectionThemeIds = Object.fromEntries(
         Object.entries(patch.sectionThemeIds).map(([section, themeId]) => [

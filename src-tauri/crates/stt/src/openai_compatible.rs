@@ -8,7 +8,7 @@ use serde::Deserialize;
 use tokio::sync::mpsc;
 
 use crate::error::SttError;
-use crate::provider::SttProvider;
+use crate::provider::{wait_for_stop, SttProvider};
 use crate::types::TranscriptEvent;
 
 const CHUNK_SECONDS: usize = 5;
@@ -58,41 +58,75 @@ impl OpenAiCompatibleSttProvider {
             .text("response_format", "json")
             .part("file", part);
 
-        let response = self
-            .client
-            .post(&self.config.endpoint)
-            .bearer_auth(&self.config.api_key)
-            .multipart(form)
-            .send()
-            .await
-            .map_err(|e| {
-                SttError::ConnectionFailed(format!(
-                    "{} request failed: {e}",
-                    self.config.provider_name
-                ))
-            })?;
+        let request = async {
+            let response = self
+                .client
+                .post(&self.config.endpoint)
+                .bearer_auth(&self.config.api_key)
+                .timeout(Duration::from_secs(30))
+                .multipart(form)
+                .send()
+                .await
+                .map_err(|e| {
+                    SttError::ConnectionFailed(format!(
+                        "{} request failed: {e}",
+                        self.config.provider_name
+                    ))
+                })?;
 
-        if !response.status().is_success() {
-            let status = response.status();
-            let body = response.text().await.unwrap_or_default();
-            return Err(SttError::ConnectionFailed(format!(
-                "{} transcription API error {status}: {body}",
-                self.config.provider_name
-            )));
+            if !response.status().is_success() {
+                let status = response.status();
+                let body = response.text().await.unwrap_or_default();
+                return Err(SttError::ConnectionFailed(format!(
+                    "{} transcription API error {status}: {body}",
+                    self.config.provider_name
+                )));
+            }
+
+            let parsed = response
+                .json::<TranscriptionResponse>()
+                .await
+                .map_err(|e| {
+                    SttError::ParseError(format!(
+                        "Failed to parse {} response: {e}",
+                        self.config.provider_name
+                    ))
+                })?;
+
+            let text = parsed.text.trim().to_string();
+            Ok((!text.is_empty()).then_some(text))
+        };
+        tokio::select! {
+            result = request => result,
+            () = wait_for_stop(&self.stop) => Ok(None),
         }
+    }
 
-        let parsed = response
-            .json::<TranscriptionResponse>()
-            .await
-            .map_err(|e| {
-                SttError::ParseError(format!(
-                    "Failed to parse {} response: {e}",
-                    self.config.provider_name
-                ))
-            })?;
-
-        let text = parsed.text.trim().to_string();
-        Ok((!text.is_empty()).then_some(text))
+    async fn emit_chunk(
+        &self,
+        samples: &[i16],
+        event_tx: &mpsc::Sender<TranscriptEvent>,
+    ) -> Result<(), SttError> {
+        match self.transcribe_chunk(samples).await {
+            Ok(Some(transcript)) => {
+                let _ = event_tx
+                    .send(TranscriptEvent::Final {
+                        transcript,
+                        words: Vec::new(),
+                        confidence: 0.9,
+                        speech_final: true,
+                    })
+                    .await;
+                Ok(())
+            }
+            Ok(None) => Ok(()),
+            Err(error) => {
+                let _ = event_tx
+                    .send(TranscriptEvent::Error(error.to_string()))
+                    .await;
+                Err(error)
+            }
+        }
     }
 }
 
@@ -103,55 +137,39 @@ impl SttProvider for OpenAiCompatibleSttProvider {
         audio_rx: Receiver<Vec<i16>>,
         event_tx: mpsc::Sender<TranscriptEvent>,
     ) -> Result<(), SttError> {
-        self.stop.store(false, Ordering::SeqCst);
+        if self.stop.load(Ordering::SeqCst) {
+            return Ok(());
+        }
         let _ = event_tx.send(TranscriptEvent::Connected).await;
 
         let target_samples = self.config.sample_rate as usize * CHUNK_SECONDS;
-        let mut buffer = Vec::<i16>::with_capacity(target_samples);
+        let mut buffer = Vec::<i16>::new();
 
-        while !self.stop.load(Ordering::SeqCst) {
-            match audio_rx.recv_timeout(Duration::from_millis(100)) {
-                Ok(samples) => buffer.extend(samples),
-                Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
-                Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
-            }
+        let result = async {
+            while !self.stop.load(Ordering::SeqCst) && !event_tx.is_closed() {
+                match audio_rx.try_recv() {
+                    Ok(samples) => buffer.extend(samples),
+                    Err(crossbeam_channel::TryRecvError::Empty) => {
+                        tokio::time::sleep(Duration::from_millis(20)).await;
+                    }
+                    Err(crossbeam_channel::TryRecvError::Disconnected) => break,
+                }
 
-            if buffer.len() >= target_samples {
-                let chunk = std::mem::take(&mut buffer);
-                match self.transcribe_chunk(&chunk).await {
-                    Ok(Some(transcript)) => {
-                        let _ = event_tx
-                            .send(TranscriptEvent::Final {
-                                transcript,
-                                words: Vec::new(),
-                                confidence: 0.9,
-                                speech_final: true,
-                            })
-                            .await;
-                    }
-                    Ok(None) => {}
-                    Err(e) => {
-                        let _ = event_tx.send(TranscriptEvent::Error(e.to_string())).await;
-                    }
+                if buffer.len() >= target_samples {
+                    let chunk = std::mem::take(&mut buffer);
+                    self.emit_chunk(&chunk, &event_tx).await?;
                 }
             }
-        }
 
-        if !buffer.is_empty() {
-            if let Ok(Some(transcript)) = self.transcribe_chunk(&buffer).await {
-                let _ = event_tx
-                    .send(TranscriptEvent::Final {
-                        transcript,
-                        words: Vec::new(),
-                        confidence: 0.9,
-                        speech_final: true,
-                    })
-                    .await;
+            if !buffer.is_empty() && !self.stop.load(Ordering::SeqCst) && !event_tx.is_closed() {
+                self.emit_chunk(&buffer, &event_tx).await?;
             }
+            Ok(())
         }
+        .await;
 
         let _ = event_tx.send(TranscriptEvent::Disconnected).await;
-        Ok(())
+        result
     }
 
     fn stop(&self) {
@@ -164,18 +182,25 @@ impl SttProvider for OpenAiCompatibleSttProvider {
 }
 
 fn encode_wav_mono_i16(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>, SttError> {
+    let byte_rate = sample_rate
+        .checked_mul(2)
+        .filter(|rate| *rate > 0)
+        .ok_or_else(|| SttError::ParseError("invalid WAV sample rate".into()))?;
     let data_len = u32::try_from(samples.len().saturating_mul(2))
         .map_err(|_| SttError::ParseError("audio chunk is too large for WAV encoding".into()))?;
+    let riff_len = data_len
+        .checked_add(36)
+        .ok_or_else(|| SttError::ParseError("audio chunk is too large for WAV encoding".into()))?;
     let mut out = Vec::with_capacity(44 + samples.len() * 2);
 
     out.extend_from_slice(b"RIFF");
-    out.extend_from_slice(&(36 + data_len).to_le_bytes());
+    out.extend_from_slice(&riff_len.to_le_bytes());
     out.extend_from_slice(b"WAVEfmt ");
     out.extend_from_slice(&16u32.to_le_bytes());
     out.extend_from_slice(&1u16.to_le_bytes());
     out.extend_from_slice(&1u16.to_le_bytes());
     out.extend_from_slice(&sample_rate.to_le_bytes());
-    out.extend_from_slice(&(sample_rate * 2).to_le_bytes());
+    out.extend_from_slice(&byte_rate.to_le_bytes());
     out.extend_from_slice(&2u16.to_le_bytes());
     out.extend_from_slice(&16u16.to_le_bytes());
     out.extend_from_slice(b"data");
@@ -187,6 +212,10 @@ fn encode_wav_mono_i16(samples: &[i16], sample_rate: u32) -> Result<Vec<u8>, Stt
 
     Ok(out)
 }
+
+#[cfg(test)]
+#[path = "openai_compatible_e2e.rs"]
+mod end_to_end;
 
 #[cfg(test)]
 mod tests {

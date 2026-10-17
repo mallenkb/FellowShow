@@ -38,6 +38,9 @@ vi.mock("@/lib/songs-data", () => ({
 vi.mock("@/lib/song-presentation", () => ({
   prepareSong: (song: CopSong) => prepareSong(song),
 }))
+vi.mock("@/components/ui/canvas-verse", () => ({
+  CanvasVerse: () => null,
+}))
 vi.mock("@tauri-apps/api/event", () => ({
   emitTo: vi.fn(() => Promise.resolve()),
 }))
@@ -80,13 +83,13 @@ describe("SongEditorDialog", () => {
     })
   })
 
-  it("opens an existing song with a blank line between its slides", async () => {
+  it("opens an existing song without rewriting its authored line breaks", async () => {
     render(<SongEditorDialog />)
     act(() => useSongEditorStore.getState().openEdit(saved.id))
 
     expect(await screen.findByDisplayValue("Quick song")).toBeTruthy()
     const lyrics = screen.getByRole("textbox", { name: "Lyrics" })
-    expect((lyrics as HTMLTextAreaElement).value).toContain("\n\n")
+    expect((lyrics as HTMLTextAreaElement).value).toBe(saved.lyrics)
     expect(screen.getByRole("button", { name: "Delete song" })).toBeTruthy()
   })
 

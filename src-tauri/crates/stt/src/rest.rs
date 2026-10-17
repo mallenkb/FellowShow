@@ -28,12 +28,6 @@ impl DeepgramRestClient {
             return Ok(vec![]);
         }
 
-        // Convert i16 samples to raw bytes (little-endian)
-        let mut audio_bytes: Vec<u8> = Vec::with_capacity(samples.len() * 2);
-        for sample in samples {
-            audio_bytes.extend_from_slice(&sample.to_le_bytes());
-        }
-
         let url = format!(
             "https://api.deepgram.com/v1/listen?model={}&encoding={}&sample_rate={}&channels=1&punctuate=true&smart_format=true",
             self.config.model,
@@ -41,9 +35,24 @@ impl DeepgramRestClient {
             self.config.sample_rate,
         );
 
+        self.transcribe_url(samples, &url).await
+    }
+
+    async fn transcribe_url(
+        &self,
+        samples: &[i16],
+        url: &str,
+    ) -> Result<Vec<TranscriptEvent>, SttError> {
+        // Convert i16 samples to raw bytes (little-endian)
+        let mut audio_bytes: Vec<u8> = Vec::with_capacity(samples.len() * 2);
+        for sample in samples {
+            audio_bytes.extend_from_slice(&sample.to_le_bytes());
+        }
+
         let response = self
             .client
-            .post(&url)
+            .post(url)
+            .timeout(std::time::Duration::from_secs(30))
             .header("Authorization", format!("Token {}", self.config.api_key))
             .header("Content-Type", "application/octet-stream")
             .body(audio_bytes)
@@ -127,3 +136,7 @@ impl DeepgramRestClient {
         Ok(events)
     }
 }
+
+#[cfg(test)]
+#[path = "rest_e2e.rs"]
+mod end_to_end;

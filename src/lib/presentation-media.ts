@@ -1,6 +1,7 @@
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core"
 import { appDataDir, join } from "@tauri-apps/api/path"
-import { copyFile, mkdir, writeFile } from "@tauri-apps/plugin-fs"
+import { copyFile, mkdir, remove, writeFile } from "@tauri-apps/plugin-fs"
+import { validatePresentationMedia } from "@/lib/media-validation"
 
 export interface CachedPresentationMedia {
   url: string
@@ -8,7 +9,8 @@ export interface CachedPresentationMedia {
 }
 
 export async function cachePresentationMediaPath(
-  sourcePath: string
+  sourcePath: string,
+  mediaType?: "image" | "video"
 ): Promise<string> {
   const directory = await join(await appDataDir(), "media")
   await mkdir(directory, { recursive: true })
@@ -18,7 +20,31 @@ export async function cachePresentationMediaPath(
     `${crypto.randomUUID()}.${extension}`
   )
   await copyFile(sourcePath, destination)
-  return convertFileSrc(destination)
+  const cached = { url: convertFileSrc(destination), filePath: destination }
+  await validateCachedMedia(cached, mediaType)
+  return cached.url
+}
+
+async function validateCachedMedia(
+  cached: CachedPresentationMedia,
+  mediaType?: "image" | "video"
+) {
+  if (!mediaType) return
+  try {
+    await validatePresentationMedia(cached.url, mediaType)
+  } catch (error) {
+    if (cached.filePath) {
+      try {
+        await remove(cached.filePath)
+      } catch (cleanupError) {
+        console.warn(
+          "[presentations] Failed to remove invalid media",
+          cleanupError
+        )
+      }
+    }
+    throw error
+  }
 }
 
 const MEDIA_MIME_BY_EXTENSION: Record<string, string> = {
@@ -82,8 +108,10 @@ export async function cachePresentationMediaAsset(
 
 export async function cachePresentationMedia(
   blob: Blob,
-  originalName: string
+  originalName: string,
+  mediaType?: "image" | "video"
 ): Promise<string> {
   const asset = await cachePresentationMediaAsset(blob, originalName)
+  await validateCachedMedia(asset, mediaType)
   return asset.url
 }

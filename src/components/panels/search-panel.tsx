@@ -5,8 +5,6 @@ import {
   useState,
   type KeyboardEvent,
 } from "react"
-import { isTauri } from "@tauri-apps/api/core"
-import { open } from "@tauri-apps/plugin-dialog"
 import {
   BookOpenIcon,
   ImageIcon,
@@ -15,7 +13,6 @@ import {
   PlusIcon,
   NotebookTextIcon,
   TimerIcon,
-  UploadIcon,
   type LucideIcon,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -32,13 +29,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { CopSong } from "@/lib/cop-songs"
 import { useSongFilterStore } from "@/stores/song-filter-store"
-import { invoke } from "@/lib/ipc"
 import { prepareSong, presentSong } from "@/lib/song-presentation"
-import { loadAllSongs, saveEasyWorshipSongs } from "@/lib/songs-data"
+import { loadAllSongs } from "@/lib/songs-data"
 import { cn } from "@/lib/utils"
 import { useQueueStore } from "@/stores"
 import { useSongEditorStore } from "@/stores/song-editor-store"
 import { SongEditorDialog } from "@/components/songs/song-editor-dialog"
+import { EasyWorshipImportButton } from "@/components/songs/easyworship-import-button"
+import { EasyWorshipRemoveDialog } from "@/components/songs/easyworship-remove-dialog"
 import { isOptionalSearchTab, useSettingsStore } from "@/stores/settings-store"
 
 type SearchTab =
@@ -78,6 +76,12 @@ export function SearchPanel({
   const [songRenderLimit, setSongRenderLimit] = useState(SONG_PAGE_SIZE)
   const [songHighlight, setSongHighlight] = useState(0)
   const [allSongs, setAllSongs] = useState<CopSong[]>([])
+  const [confirmingEasyWorshipRemoval, setConfirmingEasyWorshipRemoval] =
+    useState(false)
+  const easyWorshipSongCount = useMemo(
+    () => allSongs.filter((song) => song.source === "easyworship").length,
+    [allSongs]
+  )
   const songSearchKey = `${songQuery}\u0000${songSourceFilter}`
   const [previousSongSearchKey, setPreviousSongSearchKey] =
     useState(songSearchKey)
@@ -147,46 +151,6 @@ export function SearchPanel({
     source: songSourceFilter,
     renderLimit: songRenderLimit,
   })
-
-  const importEasyWorshipSongs = useCallback(async () => {
-    if (!isTauri()) {
-      toast.error("EasyWorship imports are available in the desktop app.")
-      return
-    }
-
-    const folder = await open({
-      directory: true,
-      title: "Choose your EasyWorship folder",
-    })
-    if (typeof folder !== "string") return
-
-    try {
-      // Finds Songs.db and SongWords.db anywhere under the chosen folder.
-      const databases = await invoke("find_easyworship_databases", { folder })
-      const imported = await invoke("import_easyworship_songs", databases)
-      const songs: CopSong[] = imported.map((song, index) => ({
-        id: song.id,
-        language: "english",
-        languageLabel: "EasyWorship",
-        number: index + 1,
-        title: song.title,
-        lyrics: song.lyrics,
-        source: "easyworship",
-        sourceLabel: "EasyWorship",
-      }))
-      await saveEasyWorshipSongs(songs)
-      setAllSongs(await loadAllSongs())
-      toast.success(
-        `Imported ${songs.length} song${songs.length === 1 ? "" : "s"} from EasyWorship.`
-      )
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Could not import EasyWorship songs."
-      )
-    }
-  }, [])
 
   // Clicking only prepares a song. Taking it live is a deliberate second Enter.
   const openSong = (song: CopSong, index: number) => {
@@ -312,6 +276,11 @@ export function SearchPanel({
             <SongFilterDropdown
               sourceValue={songSourceFilter}
               onSourceChange={setSongSourceFilter}
+              onRemoveEasyWorship={
+                easyWorshipSongCount > 0
+                  ? () => setConfirmingEasyWorshipRemoval(true)
+                  : undefined
+              }
             />
             <Button
               type="button"
@@ -324,23 +293,26 @@ export function SearchPanel({
             >
               <PlusIcon className="size-4" />
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="size-10 shrink-0"
-              onClick={() => void importEasyWorshipSongs()}
-              title="Import EasyWorship songs"
-              aria-label="Import EasyWorship songs"
-            >
-              <UploadIcon className="size-4" />
-            </Button>
+            <EasyWorshipImportButton
+              importedCount={easyWorshipSongCount}
+              onSongsChanged={(songs) => {
+                setAllSongs(songs)
+                setSongQuery("")
+              }}
+              onRequestRemove={() => setConfirmingEasyWorshipRemoval(true)}
+            />
+            <EasyWorshipRemoveDialog
+              open={confirmingEasyWorshipRemoval}
+              onOpenChange={setConfirmingEasyWorshipRemoval}
+              songCount={easyWorshipSongCount}
+              onSongsChanged={setAllSongs}
+            />
           </div>
         ) : activeTab === "timer" ? (
           <TabDescription>Timer controls</TabDescription>
         ) : activeTab === "on-display" ? (
           <TabDescription>
-            Video Overlays · logo, scrolling text, and lower thirds
+            Video Overlays · Looks, logos, bars, scrolling text, lower thirds
           </TabDescription>
         ) : null}
       </div>

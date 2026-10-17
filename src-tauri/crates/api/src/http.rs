@@ -200,13 +200,19 @@ async fn control_handler<S: CommandSink + 'static>(
                 error: None,
             }),
         ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ControlResponse {
-                success: false,
-                error: Some(e.to_string()),
-            }),
-        ),
+        Err(e) => {
+            let status = match &e {
+                CommandError::OutOfRange { .. } => StatusCode::BAD_REQUEST,
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            (
+                status,
+                Json(ControlResponse {
+                    success: false,
+                    error: Some(e.to_string()),
+                }),
+            )
+        }
     }
 }
 

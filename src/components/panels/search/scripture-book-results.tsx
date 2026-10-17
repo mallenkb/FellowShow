@@ -21,17 +21,18 @@ export function ScriptureBookResults({
   const showingVersePicker =
     showingVerses && controller.effectiveSelectedVerseId === null
   const selectedVerseId = controller.effectiveSelectedVerseId
+  const isActive = controller.isActive
   const focusSelectedVerse = useRef(false)
 
   useEffect(() => {
-    if (!showingVerses || selectedVerseId === null) return
+    if (!isActive || !showingVerses || selectedVerseId === null) return
     const row = document.getElementById(`verse-${selectedVerseId}`)
     if (focusSelectedVerse.current) {
       row?.focus({ preventScroll: true })
       focusSelectedVerse.current = false
     }
     row?.scrollIntoView({ block: "nearest" })
-  }, [selectedVerseId, showingVerses])
+  }, [isActive, selectedVerseId, showingVerses])
 
   if (controller.pickerStage === "books") {
     return (
@@ -176,6 +177,7 @@ export function ScriptureBookResults({
                 <div
                   key={verse.id}
                   id={`verse-${verse.id}`}
+                  aria-current={isSelected ? "true" : undefined}
                   tabIndex={0}
                   onClick={() => controller.handleVerseClick(verse)}
                   onDoubleClick={() => controller.handleVerseDoubleClick(verse)}

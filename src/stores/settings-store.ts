@@ -12,7 +12,8 @@ type SttProvider = "deepgram" | "openai" | "groq" | "whisper"
 export type AiProvider = "openrouter" | "openai"
 
 const DEFAULT_AI_PROVIDER: AiProvider = "openrouter"
-export const DEFAULT_OPENROUTER_MODEL = "inclusionai/ling-3.0-flash:free"
+export const DEFAULT_OPENROUTER_MODEL = "openrouter/free"
+const RETIRED_OPENROUTER_DEFAULT = "inclusionai/ling-3.0-flash:free"
 export const DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
 
 export function isAiProvider(value: unknown): value is AiProvider {
@@ -53,6 +54,8 @@ interface SettingsState {
   hiddenTranslationIds: number[]
   pinnedTranslationIds: number[]
   defaultPinnedTranslationsApplied: boolean
+  /** Set once the Video Overlays tab has been turned on by default. */
+  videoOverlaysTabApplied: boolean
   extraSearchTabs: OptionalSearchTab[]
 
   setDeepgramApiKey: (key: string | null) => void
@@ -99,7 +102,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   hiddenTranslationIds: [],
   pinnedTranslationIds: DEFAULT_PINNED_TRANSLATION_IDS,
   defaultPinnedTranslationsApplied: false,
-  extraSearchTabs: [],
+  videoOverlaysTabApplied: false,
+  extraSearchTabs: ["on-display"],
 
   setDeepgramApiKey: (deepgramApiKey) => set({ deepgramApiKey }),
   setOpenaiApiKey: (openaiApiKey) => set({ openaiApiKey }),
@@ -158,6 +162,7 @@ const PERSISTED_KEYS = [
   "hiddenTranslationIds",
   "pinnedTranslationIds",
   "defaultPinnedTranslationsApplied",
+  "videoOverlaysTabApplied",
   "extraSearchTabs",
 ] as const satisfies readonly (keyof SettingsState)[]
 
@@ -234,11 +239,29 @@ export function hydrateSettings(): Promise<void> {
 
       const patch = await loadValidatedSettings(store)
       let settingsStoreChanged = storedSchemaVersion !== SETTINGS_SCHEMA_VERSION
+      if (patch.openRouterModel === RETIRED_OPENROUTER_DEFAULT) {
+        patch.openRouterModel = DEFAULT_OPENROUTER_MODEL
+        await store.set("openRouterModel", DEFAULT_OPENROUTER_MODEL)
+        settingsStoreChanged = true
+      }
       if (!patch.defaultPinnedTranslationsApplied) {
         patch.pinnedTranslationIds = DEFAULT_PINNED_TRANSLATION_IDS
         patch.defaultPinnedTranslationsApplied = true
         await store.set("pinnedTranslationIds", DEFAULT_PINNED_TRANSLATION_IDS)
         await store.set("defaultPinnedTranslationsApplied", true)
+        settingsStoreChanged = true
+      }
+      // Video Overlays used to be hidden by default. Show it once for
+      // existing setups; operators can still turn it off in Workspace.
+      if (!patch.videoOverlaysTabApplied) {
+        const tabs =
+          patch.extraSearchTabs ?? useSettingsStore.getState().extraSearchTabs
+        patch.extraSearchTabs = tabs.includes("on-display")
+          ? tabs
+          : [...tabs, "on-display"]
+        patch.videoOverlaysTabApplied = true
+        await store.set("extraSearchTabs", patch.extraSearchTabs)
+        await store.set("videoOverlaysTabApplied", true)
         settingsStoreChanged = true
       }
       if (settingsStoreChanged) {
@@ -377,6 +400,11 @@ async function loadValidatedSettings(
           patch.defaultPinnedTranslationsApplied = value
         }
         break
+      case "videoOverlaysTabApplied":
+        if (typeof value === "boolean") {
+          patch.videoOverlaysTabApplied = value
+        }
+        break
       case "extraSearchTabs":
         if (Array.isArray(value)) {
           patch.extraSearchTabs = [
@@ -419,7 +447,7 @@ function sanitizeTranslationIds(value: unknown[]): number[] {
   return [
     ...new Set(
       value.filter(
-        (item): item is number => Number.isInteger(item) && Number(item) > 0
+        (item): item is number => Number.isSafeInteger(item) && Number(item) > 0
       )
     ),
   ]

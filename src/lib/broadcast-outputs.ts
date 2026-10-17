@@ -2,7 +2,12 @@ import type {
   BroadcastThemeSection,
   PresenterTimerRenderData,
   VerseRenderData,
+  NdiStartRequest,
 } from "@/types"
+import {
+  defaultNdiOutputConfig,
+  sanitizeNdiOutputConfig,
+} from "./ndi-output-config"
 import type { OutputType } from "@/lib/broadcast-output-control"
 import { selectFreeMonitorIndex } from "@/lib/broadcast-output-control"
 
@@ -79,6 +84,8 @@ export interface BroadcastOutputConfig {
   monitorIndex: number | null
   /** Keyer background for the graphics-only output role. */
   overlayMode?: OverlayOutputMode
+  /** Saved sender choices. Active sessions and open windows remain ephemeral. */
+  ndi?: NdiStartRequest
 }
 
 export const MAX_BROADCAST_OUTPUTS = 6
@@ -297,14 +304,19 @@ export function sanitizeOutputConfigs(
     // Migrate the pre-routing default names to the role-based ones.
     const isLegacyDefaultName =
       candidate.name === "Main Output" || candidate.name === "Alternate Output"
+    const name =
+      typeof candidate.name === "string" &&
+      candidate.name.trim().length > 0 &&
+      !isLegacyDefaultName
+        ? candidate.name
+        : defaultNameForContent(content)
+    const ndi = sanitizeNdiOutputConfig(
+      candidate.ndi,
+      defaultNdiOutputConfig(name)
+    )
     const output = {
       id,
-      name:
-        typeof candidate.name === "string" &&
-        candidate.name.trim().length > 0 &&
-        !isLegacyDefaultName
-          ? candidate.name
-          : defaultNameForContent(content),
+      name,
       content,
       themeId:
         typeof candidate.themeId === "string" &&
@@ -314,10 +326,11 @@ export function sanitizeOutputConfigs(
       outputType: candidate.outputType === "ndi" ? "ndi" : "display",
       monitorIndex:
         typeof candidate.monitorIndex === "number" &&
-        Number.isInteger(candidate.monitorIndex) &&
+        Number.isSafeInteger(candidate.monitorIndex) &&
         candidate.monitorIndex >= 0
           ? candidate.monitorIndex
           : null,
+      ...(ndi ? { ndi } : {}),
       ...(content === "overlays"
         ? {
             overlayMode: isOverlayOutputMode(candidate.overlayMode)
@@ -330,6 +343,7 @@ export function sanitizeOutputConfigs(
   }
   if (outputs.length === 0) return null
   if (!outputs.some((output) => output.id === "main")) {
+    if (outputs.length === MAX_BROADCAST_OUTPUTS) outputs.pop()
     outputs.unshift(createDefaultOutputs()[0])
   }
   return outputs
@@ -351,7 +365,10 @@ export function assignDefaultMonitorIndices(
   if (monitors.length === 0) return assignments
 
   const isValid = (index: number | null): index is number =>
-    index !== null && index >= 0 && index < monitors.length
+    index !== null &&
+    Number.isInteger(index) &&
+    index >= 0 &&
+    index < monitors.length
   const taken = new Set<number>()
   for (const output of outputs) {
     if (output.outputType === "display" && isValid(output.monitorIndex)) {

@@ -94,9 +94,13 @@ export async function initBiblePersistence(): Promise<void> {
       if (id === prev) return
       prev = id
       if (timer) clearTimeout(timer)
-      timer = setTimeout(async () => {
-        await store.set("activeTranslationId", id)
-        await store.save()
+      timer = setTimeout(() => {
+        void (async () => {
+          await store.set("activeTranslationId", id)
+          await store.save()
+        })().catch((error: unknown) => {
+          console.warn("[bible] Failed to persist active translation", error)
+        })
       }, 500)
     })
   } catch {

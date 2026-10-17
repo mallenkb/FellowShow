@@ -1,86 +1,100 @@
-import {
-  ImageIcon,
-  MessageSquareTextIcon,
-  PanelsTopLeftIcon,
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react"
+import { resolveOverlaySelection } from "@/lib/overlays"
+import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores"
+import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
+import type { ActiveOverlayState, OverlayConfiguration } from "@/types"
 import { DskOutputControls } from "@/components/on-display/dsk-output-controls"
+import { OVERLAY_KIND_STYLES, type OverlayPadKind } from "./overlay-kind-styles"
+import { OverlayLookDialog } from "./overlay-look-dialog"
+import { OverlayLooks } from "./overlay-looks"
 
+function liveGraphics(
+  config: OverlayConfiguration,
+  active: ActiveOverlayState
+): { kind: OverlayPadKind; name: string }[] {
+  const items: { kind: OverlayPadKind; name: string }[] = []
+  if (active.logoVisible) items.push({ kind: "logo", name: "Logo" })
+  const bar = config.bars.find((item) => item.id === active.barId)
+  if (bar) items.push({ kind: "bar", name: bar.name })
+  if (active.lowerThird) {
+    items.push({ kind: "lowerThird", name: active.lowerThird.preset.name })
+  }
+  const ticker = config.tickerMessages.find(
+    (item) => item.id === active.tickerMessageId
+  )
+  if (ticker) items.push({ kind: "ticker", name: ticker.text })
+  return items
+}
+
+/** Left panel of the Video Overlays tab: output, what is live, and Looks. */
 export function OnDisplayOverview() {
-  const hasLogo = useBroadcastStore(
-    (state) => state.overlayConfig.logo.logos.length > 0
-  )
-  const logoVisible = useBroadcastStore(
-    (state) => state.activeOverlays.logoVisible
-  )
-  const tickerCount = useBroadcastStore(
-    (state) => state.overlayConfig.tickerMessages.length
-  )
-  const tickerVisible = useBroadcastStore(
-    (state) => state.activeOverlays.tickerMessageId !== null
-  )
-  const lowerThirdCount = useBroadcastStore(
-    (state) => state.overlayConfig.lowerThirdPresets.length
-  )
-  const lowerThirdVisible = useBroadcastStore(
-    (state) => state.activeOverlays.lowerThird !== null
-  )
-
-  const items = [
-    {
-      icon: ImageIcon,
-      name: "Logo",
-      detail: hasLogo ? "Logo ready" : "Choose a logo",
-      visible: logoVisible,
-    },
-    {
-      icon: MessageSquareTextIcon,
-      name: "Scrolling text",
-      detail: `${tickerCount} saved`,
-      visible: tickerVisible,
-    },
-    {
-      icon: PanelsTopLeftIcon,
-      name: "Lower third",
-      detail: `${lowerThirdCount} saved`,
-      visible: lowerThirdVisible,
-    },
-  ]
+  const config = useBroadcastStore((state) => state.overlayConfig)
+  const active = useBroadcastStore((state) => state.activeOverlays)
+  const graphicsOnAir = useOverlayOutputLive()
+  const [lookEditor, setLookEditor] = useState({
+    open: false,
+    id: null as string | null,
+    key: 0,
+  })
+  const openLook = (id: string | null) =>
+    setLookEditor((state) => ({ open: true, id, key: state.key + 1 }))
+  const live = graphicsOnAir
+    ? liveGraphics(config, resolveOverlaySelection(config, active))
+    : []
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto p-3">
-      <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-        Use the Video Overlays controls in the middle panel. Active overlays
-        stay visible while you change the program underneath.
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Tap a Look or the pads to build Preview, then press Show on Live.
       </p>
       <DskOutputControls />
-      <div className="grid gap-2">
-        {items.map((item) => (
-          <div
-            key={item.name}
-            className="flex items-center gap-3 rounded-lg border border-border bg-background/30 p-3"
-          >
-            <item.icon className="size-4 text-muted-foreground" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium">{item.name}</span>
-              <span className="block text-xs text-muted-foreground">
-                {item.detail}
+      <section aria-labelledby="overlay-live-heading" className="grid gap-2">
+        <h3
+          id="overlay-live-heading"
+          className="text-[0.6875rem] font-medium tracking-wider text-muted-foreground uppercase"
+        >
+          Live now
+        </h3>
+        {live.length === 0 ? (
+          <p className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground">
+            {graphicsOnAir
+              ? "The graphics output is on air with nothing showing."
+              : "Graphics are off air."}
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {live.map((item) => (
+              <span
+                key={item.kind}
+                title={item.name}
+                className={cn(
+                  "inline-flex max-w-full min-w-0 items-center gap-2 rounded-md border px-2 py-1 text-xs",
+                  OVERLAY_KIND_STYLES[item.kind].tile
+                )}
+              >
+                <span className="inline-flex shrink-0 items-center gap-1 text-[0.625rem] font-semibold text-red-500 uppercase">
+                  <span
+                    aria-hidden="true"
+                    className="size-1.5 rounded-full bg-current"
+                  />
+                  Live
+                </span>
+                <span className="max-w-48 min-w-0 truncate">
+                  {item.kind === "ticker" ? "Scrolling text" : item.name}
+                </span>
               </span>
-            </span>
-            <Badge
-              variant="outline"
-              className={
-                item.visible
-                  ? "border-red-500/50 bg-red-500/10 text-[0.625rem] font-semibold tracking-wide text-red-500 uppercase"
-                  : "text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase"
-              }
-            >
-              {item.visible ? "On" : "Off"}
-            </Badge>
+            ))}
           </div>
-        ))}
-      </div>
+        )}
+      </section>
+      <OverlayLooks onSave={() => openLook(null)} onEdit={openLook} />
+      <OverlayLookDialog
+        key={lookEditor.key}
+        lookId={lookEditor.id}
+        open={lookEditor.open}
+        onOpenChange={(open) => setLookEditor((state) => ({ ...state, open }))}
+      />
     </div>
   )
 }

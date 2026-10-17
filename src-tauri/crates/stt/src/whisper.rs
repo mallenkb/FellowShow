@@ -26,6 +26,17 @@ const MAX_BUFFER_SAMPLES: usize = 16_000 * 10;
 /// Whisper warns "input is too short" below 1s.
 const MIN_BUFFER_SAMPLES: usize = 16_000;
 
+fn whisper_vad_config() -> fellowshow_audio::VadConfig {
+    fellowshow_audio::VadConfig {
+        silence_threshold: 0.01,
+        frame_threshold: 0.005,
+        min_voice_frames: 6,
+        // Keep the frames used to confirm speech so the first word is retained.
+        pre_buffer_frames: 6,
+        ..fellowshow_audio::VadConfig::default()
+    }
+}
+
 /// Convert i16 PCM samples to f32 in [-1.0, 1.0] range.
 fn i16_to_f32(samples: &[i16]) -> Vec<f32> {
     samples.iter().map(|&s| f32::from(s) / 32768.0).collect()
@@ -128,14 +139,15 @@ impl SttProvider for WhisperProvider {
         audio_rx: Receiver<Vec<i16>>,
         event_tx: mpsc::Sender<TranscriptEvent>,
     ) -> Result<(), SttError> {
+        if self.cancelled.load(Ordering::SeqCst) {
+            return Ok(());
+        }
         if !self.model_path.exists() {
             return Err(SttError::ModelNotFound(format!(
                 "Whisper model not found: {}",
                 self.model_path.display()
             )));
         }
-
-        let _ = event_tx.send(TranscriptEvent::Connected).await;
 
         let model_path = self.model_path.clone();
         let language = self.language.clone();
@@ -148,17 +160,11 @@ impl SttProvider for WhisperProvider {
         let vad_cancelled = cancelled.clone();
         let vad_event_tx = event_tx.clone();
         let vad_handle = tokio::task::spawn_blocking(move || {
-            use fellowshow_audio::{AudioFrame, Vad, VadConfig, VadTransition};
+            use fellowshow_audio::{AudioFrame, Vad, VadTransition};
 
             // Higher thresholds than default to avoid sending near-silence
             // to Whisper (which causes hallucinations).
-            let vad_config = VadConfig {
-                silence_threshold: 0.01,
-                frame_threshold: 0.005,
-                min_voice_frames: 6,
-                ..VadConfig::default()
-            };
-            let mut vad = Vad::new(vad_config);
+            let mut vad = Vad::new(whisper_vad_config());
             let mut audio_buffer: Vec<i16> = Vec::new();
 
             loop {
@@ -216,90 +222,114 @@ impl SttProvider for WhisperProvider {
         // ── Task 2: Whisper inference ────────────────────────────────────
         let inf_cancelled = cancelled.clone();
         let inf_event_tx = event_tx.clone();
-        let inf_handle = tokio::task::spawn_blocking(move || {
-            let ctx = match WhisperContext::new_with_params(
-                &model_path,
-                WhisperContextParameters::default(),
-            ) {
-                Ok(ctx) => ctx,
-                Err(e) => {
-                    log::error!("[Whisper] Failed to load model: {e}");
-                    let _ = inf_event_tx.blocking_send(TranscriptEvent::Error(format!(
-                        "Failed to load Whisper model: {e}"
-                    )));
-                    return;
-                }
-            };
+        let inf_handle = tokio::task::spawn_blocking(move || -> Result<(), SttError> {
+            let result = (|| {
+                let ctx = match WhisperContext::new_with_params(
+                    &model_path,
+                    WhisperContextParameters::default(),
+                ) {
+                    Ok(ctx) => ctx,
+                    Err(e) => {
+                        log::error!("[Whisper] Failed to load model: {e}");
+                        return Err(SttError::ModelNotFound(format!(
+                            "Failed to load Whisper model: {e}"
+                        )));
+                    }
+                };
 
-            let mut state = match ctx.create_state() {
-                Ok(s) => s,
-                Err(e) => {
-                    log::error!("[Whisper] Failed to create state: {e}");
-                    let _ = inf_event_tx.blocking_send(TranscriptEvent::Error(format!(
-                        "Failed to create Whisper state: {e}"
-                    )));
-                    return;
-                }
-            };
+                let mut state = match ctx.create_state() {
+                    Ok(s) => s,
+                    Err(e) => {
+                        log::error!("[Whisper] Failed to create state: {e}");
+                        return Err(SttError::ParseError(format!(
+                            "Failed to create Whisper state: {e}"
+                        )));
+                    }
+                };
 
-            log::info!("[Whisper] Model loaded, ready for inference");
+                log::info!("[Whisper] Model loaded, ready for inference");
+                let _ = inf_event_tx.blocking_send(TranscriptEvent::Connected);
 
-            while let Some(audio_i16) = inference_rx.blocking_recv() {
-                if inf_cancelled.load(Ordering::SeqCst) {
-                    break;
-                }
+                while let Some(audio_i16) = inference_rx.blocking_recv() {
+                    if inf_cancelled.load(Ordering::SeqCst) {
+                        break;
+                    }
 
-                let audio_f32 = i16_to_f32(&audio_i16);
+                    let audio_f32 = i16_to_f32(&audio_i16);
 
-                let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
-                params.set_language(Some(language.as_deref().unwrap_or("en")));
-                params.set_n_threads(n_threads);
-                params.set_print_progress(false);
-                params.set_print_special(false);
-                params.set_print_realtime(false);
-                params.set_single_segment(false);
-                params.set_token_timestamps(true);
-                params.set_no_speech_thold(0.6);
-                params.set_suppress_blank(true);
-                params.set_suppress_nst(true);
+                    let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+                    params.set_language(Some(language.as_deref().unwrap_or("en")));
+                    params.set_n_threads(n_threads);
+                    params.set_print_progress(false);
+                    params.set_print_special(false);
+                    params.set_print_realtime(false);
+                    params.set_single_segment(false);
+                    params.set_token_timestamps(true);
+                    params.set_no_speech_thold(0.6);
+                    params.set_suppress_blank(true);
+                    params.set_suppress_nst(true);
+                    let abort_cancelled = Arc::clone(&inf_cancelled);
+                    let abort_callback: Box<dyn FnMut() -> bool> =
+                        Box::new(move || abort_cancelled.load(Ordering::SeqCst));
+                    params.set_abort_callback_safe::<_, Box<dyn FnMut() -> bool>>(Some(
+                        abort_callback,
+                    ));
 
-                let start = std::time::Instant::now();
-                if let Err(e) = state.full(params, &audio_f32) {
-                    log::error!("[Whisper] Inference error: {e}");
-                    let _ = inf_event_tx.blocking_send(TranscriptEvent::Error(format!(
-                        "Whisper inference error: {e}"
-                    )));
-                    continue;
-                }
-                let elapsed = start.elapsed();
+                    let start = std::time::Instant::now();
+                    if let Err(e) = state.full(params, &audio_f32) {
+                        if inf_cancelled.load(Ordering::SeqCst) {
+                            break;
+                        }
+                        log::error!("[Whisper] Inference error: {e}");
+                        let _ = inf_event_tx.blocking_send(TranscriptEvent::Error(format!(
+                            "Whisper inference error: {e}"
+                        )));
+                        continue;
+                    }
+                    let elapsed = start.elapsed();
 
-                let (text, words, confidence) = extract_segments(&state);
+                    let (text, words, confidence) = extract_segments(&state);
 
-                #[expect(clippy::cast_precision_loss, reason = "audio sample count fits in f64")]
-                let audio_duration_s = audio_i16.len() as f64 / 16_000.0;
-                log::info!(
+                    #[expect(
+                        clippy::cast_precision_loss,
+                        reason = "audio sample count fits in f64"
+                    )]
+                    let audio_duration_s = audio_i16.len() as f64 / 16_000.0;
+                    log::info!(
                     "[Whisper] Transcribed {audio_duration_s:.1}s audio in {elapsed:.1?}: \"{text}\""
                 );
 
-                if !text.is_empty() {
-                    let _ = inf_event_tx.blocking_send(TranscriptEvent::Final {
-                        transcript: text,
-                        words,
-                        confidence,
-                        speech_final: true,
-                    });
+                    if !text.is_empty() {
+                        let _ = inf_event_tx.blocking_send(TranscriptEvent::Final {
+                            transcript: text,
+                            words,
+                            confidence,
+                            speech_final: true,
+                        });
+                    }
+
+                    let _ = inf_event_tx.blocking_send(TranscriptEvent::UtteranceEnd);
                 }
 
-                let _ = inf_event_tx.blocking_send(TranscriptEvent::UtteranceEnd);
+                log::info!("[Whisper] Inference task exiting");
+                Ok(())
+            })();
+            if let Err(ref error) = result {
+                inf_cancelled.store(true, Ordering::SeqCst);
+                let _ = inf_event_tx.blocking_send(TranscriptEvent::Error(error.to_string()));
             }
-
-            log::info!("[Whisper] Inference task exiting");
+            result
         });
 
-        let _ = tokio::join!(vad_handle, inf_handle);
+        let (vad_result, inference_result) = tokio::join!(vad_handle, inf_handle);
         let _ = event_tx.send(TranscriptEvent::Disconnected).await;
 
-        Ok(())
+        vad_result.map_err(|error| {
+            SttError::ConnectionFailed(format!("Whisper audio worker failed: {error}"))
+        })?;
+        inference_result.map_err(|error| {
+            SttError::ConnectionFailed(format!("Whisper inference worker failed: {error}"))
+        })?
     }
 
     fn stop(&self) {
@@ -308,5 +338,28 @@ impl SttProvider for WhisperProvider {
 
     fn name(&self) -> &'static str {
         "whisper"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::whisper_vad_config;
+    use fellowshow_audio::{AudioFrame, Vad, VadTransition};
+
+    #[test]
+    fn speech_confirmation_keeps_the_first_voiced_audio_frame() {
+        let mut vad = Vad::new(whisper_vad_config());
+        let mut onset = Vec::new();
+        for index in 0..6_i16 {
+            let result = vad.process(&AudioFrame {
+                samples: vec![1000 + index; 1024],
+                timestamp_ms: 0,
+            });
+            if result.transition == Some(VadTransition::SpeechStarted) {
+                onset = result.frames;
+            }
+        }
+        assert_eq!(onset.len(), 6);
+        assert_eq!(onset[0].samples, vec![1000; 1024]);
     }
 }

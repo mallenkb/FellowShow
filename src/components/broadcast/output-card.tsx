@@ -174,6 +174,7 @@ export function OutputCard({
         <div className="grid grid-cols-2 gap-1.5">
           <button
             type="button"
+            disabled={pending || enabled}
             onClick={() => updateOutput({ outputType: "display" })}
             className={cn(
               "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
@@ -187,6 +188,7 @@ export function OutputCard({
           </button>
           <button
             type="button"
+            disabled={pending || enabled}
             onClick={() => updateOutput({ outputType: "ndi" })}
             className={cn(
               "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
@@ -214,13 +216,17 @@ export function OutputCard({
         />
       ) : (
         <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Sends NDI High Bandwidth. NDI HX-only receivers, including GoStream
+            Duet, cannot receive this output directly.
+          </p>
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground">Source Name</label>
             <Input
               value={runtime.ndiSourceName}
               onChange={(e) => updateRuntime({ ndiSourceName: e.target.value })}
               placeholder={`FellowShow ${output.name}`}
-              disabled={runtime.ndiActive}
+              disabled={pending || runtime.ndiActive}
             />
           </div>
           {(showAdvanced || !compact) && (
@@ -232,11 +238,15 @@ export function OutputCard({
                   </label>
                   <Select
                     value={runtime.ndiResolution}
+                    disabled={pending || runtime.ndiActive}
                     onValueChange={(value) =>
                       updateRuntime({ ndiResolution: value as NdiResolution })
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger
+                      className="w-full"
+                      aria-label="NDI resolution"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -254,11 +264,15 @@ export function OutputCard({
                   </label>
                   <Select
                     value={runtime.ndiFrameRate}
+                    disabled={pending || runtime.ndiActive}
                     onValueChange={(value) =>
                       updateRuntime({ ndiFrameRate: value as NdiFrameRate })
                     }
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger
+                      className="w-full"
+                      aria-label="NDI frame rate"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -277,11 +291,15 @@ export function OutputCard({
                 </label>
                 <Select
                   value={runtime.ndiAlphaMode}
+                  disabled={pending || runtime.ndiActive}
                   onValueChange={(value) =>
                     updateRuntime({ ndiAlphaMode: value as NdiAlphaMode })
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger
+                    className="w-full"
+                    aria-label="NDI alpha channel"
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

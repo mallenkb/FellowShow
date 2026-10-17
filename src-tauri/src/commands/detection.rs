@@ -51,31 +51,40 @@ fn source_to_string(source: &fellowshow_detection::DetectionSource) -> String {
 /// Resolution order:
 /// 1. By `verse_id` (semantic detections with DB primary key)
 /// 2. By `book_number/chapter/verse_start` with active translation (direct + FTS5 detections)
-/// 3. Fallback to unresolved `VerseRef` fields (no DB available)
-pub fn to_result(state: &AppState, merged: &MergedDetection) -> DetectionResult {
+/// 3. Preserve an unresolved suggestion without auto-queueing when the database is unavailable.
+///
+/// References absent from an available active translation are discarded.
+pub fn to_result(state: &AppState, merged: &MergedDetection) -> Option<DetectionResult> {
     let vr = &merged.detection.verse_ref;
     let vid = merged.detection.verse_id;
 
-    let resolved = state.bible_db.as_ref().and_then(|db| {
+    let resolved = if let Some(db) = &state.bible_db {
         // Try verse_id first (vector-based semantic detections)
-        if let Some(id) = vid {
-            if let Ok(Some(v)) = db.get_verse_by_id(id) {
-                return Some(v);
-            }
-        }
+        let by_id = vid.and_then(|id| db.get_verse_by_id(id).ok().flatten());
         // Fall back to book/chapter/verse lookup (direct + FTS5 detections)
-        if vr.book_number > 0 && vr.chapter > 0 && vr.verse_start > 0 {
-            if let Ok(Some(v)) = db.get_verse(
+        if by_id.is_some() {
+            by_id
+        } else if state.active_translation_id > 0 {
+            match db.get_verse(
                 state.active_translation_id,
                 vr.book_number,
                 vr.chapter,
                 vr.verse_start,
             ) {
-                return Some(v);
+                Ok(Some(verse)) => Some(verse),
+                Ok(None) => return None,
+                Err(error) => {
+                    log::warn!("Could not resolve detected Bible reference: {error}");
+                    None
+                }
             }
+        } else {
+            None
         }
+    } else {
         None
-    });
+    };
+    let has_verse_text = resolved.is_some();
 
     let (reference, verse_text, book_name, book_number, chapter, verse) = if let Some(v) = resolved
     {
@@ -93,7 +102,7 @@ pub fn to_result(state: &AppState, merged: &MergedDetection) -> DetectionResult 
         )
     };
 
-    DetectionResult {
+    Some(DetectionResult {
         verse_ref: reference,
         verse_text,
         book_name,
@@ -102,10 +111,10 @@ pub fn to_result(state: &AppState, merged: &MergedDetection) -> DetectionResult 
         verse,
         confidence: merged.detection.confidence,
         source: source_to_string(&merged.detection.source),
-        auto_queued: merged.auto_queued,
+        auto_queued: merged.auto_queued && has_verse_text,
         transcript_snippet: merged.detection.transcript_snippet.clone(),
         is_chapter_only: merged.detection.is_chapter_only,
-    }
+    })
 }
 
 /// Run the detection pipeline on a piece of transcript text
@@ -120,7 +129,10 @@ pub fn detect_verses(
         pipeline.process(&text)
     };
     let app_state = state.lock().map_err(|e| e.to_string())?;
-    let results: Vec<DetectionResult> = merged.iter().map(|m| to_result(&app_state, m)).collect();
+    let results: Vec<DetectionResult> = merged
+        .iter()
+        .filter_map(|m| to_result(&app_state, m))
+        .collect();
     Ok(results)
 }
 
@@ -359,4 +371,85 @@ pub fn stop_reading_mode(state: State<'_, Mutex<ReadingMode>>) -> Result<(), Str
     let mut rm = state.lock().map_err(|e| e.to_string())?;
     rm.deactivate();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::to_result;
+    use crate::state::AppState;
+    use fellowshow_bible::BibleDb;
+    use fellowshow_detection::{Detection, DetectionSource, MergedDetection, VerseRef};
+
+    fn detection(book_number: i32, book_name: &str, chapter: i32, verse: i32) -> MergedDetection {
+        MergedDetection {
+            detection: Detection {
+                verse_ref: VerseRef {
+                    book_number,
+                    book_name: book_name.to_string(),
+                    chapter,
+                    verse_start: verse,
+                    verse_end: None,
+                },
+                verse_id: None,
+                confidence: 0.95,
+                source: DetectionSource::DirectReference,
+                transcript_snippet: "synthetic test transcript".to_string(),
+                detected_at: 1,
+                is_chapter_only: false,
+            },
+            auto_queued: true,
+        }
+    }
+
+    fn database_state() -> (tempfile::TempDir, AppState) {
+        let directory = tempfile::tempdir().expect("create database directory");
+        let path = directory.path().join("bible.db");
+        let connection = rusqlite::Connection::open(&path).expect("create database");
+        connection.execute_batch(
+            "CREATE TABLE verses (id INTEGER PRIMARY KEY, translation_id INTEGER, book_number INTEGER, book_name TEXT, book_abbreviation TEXT, chapter INTEGER, verse INTEGER, text TEXT);
+             INSERT INTO verses VALUES (1, 1, 43, 'John', 'Jn', 3, 16, 'For God so loved the world');
+             INSERT INTO verses VALUES (2, 1, 22, 'Song of Solomon', 'Song', 3, 11, 'Song chapter three ends here');"
+        ).expect("create fixture verses");
+        drop(connection);
+        let mut state = AppState::new();
+        state.active_translation_id = 1;
+        state.bible_db = Some(BibleDb::open(&path).expect("open Bible database"));
+        (directory, state)
+    }
+
+    #[test]
+    fn nonexistent_verses_do_not_reach_the_operator_queue() {
+        let (_directory, state) = database_state();
+        assert!(to_result(&state, &detection(22, "Song of Solomon", 3, 16)).is_none());
+    }
+
+    #[test]
+    fn existing_verses_keep_their_text_and_auto_queue_flag() {
+        let (_directory, state) = database_state();
+        let result = to_result(&state, &detection(43, "John", 3, 16)).expect("existing verse");
+        assert_eq!(result.verse_text, "For God so loved the world");
+        assert!(result.auto_queued);
+    }
+
+    #[test]
+    fn unavailable_database_preserves_an_unqueued_suggestion() {
+        let result = to_result(&AppState::new(), &detection(43, "John", 3, 16))
+            .expect("unresolved suggestion");
+        assert_eq!(result.verse_ref, "John 3:16");
+        assert!(!result.auto_queued);
+    }
+
+    #[test]
+    fn a_database_lookup_error_preserves_an_unqueued_suggestion() {
+        let (directory, state) = database_state();
+        let connection = rusqlite::Connection::open(directory.path().join("bible.db"))
+            .expect("open fixture database");
+        connection
+            .execute("DROP TABLE verses", [])
+            .expect("simulate unavailable verse data");
+        let result =
+            to_result(&state, &detection(43, "John", 3, 16)).expect("unresolved suggestion");
+        assert_eq!(result.verse_ref, "John 3:16");
+        assert!(!result.auto_queued);
+    }
 }

@@ -20,6 +20,9 @@ export interface AutocompleteResult {
   stage: "book" | "chapter" | "verse" | "complete" | "none"
 }
 
+// Tauri's get_chapter and get_verse commands accept Rust i32 values.
+const MAX_REFERENCE_NUMBER = 2_147_483_647
+
 /**
  * Convert number to Roman numeral for numbered books
  */
@@ -313,6 +316,13 @@ function parseNaturalReference(input: string): {
   const verse = verseIndex >= 0 ? Number(usableTokens[verseIndex]) : undefined
 
   if (bookTokens.length === 0) return null
+  if (!Number.isSafeInteger(chapter) || chapter > MAX_REFERENCE_NUMBER)
+    return null
+  if (
+    verse !== undefined &&
+    (!Number.isSafeInteger(verse) || verse > MAX_REFERENCE_NUMBER)
+  )
+    return null
 
   return {
     bookInput: bookTokens.join(" "),

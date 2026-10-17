@@ -203,7 +203,7 @@ export function useScriptureSearch({
         return
       }
 
-      const pendingKey = `${pending.bookNumber}:${pending.chapter}:${pending.verse}`
+      const pendingKey = `${state.activeTranslationId}:${pending.bookNumber}:${pending.chapter}:${pending.verse}:${pending.activate !== false}`
       if (pendingKey === lastHandledKey) return
       const book = state.books.find(
         (candidate) => candidate.book_number === pending.bookNumber
@@ -213,16 +213,29 @@ export function useScriptureSearch({
       lastHandledKey = pendingKey
       const requestId = ++navigationRequestId
       const selectedAtRequest = state.selectedVerse
+      const translationAtRequest = state.activeTranslationId
       applyNavigationSelection(
         book,
         pending.chapter,
         pending.activate !== false
       )
       bibleActions
-        .loadChapter(pending.bookNumber, pending.chapter)
+        .loadChapter(pending.bookNumber, pending.chapter, translationAtRequest)
         .then((verses) => {
           if (requestId !== navigationRequestId) return
-          if (useBibleStore.getState().selectedVerse !== selectedAtRequest)
+          const current = useBibleStore.getState()
+          if (current.activeTranslationId !== translationAtRequest) return
+          const selection = current.selectedVerse
+          // The transcript also fetches this verse directly. Its matching result
+          // can arrive first without being a different operator selection.
+          if (
+            selection !== selectedAtRequest &&
+            (!selection ||
+              selection.translation_id !== translationAtRequest ||
+              selection.book_number !== pending.bookNumber ||
+              selection.chapter !== pending.chapter ||
+              selection.verse !== pending.verse)
+          )
             return
           const target = verses.find((verse) => verse.verse === pending.verse)
           if (target) {
@@ -238,9 +251,10 @@ export function useScriptureSearch({
         .catch(console.error)
         .finally(() => {
           if (requestId !== navigationRequestId) return
-          const current = useBibleStore.getState().pendingNavigation
+          const state = useBibleStore.getState()
+          const current = state.pendingNavigation
           const currentKey = current
-            ? `${current.bookNumber}:${current.chapter}:${current.verse}`
+            ? `${state.activeTranslationId}:${current.bookNumber}:${current.chapter}:${current.verse}:${current.activate !== false}`
             : null
           if (currentKey === pendingKey) {
             useBibleStore.getState().setPendingNavigation(null)
@@ -498,6 +512,7 @@ export function useScriptureSearch({
     handleVerseClick,
     handleVerseDoubleClick,
     hasAvailableScripture,
+    isActive,
     pickerStage,
     pinnedTranslations,
     queuedVerseKeys,

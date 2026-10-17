@@ -2,6 +2,10 @@ import { useRef, useEffect, useState, useMemo, memo } from "react"
 import { renderVerse } from "@/lib/verse-renderer"
 import { presentationMedia } from "@/lib/presentation-composition"
 import { pruneVideoCache } from "@/lib/media-cache"
+import {
+  releaseVideoFrameCapture,
+  startVideoFrameCapture,
+} from "@/lib/video-frame-cache"
 import { drawTransitionFrame } from "@/lib/render-transition"
 import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
 import { hasAnimatingOverlay } from "@/lib/overlays"
@@ -60,11 +64,12 @@ export const CanvasVerse = memo(function CanvasVerse({
   const previousFrameRef = useRef<HTMLCanvasElement | null>(null)
   const transitionFrameRef = useRef<number | null>(null)
   const previousContentKeyRef = useRef<string | null>(null)
+  const sceneCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const scaledCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const repaintRef = useRef<(() => void) | null>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [containerHeight, setContainerHeight] = useState(0)
   const [imageVersion, setImageVersion] = useState(0)
-  const [videoVersion, setVideoVersion] = useState(0)
-  const [tickerVersion, setTickerVersion] = useState(0)
   const [fontVersion, setFontVersion] = useState(0)
 
   useEffect(() => {
@@ -112,6 +117,7 @@ export const CanvasVerse = memo(function CanvasVerse({
         : null,
       overlays?.lowerThird?.avatarImageUrl ?? null,
       overlays?.lowerThird?.logoImageUrl ?? null,
+      overlays?.bar?.backgroundImageUrl ?? null,
       ...(overlays?.logos.map((logo) => logo.imageUrl) ?? []),
     ].filter((url): url is string => Boolean(url))
     const videoMedia = [
@@ -158,6 +164,7 @@ export const CanvasVerse = memo(function CanvasVerse({
       video.loop = true
       video.playsInline = true
       video.preload = "auto"
+      startVideoFrameCapture(video)
       video.onloadedmetadata = () => {
         syncVideoToPlaybackClock(video, item.playbackStartedAt)
       }
@@ -165,9 +172,10 @@ export const CanvasVerse = memo(function CanvasVerse({
         syncVideoToPlaybackClock(video, item.playbackStartedAt)
         videoCacheRef.current.set(item.url, video)
         playVideoSafely(video)
-        setVideoVersion((version) => version + 1)
+        repaintRef.current?.()
       }
       video.onerror = () => {
+        releaseVideoFrameCapture(video)
         videoCacheRef.current.delete(item.url)
         console.warn("[canvas-verse] failed to load video", item.url)
       }
@@ -205,7 +213,14 @@ export const CanvasVerse = memo(function CanvasVerse({
     overlays?.logos,
     overlays?.lowerThird?.avatarImageUrl,
     overlays?.lowerThird?.logoImageUrl,
+    overlays?.bar?.backgroundImageUrl,
   ])
+
+  const hasTicker =
+    shouldRenderTickerLayer(theme) &&
+    !!verse?.tickerText &&
+    !verse.presentationImage
+  const hasOverlayAnimation = hasAnimatingOverlay(overlays)
 
   useEffect(() => {
     const clockedVideoMedia = [
@@ -237,13 +252,13 @@ export const CanvasVerse = memo(function CanvasVerse({
       } => Boolean(item)
     )
     const hasVideo = clockedVideoMedia.length > 0
-    if (!hasVideo) return
+    if (!hasVideo && !hasTicker && !hasOverlayAnimation) return
 
     let frame = 0
     let lastRender = 0
     let lastPlaybackSync = 0
     const tick = (now: number) => {
-      if (now - lastPlaybackSync >= 250) {
+      if (hasVideo && now - lastPlaybackSync >= 250) {
         lastPlaybackSync = now
         for (const item of clockedVideoMedia) {
           const video = videoCacheRef.current.get(item.url)
@@ -252,10 +267,11 @@ export const CanvasVerse = memo(function CanvasVerse({
           }
         }
       }
-      // Avoid a React render on every display refresh, especially in WebKit.
-      if (now - lastRender >= 66) {
+      // Animate the existing canvas directly. React only owns content changes.
+      const interval = hasTicker || hasOverlayAnimation ? 0 : 1000 / 30
+      if (now - lastRender >= interval) {
         lastRender = now
-        setVideoVersion((version) => version + 1)
+        repaintRef.current?.()
       }
       frame = window.requestAnimationFrame(tick)
     }
@@ -268,25 +284,9 @@ export const CanvasVerse = memo(function CanvasVerse({
     timer?.backgroundMediaType,
     timer?.backgroundPlaybackStartedAt,
     timer?.backgroundUrl,
+    hasTicker,
+    hasOverlayAnimation,
   ])
-
-  const hasTicker =
-    shouldRenderTickerLayer(theme) &&
-    !!verse?.tickerText &&
-    !verse.presentationImage
-  const hasOverlayAnimation = hasAnimatingOverlay(overlays)
-
-  useEffect(() => {
-    if (!hasTicker && !hasOverlayAnimation) return
-
-    let frame = 0
-    const tick = () => {
-      setTickerVersion((version) => version + 1)
-      frame = window.requestAnimationFrame(tick)
-    }
-    frame = window.requestAnimationFrame(tick)
-    return () => window.cancelAnimationFrame(frame)
-  }, [hasTicker, hasOverlayAnimation, theme.id, verse?.tickerText])
 
   // Render to canvas at display size
   useEffect(() => {
@@ -362,6 +362,7 @@ export const CanvasVerse = memo(function CanvasVerse({
         ? { ...theme.transition, type: "fade" as const, duration: 300 }
         : theme.transition
     const shouldAnimate =
+      !document.hidden &&
       previousContentKey !== null &&
       previousContentKey !== contentKey &&
       !overlayMode &&
@@ -410,61 +411,100 @@ export const CanvasVerse = memo(function CanvasVerse({
     // like the external broadcast window. Scaling the theme down before text
     // fitting makes wrapping, auto-fit thresholds, and vertical spacing vary
     // with the size of the panel.
-    const scene = document.createElement("canvas")
-    scene.width = theme.resolution.width
-    scene.height = theme.resolution.height
+    const scene = (sceneCanvasRef.current ??= document.createElement("canvas"))
+    if (scene.width !== theme.resolution.width)
+      scene.width = theme.resolution.width
+    if (scene.height !== theme.resolution.height)
+      scene.height = theme.resolution.height
     const sceneCtx = scene.getContext("2d")
     if (!sceneCtx) return
-    if (overlayMode) {
-      sceneCtx.fillStyle = getOverlayBackgroundColor(overlayMode)
-      sceneCtx.fillRect(0, 0, scene.width, scene.height)
-    } else {
-      renderVerse(sceneCtx, theme, verse, {
-        scale: 1,
-        timer,
-        lowerThird,
-        imageCache: imageCacheRef.current,
-        videoCache: videoCacheRef.current,
-        now: hasTicker ? Date.now() : undefined,
-      })
-      if (!verse && !timer) {
-        drawVideoStreamPlaceholder(sceneCtx, theme.resolution)
-      }
-    }
-    drawBroadcastOverlays(sceneCtx, theme.resolution, overlays, {
-      imageCache: imageCacheRef.current,
-      now: Date.now(),
-    })
-
-    const next = document.createElement("canvas")
-    next.width = canvas.width
-    next.height = canvas.height
+    const next = (scaledCanvasRef.current ??= document.createElement("canvas"))
+    if (next.width !== canvas.width) next.width = canvas.width
+    if (next.height !== canvas.height) next.height = canvas.height
     const nextCtx = next.getContext("2d")
     if (!nextCtx) return
-    if (useNativeBackingStore) {
-      nextCtx.drawImage(scene, 0, 0)
-    } else {
-      nextCtx.scale(dpr, dpr)
-      nextCtx.drawImage(
-        scene,
-        offsetX,
-        offsetY,
-        theme.resolution.width * scale,
-        theme.resolution.height * scale
-      )
-    }
+    let transitionActive = shouldAnimate && previousFrame !== null
+    const repaint = () => {
+      sceneCtx.setTransform(1, 0, 0, 1, 0, 0)
+      sceneCtx.clearRect(0, 0, scene.width, scene.height)
+      if (overlayMode) {
+        sceneCtx.fillStyle = getOverlayBackgroundColor(overlayMode)
+        sceneCtx.fillRect(0, 0, scene.width, scene.height)
+      } else {
+        renderVerse(sceneCtx, theme, verse, {
+          scale: 1,
+          timer,
+          lowerThird,
+          imageCache: imageCacheRef.current,
+          videoCache: videoCacheRef.current,
+          now: hasTicker ? Date.now() : undefined,
+        })
+        if (!verse && !timer) {
+          drawVideoStreamPlaceholder(sceneCtx, theme.resolution)
+        }
+      }
+      drawBroadcastOverlays(sceneCtx, theme.resolution, overlays, {
+        keyMode: overlayMode,
+        imageCache: imageCacheRef.current,
+        now: Date.now(),
+      })
 
+      nextCtx.setTransform(1, 0, 0, 1, 0, 0)
+      nextCtx.clearRect(0, 0, next.width, next.height)
+      if (useNativeBackingStore) {
+        nextCtx.drawImage(scene, 0, 0)
+      } else {
+        nextCtx.scale(dpr, dpr)
+        nextCtx.drawImage(
+          scene,
+          offsetX,
+          offsetY,
+          theme.resolution.width * scale,
+          theme.resolution.height * scale
+        )
+      }
+
+      if (!transitionActive) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(next, 0, 0)
+      }
+    }
+    repaintRef.current = repaint
+    const clearRepaint = () => {
+      if (repaintRef.current === repaint) repaintRef.current = null
+    }
+    repaint()
     const previous = previousFrameRef.current
     if (!shouldAnimate || !previous) {
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.drawImage(next, 0, 0)
       previousFrameRef.current = null
-      return
+      return clearRepaint
     }
 
     const startedAt = performance.now()
     const duration = Math.max(1, transition.duration)
+    let fallbackTimeout: number | null = null
+    const finishTransition = () => {
+      transitionActive = false
+      if (transitionFrameRef.current !== null) {
+        window.cancelAnimationFrame(transitionFrameRef.current)
+        transitionFrameRef.current = null
+      }
+      if (fallbackTimeout !== null) {
+        window.clearTimeout(fallbackTimeout)
+        fallbackTimeout = null
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.drawImage(next, 0, 0)
+      previousFrameRef.current = null
+    }
+    const finishWhenHidden = () => {
+      if (document.hidden) finishTransition()
+    }
     const tick = (now: number) => {
+      transitionFrameRef.current = null
       const progress = Math.min(1, (now - startedAt) / duration)
       ctx.save()
       ctx.setTransform(1, 0, 0, 1, 0, 0)
@@ -479,11 +519,24 @@ export const CanvasVerse = memo(function CanvasVerse({
       if (progress < 1) {
         transitionFrameRef.current = window.requestAnimationFrame(tick)
       } else {
-        transitionFrameRef.current = null
-        previousFrameRef.current = null
+        finishTransition()
       }
     }
+    // WebKit can suspend animation frames even while this window is visible.
+    // A content change must still reach Program if no animation callback runs.
+    fallbackTimeout = window.setTimeout(finishTransition, duration + 50)
+    document.addEventListener("visibilitychange", finishWhenHidden)
     transitionFrameRef.current = window.requestAnimationFrame(tick)
+    return () => {
+      clearRepaint()
+      document.removeEventListener("visibilitychange", finishWhenHidden)
+      if (fallbackTimeout !== null) window.clearTimeout(fallbackTimeout)
+      if (transitionFrameRef.current !== null) {
+        window.cancelAnimationFrame(transitionFrameRef.current)
+        transitionFrameRef.current = null
+      }
+      previousFrameRef.current = null
+    }
   }, [
     theme,
     verse,
@@ -494,26 +547,17 @@ export const CanvasVerse = memo(function CanvasVerse({
     containerHeight,
     fit,
     imageVersion,
-    videoVersion,
-    tickerVersion,
     fontVersion,
     hasTicker,
     overlayMode,
   ])
 
-  useEffect(() => {
-    return () => {
-      if (transitionFrameRef.current !== null) {
-        window.cancelAnimationFrame(transitionFrameRef.current)
-      }
-    }
-  }, [])
-
   return (
     <div
       ref={containerRef}
       className={cn(
-        "flex w-full items-center justify-center",
+        "flex w-full justify-center",
+        overlayMode ? "items-end" : "items-center",
         (fillContainer || fit === "contain" || fit === "cover") && "h-full",
         className
       )}

@@ -7,6 +7,13 @@ import { PreviewPanel } from "./preview-panel"
 import { stageVerse } from "@/lib/preview-staging"
 import { useBibleStore } from "@/stores/bible-store"
 import { useBroadcastStore } from "@/stores/broadcast-store"
+import { useOutputRuntimeStore } from "@/lib/broadcast-output-runtime"
+import { createDefaultOutputs } from "@/lib/broadcast-outputs"
+import {
+  createDefaultOverlayConfiguration,
+  createInactiveOverlayState,
+} from "@/lib/overlays"
+import { OverlayLooks } from "@/components/on-display/overlay-looks"
 import type { Verse, VerseRenderData } from "@/types"
 
 vi.mock("@tauri-apps/api/event", () => ({
@@ -57,6 +64,12 @@ describe("PreviewPanel", () => {
       selectedVerse: john316,
     })
     useBroadcastStore.setState({
+      outputs: createDefaultOutputs(),
+      overlayConfig: createDefaultOverlayConfiguration(),
+      activeOverlays: createInactiveOverlayState(),
+      stagedOverlays: createInactiveOverlayState(),
+      liveOverlayOutputIds: [],
+      selectedOverlayOutputId: null,
       isLive: false,
       liveSource: null,
       liveVerse: null,
@@ -64,6 +77,7 @@ describe("PreviewPanel", () => {
       previewVerse: stagedNotice,
       previewTimer: null,
     })
+    useOutputRuntimeStore.setState({ byId: {} })
   })
 
   afterEach(() => {
@@ -115,5 +129,71 @@ describe("PreviewPanel", () => {
 
     expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "Stop" })).toBeTruthy()
+  })
+
+  it("shows Show on Live and no live Look for stale graphics flags whose transport is off", () => {
+    const store = useBroadcastStore.getState()
+    const output = store.addOutput({ content: "overlays", outputType: "ndi" })
+    if (!output) throw new Error("Graphics output was not configured")
+    useOutputRuntimeStore.getState().ensureRuntime(output)
+    const tickerId = store.saveTickerMessage({ text: "Sermon notes" })
+    store.toggleStagedTicker(tickerId)
+    store.commitStagedOverlays()
+    store.saveOverlayLook({
+      name: "Sermon",
+      logo: false,
+      tickerMessageId: tickerId,
+      lowerThirdPresetId: null,
+      barId: null,
+    })
+    store.setOverlayOutputLive(output.id, true)
+
+    render(
+      <>
+        <PreviewPanel mode="on-display" />
+        <OverlayLooks onSave={vi.fn()} onEdit={vi.fn()} />
+      </>
+    )
+
+    expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Update Live" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Stop Live" })).toBeNull()
+    expect(screen.queryByText("Live", { exact: true })).toBeNull()
+  })
+
+  it("tracks a running graphics output independently of Program and clears controls when it stops", () => {
+    const store = useBroadcastStore.getState()
+    const output = store.addOutput({ content: "overlays", outputType: "ndi" })
+    if (!output) throw new Error("Graphics output was not configured")
+    const runtime = useOutputRuntimeStore.getState()
+    runtime.ensureRuntime(output)
+    runtime.updateRuntime(output.id, { ndiActive: true })
+    const tickerId = store.saveTickerMessage({ text: "Sermon notes" })
+    store.toggleStagedTicker(tickerId)
+    store.commitStagedOverlays()
+    store.saveOverlayLook({
+      name: "Sermon",
+      logo: false,
+      tickerMessageId: tickerId,
+      lowerThirdPresetId: null,
+      barId: null,
+    })
+    store.setOverlayOutputLive(output.id, true)
+    render(
+      <>
+        <PreviewPanel mode="on-display" />
+        <OverlayLooks onSave={vi.fn()} onEdit={vi.fn()} />
+      </>
+    )
+    expect(useBroadcastStore.getState().isLive).toBe(false)
+    expect(screen.getByRole("button", { name: "Stop Live" })).toBeTruthy()
+    expect(screen.getByText("Live", { exact: true })).toBeTruthy()
+
+    act(() => runtime.updateRuntime(output.id, { ndiActive: false }))
+
+    expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Stop Live" })).toBeNull()
+    expect(screen.queryByText("Live", { exact: true })).toBeNull()
+    expect(useBroadcastStore.getState().liveOverlayOutputIds).toEqual([])
   })
 })

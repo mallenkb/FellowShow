@@ -99,6 +99,57 @@ describe("settings store", () => {
     )
   })
 
+  it("defaults new profiles to the available OpenRouter free router", async () => {
+    const { DEFAULT_OPENROUTER_MODEL, useSettingsStore } =
+      await import("./settings-store")
+    expect(DEFAULT_OPENROUTER_MODEL).toBe("openrouter/free")
+    expect(useSettingsStore.getState().openRouterModel).toBe("openrouter/free")
+  })
+
+  it("migrates the retired built-in OpenRouter model and saves the replacement", async () => {
+    mockGet.mockImplementation(async (key: string) => {
+      if (key === "schemaVersion") return 1
+      if (key === "defaultPinnedTranslationsApplied") return true
+      if (key === "openRouterModel") return "inclusionai/ling-3.0-flash:free"
+      return null
+    })
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
+
+    await hydrateSettings()
+
+    expect(useSettingsStore.getState().openRouterModel).toBe("openrouter/free")
+    expect(mockSet).toHaveBeenCalledWith("openRouterModel", "openrouter/free")
+    expect(mockSave).toHaveBeenCalledOnce()
+    expect(mockInvoke).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    "my-provider/custom-model",
+    "inclusionai/ling-3.0-flash",
+    "inclusionai/ling-3.0-flash-vl",
+    "openrouter/free",
+  ])("preserves an explicitly selected OpenRouter model %s", async (model) => {
+    mockGet.mockImplementation(async (key: string) => {
+      if (key === "schemaVersion") return 1
+      if (key === "defaultPinnedTranslationsApplied") return true
+      if (key === "videoOverlaysTabApplied") return true
+      if (key === "openRouterModel") return model
+      return null
+    })
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
+
+    await hydrateSettings()
+
+    expect(useSettingsStore.getState().openRouterModel).toBe(model)
+    expect(mockSet).not.toHaveBeenCalledWith(
+      "openRouterModel",
+      expect.anything()
+    )
+    expect(mockSave).not.toHaveBeenCalled()
+  })
+
   it("does not open the vault for startup or ordinary settings changes", async () => {
     mockGet.mockResolvedValue(null)
     const { hydrateSettings, saveSettingsNow, useSettingsStore } =
@@ -147,16 +198,50 @@ describe("settings store", () => {
     expect(useSettingsStore.getState().autoUpdateEnabled).toBe(false)
   })
 
-  it("hides Video Overlays and Timer until they are turned on", async () => {
+  it("shows Video Overlays by default and hides Timer until turned on", async () => {
     mockGet.mockResolvedValue(null)
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
     await hydrateSettings()
 
-    expect(useSettingsStore.getState().extraSearchTabs).toEqual([])
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual(["on-display"])
     useSettingsStore.getState().toggleExtraSearchTab("timer")
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual([
+      "on-display",
+      "timer",
+    ])
+    useSettingsStore.getState().toggleExtraSearchTab("on-display")
     expect(useSettingsStore.getState().extraSearchTabs).toEqual(["timer"])
-    useSettingsStore.getState().toggleExtraSearchTab("timer")
+  })
+
+  it("turns on Video Overlays once for existing setups", async () => {
+    mockGet.mockImplementation(async (key: string) => {
+      if (key === "schemaVersion") return 1
+      if (key === "extraSearchTabs") return ["timer"]
+      return null
+    })
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
+    await hydrateSettings()
+
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual([
+      "timer",
+      "on-display",
+    ])
+    expect(mockSet).toHaveBeenCalledWith("videoOverlaysTabApplied", true)
+  })
+
+  it("keeps Video Overlays off after the operator turned it off", async () => {
+    mockGet.mockImplementation(async (key: string) => {
+      if (key === "schemaVersion") return 1
+      if (key === "videoOverlaysTabApplied") return true
+      if (key === "extraSearchTabs") return []
+      return null
+    })
+    const { hydrateSettings, useSettingsStore } =
+      await import("./settings-store")
+    await hydrateSettings()
+
     expect(useSettingsStore.getState().extraSearchTabs).toEqual([])
   })
 

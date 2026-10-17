@@ -19,7 +19,7 @@ pub fn coerce_bool(arg: &OscType) -> Result<bool, CommandError> {
             expected: "bool".into(),
             got: format!("Int({i})"),
         }),
-        OscType::Float(f) => Ok(*f >= 0.5),
+        OscType::Float(f) if f.is_finite() => Ok(*f >= 0.5),
         OscType::String(s) => match s.to_lowercase().as_str() {
             "true" | "1" | "on" => Ok(true),
             "false" | "0" | "off" => Ok(false),
@@ -44,12 +44,12 @@ pub fn coerce_bool(arg: &OscType) -> Result<bool, CommandError> {
 /// - `Long(l)` -> same as Int logic
 pub fn coerce_f32_normalized(arg: &OscType) -> Result<f32, CommandError> {
     match arg {
-        OscType::Float(f) => Ok(f.clamp(0.0, 1.0)),
+        OscType::Float(f) if f.is_finite() => Ok(f.clamp(0.0, 1.0)),
         #[expect(
             clippy::cast_possible_truncation,
             reason = "OSC double values are small control values that fit in f32"
         )]
-        OscType::Double(d) => Ok((*d as f32).clamp(0.0, 1.0)),
+        OscType::Double(d) if d.is_finite() => Ok(d.clamp(0.0, 1.0) as f32),
         #[expect(
             clippy::cast_precision_loss,
             reason = "OSC int values are small control values that fit in f32"

@@ -22,6 +22,15 @@ pub struct CommandDispatcher;
 
 impl CommandDispatcher {
     pub fn dispatch(cmd: &RemoteCommand, sink: &dyn CommandSink) -> Result<(), CommandError> {
+        if let RemoteCommand::Opacity(value) | RemoteCommand::Confidence(value) = cmd {
+            if !value.is_finite() || !(0.0..=1.0).contains(value) {
+                return Err(CommandError::OutOfRange {
+                    value: *value,
+                    min: 0.0,
+                    max: 1.0,
+                });
+            }
+        }
         match cmd {
             RemoteCommand::Next => sink.emit_event("remote:next", "{}"),
             RemoteCommand::Prev => sink.emit_event("remote:prev", "{}"),

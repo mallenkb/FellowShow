@@ -1,4 +1,7 @@
+import { releaseVideoFrameCapture } from "./video-frame-cache"
+
 function releaseVideo(video: HTMLVideoElement): void {
+  releaseVideoFrameCapture(video)
   video.onloadeddata = null
   video.onloadedmetadata = null
   video.onerror = null

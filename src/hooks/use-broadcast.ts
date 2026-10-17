@@ -8,6 +8,7 @@ export function toVerseRenderData(
 ): VerseRenderData {
   if (verse.book_number < 0) {
     return {
+      sourceId: verse.id,
       reference: "",
       themeSection: "songs",
       referenceMode: "lyric-footer",

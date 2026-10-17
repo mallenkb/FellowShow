@@ -4,6 +4,7 @@ pub mod broadcast;
 pub mod detection;
 pub mod documents;
 pub mod easyworship;
+pub mod ndi_frame_clock;
 pub mod remote;
 pub mod secrets;
 pub mod stt;

@@ -22,6 +22,7 @@ import {
 } from "./draw"
 import type { VerseLayoutMetrics } from "./draw"
 import { computeVerseLayoutMetrics } from "./layout"
+import { shouldPreserveLineBreaks } from "./measure"
 export function renderVerse(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
@@ -161,7 +162,8 @@ function renderVerseImpl(
       verse,
       metrics.textRect.x,
       metrics.textRect.width,
-      verseRect.y
+      verseRect.y,
+      shouldPreserveLineBreaks(verse)
     )
   }
   if (referenceRect && !verse.announcement) {

@@ -14,7 +14,8 @@ const EXTRA_TABS: {
   {
     id: "on-display",
     label: "Video Overlays",
-    description: "Logo, scrolling text, and lower thirds over the video feed.",
+    description:
+      "Looks, logos, bars, scrolling text and lower thirds over the video feed.",
     icon: LayersIcon,
   },
   {

@@ -7,6 +7,10 @@ use crate::db::BibleDb;
 use crate::error::BibleError;
 use crate::models::{Book, Verse};
 
+#[cfg(test)]
+#[path = "search_fuzz.rs"]
+mod input_fuzz;
+
 /// A verse with its BM25 relevance rank from FTS5 full-text search.
 /// Deduplicated across translations — one entry per unique verse reference.
 pub struct Bm25Result {
@@ -187,10 +191,6 @@ fn build_or_query(input: &str) -> String {
 // ── SQL runner ──────────────────────────────────────────────────────
 
 /// Execute a BM25-ranked FTS5 query across all English translations.
-#[expect(
-    clippy::cast_possible_wrap,
-    reason = "limit is a small page-size value that fits in i64"
-)]
 fn run_fts_query(
     conn: &Connection,
     fts_query: &str,
@@ -210,7 +210,11 @@ fn run_fts_query(
          LIMIT ?2",
     )?;
     let rows = stmt.query_map(
-        rusqlite::params![fts_query, limit as i64, translation_id],
+        rusqlite::params![
+            fts_query,
+            i64::try_from(limit).unwrap_or(i64::MAX),
+            translation_id
+        ],
         |row: &rusqlite::Row| {
             Ok(Bm25Result {
                 rank: row.get(0)?,
@@ -264,11 +268,7 @@ impl BibleDb {
              WHERE fts.text MATCH ?1 AND v.translation_id = ?2 \
              LIMIT ?3",
         )?;
-        #[expect(
-            clippy::cast_possible_wrap,
-            reason = "limit is a small page-size value that fits in i64"
-        )]
-        let limit_i64 = limit as i64;
+        let limit_i64 = i64::try_from(limit).unwrap_or(i64::MAX);
         let rows = stmt.query_map(
             rusqlite::params![query, translation_id, limit_i64],
             |row: &rusqlite::Row| {
@@ -311,7 +311,7 @@ impl BibleDb {
         translation_id: Option<i64>,
     ) -> Result<Vec<Bm25Result>, BibleError> {
         let conn = self.conn();
-        let fetch_limit = limit * 4;
+        let fetch_limit = limit.saturating_mul(4);
 
         // Tier 1: Exact phrase match
         let phrase = build_phrase_query(query);

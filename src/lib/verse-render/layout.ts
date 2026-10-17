@@ -19,6 +19,7 @@ import {
   lyricPresentationTheme,
   measureReferenceWidth,
   measureVerseHeight,
+  shouldPreserveLineBreaks,
 } from "./measure"
 function rectForAlignedText(
   align: BroadcastTheme["layout"]["textAlign"],
@@ -109,7 +110,8 @@ export function computeVerseLayoutMetrics(
       scaledTheme,
       verse,
       textRectW,
-      textRectH
+      textRectH,
+      shouldPreserveLineBreaks(verse)
     )
   } else {
     scaledTheme = fitStandardVerseTheme(
@@ -149,7 +151,13 @@ export function computeVerseLayoutMetrics(
     0,
     scaledTheme.layout.referenceGap ?? footerTheme.reference.fontSize * 0.5
   )
-  const verseMetrics = measureVerseHeight(ctx, scaledTheme, verse, textRectW)
+  const verseMetrics = measureVerseHeight(
+    ctx,
+    scaledTheme,
+    verse,
+    textRectW,
+    shouldPreserveLineBreaks(verse)
+  )
   const verseHeight = verseMetrics.height
   const verseDrawX = alignX(
     verseAlign === "justify" ? "left" : verseAlign,

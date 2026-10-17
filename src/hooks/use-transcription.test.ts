@@ -20,6 +20,7 @@ vi.mock("@/hooks/use-tauri-event", () => ({
 async function loadModules() {
   vi.resetModules()
   const transcriptMod = await import("@/stores/transcript-store")
+  const audioMod = await import("@/stores/audio-store")
   const settingsMod = await import("@/stores/settings-store")
   // Startup hydration and keychain access have their own store tests. Keep
   // this unit test focused on transcription using the configured settings.
@@ -32,6 +33,7 @@ async function loadModules() {
   const hookMod = await import("./use-transcription")
   return {
     useTranscriptStore: transcriptMod.useTranscriptStore,
+    useAudioStore: audioMod.useAudioStore,
     useSettingsStore: settingsMod.useSettingsStore,
     transcriptionActions: hookMod.transcriptionActions,
     hydrateSettings,
@@ -217,13 +219,15 @@ describe("use-transcription", () => {
   describe("transcriptionActions.stop", () => {
     it("resets transcript state on success", async () => {
       mockInvoke.mockResolvedValue(undefined)
-      const { useTranscriptStore, transcriptionActions } = await loadModules()
+      const { useTranscriptStore, useAudioStore, transcriptionActions } =
+        await loadModules()
 
       useTranscriptStore.setState({
         isTranscribing: true,
         currentPartial: "partial text",
         connectionStatus: "connected",
       })
+      useAudioStore.getState().setLevel({ rms: 0.2, peak: 0.8 })
 
       await transcriptionActions.stop()
 
@@ -231,6 +235,7 @@ describe("use-transcription", () => {
       expect(state.isTranscribing).toBe(false)
       expect(state.currentPartial).toBe("")
       expect(state.connectionStatus).toBe("disconnected")
+      expect(useAudioStore.getState().level).toEqual({ rms: 0, peak: 0 })
       expect(mockToastError).not.toHaveBeenCalled()
     })
 
@@ -248,13 +253,15 @@ describe("use-transcription", () => {
 
     it("keeps the microphone state and partial transcript when stop fails", async () => {
       mockInvoke.mockRejectedValue("Audio device disappeared")
-      const { useTranscriptStore, transcriptionActions } = await loadModules()
+      const { useTranscriptStore, useAudioStore, transcriptionActions } =
+        await loadModules()
 
       useTranscriptStore.setState({
         isTranscribing: true,
         currentPartial: "mid-sentence...",
         connectionStatus: "connected",
       })
+      useAudioStore.getState().setLevel({ rms: 0.2, peak: 0.8 })
 
       await expect(transcriptionActions.stop()).rejects.toBe(
         "Audio device disappeared"
@@ -268,6 +275,15 @@ describe("use-transcription", () => {
       expect(state.isTranscribing).toBe(true)
       expect(state.currentPartial).toBe("mid-sentence...")
       expect(state.connectionStatus).toBe("error")
+      expect(useAudioStore.getState().level).toEqual({ rms: 0.2, peak: 0.8 })
+    })
+
+    it("clears a stale microphone meter when capture has already stopped", async () => {
+      const { useAudioStore, transcriptionActions } = await loadModules()
+      useAudioStore.getState().setLevel({ rms: 0.2, peak: 0.8 })
+      await transcriptionActions.stop()
+      expect(useAudioStore.getState().level).toEqual({ rms: 0, peak: 0 })
+      expect(mockInvoke).not.toHaveBeenCalled()
     })
   })
 

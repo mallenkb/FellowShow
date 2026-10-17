@@ -9,7 +9,9 @@ use fellowshow_broadcast::ndi::{NdiRuntime, NdiSessionInfo, NdiStartRequest};
 use serde::Serialize;
 use tauri::webview::PageLoadEvent;
 use tauri::State;
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{utils::config::BackgroundThrottlingPolicy, Manager, WebviewUrl, WebviewWindowBuilder};
+
+use super::ndi_frame_clock::NdiFrameClocks;
 
 /// Map `output_id` to its Tauri window label. "main" and "alt" keep their
 /// historical labels; added outputs get a label derived from their id. Must
@@ -169,6 +171,8 @@ pub fn ensure_broadcast_window(
         .visible(false)
         .skip_taskbar(true)
         .focused(false)
+        // NDI renders in a hidden webview, which must keep processing frame timers.
+        .background_throttling(BackgroundThrottlingPolicy::Disabled)
         .build()
         .map_err(|e| e.to_string())?;
     Ok(())
@@ -220,6 +224,8 @@ pub async fn open_broadcast_window(
             .skip_taskbar(false)
             .focused(true)
             .visible(true)
+            // This projector can later be hidden and reused by an NDI output.
+            .background_throttling(BackgroundThrottlingPolicy::Disabled)
             .on_page_load(|window, payload| {
                 log::info!(
                     "Projector page load {:?}: {}",
@@ -279,19 +285,36 @@ pub fn close_broadcast_window(
 
 #[tauri::command]
 pub fn start_ndi(
+    app: tauri::AppHandle,
     output_id: String,
     runtime: State<'_, Mutex<NdiRuntime>>,
+    clocks: State<'_, NdiFrameClocks>,
     request: NdiStartRequest,
 ) -> Result<NdiSessionInfo, String> {
+    let window = app
+        .get_webview_window(&window_label(&output_id))
+        .ok_or_else(|| "NDI output window is unavailable".to_owned())?;
+    clocks.stop(&output_id)?;
     let mut runtime = runtime.lock().map_err(|e| e.to_string())?;
-    runtime.start(output_id, request).map_err(|e| e.to_string())
+    let info = runtime
+        .start(output_id.clone(), request)
+        .map_err(|e| e.to_string())?;
+    if let Err(error) = clocks.start(&output_id, info.fps, window) {
+        runtime.stop(&output_id);
+        return Err(error);
+    }
+    Ok(info)
 }
 
 #[tauri::command]
-pub fn stop_ndi(output_id: String, runtime: State<'_, Mutex<NdiRuntime>>) -> Result<(), String> {
+pub fn stop_ndi(
+    output_id: String,
+    runtime: State<'_, Mutex<NdiRuntime>>,
+    clocks: State<'_, NdiFrameClocks>,
+) -> Result<(), String> {
     let mut runtime = runtime.lock().map_err(|e| e.to_string())?;
     runtime.stop(&output_id);
-    Ok(())
+    clocks.stop(&output_id)
 }
 
 #[derive(Serialize)]
@@ -317,6 +340,42 @@ pub fn get_ndi_status(
         })),
         None => Ok(None),
     }
+}
+
+/// Bounded rendering diagnostics contain no content, file paths or remote addresses.
+#[tauri::command]
+pub fn report_broadcast_diagnostic(
+    output_id: String,
+    stage: String,
+    category: String,
+    sequence: u32,
+) -> Result<(), String> {
+    let stages = [
+        "ready", "config", "payload", "tick", "draw", "capture", "send", "sent", "error",
+    ];
+    let categories = [
+        "none",
+        "hidden",
+        "visible",
+        "waiting",
+        "SecurityError",
+        "TypeError",
+        "RangeError",
+        "Error",
+        "nativeCommand",
+        "dimensionsMismatch",
+        "bufferSize",
+        "inactiveSession",
+        "unknown",
+    ];
+    if !stages.contains(&stage.as_str())
+        || !categories.contains(&category.as_str())
+        || output_id.len() > 64
+    {
+        return Err("Invalid broadcast diagnostic metadata".to_owned());
+    }
+    log::info!("Broadcast diagnostic output={output_id} stage={stage} category={category} sequence={sequence}");
+    Ok(())
 }
 
 #[tauri::command]

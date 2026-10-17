@@ -4,20 +4,24 @@ import { Button } from "@/components/ui/button"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { bibleActions } from "@/hooks/use-bible"
+import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
 import { stageVerse } from "@/lib/preview-staging"
 import {
   getOverlayOutputMode,
   resolveOutputThemeId,
 } from "@/lib/broadcast-outputs"
 import {
-  isOutputOn,
-  setOutputEnabled,
-  useOutputRuntimeStore,
-} from "@/lib/broadcast-output-runtime"
-import {
+  getCurrentOverlayScripture,
   getOverlayPayloadForOutput,
   getOverlayPreviewPayload,
+  overlaySelectionsMatch,
+  resolveOverlaySelection,
 } from "@/lib/overlays"
+import {
+  resolveOverlayOutput,
+  showOverlayPreviewOnLive,
+  stopOverlayOutputLive,
+} from "@/lib/overlay-live"
 import {
   useBibleStore,
   useBroadcastStore,
@@ -74,7 +78,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const presenterTimer = useBroadcastStore((s) => s.presenterTimer)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
-  const liveOverlayOutputIds = useBroadcastStore((s) => s.liveOverlayOutputIds)
+  const stagedOverlays = useBroadcastStore((s) => s.stagedOverlays)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
   const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
@@ -116,17 +120,13 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     previewVerse,
     sectionFromMode(mode)
   )
-  const overlayOutput = useMemo(() => {
-    if (!isOverlayPreview) return null
-    return (
-      outputs.find(
-        (output) =>
-          output.id === selectedOverlayOutputId && output.content === "overlays"
-      ) ??
-      outputs.find((output) => output.content === "overlays") ??
-      null
-    )
-  }, [isOverlayPreview, outputs, selectedOverlayOutputId])
+  const overlayOutput = useMemo(
+    () =>
+      isOverlayPreview
+        ? resolveOverlayOutput(outputs, selectedOverlayOutputId)
+        : null,
+    [isOverlayPreview, outputs, selectedOverlayOutputId]
+  )
   const overlayPreviewTheme = useMemo(() => {
     if (!overlayOutput) return activeTheme
     const themeId = resolveOutputThemeId(
@@ -141,12 +141,25 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     return themes.find((theme) => theme.id === themeId) ?? activeTheme
   }, [activeTheme, overlayOutput, sectionThemeIds, themes])
   const overlayMode = overlayOutput ? getOverlayOutputMode(overlayOutput) : null
-  const overlayOutputIsLive = overlayOutput
-    ? liveOverlayOutputIds.includes(overlayOutput.id)
-    : false
+  const overlayOutputIsLive = useOverlayOutputLive(overlayOutput?.id ?? null)
+  // Video Overlays Preview shows what is staged, not what is on air.
+  const resolvedStaged = resolveOverlaySelection(overlayConfig, stagedOverlays)
   const overlayPreviewPayload = overlayOutput
-    ? getOverlayPreviewPayload(overlayConfig, activeOverlays)
+    ? getOverlayPreviewPayload(overlayConfig, resolvedStaged, undefined, {
+        scripture: getCurrentOverlayScripture({
+          isLive: isProgramLive,
+          liveVerse,
+          previewVerse,
+        }),
+        holdForPreview: true,
+      })
     : null
+  const overlayChangesPending =
+    overlayOutputIsLive &&
+    !overlaySelectionsMatch(
+      resolvedStaged,
+      resolveOverlaySelection(overlayConfig, activeOverlays)
+    )
 
   useEffect(() => {
     if (
@@ -188,32 +201,12 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     )
   }
 
-  const toggleOverlayLive = async () => {
-    if (!overlayOutput || isShowingOverlayLive) {
-      return
-    }
-    const output = useBroadcastStore
-      .getState()
-      .outputs.find(
-        (candidate) =>
-          candidate.id === overlayOutput.id && candidate.content === "overlays"
-      )
-    if (!output) return
-
-    const store = useBroadcastStore.getState()
-    const isLive = store.liveOverlayOutputIds.includes(output.id)
+  const runOverlayLive = async (action: "show" | "stop") => {
+    if (!overlayOutput || isShowingOverlayLive) return
     setIsShowingOverlayLive(true)
     try {
-      if (isLive) {
-        await setOutputEnabled(output, false)
-        return
-      }
-      const runtime = useOutputRuntimeStore.getState().byId[output.id]
-      if (!isOutputOn(runtime)) {
-        const enabled = await setOutputEnabled(output, true)
-        if (!enabled) return
-      }
-      useBroadcastStore.getState().setOverlayOutputLive(output.id, true)
+      if (action === "stop") await stopOverlayOutputLive(overlayOutput.id)
+      else await showOverlayPreviewOnLive(overlayOutput.id)
     } catch {
       // The output runtime already reports an actionable toast.
     } finally {
@@ -273,29 +266,50 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
       </div>
       {isOverlayPreview ? (
         <div className="relative z-10 border-t border-border bg-card px-3 py-2">
-          <Button
-            type="button"
-            variant={overlayOutputIsLive ? "destructive" : "secondary"}
-            size="sm"
-            className="h-auto min-h-8 w-full justify-center gap-2 py-2 text-center whitespace-normal"
-            onClick={() => {
-              void toggleOverlayLive()
-            }}
-            disabled={!overlayOutput || isShowingOverlayLive}
-          >
+          <div className="flex gap-2">
+            {!overlayOutputIsLive || overlayChangesPending ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="h-auto min-h-8 flex-1 justify-center gap-2 py-2 text-center whitespace-normal"
+                onClick={() => {
+                  void runOverlayLive("show")
+                }}
+                disabled={!overlayOutput || isShowingOverlayLive}
+              >
+                <RadioIcon className="size-3.5 shrink-0" />
+                {overlayChangesPending ? "Update Live" : "Show on Live"}
+              </Button>
+            ) : null}
             {overlayOutputIsLive ? (
-              <SquareIcon className="size-3.5 shrink-0" />
-            ) : (
-              <RadioIcon className="size-3.5 shrink-0" />
-            )}
-            {overlayOutputIsLive ? "Stop Live" : "Show on Live"}
-          </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className={
+                  overlayChangesPending
+                    ? "h-auto min-h-8 shrink-0 gap-2 py-2"
+                    : "h-auto min-h-8 flex-1 justify-center gap-2 py-2"
+                }
+                onClick={() => {
+                  void runOverlayLive("stop")
+                }}
+                disabled={isShowingOverlayLive}
+              >
+                <SquareIcon className="size-3.5 shrink-0" />
+                {overlayChangesPending ? "Stop" : "Stop Live"}
+              </Button>
+            ) : null}
+          </div>
           <p className="mt-1.5 text-center text-[0.625rem] leading-relaxed text-muted-foreground">
             {!overlayOutput
               ? "Add a Video Overlays output in Displays to enable Show on Live."
-              : overlayOutputIsLive
-                ? "The selected graphics output is live. Stop Live takes it off air; Program stays independent."
-                : "Preview only — Show on Live sends these graphics to the selected output; Program stays independent."}
+              : overlayChangesPending
+                ? "Preview has changes. Update Live sends them to the graphics output."
+                : overlayOutputIsLive
+                  ? "These graphics are live. Changes you make stay in Preview until you press Update Live."
+                  : "Preview only. Show on Live sends these graphics to the selected output. Program is not affected."}
           </p>
         </div>
       ) : (

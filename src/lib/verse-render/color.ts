@@ -7,6 +7,10 @@ import {
   DEFAULT_PRESENTATION_FONT_FAMILY,
   getFontFallback,
 } from "@/lib/font-options"
+import {
+  getTickerTextTrack,
+  drawTickerTextTrack,
+} from "@/lib/ticker-text-track"
 import { roundRect, type VerseLayoutRect } from "./draw"
 export function lyricFooterTheme(theme: BroadcastTheme): BroadcastTheme {
   const fontSize = Math.max(10, Math.min(22, theme.reference.fontSize * 0.36))
@@ -217,6 +221,23 @@ function normalizeTickerText(verse: VerseRenderData): string {
   return verse.reference.trim()
 }
 
+let tickerClockMinute = -1
+let tickerClockText = ""
+
+function currentTickerTime(): string {
+  const now = Date.now()
+  const minute = Math.floor(now / 60_000)
+  if (minute !== tickerClockMinute) {
+    tickerClockMinute = minute
+    tickerClockText = new Date(now).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+  }
+  return tickerClockText
+}
+
 export function drawTickerLayer(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
@@ -245,12 +266,7 @@ export function drawTickerLayer(
   const textContentW = Math.max(1, textLaneW - textPadding * 2)
   const speed = Math.max(95, fontSize * 2.2)
   const separator = "\u00A0\u00A0\u2022\u00A0\u00A0"
-  let track = `${tickerText}${separator}`
-  const timeText = new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  })
+  const timeText = currentTickerTime()
 
   ctx.save()
 
@@ -287,41 +303,28 @@ export function drawTickerLayer(
   ctx.textAlign = "left"
   ctx.fillStyle = theme.verseText.color
 
-  let trackWidth = Math.max(ctx.measureText(track).width, 20)
-  while (trackWidth < textContentW * 1.35) {
-    track += `${tickerText}${separator}`
-    trackWidth = Math.max(ctx.measureText(track).width, 20)
-  }
+  const track = getTickerTextTrack(ctx, {
+    message: tickerText,
+    separator,
+    minimumWidth: textContentW * 1.35,
+    minimumMeasuredWidth: 20,
+    lineHeight: laneH,
+    font: ctx.font,
+    color: theme.verseText.color,
+    shadow: theme.verseText.shadow ?? undefined,
+  })
   const gap = Math.max(fontSize * 1.6, 56)
-  const loopWidth = trackWidth + gap
+  const loopWidth = track.width + gap
   const elapsed = Math.max(0, now) / 1000
   const xStart = textContentX - ((elapsed * speed) % loopWidth)
   const textY = laneY + laneH / 2
-
-  if (theme.verseText.shadow) {
-    ctx.save()
-    ctx.shadowColor = theme.verseText.shadow.color
-    ctx.shadowBlur = theme.verseText.shadow.blur
-    ctx.shadowOffsetX = theme.verseText.shadow.x
-    ctx.shadowOffsetY = theme.verseText.shadow.y
-    for (
-      let x = xStart - loopWidth;
-      x < textContentX + textContentW + loopWidth;
-      x += loopWidth
-    ) {
-      ctx.fillText(track, x, textY)
-    }
-    ctx.restore()
-    ctx.restore()
-    return
-  }
 
   for (
     let x = xStart - loopWidth;
     x < textContentX + textContentW + loopWidth;
     x += loopWidth
   ) {
-    ctx.fillText(track, x, textY)
+    drawTickerTextTrack(ctx, track, x, textY)
   }
 
   ctx.restore()

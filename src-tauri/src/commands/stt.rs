@@ -94,6 +94,7 @@ pub async fn test_deepgram_connection(api_key: String) -> Result<DeepgramConnect
 
     let response = reqwest::Client::new()
         .get("https://api.deepgram.com/v1/projects")
+        .timeout(Duration::from_secs(15))
         .header("Authorization", format!("Token {resolved_api_key}"))
         .send()
         .await
@@ -159,6 +160,7 @@ async fn test_bearer_connection(
 
     let response = reqwest::Client::new()
         .get(url)
+        .timeout(Duration::from_secs(15))
         .bearer_auth(resolved_api_key)
         .send()
         .await
@@ -251,10 +253,10 @@ pub async fn start_transcription(
             } else {
                 "GROQ_API_KEY"
             };
-            let resolved_api_key = if api_key.is_empty() {
+            let resolved_api_key = if api_key.trim().is_empty() {
                 std::env::var(env_var).unwrap_or_default()
             } else {
-                api_key
+                api_key.trim().to_string()
             };
 
             if resolved_api_key.is_empty() {
@@ -296,10 +298,10 @@ pub async fn start_transcription(
         }
         _ => {
             // Deepgram (default)
-            let resolved_api_key = if api_key.is_empty() {
+            let resolved_api_key = if api_key.trim().is_empty() {
                 std::env::var("DEEPGRAM_API_KEY").unwrap_or_default()
             } else {
-                api_key
+                api_key.trim().to_string()
             };
 
             if resolved_api_key.is_empty() {
@@ -402,7 +404,7 @@ pub async fn start_transcription(
 
                         // (a) Compute audio levels at ~15 Hz
                         //     At 16 kHz with ~1024-sample frames, every 4th frame is ~15 Hz.
-                        if frame_count % 4 == 0 {
+                        if frame_count.is_multiple_of(4) {
                             let level = fellowshow_audio::meter::compute_level(&frame.samples);
                             let _ = fan_app.emit(
                                 EVENT_AUDIO_LEVEL,
@@ -416,7 +418,8 @@ pub async fn start_transcription(
                         // (b) Forward all audio to STT provider
                         if audio_send_tx.try_send(frame.samples).is_err() {
                             dropped_audio_frames += 1;
-                            if dropped_audio_frames == 1 || dropped_audio_frames % 100 == 0 {
+                            if dropped_audio_frames == 1 || dropped_audio_frames.is_multiple_of(100)
+                            {
                                 log::warn!(
                                     "Audio backpressure dropped {dropped_audio_frames} frame(s)"
                                 );
@@ -460,10 +463,21 @@ pub async fn start_transcription(
     // Task A: run the STT provider (Deepgram WS+REST or Whisper local).
     tauri::async_runtime::spawn(async move {
         let _cancel_capture = CancelCaptureOnDrop(provider_guard.cancelled.clone());
-        let result = stt_provider.start(audio_send_rx, event_tx).await;
+        let provider_events = event_tx.clone();
+        let result = run_stt_provider(
+            stt_provider.as_ref(),
+            audio_send_rx,
+            event_tx,
+            &provider_guard.cancelled,
+        )
+        .await;
         if let Err(e) = result {
             log::error!("[STT-{provider_log_name}] Provider failed: {e}");
+            let _ = provider_events
+                .send(TranscriptEvent::Error(e.to_string()))
+                .await;
         }
+        drop(provider_events);
         provider_guard.cancelled.store(true, Ordering::SeqCst);
         // Do not permit a replacement session until the microphone is released.
         if !matches!(
@@ -532,9 +546,15 @@ pub async fn start_transcription(
         let _session_guard = session_guard;
         let mut dropped_direct_jobs: u64 = 0;
         let mut dropped_semantic_jobs: u64 = 0;
+        let mut last_error = None;
         while let Some(event) = event_rx.recv().await {
             if evt_cancelled.load(Ordering::SeqCst)
-                && !matches!(&event, TranscriptEvent::Final { .. })
+                && matches!(
+                    &event,
+                    TranscriptEvent::Partial { .. }
+                        | TranscriptEvent::SpeechStarted
+                        | TranscriptEvent::Connected
+                )
             {
                 continue;
             }
@@ -587,7 +607,7 @@ pub async fn start_transcription(
                         // Event consumer proceeds immediately to next transcript.
                         if detect_tx.try_send(transcript.clone()).is_err() {
                             dropped_direct_jobs += 1;
-                            if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                            if dropped_direct_jobs == 1 || dropped_direct_jobs.is_multiple_of(25) {
                                 log::warn!(
                                     "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
                                 );
@@ -602,7 +622,9 @@ pub async fn start_transcription(
                                 && detect_tx.try_send(sentence).is_err()
                             {
                                 dropped_direct_jobs += 1;
-                                if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                                if dropped_direct_jobs == 1
+                                    || dropped_direct_jobs.is_multiple_of(25)
+                                {
                                     log::warn!(
                                         "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
                                     );
@@ -616,7 +638,9 @@ pub async fn start_transcription(
                                     && detect_tx.try_send(sentence).is_err()
                                 {
                                     dropped_direct_jobs += 1;
-                                    if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                                    if dropped_direct_jobs == 1
+                                        || dropped_direct_jobs.is_multiple_of(25)
+                                    {
                                         log::warn!(
                                             "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
                                         );
@@ -629,7 +653,9 @@ pub async fn start_transcription(
                         // short exact quotes appear without waiting for a pause.
                         if semantic_tx.try_send(transcript.clone()).is_err() {
                             dropped_semantic_jobs += 1;
-                            if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0 {
+                            if dropped_semantic_jobs == 1
+                                || dropped_semantic_jobs.is_multiple_of(25)
+                            {
                                 log::warn!(
                                     "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
                                 );
@@ -643,7 +669,9 @@ pub async fn start_transcription(
                                 && semantic_tx.try_send(sentence).is_err()
                             {
                                 dropped_semantic_jobs += 1;
-                                if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0 {
+                                if dropped_semantic_jobs == 1
+                                    || dropped_semantic_jobs.is_multiple_of(25)
+                                {
                                     log::warn!(
                                         "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
                                     );
@@ -657,7 +685,8 @@ pub async fn start_transcription(
                                     && semantic_tx.try_send(sentence).is_err()
                                 {
                                     dropped_semantic_jobs += 1;
-                                    if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0
+                                    if dropped_semantic_jobs == 1
+                                        || dropped_semantic_jobs.is_multiple_of(25)
                                     {
                                         log::warn!(
                                             "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
@@ -678,7 +707,7 @@ pub async fn start_transcription(
                     if let Some(sentence) = direct_sentence_buffer.force_flush() {
                         if detect_tx.try_send(sentence).is_err() {
                             dropped_direct_jobs += 1;
-                            if dropped_direct_jobs == 1 || dropped_direct_jobs % 25 == 0 {
+                            if dropped_direct_jobs == 1 || dropped_direct_jobs.is_multiple_of(25) {
                                 log::warn!(
                                     "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
                                 );
@@ -688,7 +717,9 @@ pub async fn start_transcription(
                     if let Some(sentence) = semantic_sentence_buffer.force_flush() {
                         if semantic_tx.try_send(sentence).is_err() {
                             dropped_semantic_jobs += 1;
-                            if dropped_semantic_jobs == 1 || dropped_semantic_jobs % 25 == 0 {
+                            if dropped_semantic_jobs == 1
+                                || dropped_semantic_jobs.is_multiple_of(25)
+                            {
                                 log::warn!(
                                     "Detection backpressure dropped {dropped_semantic_jobs} semantic job(s)"
                                 );
@@ -701,9 +732,13 @@ pub async fn start_transcription(
                 }
                 TranscriptEvent::Error(msg) => {
                     log::error!("[STT] Error: {msg}");
-                    let _ = event_app.emit("stt_error", msg);
+                    if last_error.as_ref() != Some(&msg) {
+                        last_error = Some(msg.clone());
+                        let _ = event_app.emit("stt_error", msg);
+                    }
                 }
                 TranscriptEvent::Connected => {
+                    last_error = None;
                     log::info!("[STT] Connected");
                     let _ = event_app.emit("stt_connected", ());
                 }
@@ -719,6 +754,44 @@ pub async fn start_transcription(
 
     Ok(())
 }
+
+async fn wait_for_session_cancellation(cancelled: &AtomicBool) {
+    while !cancelled.load(Ordering::SeqCst) {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+}
+
+const STT_SHUTDOWN_GRACE: Duration = Duration::from_secs(3);
+
+async fn run_stt_provider(
+    provider: &dyn SttProvider,
+    audio_rx: crossbeam_channel::Receiver<Vec<i16>>,
+    event_tx: tokio::sync::mpsc::Sender<TranscriptEvent>,
+    cancelled: &AtomicBool,
+) -> Result<(), fellowshow_stt::SttError> {
+    if cancelled.load(Ordering::SeqCst) {
+        return Ok(());
+    }
+    let run_provider = provider.start(audio_rx, event_tx);
+    tokio::pin!(run_provider);
+    tokio::select! {
+        result = &mut run_provider => result,
+        () = wait_for_session_cancellation(cancelled) => {
+            // Capture observes the same flag and closes audio input. Let its
+            // last captured words finish before cancelling an unresponsive provider.
+            if let Ok(result) = tokio::time::timeout(STT_SHUTDOWN_GRACE, &mut run_provider).await {
+                result
+            } else {
+                provider.stop();
+                run_provider.await
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "stt_lifecycle_tests.rs"]
+mod lifecycle_tests;
 
 /// Run direct (regex/pattern) detection only. Instant, no ONNX.
 /// Uses SEPARATE Mutex<DirectDetector> and Mutex<DetectionMerger> so it
@@ -747,9 +820,6 @@ fn run_direct_detection(app: &AppHandle, transcript: &str) -> bool {
         return false;
     }
 
-    // Check if any result has high confidence before merging
-    let has_high_confidence = direct_results.iter().any(|d| d.confidence >= 0.90);
-
     // Merge using the managed merger (persists cooldown state across calls,
     // preventing duplicate emissions when running on both partials and finals)
     let merger_state: State<'_, Mutex<DetectionMerger>> = app.state();
@@ -768,44 +838,15 @@ fn run_direct_detection(app: &AppHandle, transcript: &str) -> bool {
 
     // Resolve verse info from DB (needs AppState, but only briefly for DB lookup)
     let app_managed: State<'_, Mutex<AppState>> = app.state();
-    let Ok(app_state) = app_managed.try_lock() else {
-        log::warn!(
-            "[DET-DIRECT] AppState try_lock FAILED (contention) — emitting without verse text"
-        );
-        // AppState locked — emit results without verse text
-        let results: Vec<super::detection::DetectionResult> = merged
-            .iter()
-            .map(|m| {
-                let vr = &m.detection.verse_ref;
-                super::detection::DetectionResult {
-                    verse_ref: format!("{} {}:{}", vr.book_name, vr.chapter, vr.verse_start),
-                    verse_text: String::new(),
-                    book_name: vr.book_name.clone(),
-                    book_number: vr.book_number,
-                    chapter: vr.chapter,
-                    verse: vr.verse_start,
-                    confidence: m.detection.confidence,
-                    source: "direct".to_string(),
-                    auto_queued: m.auto_queued,
-                    transcript_snippet: m.detection.transcript_snippet.clone(),
-                    is_chapter_only: m.detection.is_chapter_only,
-                }
-            })
-            .collect();
-        for r in &results {
-            log::info!(
-                "[DET-DIRECT] Found: {} ({:.0}%) (no DB)",
-                r.verse_ref,
-                r.confidence * 100.0
-            );
-        }
-        let _ = app.emit("verse_detections", &results);
-        return has_high_confidence;
+    let Ok(app_state) = app_managed.lock() else {
+        log::error!("[DET-DIRECT] Failed to lock AppState for verse resolution");
+        return false;
     };
     let results: Vec<super::detection::DetectionResult> = merged
         .iter()
-        .map(|m| super::detection::to_result(&app_state, m))
+        .filter_map(|m| super::detection::to_result(&app_state, m))
         .collect();
+    let has_high_confidence = results.iter().any(|result| result.confidence >= 0.90);
 
     for r in &results {
         log::info!(

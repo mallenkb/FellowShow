@@ -66,6 +66,28 @@ describe("SongsQueuePanel", () => {
     expect(previewText()).toBe("Love so amazing, so divine")
   })
 
+  it("keeps Notes line breaks unchanged when staging and showing lyrics live", async () => {
+    const text =
+      "Bearing shame and scoffing\nrude,\nSealed my pardon with his\nblood;"
+    useQueueStore.setState({
+      items: [
+        {
+          ...song,
+          lyricBlocks: [{ label: "Verse 1", text }],
+        },
+      ],
+    })
+    const user = userEvent.setup()
+    render(<SongsQueuePanel />)
+    const note = screen.getByText(
+      (_, element) => element?.tagName === "P" && element.textContent === text
+    )
+    await user.click(note)
+    expect(previewText()).toBe(text)
+    await user.keyboard("{Enter}")
+    expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(text)
+  })
+
   it("plays the chorus after verse 2 when Repeat chorus is on", async () => {
     const user = userEvent.setup()
     useSongPlayStore.setState({ repeatChorusSongIds: [song.id] })

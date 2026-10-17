@@ -127,9 +127,7 @@ async function sendScriptureToScroll(reference: SermonDirectReference) {
   const broadcast = useBroadcastStore.getState()
   const id = broadcast.saveTickerMessage({
     text: reference.reference + ": " + verse.text,
-    targetOutputIds: broadcast.overlayConfig.logo.logos[0]?.targetOutputIds ?? [
-      "main",
-    ],
+    targetOutputIds: broadcast.outputs.map((output) => output.id),
   })
   broadcast.showTickerMessage(id)
   toast.success(reference.reference + " is scrolling live")

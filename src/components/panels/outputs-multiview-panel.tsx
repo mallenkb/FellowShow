@@ -20,6 +20,7 @@ import {
 } from "@/lib/broadcast-output-runtime"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
 import {
+  getCurrentOverlayScripture,
   getOverlayPayloadForOutput,
   getOverlayPreviewPayload,
 } from "@/lib/overlays"
@@ -91,6 +92,11 @@ export function OutputsMultiviewPanel({
   const lowerThird = useBroadcastStore((s) => s.lowerThird)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
+  const overlayScripture = getCurrentOverlayScripture({
+    isLive,
+    liveVerse,
+    previewVerse,
+  })
   const runtimeById = useOutputRuntimeStore((s) => s.byId)
   const [isOpen, setIsOpen] = useState(true)
   const [isReordering, setIsReordering] = useState(false)
@@ -272,7 +278,12 @@ export function OutputsMultiviewPanel({
             const overlays =
               active && outputIsLive
                 ? output.content === "overlays"
-                  ? getOverlayPreviewPayload(overlayConfig, activeOverlays)
+                  ? getOverlayPreviewPayload(
+                      overlayConfig,
+                      activeOverlays,
+                      undefined,
+                      { scripture: overlayScripture }
+                    )
                   : getOverlayPayloadForOutput(
                       overlayConfig,
                       activeOverlays,
@@ -280,7 +291,9 @@ export function OutputsMultiviewPanel({
                       {
                         verse: active ? verse : null,
                         timer: active ? timer : null,
-                      }
+                      },
+                      undefined,
+                      overlayScripture
                     )
                 : null
             // Highlight the dedicated screen for the current search tab.

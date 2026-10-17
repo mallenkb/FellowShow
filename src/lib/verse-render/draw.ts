@@ -1,9 +1,12 @@
 import { presentationMedia } from "@/lib/presentation-composition"
+import { videoFrameForCanvas } from "@/lib/video-frame-cache"
 import type {
   BroadcastTheme,
   PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types/broadcast"
+import { lyricDisplayLines } from "@/lib/lyrics"
+import { splitOversizedWord } from "./word-wrap"
 
 export interface VerseLayoutRect {
   x: number
@@ -256,7 +259,11 @@ export function drawBackground(
       const media = isVideo
         ? videoCache?.get(bg.image.url)
         : imageCache?.get(bg.image.url)
-      if (!media || (isVideo && (media as HTMLVideoElement).readyState < 2)) {
+      const frame =
+        isVideo && media
+          ? videoFrameForCanvas(media as HTMLVideoElement)
+          : media
+      if (!media || !frame) {
         // Use a deterministic fallback while image is still loading.
         ctx.fillStyle = bg.image.tint ?? "#000"
         ctx.fillRect(0, 0, width, height)
@@ -323,7 +330,7 @@ export function drawBackground(
       const drawX = ((width - drawW) / 2) * (1 + panX)
       const drawY = ((height - drawH) / 2) * (1 + panY)
 
-      ctx.drawImage(media, drawX, drawY, drawW, drawH)
+      ctx.drawImage(frame, drawX, drawY, drawW, drawH)
       ctx.restore()
 
       if (bg.image.tint) {
@@ -351,7 +358,8 @@ function drawImageToRect(
   offsetX = 0,
   offsetY = 0
 ): void {
-  if (img instanceof HTMLVideoElement && img.readyState < 2) return
+  const frame = img instanceof HTMLVideoElement ? videoFrameForCanvas(img) : img
+  if (!frame) return
   let drawX = x
   let drawY = y
   let drawW = width
@@ -385,7 +393,7 @@ function drawImageToRect(
   drawW = scaledW
   drawH = scaledH
 
-  ctx.drawImage(img, drawX, drawY, drawW, drawH)
+  ctx.drawImage(frame, drawX, drawY, drawW, drawH)
 }
 
 export function drawPresentationImage(
@@ -523,7 +531,8 @@ export function drawVerseText(
   verse: VerseRenderData,
   textRectX: number,
   textRectWidth: number,
-  startY: number
+  startY: number,
+  preserveLineBreaks = false
 ): number {
   const vt = theme.verseText
   const vn = theme.verseNumbers
@@ -570,30 +579,27 @@ export function drawVerseText(
   }
 
   const spaceWidth = measureToken(" ", "text").width
-  const tokens: StyledToken[] = []
-  for (const segment of verse.segments) {
-    if (vn.visible && segment.verseNumber !== undefined) {
-      tokens.push(measureToken(String(segment.verseNumber), "number"))
-    }
-    const transformedText = applyTextTransform(
-      segment.text,
-      resolveTextTransform(vt.textTransform)
-    )
-    for (const word of transformedText.split(/\s+/).filter(Boolean)) {
-      tokens.push(measureToken(word, "text"))
-    }
-  }
-
   const wrappedLines: StyledLine[] = []
   let currentLine: StyledToken[] = []
   let currentWidth = 0
-  for (const token of tokens) {
+  const flushLine = (includeEmpty = false) => {
+    if (currentLine.length > 0 || includeEmpty) {
+      wrappedLines.push({ tokens: currentLine, width: currentWidth })
+    }
+    currentLine = []
+    currentWidth = 0
+  }
+  const appendToken = (token: StyledToken) => {
     const nextWidth =
       currentLine.length === 0
         ? token.width
         : currentWidth + spaceWidth + token.width
-    if (nextWidth > textRectWidth && currentLine.length > 0) {
-      wrappedLines.push({ tokens: currentLine, width: currentWidth })
+    if (
+      !preserveLineBreaks &&
+      nextWidth > textRectWidth &&
+      currentLine.length > 0
+    ) {
+      flushLine()
       currentLine = [token]
       currentWidth = token.width
     } else {
@@ -601,8 +607,40 @@ export function drawVerseText(
       currentWidth = nextWidth
     }
   }
-  if (currentLine.length > 0) {
-    wrappedLines.push({ tokens: currentLine, width: currentWidth })
+  let hasExplicitLine = false
+  for (const segment of verse.segments) {
+    if (vn.visible && segment.verseNumber !== undefined) {
+      appendToken(measureToken(String(segment.verseNumber), "number"))
+    }
+    const transformedText = applyTextTransform(
+      segment.text,
+      resolveTextTransform(vt.textTransform)
+    )
+    const lines = preserveLineBreaks
+      ? lyricDisplayLines(transformedText)
+      : [transformedText]
+    for (const [lineIndex, line] of lines.entries()) {
+      if (preserveLineBreaks && lineIndex > 0) flushLine(true)
+      hasExplicitLine = true
+      if (preserveLineBreaks) {
+        if (line) appendToken(measureToken(line, "text"))
+        continue
+      }
+      for (const word of line.split(/\s+/).filter(Boolean)) {
+        const parts = splitOversizedWord(
+          word,
+          textRectWidth,
+          (text) => measureToken(text, "text").width
+        )
+        for (const [index, part] of parts.entries()) {
+          if (index > 0) flushLine()
+          appendToken(measureToken(part, "text"))
+        }
+      }
+    }
+  }
+  if (currentLine.length > 0 || (preserveLineBreaks && hasExplicitLine)) {
+    flushLine(preserveLineBreaks)
   }
 
   let currentY = startY

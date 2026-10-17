@@ -136,7 +136,11 @@ export const usePresenterTimerStore = create<PresenterTimerState>(
       backgroundOptions: persistedBackgrounds.backgroundOptions,
 
       setDuration: (seconds) => {
-        const totalSeconds = Math.max(1, Math.floor(seconds))
+        if (!Number.isFinite(seconds)) return
+        const totalSeconds = Math.min(
+          Number.MAX_SAFE_INTEGER,
+          Math.max(1, Math.floor(seconds))
+        )
         set((state) => ({
           totalSeconds,
           remainingSeconds: state.isRunning

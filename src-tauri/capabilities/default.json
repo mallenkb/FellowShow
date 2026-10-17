@@ -25,6 +25,10 @@
     {
       "identifier": "fs:allow-write-file",
       "allow": [{ "path": "$APPDATA/media/*" }]
+    },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": [{ "path": "$APPDATA/media/*" }]
     }
   ]
 }

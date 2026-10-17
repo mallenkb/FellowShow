@@ -23,14 +23,6 @@ function sessionSegments(session: SermonSession) {
     .segments.slice(session.transcriptStartIndex)
 }
 
-async function summarize(session: SermonSession): Promise<PreachingSummary> {
-  const transcript = useTranscriptStore.getState()
-  return summarizeTranscript(
-    sessionSegments(session).map((segment) => segment.text),
-    transcript.highlightedScriptures
-  )
-}
-
 async function summarizeTranscript(
   segments: string[],
   scriptures: string[]
@@ -118,14 +110,44 @@ export async function generateLiveSermonNotes(force = false): Promise<void> {
   const segmentCount = useTranscriptStore.getState().segments.length
   if (!force && segmentCount - session.lastNoteSegmentIndex < 4) return
   if (segmentCount <= session.transcriptStartIndex) return
+  const capturedSegments = [...sessionSegments(session)]
+  const capturedScriptures = [
+    ...useTranscriptStore.getState().highlightedScriptures,
+  ]
 
   noteGenerationPromise = (async () => {
     try {
-      const summary = await summarize(session)
+      const summary = await invoke("summarize_preaching", {
+        segments: capturedSegments.map((segment) => segment.text),
+        scriptures: capturedScriptures,
+      })
       if (useSermonStore.getState().activeSessionId !== session.id) return
+      const normalized = normalizePreachingSummary(summary)
+      const drafts = summary.key_points.flatMap((rawPoint, index) => {
+        const point = rawPoint.trim()
+        const sourceIndex = capturedSegments.findIndex((segment) => {
+          const text = segment.text.trim()
+          return (
+            text === point ||
+            (point.endsWith("…") &&
+              text.startsWith(point.slice(0, -1).trimEnd()))
+          )
+        })
+        const source = capturedSegments[sourceIndex]
+        if (!source) return []
+        return [
+          {
+            text: normalized.key_points[index],
+            sourceContext: source.text.trim(),
+            sourceSegmentIds: [source.id],
+            sourceSegmentStartIndex: session.transcriptStartIndex + sourceIndex,
+            sourceSegmentEndIndex: session.transcriptStartIndex + sourceIndex,
+          },
+        ]
+      })
       useSermonStore
         .getState()
-        .addNotes(session.id, summary.key_points, segmentCount, "live")
+        .addGeneratedNotes(session.id, drafts, segmentCount, false)
     } catch (error) {
       if (force) {
         toast.error("Could not generate sermon notes", {

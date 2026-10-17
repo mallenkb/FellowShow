@@ -322,7 +322,9 @@ export function ThemeLibrary() {
     let result = themes
     if (selectedThemeSection === "announcements") {
       result = result.filter(
-        (theme) => theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID
+        (theme) =>
+          theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID ||
+          (!theme.builtin && theme.section === "announcements")
       )
     } else if (selectedThemeSection === "presentation") {
       result = result.filter(

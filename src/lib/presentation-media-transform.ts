@@ -44,16 +44,27 @@ export function movePresentationMedia(
   frameWidth: number,
   frameHeight: number
 ) {
-  if (frameWidth <= 0 || frameHeight <= 0) {
-    return {
-      offsetX: clamp(start.offsetX, -1, 1),
-      offsetY: clamp(start.offsetY, -1, 1),
-    }
+  const initial = clampPresentationMediaTransform(start)
+  if (
+    !Number.isFinite(frameWidth) ||
+    !Number.isFinite(frameHeight) ||
+    frameWidth <= 0 ||
+    frameHeight <= 0
+  ) {
+    return { offsetX: initial.offsetX, offsetY: initial.offsetY }
   }
 
   return {
-    offsetX: clamp(snap(start.offsetX + deltaX / frameWidth, 0.25), -1, 1),
-    offsetY: clamp(snap(start.offsetY + deltaY / frameHeight, 0.5), -1, 1),
+    offsetX: clamp(
+      snap(initial.offsetX + finiteOr(deltaX, 0) / frameWidth, 0.25),
+      -1,
+      1
+    ),
+    offsetY: clamp(
+      snap(initial.offsetY + finiteOr(deltaY, 0) / frameHeight, 0.5),
+      -1,
+      1
+    ),
   }
 }
 
@@ -65,9 +76,14 @@ export function resizePresentationMedia(
   frameWidth: number,
   frameHeight: number
 ) {
-  if (frameWidth <= 0 || frameHeight <= 0) {
+  if (
+    !Number.isFinite(frameWidth) ||
+    !Number.isFinite(frameHeight) ||
+    frameWidth <= 0 ||
+    frameHeight <= 0
+  ) {
     return clamp(
-      startScale,
+      finiteOr(startScale, 1),
       PRESENTATION_MEDIA_MIN_SCALE,
       PRESENTATION_MEDIA_MAX_SCALE
     )
@@ -80,9 +96,11 @@ export function resizePresentationMedia(
       : 0
   const verticalSign = handle.includes("s") ? 1 : handle.includes("n") ? -1 : 0
   const horizontalDelta =
-    horizontalSign === 0 ? 0 : (deltaX * horizontalSign) / frameWidth
+    horizontalSign === 0
+      ? 0
+      : (finiteOr(deltaX, 0) * horizontalSign) / frameWidth
   const verticalDelta =
-    verticalSign === 0 ? 0 : (deltaY * verticalSign) / frameHeight
+    verticalSign === 0 ? 0 : (finiteOr(deltaY, 0) * verticalSign) / frameHeight
   const scaleDelta =
     Math.abs(horizontalDelta) > Math.abs(verticalDelta)
       ? horizontalDelta
@@ -105,7 +123,14 @@ export function presentationMediaVisibleSize(
   mediaAspect: number | null,
   frameAspect = 16 / 9
 ): { width: number; height: number } {
-  if (fit !== "contain" || !mediaAspect || !Number.isFinite(mediaAspect)) {
+  if (
+    fit !== "contain" ||
+    !mediaAspect ||
+    !Number.isFinite(mediaAspect) ||
+    mediaAspect <= 0 ||
+    !Number.isFinite(frameAspect) ||
+    frameAspect <= 0
+  ) {
     return { width: 1, height: 1 }
   }
   return mediaAspect >= frameAspect

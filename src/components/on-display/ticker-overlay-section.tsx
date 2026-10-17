@@ -40,8 +40,6 @@ import {
 import { OutputTargetSelector } from "./output-target-selector"
 import { OverlaySection } from "./overlay-section"
 
-const DEFAULT_TARGET_OUTPUT_IDS = ["main"]
-
 function ColorField({
   label,
   value,
@@ -109,24 +107,35 @@ function TickerPreview({
   )
 }
 
-export function TickerOverlaySection() {
+export function TickerOverlaySection({
+  initialEditId,
+}: {
+  /** Opens with this message's editor showing. */
+  initialEditId?: string
+} = {}) {
   const tickerConfig = useBroadcastStore((state) => state.overlayConfig.ticker)
   const messages = useBroadcastStore(
     (state) => state.overlayConfig.tickerMessages
   )
+  // These controls build the Video Overlays Preview; Show on Live sends it.
   const activeMessageId = useBroadcastStore(
-    (state) => state.activeOverlays.tickerMessageId
+    (state) => state.stagedOverlays.tickerMessageId
   )
   const updateTicker = useBroadcastStore((state) => state.updateTickerOverlay)
   const saveMessage = useBroadcastStore((state) => state.saveTickerMessage)
   const deleteMessage = useBroadcastStore((state) => state.deleteTickerMessage)
-  const showMessage = useBroadcastStore((state) => state.showTickerMessage)
-  const stopMessage = useBroadcastStore((state) => state.stopTickerMessage)
-  const defaultTargets = useBroadcastStore(
-    (state) =>
-      state.overlayConfig.logo.logos[0]?.targetOutputIds ??
-      DEFAULT_TARGET_OUTPUT_IDS
+  const toggleStagedTicker = useBroadcastStore(
+    (state) => state.toggleStagedTicker
   )
+  const showMessage = (id: string) => {
+    if (activeMessageId !== id) toggleStagedTicker(id)
+  }
+  const stopMessage = () => {
+    if (activeMessageId) toggleStagedTicker(activeMessageId)
+  }
+  // New messages show on every output until the operator narrows them down.
+  const outputs = useBroadcastStore((state) => state.outputs)
+  const defaultTargets = outputs.map((output) => output.id)
   const [text, setText] = useState("")
   const [targetOutputIds, setTargetOutputIds] = useState(defaultTargets)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -151,6 +160,16 @@ export function TickerOverlaySection() {
     setEditingId(message.id)
     setEditText(message.text)
     setEditTargetOutputIds(message.targetOutputIds)
+  }
+
+  // Open the requested message once, on the first render that has it.
+  const [openedEditId, setOpenedEditId] = useState<string>()
+  if (initialEditId && openedEditId !== initialEditId) {
+    const message = messages.find((item) => item.id === initialEditId)
+    if (message) {
+      setOpenedEditId(initialEditId)
+      openEditor(message)
+    }
   }
 
   const closeEditor = () => setEditingId(null)
@@ -224,7 +243,7 @@ export function TickerOverlaySection() {
               size="sm"
               onClick={stopMessage}
             >
-              <SquareIcon /> Stop
+              <SquareIcon /> Remove from Preview
             </Button>
           ) : null}
         </div>
@@ -267,7 +286,7 @@ export function TickerOverlaySection() {
                 className={cn(
                   "flex items-center gap-2 rounded-md border px-3 py-2 transition-colors",
                   isActive
-                    ? "border-red-500/50 bg-red-500/10"
+                    ? "border-primary bg-primary/10"
                     : "border-border hover:bg-muted/50"
                 )}
               >
@@ -278,7 +297,10 @@ export function TickerOverlaySection() {
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={isActive ? "Stop message" : "Show message"}
+                  aria-label={
+                    isActive ? "Remove from Preview" : "Add to Preview"
+                  }
+                  title={isActive ? "Remove from Preview" : "Add to Preview"}
                   onClick={() => {
                     if (isActive) stopMessage()
                     else showMessage(message.id)

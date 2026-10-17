@@ -86,6 +86,7 @@ export function createDesignerActions(
     saveDraft: () => {
       const { draftTheme } = get()
       if (!draftTheme) return
+      lastEditPath = null
       // If editing a builtin, save as a new custom theme
       if (draftTheme.builtin) {
         const customTheme = {
@@ -96,6 +97,15 @@ export function createDesignerActions(
           createdAt: Date.now(),
           updatedAt: Date.now(),
         }
+        // History still changes the design, but it now belongs to the saved
+        // copy. Undo must never turn that copy back into a built-in theme.
+        const copyHistory = (theme: BroadcastTheme): BroadcastTheme => ({
+          ...theme,
+          id: customTheme.id,
+          name: customTheme.name,
+          builtin: false,
+          createdAt: customTheme.createdAt,
+        })
         set((s) => ({
           themes: [...s.themes, customTheme],
           activeThemeId:
@@ -110,6 +120,8 @@ export function createDesignerActions(
           draftTheme: customTheme,
           baselineTheme: customTheme,
           isDirty: false,
+          undoStack: s.undoStack.map(copyHistory),
+          redoStack: s.redoStack.map(copyHistory),
         }))
       } else {
         get().saveTheme(draftTheme)

@@ -609,8 +609,12 @@ impl DirectDetector {
         };
 
         // Step 2 & 3: Parse references and resolve context
-        for book_match in effective_matches {
-            if let Some(verse_ref) = parser::parse_reference(text, book_match) {
+        for (index, book_match) in effective_matches.iter().enumerate() {
+            // A book cannot borrow the chapter and verse belonging to a later book.
+            let reference_text = effective_matches
+                .get(index + 1)
+                .map_or(text.as_str(), |next| &text[..next.start]);
+            if let Some(verse_ref) = parser::parse_reference(reference_text, book_match) {
                 // Resolve any partial references using context
                 let resolved = self.context.resolve(&verse_ref);
 
@@ -839,6 +843,49 @@ mod tests {
         assert_eq!(results[0].verse_ref.book_name, "John");
         assert_eq!(results[0].verse_ref.chapter, 3);
         assert_eq!(results[0].verse_ref.verse_start, 16);
+    }
+
+    #[test]
+    fn quoted_john_verse_does_not_create_a_song_of_solomon_reference() {
+        let mut detector = DirectDetector::new();
+        let results = detector.detect(
+            "For God so loved the world, that he gave his only begotten Son. John chapter three, verse sixteen.",
+        );
+        let references: Vec<_> = results.iter().map(|result| &result.verse_ref).collect();
+        assert_eq!(references.len(), 1, "unexpected detections: {references:?}");
+        assert_eq!(references[0].book_number, 43);
+        assert_eq!((references[0].chapter, references[0].verse_start), (3, 16));
+    }
+
+    #[test]
+    fn short_alias_in_a_partial_transcript_does_not_capture_the_next_reference() {
+        let mut detector = DirectDetector::new();
+        assert!(detector.detect("For God so").is_empty());
+        let results = detector.detect("loved the world. John chapter three verse sixteen.");
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].verse_ref.book_number, 43);
+    }
+
+    #[test]
+    fn a_book_cannot_borrow_the_reference_after_another_book() {
+        let mut detector = DirectDetector::new();
+        let results = detector.detect("Genesis reminds us of John 3:16");
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].verse_ref.book_number, 43);
+    }
+
+    #[test]
+    fn explicit_short_book_aliases_still_work() {
+        for text in [
+            "So 3:1",
+            "So chapter three verse one",
+            "Jn 3:16",
+            "Is 53:5",
+            "Am 3:3",
+        ] {
+            let mut detector = DirectDetector::new();
+            assert_eq!(detector.detect(text).len(), 1, "lost shorthand {text:?}");
+        }
     }
 
     #[test]

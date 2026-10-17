@@ -33,6 +33,8 @@ const ANNOUNCEMENT_MARK_TYPES: ReadonlySet<string> = new Set([
   "italic",
   "underline",
 ])
+/** Saved documents nest far less than this; deeper input is dropped. */
+const MAX_ANNOUNCEMENT_NODE_DEPTH = 64
 
 type AnnouncementDocumentNode = AnnouncementDocument["content"][number]
 type AnnouncementDocumentMarkNode = NonNullable<
@@ -280,7 +282,7 @@ export function sanitizeAnnouncementDocument(
   }
 
   const content = document.content
-    .map(sanitizeAnnouncementNode)
+    .map((node) => sanitizeAnnouncementNode(node, 1))
     .filter((node): node is AnnouncementDocumentNode => node !== null)
   return content.length > 0
     ? { type: "doc", content }
@@ -288,10 +290,12 @@ export function sanitizeAnnouncementDocument(
 }
 
 function sanitizeAnnouncementNode(
-  value: unknown
+  value: unknown,
+  depth: number
 ): AnnouncementDocumentNode | null {
   const node = recordValue(value)
   if (
+    depth > MAX_ANNOUNCEMENT_NODE_DEPTH ||
     !node ||
     typeof node.type !== "string" ||
     !ANNOUNCEMENT_NODE_TYPES.has(node.type)
@@ -301,7 +305,7 @@ function sanitizeAnnouncementNode(
 
   const content = Array.isArray(node.content)
     ? node.content
-        .map(sanitizeAnnouncementNode)
+        .map((child) => sanitizeAnnouncementNode(child, depth + 1))
         .filter((child): child is AnnouncementDocumentNode => child !== null)
     : undefined
   const marks = Array.isArray(node.marks)

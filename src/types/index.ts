@@ -37,7 +37,11 @@ export type {
 } from "./announcements"
 export {
   type ActiveOverlayState,
+  type BarAppearance,
+  type BarOverlayItem,
+  type BarSource,
   type BroadcastOverlayPayload,
+  type OverlayLook,
   type LogoOverlayConfig,
   type LogoOverlayItem,
   type LowerThirdPreset,

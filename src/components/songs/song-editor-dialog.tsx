@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { CanvasVerse } from "@/components/ui/canvas-verse"
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import type { CopSong } from "@/lib/cop-songs"
 import { splitLyricBlocks } from "@/lib/lyrics"
 import { prepareSong } from "@/lib/song-presentation"
@@ -20,20 +29,9 @@ import {
   resetSongEdits,
   updateSong,
 } from "@/lib/songs-data"
-import { useQueueStore } from "@/stores"
+import { useBroadcastStore, useQueueStore } from "@/stores"
 import { useSongEditorStore } from "@/stores/song-editor-store"
-
-/**
- * Shows each slide as its own paragraph with its section name, so the editor
- * matches what goes on screen. Lyrics that already separate their slides with
- * blank lines are left as written.
- */
-function lyricsForEditing(lyrics: string): string {
-  const blocks = splitLyricBlocks(lyrics)
-  const paragraphs = lyrics.split(/\n\s*\n/).filter((part) => part.trim())
-  if (paragraphs.length >= blocks.length) return lyrics
-  return blocks.map((block) => `${block.label}\n${block.text}`).join("\n\n")
-}
+import type { VerseRenderData } from "@/types"
 
 function isPrepared(songId: string) {
   return useQueueStore
@@ -54,6 +52,11 @@ function SongEditorForm({
   // The lyrics as first shown, so an unchanged song keeps its stored text.
   const [openedLyrics, setOpenedLyrics] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [selectedPreviewSectionIndex, setSelectedPreviewSectionIndex] =
+    useState(0)
+  const themes = useBroadcastStore((state) => state.themes)
+  const activeThemeId = useBroadcastStore((state) => state.activeThemeId)
+  const sectionThemeIds = useBroadcastStore((state) => state.sectionThemeIds)
 
   useEffect(() => {
     if (!songId) return
@@ -64,7 +67,7 @@ function SongEditorForm({
         const found = songs.find((candidate) => candidate.id === songId) ?? null
         setSong(found)
         setTitle(found?.title ?? "")
-        const shown = lyricsForEditing(found?.lyrics ?? "")
+        const shown = found?.lyrics ?? ""
         setLyrics(shown)
         setOpenedLyrics(shown)
       })
@@ -75,6 +78,28 @@ function SongEditorForm({
   }, [songId])
 
   const sections = useMemo(() => splitLyricBlocks(lyrics), [lyrics])
+  const previewSectionIndex = Math.min(
+    selectedPreviewSectionIndex,
+    Math.max(sections.length - 1, 0)
+  )
+  const previewSection = sections[previewSectionIndex] ?? null
+  const previewVerse = useMemo<VerseRenderData | null>(
+    () =>
+      previewSection
+        ? {
+            reference: "",
+            themeSection: "songs",
+            referenceMode: "lyric-footer",
+            segments: [{ text: previewSection.text }],
+          }
+        : null,
+    [previewSection]
+  )
+  const previewTheme = getThemeForProgramContent(
+    { themes, activeThemeId, sectionThemeIds },
+    previewVerse,
+    "songs"
+  )
   const canSave = title.trim().length > 0 && lyrics.trim().length > 0
 
   const finish = (saved: CopSong | null, message: string) => {
@@ -145,20 +170,85 @@ function SongEditorForm({
         aria-label="Song title"
         autoFocus={!songId}
       />
-      <textarea
-        value={lyrics}
-        onChange={(event) => setLyrics(event.target.value)}
-        placeholder={"Verse 1\nPaste or type the lyrics here\n\nChorus\n…"}
-        aria-label="Lyrics"
-        className="min-h-72 flex-1 resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-      />
-      <p className="text-xs text-muted-foreground">
-        {sections.length === 0
-          ? "No sections yet"
-          : `${sections.length} slide${sections.length === 1 ? "" : "s"}: ${sections
-              .map((section) => section.label)
-              .join(" · ")}`}
-      </p>
+      <div className="grid min-h-0 flex-1 gap-4 sm:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
+        <div className="flex min-h-0 flex-col gap-2">
+          <label htmlFor="song-lyrics" className="text-xs font-medium">
+            Lyrics
+          </label>
+          <textarea
+            id="song-lyrics"
+            value={lyrics}
+            onChange={(event) => setLyrics(event.target.value)}
+            placeholder={"Verse 1\nPaste or type the lyrics here\n\nChorus\n…"}
+            className="min-h-56 min-w-0 flex-1 resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+          />
+          <p className="text-xs text-muted-foreground">
+            {sections.length === 0
+              ? "No slides yet"
+              : `${sections.length} slide${sections.length === 1 ? "" : "s"}: ${sections
+                  .map((section) => section.label)
+                  .join(" · ")}`}
+          </p>
+        </div>
+
+        <section className="flex min-h-0 flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-xs font-medium">Slide preview</h3>
+              <p className="truncate text-[0.6875rem] text-muted-foreground">
+                Song theme: {previewTheme.name}
+              </p>
+            </div>
+            <Select
+              value={
+                sections.length > 0 ? String(previewSectionIndex) : undefined
+              }
+              onValueChange={(value) =>
+                setSelectedPreviewSectionIndex(Number(value))
+              }
+              disabled={sections.length === 0}
+            >
+              <SelectTrigger
+                className="w-36 shrink-0"
+                aria-label="Preview slide"
+              >
+                <SelectValue placeholder="No slides" />
+              </SelectTrigger>
+              <SelectContent>
+                {sections.map((section, index) => (
+                  <SelectItem
+                    key={`${index}-${section.label}`}
+                    value={String(index)}
+                  >
+                    {index + 1}. {section.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {previewVerse ? (
+            <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border bg-black">
+              <CanvasVerse
+                theme={previewTheme}
+                verse={previewVerse}
+                className="h-full"
+                fillContainer
+                fit="contain"
+              />
+            </div>
+          ) : (
+            <div className="flex aspect-video items-center justify-center rounded-md border border-dashed border-border bg-muted/20 px-4 text-center text-sm text-muted-foreground">
+              Enter lyrics to preview a slide.
+            </div>
+          )}
+          {previewSection ? (
+            <p className="text-xs text-muted-foreground">
+              Slide {previewSectionIndex + 1} of {sections.length}:{" "}
+              {previewSection.label}
+            </p>
+          ) : null}
+        </section>
+      </div>
       <DialogFooter className="sm:justify-between">
         <div className="flex gap-2">
           {song?.source === "custom" ? (
@@ -216,7 +306,7 @@ export function SongEditorDialog() {
         if (!next) useSongEditorStore.getState().close()
       }}
     >
-      <DialogContent className="flex max-h-[calc(100dvh-4rem)] flex-col gap-4 sm:max-w-xl">
+      <DialogContent className="flex max-h-[calc(100dvh-4rem)] flex-col gap-4 overflow-y-auto sm:max-w-5xl">
         <SongEditorForm
           key={session}
           songId={songId}

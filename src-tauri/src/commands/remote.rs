@@ -4,7 +4,7 @@ use tauri::{AppHandle, Emitter, State};
 
 use fellowshow_api::{
     new_shared_status, start_http_server, start_osc_listener, CommandError, CommandSink,
-    HttpConfig, HttpHandle, OscConfig, OscHandle, SharedStatus,
+    HttpConfig, HttpHandle, OscConfig, OscHandle, SharedStatus, StatusSnapshot,
 };
 
 /// Tauri-aware implementation of `CommandSink`.
@@ -13,33 +13,42 @@ use fellowshow_api::{
 /// and backend-bound commands as Tauri command invocations.
 struct TauriSink {
     app: AppHandle,
+    source: &'static str,
+}
+
+#[derive(Clone, serde::Serialize)]
+struct ReceivedCommand<'a> {
+    source: &'static str,
+    command: &'a str,
 }
 
 impl CommandSink for TauriSink {
     fn emit_event(&self, event: &str, payload: &str) -> Result<(), CommandError> {
         self.app
             .emit(event, payload.to_string())
-            .map_err(|e| CommandError::DispatchFailed(format!("Tauri emit failed: {e}")))
+            .map_err(|e| CommandError::DispatchFailed(format!("Tauri emit failed: {e}")))?;
+        let receipt = ReceivedCommand {
+            source: self.source,
+            command: event.strip_prefix("remote:").unwrap_or(event),
+        };
+        if let Err(error) = self.app.emit("remote:received", receipt) {
+            // The command already succeeded; a log failure must not invite a duplicate retry.
+            log::warn!("Failed to log received remote command: {error}");
+        }
+        Ok(())
     }
 
     fn invoke_backend(&self, action: &str, args: &str) -> Result<(), CommandError> {
         match action {
             "show_broadcast" => {
                 log::info!("Remote control: show broadcast");
-                self.app
-                    .emit("remote:show", "{}")
-                    .map_err(|e| CommandError::DispatchFailed(e.to_string()))
+                self.emit_event("remote:show", "{}")
             }
             "hide_broadcast" => {
                 log::info!("Remote control: hide broadcast");
-                self.app
-                    .emit("remote:hide", "{}")
-                    .map_err(|e| CommandError::DispatchFailed(e.to_string()))
+                self.emit_event("remote:hide", "{}")
             }
-            "set_confidence" => self
-                .app
-                .emit("remote:confidence", args.to_string())
-                .map_err(|e| CommandError::DispatchFailed(e.to_string())),
+            "set_confidence" => self.emit_event("remote:confidence", args),
             _ => Err(CommandError::DispatchFailed(format!(
                 "Unknown backend action: {action}"
             ))),
@@ -88,7 +97,7 @@ pub async fn start_osc(
         host: "127.0.0.1".into(),
     };
 
-    let sink = Arc::new(TauriSink { app });
+    let sink = Arc::new(TauriSink { app, source: "OSC" });
     let result = start_osc_listener(config, sink).map_err(|e| e.to_string())?;
 
     let bound_port = result.bound_port;
@@ -185,7 +194,10 @@ pub async fn start_http(
         host: "127.0.0.1".into(),
     };
 
-    let sink = Arc::new(TauriSink { app });
+    let sink = Arc::new(TauriSink {
+        app,
+        source: "HTTP",
+    });
     let result = start_http_server(config, sink, status)
         .await
         .map_err(|e| e.to_string())?;
@@ -248,23 +260,66 @@ pub async fn update_remote_status(
     };
 
     let mut snapshot = status.write().await;
+    apply_status_snapshot(
+        &mut snapshot,
+        on_air,
+        active_theme,
+        live_verse,
+        queue_length,
+        confidence_threshold,
+    );
+
+    Ok(())
+}
+
+fn apply_status_snapshot(
+    snapshot: &mut StatusSnapshot,
+    on_air: Option<bool>,
+    active_theme: Option<String>,
+    live_verse: Option<String>,
+    queue_length: Option<usize>,
+    confidence_threshold: Option<f32>,
+) {
     if let Some(v) = on_air {
         snapshot.on_air = v;
     }
-    if let Some(v) = active_theme {
-        snapshot.active_theme = Some(v);
-    }
-    if let Some(v) = live_verse {
-        snapshot.live_verse = Some(v);
-    }
+    // The frontend sends the full snapshot; null clears previously displayed content.
+    snapshot.active_theme = active_theme;
+    snapshot.live_verse = live_verse;
     if let Some(v) = queue_length {
         snapshot.queue_length = v;
     }
     if let Some(v) = confidence_threshold {
         snapshot.confidence_threshold = v;
     }
+}
 
-    Ok(())
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cleared_frontend_content_clears_remote_status() {
+        let mut snapshot = StatusSnapshot {
+            on_air: true,
+            active_theme: Some("Minimal".to_owned()),
+            live_verse: Some("John 3:16".to_owned()),
+            queue_length: 2,
+            confidence_threshold: 0.75,
+        };
+        apply_status_snapshot(&mut snapshot, Some(false), None, None, Some(0), Some(0.5));
+        let payload = serde_json::to_value(snapshot).unwrap();
+        assert_eq!(
+            payload,
+            serde_json::json!({
+                "on_air": false,
+                "active_theme": null,
+                "live_verse": null,
+                "queue_length": 0,
+                "confidence_threshold": 0.5,
+            })
+        );
+    }
 }
 
 #[derive(serde::Serialize)]

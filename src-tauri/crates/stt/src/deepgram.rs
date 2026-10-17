@@ -12,7 +12,7 @@ use url::Url;
 
 use crate::error::SttError;
 use crate::keyterms::bible_keyterms;
-use crate::provider::SttProvider;
+use crate::provider::{wait_for_stop, SttProvider};
 use crate::types::{SttConfig, TranscriptEvent, Word};
 
 const MAX_RECONNECT_ATTEMPTS: u32 = 5;
@@ -109,6 +109,16 @@ impl DeepgramClient {
             return Err(SttError::ApiKeyMissing);
         }
 
+        let url = self.build_url()?;
+        self.connect_url(audio_rx, event_tx, &url).await
+    }
+
+    async fn connect_url(
+        &self,
+        audio_rx: Receiver<Vec<i16>>,
+        event_tx: mpsc::Sender<TranscriptEvent>,
+        url: &Url,
+    ) -> Result<(), SttError> {
         let cancelled = self.cancelled.clone();
         let mut attempts: u32 = 0;
 
@@ -119,7 +129,7 @@ impl DeepgramClient {
             }
 
             match self
-                .try_connect(audio_rx.clone(), event_tx.clone(), cancelled.clone())
+                .try_connect(audio_rx.clone(), event_tx.clone(), url)
                 .await
             {
                 Ok(()) => {
@@ -145,7 +155,10 @@ impl DeepgramClient {
                         return Err(e);
                     }
 
-                    tokio::time::sleep(RECONNECT_DELAY).await;
+                    tokio::select! {
+                        () = tokio::time::sleep(RECONNECT_DELAY) => {},
+                        () = wait_for_stop(&cancelled) => break,
+                    }
                 }
             }
         }
@@ -153,21 +166,21 @@ impl DeepgramClient {
         Ok(())
     }
 
-    /// Attempt a single WebSocket connection and run send/receive loops.
-    #[allow(clippy::too_many_lines)]
+    /// Run one socket session, ending all audio work before reconnecting.
+    #[expect(
+        clippy::too_many_lines,
+        reason = "socket and audio bridge share one lifecycle"
+    )]
     async fn try_connect(
         &self,
         audio_rx: Receiver<Vec<i16>>,
         event_tx: mpsc::Sender<TranscriptEvent>,
-        cancelled: Arc<AtomicBool>,
+        url: &Url,
     ) -> Result<(), SttError> {
-        let url = self.build_url()?;
-
         let mut request = url
             .as_str()
             .into_client_request()
             .map_err(|e| SttError::ConnectionFailed(e.to_string()))?;
-
         let auth_value = format!("Token {}", self.config.api_key);
         request.headers_mut().insert(
             "Authorization",
@@ -175,172 +188,135 @@ impl DeepgramClient {
                 .map_err(|e| SttError::ConnectionFailed(e.to_string()))?,
         );
 
-        let (ws_stream, _response) = tokio_tungstenite::connect_async(request)
-            .await
-            .map_err(|e| SttError::ConnectionFailed(e.to_string()))?;
-
-        log::info!("DeepgramClient: connected to Deepgram");
+        let (ws_stream, _) = tokio::select! {
+            result = tokio::time::timeout(Duration::from_secs(10), tokio_tungstenite::connect_async(request)) => {
+                result.map_err(|_| SttError::ConnectionFailed("WebSocket connection timed out".into()))?
+                    .map_err(|e| SttError::ConnectionFailed(e.to_string()))?
+            },
+            () = wait_for_stop(&self.cancelled) => return Ok(()),
+        };
         let _ = event_tx.send(TranscriptEvent::Connected).await;
-
         let (mut write, mut read) = ws_stream.split();
 
-        let send_cancelled = cancelled.clone();
-        let recv_cancelled = cancelled.clone();
-
-        // Track unexpected disconnects so try_connect returns Err and triggers reconnection.
-        let send_error_flag = Arc::new(AtomicBool::new(false));
-        let recv_error_flag = Arc::new(AtomicBool::new(false));
-        let send_err = send_error_flag.clone();
-        let recv_err = recv_error_flag.clone();
-
-        // Split the sender into two parts to avoid blocking the tokio runtime:
-        // 1. A blocking thread reads audio from crossbeam → sends to a tokio channel
-        // 2. An async task reads from the tokio channel → writes to the WebSocket
-        //
-        // The blocking crossbeam recv_timeout() was starving the receiver/consumer
-        // tasks when run inside tokio::spawn, causing events to stop flowing.
-
-        // Bridge channel: blocking audio reader → async WebSocket writer
         #[allow(clippy::items_after_statements)]
         enum WsCommand {
             Audio(Vec<u8>),
             KeepAlive,
             Close,
         }
-        let (ws_tx, mut ws_rx) = tokio::sync::mpsc::channel::<WsCommand>(64);
-
-        // Part 1: Blocking thread reads audio from crossbeam channel
-        let audio_reader = {
-            let ws_tx = ws_tx.clone();
-            let cancelled = send_cancelled.clone();
-            tokio::task::spawn_blocking(move || {
-                let mut batch_buf: Vec<u8> = Vec::with_capacity(BATCH_SAMPLES * 2);
-                let batch_byte_threshold = BATCH_SAMPLES * 2;
-                let mut last_send = std::time::Instant::now();
-                let keepalive_interval = Duration::from_secs(5);
-
-                loop {
-                    if cancelled.load(Ordering::SeqCst) {
+        let (ws_tx, mut ws_rx) = mpsc::channel::<WsCommand>(64);
+        let connection_done = Arc::new(AtomicBool::new(false));
+        let audio_done = Arc::clone(&connection_done);
+        let cancelled = Arc::clone(&self.cancelled);
+        let audio_reader = tokio::task::spawn_blocking(move || {
+            let mut batch_buf = Vec::with_capacity(BATCH_SAMPLES * 2);
+            let mut last_send = std::time::Instant::now();
+            while !cancelled.load(Ordering::SeqCst) && !audio_done.load(Ordering::SeqCst) {
+                match audio_rx.recv_timeout(Duration::from_millis(50)) {
+                    Ok(samples) => {
+                        for sample in samples {
+                            batch_buf.extend_from_slice(&sample.to_le_bytes());
+                        }
+                        if batch_buf.len() >= BATCH_SAMPLES * 2 {
+                            if ws_tx
+                                .blocking_send(WsCommand::Audio(std::mem::take(&mut batch_buf)))
+                                .is_err()
+                            {
+                                break;
+                            }
+                            last_send = std::time::Instant::now();
+                        }
+                    }
+                    Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
+                        if !batch_buf.is_empty()
+                            && last_send.elapsed() >= Duration::from_millis(250)
+                        {
+                            if ws_tx
+                                .blocking_send(WsCommand::Audio(std::mem::take(&mut batch_buf)))
+                                .is_err()
+                            {
+                                break;
+                            }
+                            last_send = std::time::Instant::now();
+                        }
+                        if last_send.elapsed() >= Duration::from_secs(5) {
+                            if ws_tx.blocking_send(WsCommand::KeepAlive).is_err() {
+                                break;
+                            }
+                            last_send = std::time::Instant::now();
+                        }
+                    }
+                    Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
+                        if !batch_buf.is_empty()
+                            && ws_tx.blocking_send(WsCommand::Audio(batch_buf)).is_err()
+                        {
+                            break;
+                        }
                         let _ = ws_tx.blocking_send(WsCommand::Close);
                         break;
                     }
-
-                    match audio_rx.recv_timeout(Duration::from_millis(50)) {
-                        Ok(samples) => {
-                            for sample in &samples {
-                                batch_buf.extend_from_slice(&sample.to_le_bytes());
-                            }
-                            if batch_buf.len() >= batch_byte_threshold {
-                                let data = std::mem::take(&mut batch_buf);
-                                if ws_tx.blocking_send(WsCommand::Audio(data)).is_err() {
-                                    break;
-                                }
-                                last_send = std::time::Instant::now();
-                            }
-                        }
-                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
-                            // Flush remaining audio
-                            if !batch_buf.is_empty() {
-                                let data = std::mem::take(&mut batch_buf);
-                                if ws_tx.blocking_send(WsCommand::Audio(data)).is_err() {
-                                    break;
-                                }
-                                last_send = std::time::Instant::now();
-                            }
-                            // KeepAlive if idle >5s
-                            if last_send.elapsed() >= keepalive_interval {
-                                if ws_tx.blocking_send(WsCommand::KeepAlive).is_err() {
-                                    break;
-                                }
-                                last_send = std::time::Instant::now();
-                            }
-                        }
-                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
-                            // Audio source closed
-                            if !batch_buf.is_empty() {
-                                let data = std::mem::take(&mut batch_buf);
-                                let _ = ws_tx.blocking_send(WsCommand::Audio(data));
-                            }
-                            let _ = ws_tx.blocking_send(WsCommand::Close);
-                            break;
-                        }
-                    }
-                }
-            })
-        };
-
-        // Part 2: Async task writes to WebSocket (non-blocking, doesn't starve tokio)
-        let ws_writer = tokio::spawn(async move {
-            while let Some(cmd) = ws_rx.recv().await {
-                match cmd {
-                    WsCommand::Audio(data) => {
-                        if let Err(e) = write.send(Message::Binary(data.into())).await {
-                            log::error!("DeepgramClient ws_writer: send error: {e}");
-                            send_err.store(true, Ordering::SeqCst);
-                            break;
-                        }
-                    }
-                    WsCommand::KeepAlive => {
-                        let ka = serde_json::json!({"type": "KeepAlive"}).to_string();
-                        if let Err(e) = write.send(Message::Text(ka.into())).await {
-                            log::error!("DeepgramClient ws_writer: keepalive error: {e}");
-                            send_err.store(true, Ordering::SeqCst);
-                            break;
-                        }
-                    }
-                    WsCommand::Close => {
-                        let close_msg = serde_json::json!({"type": "CloseStream"}).to_string();
-                        let _ = write.send(Message::Text(close_msg.into())).await;
-                        let _ = write.close().await;
-                        break;
-                    }
                 }
             }
         });
 
-        // Receiver task: reads text frames and parses Deepgram JSON.
-        let receiver = tokio::spawn(async move {
-            while let Some(msg_result) = read.next().await {
-                if recv_cancelled.load(Ordering::SeqCst) {
-                    break;
-                }
-
-                match msg_result {
-                    Ok(Message::Text(text)) => {
-                        if let Err(e) = parse_and_send(&text, &event_tx).await {
-                            log::warn!("DeepgramClient receiver: parse error: {e}");
+        let result = async {
+            let mut close_deadline = None;
+            loop {
+                tokio::select! {
+                    () = wait_for_stop(&self.cancelled) => return Ok(()),
+                    () = async {
+                        if let Some(deadline) = close_deadline {
+                            tokio::time::sleep_until(deadline).await;
+                        } else {
+                            std::future::pending::<()>().await;
+                        }
+                    } => return Ok(()),
+                    message = read.next() => {
+                        match message {
+                            Some(Ok(Message::Text(text))) => {
+                                if let Err(error) = parse_and_send(&text, &event_tx).await {
+                                    if matches!(error, SttError::ConnectionFailed(_)) {
+                                        return Err(error);
+                                    }
+                                    log::warn!("Deepgram response error: {error}");
+                                }
+                            }
+                            Some(Ok(Message::Close(_))) | None => {
+                                return if close_deadline.is_some() { Ok(()) } else {
+                                    Err(SttError::ConnectionFailed("Server closed the audio stream unexpectedly".into()))
+                                };
+                            }
+                            Some(Err(error)) => return Err(SttError::WebSocketError(error.to_string())),
+                            Some(Ok(_)) => {},
                         }
                     }
-                    Ok(Message::Close(_)) => {
-                        log::info!("DeepgramClient receiver: server closed connection");
-                        break;
-                    }
-                    Ok(_) => {
-                        // Ignore binary/ping/pong frames
-                    }
-                    Err(e) => {
-                        log::error!("DeepgramClient receiver: WebSocket error: {e}");
-                        recv_err.store(true, Ordering::SeqCst);
-                        let _ = event_tx
-                            .send(TranscriptEvent::Error(format!("WebSocket error: {e}")))
-                            .await;
-                        break;
+                    command = ws_rx.recv(), if close_deadline.is_none() => {
+                        let message = match command {
+                            Some(WsCommand::Audio(data)) => Message::Binary(data.into()),
+                            Some(WsCommand::KeepAlive) => Message::Text(r#"{"type":"KeepAlive"}"#.into()),
+                            Some(WsCommand::Close) => {
+                                close_deadline = Some(tokio::time::Instant::now() + Duration::from_secs(2));
+                                Message::Text(r#"{"type":"CloseStream"}"#.into())
+                            }
+                            None => return Ok(()),
+                        };
+                        tokio::select! {
+                            result = tokio::time::timeout(Duration::from_secs(5), write.send(message)) => {
+                                result.map_err(|_| SttError::SendError("WebSocket send timed out".into()))?
+                                    .map_err(|error| SttError::SendError(error.to_string()))?;
+                            }
+                            () = wait_for_stop(&self.cancelled) => return Ok(()),
+                        }
                     }
                 }
             }
-        });
-
-        // Wait for all tasks
-        let _ = tokio::join!(audio_reader, ws_writer, receiver);
-
-        // If either side had an unexpected error, return Err so the connection loop retries.
-        if send_error_flag.load(Ordering::SeqCst) || recv_error_flag.load(Ordering::SeqCst) {
-            return Err(SttError::ConnectionFailed(
-                "Connection lost unexpectedly".into(),
-            ));
-        }
-
-        Ok(())
+        }.await;
+        connection_done.store(true, Ordering::SeqCst);
+        drop(ws_rx);
+        audio_reader
+            .await
+            .map_err(|error| SttError::ConnectionFailed(format!("Audio reader failed: {error}")))?;
+        result
     }
 
     /// Cancel the current connection and signal shutdown.
@@ -348,6 +324,14 @@ impl DeepgramClient {
         self.cancelled.store(true, Ordering::SeqCst);
     }
 }
+
+#[cfg(test)]
+#[path = "deepgram_fuzz.rs"]
+mod input_fuzz;
+
+#[cfg(test)]
+#[path = "deepgram_e2e.rs"]
+mod end_to_end;
 
 /// Parse a Deepgram JSON response and send the corresponding `TranscriptEvent`.
 async fn parse_and_send(
@@ -364,6 +348,18 @@ async fn parse_and_send(
         .unwrap_or_default();
 
     match msg_type {
+        "Error" => {
+            let message = json
+                .get("description")
+                .or_else(|| json.get("message"))
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("Deepgram rejected the audio stream");
+            let error = SttError::ConnectionFailed(message.to_string());
+            let _ = event_tx
+                .send(TranscriptEvent::Error(error.to_string()))
+                .await;
+            return Err(error);
+        }
         "UtteranceEnd" => {
             let _ = event_tx.send(TranscriptEvent::UtteranceEnd).await;
             return Ok(());
@@ -456,70 +452,67 @@ impl SttProvider for DeepgramClient {
         audio_rx: Receiver<Vec<i16>>,
         event_tx: mpsc::Sender<TranscriptEvent>,
     ) -> Result<(), SttError> {
-        let result = self.connect(audio_rx.clone(), event_tx.clone()).await;
-
-        // On max reconnect failure, fall back to REST mode (hybrid).
-        if let Err(ref e) = result {
-            log::warn!(
-                "[STT-Deepgram] WebSocket failed after retries: {e}, switching to REST fallback"
-            );
-            let _ = event_tx
-                .send(TranscriptEvent::Error(
-                    "Connection unstable, switching to Hybrid mode".into(),
-                ))
-                .await;
-
-            let rest_client = crate::rest::DeepgramRestClient::new(self.config.clone());
-            let mut audio_buffer: Vec<i16> = Vec::new();
-            let flush_interval = std::time::Duration::from_secs(5);
-            let mut last_flush = std::time::Instant::now();
-            let cancelled = self.cancelled.clone();
-
-            loop {
-                if cancelled.load(Ordering::SeqCst) {
-                    break;
-                }
-
-                match audio_rx.recv_timeout(Duration::from_millis(100)) {
-                    Ok(samples) => {
-                        audio_buffer.extend(samples);
-
-                        if last_flush.elapsed() >= flush_interval && !audio_buffer.is_empty() {
-                            match rest_client.transcribe(&audio_buffer).await {
-                                Ok(events) => {
-                                    for evt in events {
-                                        let _ = event_tx.send(evt).await;
-                                    }
-                                }
-                                Err(e) => {
-                                    log::error!("[STT-REST] Transcription failed: {e}");
-                                }
-                            }
-                            audio_buffer.clear();
-                            last_flush = std::time::Instant::now();
-                        }
-                    }
-                    Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
-                        if last_flush.elapsed() >= flush_interval && !audio_buffer.is_empty() {
-                            match rest_client.transcribe(&audio_buffer).await {
-                                Ok(events) => {
-                                    for evt in events {
-                                        let _ = event_tx.send(evt).await;
-                                    }
-                                }
-                                Err(e) => {
-                                    log::error!("[STT-REST] Transcription failed: {e}");
-                                }
-                            }
-                            audio_buffer.clear();
-                            last_flush = std::time::Instant::now();
-                        }
-                    }
-                    Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
-                }
-            }
+        if self.config.api_key.trim().is_empty() {
+            return Err(SttError::ApiKeyMissing);
         }
-
+        if let Err(error) = self.connect(audio_rx.clone(), event_tx.clone()).await {
+            if self.cancelled.load(Ordering::SeqCst) {
+                return Ok(());
+            }
+            log::warn!("[STT-Deepgram] WebSocket failed: {error}, switching to REST fallback");
+            let rest_client = crate::rest::DeepgramRestClient::new(self.config.clone());
+            let mut buffer = Vec::new();
+            let mut last_flush = std::time::Instant::now();
+            let result = async {
+                loop {
+                    if self.cancelled.load(Ordering::SeqCst) || event_tx.is_closed() {
+                        break;
+                    }
+                    let disconnected = match audio_rx.try_recv() {
+                        Ok(samples) => {
+                            buffer.extend(samples);
+                            false
+                        }
+                        Err(crossbeam_channel::TryRecvError::Empty) => {
+                            tokio::time::sleep(Duration::from_millis(20)).await;
+                            false
+                        }
+                        Err(crossbeam_channel::TryRecvError::Disconnected) => true,
+                    };
+                    if !buffer.is_empty()
+                        && (disconnected || last_flush.elapsed() >= Duration::from_secs(5))
+                    {
+                        let events = tokio::select! {
+                            result = rest_client.transcribe(&buffer) => result,
+                            () = wait_for_stop(&self.cancelled) => break,
+                        };
+                        match events {
+                            Ok(events) => {
+                                let _ = event_tx.send(TranscriptEvent::Connected).await;
+                                for event in events {
+                                    let _ = event_tx.send(event).await;
+                                }
+                            }
+                            Err(error) => {
+                                let _ = event_tx
+                                    .send(TranscriptEvent::Error(error.to_string()))
+                                    .await;
+                                return Err(error);
+                            }
+                        }
+                        buffer.clear();
+                        last_flush = std::time::Instant::now();
+                    }
+                    if disconnected {
+                        break;
+                    }
+                }
+                Ok(())
+            }
+            .await;
+            let _ = event_tx.send(TranscriptEvent::Disconnected).await;
+            return result;
+        }
         Ok(())
     }
 

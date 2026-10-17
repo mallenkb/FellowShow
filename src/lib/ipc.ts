@@ -113,7 +113,13 @@ export interface Commands {
   >
   import_easyworship_songs: WithArgs<
     { songsDbPath: string; songWordsDbPath: string },
-    EasyWorshipImportedSong[]
+    {
+      songs: EasyWorshipImportedSong[]
+      totalSongs: number
+      skippedSongs: Array<{ id: string; title: string; reason: string }>
+      orphanLyricIds: number[]
+      unassignedLyricRows: number
+    }
   >
   get_audio_devices: NoArgs<DeviceInfo[]>
   test_deepgram_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
@@ -138,12 +144,17 @@ export interface Commands {
     void
   >
   close_broadcast_window: WithArgs<{ outputId: string }, void>
+  /** Starts the sender and its native frame clock. App/state arguments are injected. */
   start_ndi: WithArgs<
     { outputId: string; request: NdiStartRequest },
     NdiSessionInfo
   >
   stop_ndi: WithArgs<{ outputId: string }, void>
   get_ndi_status: WithArgs<{ outputId: string }, NdiStatus | null>
+  report_broadcast_diagnostic: WithArgs<
+    { outputId: string; stage: string; category: string; sequence: number },
+    void
+  >
   push_ndi_frame: WithArgs<{ request: NdiFrameRequest }, void>
   start_osc: WithArgs<{ port?: number }, number>
   stop_osc: NoArgs<void>

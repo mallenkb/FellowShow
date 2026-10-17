@@ -8,6 +8,7 @@ import {
 import { createDesignerActions } from "./broadcast-designer-actions"
 import { createOutputActions } from "./broadcast-output-actions"
 import { createOverlayActions } from "./broadcast-overlay-actions"
+import { createOverlayStagingActions } from "./broadcast-overlay-staging-actions"
 import {
   DEFAULT_BROADCAST_THEME_ID,
   DEFAULT_SECTION_THEME_IDS,
@@ -34,6 +35,7 @@ const initialState: BroadcastDataState = {
   lowerThird: null,
   overlayConfig: createDefaultOverlayConfiguration(),
   activeOverlays: createInactiveOverlayState(),
+  stagedOverlays: createInactiveOverlayState(),
   outputOpacity: 1,
   selectedOverlayOutputId: null,
   liveOverlayOutputIds: [],
@@ -52,6 +54,7 @@ export const useBroadcastStore = create<BroadcastState>((set, get) => ({
   ...createThemeActions(set, get),
   ...createOutputActions(set, get),
   ...createOverlayActions(set, get),
+  ...createOverlayStagingActions(set, get),
   ...createDesignerActions(set, get),
 }))
 

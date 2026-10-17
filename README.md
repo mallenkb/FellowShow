@@ -281,6 +281,29 @@ AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 ```
 
+### Import and audit EasyWorship songs
+
+In the desktop app, open Songs, click **Import EasyWorship songs**, and choose
+your EasyWorship folder. FellowShow searches up to five folders deep for
+`Songs.db` and `SongWords.db`. It reads both files without changing them and
+imports lyric text without font tables or EasyWorship layout values. Re-import
+an existing library to replace lyrics imported by an older converter. Saved
+song edits remain in place.
+
+To audit the original databases and write cleanup suggestions, run:
+
+```bash
+bun run audit:songs "/path/to/EasyWorship"
+```
+
+The audit uses FellowShow's lyric reader and writes `audit.json` and
+`review.csv` to a new folder under `output/song-audit`. Use
+`--out "/path/to/new-report-folder"` to choose the destination. It reports
+missing lyrics, orphan records, matching lyrics, title variants, unusually
+long entries, possible indexes, credits and possible legacy font encoding.
+Review suggestions before changing songs. The command applies no cleanup
+and never overwrites an existing report. Rust and Cargo are required.
+
 ## Project Structure
 
 ```

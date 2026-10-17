@@ -30,7 +30,9 @@ const MAX_ACCOUNTS = 6
 const MAX_FIELD_LENGTH = 120
 
 function isGivingNetwork(value: unknown): value is GivingNetwork {
-  return typeof value === "string" && value in GIVING_NETWORK_LABELS
+  return (
+    typeof value === "string" && Object.hasOwn(GIVING_NETWORK_LABELS, value)
+  )
 }
 
 export function createGivingAccount(

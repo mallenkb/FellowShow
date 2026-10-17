@@ -10,6 +10,11 @@ import {
   type BroadcastOutputConfig,
 } from "@/lib/broadcast-outputs"
 import { useBroadcastStore } from "@/stores/broadcast-store"
+import {
+  defaultNdiOutputConfig,
+  sameNdiOutputConfig,
+  sanitizeNdiOutputConfig,
+} from "@/lib/ndi-output-config"
 import type {
   NdiAlphaMode,
   NdiFrameRate,
@@ -29,14 +34,60 @@ export interface OutputRuntime {
 }
 
 function createOutputRuntime(output: BroadcastOutputConfig): OutputRuntime {
+  const config = output.ndi ?? defaultNdiOutputConfig(output.name)
   return {
     isDisplayOpen: false,
     ndiActive: false,
-    ndiSourceName: `FellowShow ${output.name}`,
-    ndiResolution: "r1080p",
-    ndiFrameRate: "fps24",
-    ndiAlphaMode: "straightAlpha",
+    ...ndiRuntimeSettings(config),
   }
+}
+
+function ndiRuntimeSettings(config: NdiStartRequest) {
+  return {
+    ndiSourceName: config.sourceName,
+    ndiResolution: config.resolution,
+    ndiFrameRate: config.frameRate,
+    ndiAlphaMode: config.alphaMode,
+  }
+}
+
+function restoreRuntimeConfig(
+  output: BroadcastOutputConfig,
+  existing: OutputRuntime | undefined
+): OutputRuntime {
+  if (!existing) return createOutputRuntime(output)
+  if (!output.ndi) return existing
+  const settings = ndiRuntimeSettings(output.ndi)
+  return Object.entries(settings).every(
+    ([key, value]) => existing[key as keyof OutputRuntime] === value
+  )
+    ? existing
+    : { ...existing, ...settings }
+}
+
+function persistRuntimeConfig(id: string, updates: Partial<OutputRuntime>) {
+  if (
+    updates.ndiSourceName === undefined &&
+    updates.ndiResolution === undefined &&
+    updates.ndiFrameRate === undefined &&
+    updates.ndiAlphaMode === undefined
+  )
+    return
+  const store = useBroadcastStore.getState()
+  const output = store.outputs.find((candidate) => candidate.id === id)
+  if (!output) return
+  const previous = output.ndi ?? defaultNdiOutputConfig(output.name)
+  const next = sanitizeNdiOutputConfig(
+    {
+      sourceName: updates.ndiSourceName ?? previous.sourceName,
+      resolution: updates.ndiResolution ?? previous.resolution,
+      frameRate: updates.ndiFrameRate ?? previous.frameRate,
+      alphaMode: updates.ndiAlphaMode ?? previous.alphaMode,
+    },
+    previous
+  )
+  if (next && !sameNdiOutputConfig(previous, next))
+    store.updateOutput(id, { ndi: next })
 }
 
 export function isOutputOn(runtime: OutputRuntime | undefined): boolean {
@@ -119,23 +170,44 @@ interface OutputRuntimeState {
   reconcileAll: (outputs: BroadcastOutputConfig[]) => Promise<void>
 }
 
+function reconcileLiveOverlayOutputs() {
+  const store = useBroadcastStore.getState()
+  const runtimeById = useOutputRuntimeStore.getState().byId
+  const liveIds = store.liveOverlayOutputIds.filter((id) =>
+    store.outputs.some(
+      (output) =>
+        output.id === id &&
+        output.content === "overlays" &&
+        isOutputOn(runtimeById[id])
+    )
+  )
+  if (liveIds.length === store.liveOverlayOutputIds.length) return
+  useBroadcastStore.setState({ liveOverlayOutputIds: liveIds })
+  for (const id of store.liveOverlayOutputIds) {
+    if (!liveIds.includes(id)) store.syncBroadcastOutputFor(id)
+  }
+}
+
 export const useOutputRuntimeStore = create<OutputRuntimeState>((set, get) => ({
   byId: {},
   ensureRuntime: (output) => {
     set((state) => {
-      if (state.byId[output.id]) return state
+      const runtime = restoreRuntimeConfig(output, state.byId[output.id])
+      if (runtime === state.byId[output.id]) return state
       return {
-        byId: { ...state.byId, [output.id]: createOutputRuntime(output) },
+        byId: { ...state.byId, [output.id]: runtime },
       }
     })
+    reconcileLiveOverlayOutputs()
   },
   ensureAll: (outputs) => {
     set((state) => {
       let changed = false
       const next = { ...state.byId }
       for (const output of outputs) {
-        if (!next[output.id]) {
-          next[output.id] = createOutputRuntime(output)
+        const runtime = restoreRuntimeConfig(output, next[output.id])
+        if (next[output.id] !== runtime) {
+          next[output.id] = runtime
           changed = true
         }
       }
@@ -148,13 +220,20 @@ export const useOutputRuntimeStore = create<OutputRuntimeState>((set, get) => ({
       }
       return changed ? { byId: next } : state
     })
+    reconcileLiveOverlayOutputs()
   },
   updateRuntime: (id, updates) => {
+    if (!get().byId[id]) {
+      reconcileLiveOverlayOutputs()
+      return
+    }
     set((state) => {
       const existing = state.byId[id]
       if (!existing) return state
       return { byId: { ...state.byId, [id]: { ...existing, ...updates } } }
     })
+    reconcileLiveOverlayOutputs()
+    persistRuntimeConfig(id, updates)
   },
   removeRuntime: (id) => {
     set((state) => {
@@ -163,13 +242,17 @@ export const useOutputRuntimeStore = create<OutputRuntimeState>((set, get) => ({
       delete next[id]
       return { byId: next }
     })
+    reconcileLiveOverlayOutputs()
   },
   reconcileOutput: async (output) => {
     get().ensureRuntime(output)
+    const requestedRuntime = get().byId[output.id]
     const [visible, ndiStatus] = await Promise.all([
       isProjectorWindowVisible(output.id),
       invoke("get_ndi_status", { outputId: output.id }).catch(() => null),
     ])
+    // A poll begun before Start/Stop or removal must not overwrite that action.
+    if (get().byId[output.id] !== requestedRuntime) return
     get().updateRuntime(output.id, {
       isDisplayOpen: visible,
       ndiActive: Boolean(ndiStatus?.active),
@@ -249,12 +332,31 @@ async function startNdiOutput(output: BroadcastOutputConfig): Promise<void> {
     }, 300)
     toast.success(`NDI source "${runtime.ndiSourceName}" is broadcasting`)
   } catch (error) {
+    store.updateRuntime(output.id, { ndiActive: false })
     console.error(`Failed to start NDI for ${output.name}`, error)
     toast.error(`Couldn't start NDI for ${output.name}`, {
       description: typeof error === "string" ? error : undefined,
+      // Operators without a working NDI receiver can send this output to a
+      // screen instead, without hunting for the setting in Manage.
+      action: {
+        label: "Use a display instead",
+        onClick: () => switchOutputToDisplay(output.id),
+      },
     })
     throw error
   }
+}
+
+/** Turns an NDI output into a normal screen output. */
+function switchOutputToDisplay(outputId: string): void {
+  const store = useBroadcastStore.getState()
+  const output = store.outputs.find((candidate) => candidate.id === outputId)
+  if (!output) return
+  useOutputRuntimeStore.getState().updateRuntime(outputId, { ndiActive: false })
+  store.updateOutput(outputId, { outputType: "display" })
+  toast.success(`${output.name} is now a display`, {
+    description: "Choose its screen in Displays, then Manage, and turn it on.",
+  })
 }
 
 export async function stopOutput(output: BroadcastOutputConfig): Promise<void> {
@@ -282,6 +384,7 @@ export async function setOutputEnabled(
   enabled: boolean,
   options?: { monitorCount?: number }
 ): Promise<boolean> {
+  reconcileLiveOverlayOutputs()
   if (!enabled) {
     await stopOutput(output)
     return true

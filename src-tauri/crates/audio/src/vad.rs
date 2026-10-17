@@ -119,10 +119,12 @@ impl Vad {
                 }
 
                 // Buffer frame for pre-speech capture
-                if self.pre_buffer.len() >= self.config.pre_buffer_frames {
-                    self.pre_buffer.remove(0);
+                if self.config.pre_buffer_frames > 0 {
+                    if self.pre_buffer.len() >= self.config.pre_buffer_frames {
+                        self.pre_buffer.remove(0);
+                    }
+                    self.pre_buffer.push(frame.clone());
                 }
-                self.pre_buffer.push(frame.clone());
 
                 VadResult {
                     frames: vec![],

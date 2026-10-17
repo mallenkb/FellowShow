@@ -49,6 +49,7 @@ describe("master overlays", () => {
       logos: [],
       lowerThird: null,
       ticker: null,
+      bar: null,
     })
   })
 
@@ -63,7 +64,7 @@ describe("master overlays", () => {
     expect(getLowerThirdOpacity(lowerThird, 15_000)).toBe(0)
   })
 
-  it("removes missing targets and falls back to Program", () => {
+  it("removes missing targets and falls back to every output", () => {
     const config = createDefaultOverlayConfiguration()
     config.logo.logos[0] = {
       id: "logo-1",
@@ -80,6 +81,6 @@ describe("master overlays", () => {
     expect(
       sanitizeOverlayConfiguration(config, ["main", "alt"]).logo.logos[0]
         .targetOutputIds
-    ).toEqual(["main"])
+    ).toEqual(["main", "alt"])
   })
 })

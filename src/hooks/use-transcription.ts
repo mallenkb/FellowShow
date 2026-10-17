@@ -8,6 +8,7 @@ import {
   useSettingsStore,
 } from "@/stores/settings-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
+import { useAudioStore } from "@/stores/audio-store"
 import { useTauriEvent } from "./use-tauri-event"
 
 interface TranscriptPartialPayload {
@@ -30,6 +31,14 @@ const MISSING_API_KEY_MARKER = "No "
 const NOT_RUNNING_ERROR = "Transcription is not running"
 let startPromise: Promise<void> | null = null
 let stopPromise: Promise<void> | null = null
+
+function markTranscriptionStopped(): void {
+  const transcript = useTranscriptStore.getState()
+  transcript.setTranscribing(false)
+  transcript.setPartial("")
+  transcript.setConnectionStatus("disconnected")
+  useAudioStore.getState().setLevel({ rms: 0, peak: 0 })
+}
 
 export const transcriptionActions = {
   async start(onMissingApiKey?: () => void): Promise<void> {
@@ -107,6 +116,7 @@ export const transcriptionActions = {
         !transcript.isTranscribing &&
         transcript.connectionStatus === "disconnected"
       ) {
+        useAudioStore.getState().setLevel({ rms: 0, peak: 0 })
         return
       }
       try {
@@ -120,9 +130,7 @@ export const transcriptionActions = {
           throw e
         }
       }
-      transcript.setTranscribing(false)
-      transcript.setPartial("")
-      transcript.setConnectionStatus("disconnected")
+      markTranscriptionStopped()
     })().finally(() => {
       stopPromise = null
     })
@@ -143,12 +151,7 @@ export function useTranscription(options?: UseTranscriptionOptions) {
   useTauriEvent("stt_disconnected", () => {
     useTranscriptStore.getState().setConnectionStatus("disconnected")
   })
-  useTauriEvent("stt_stopped", () => {
-    const store = useTranscriptStore.getState()
-    store.setTranscribing(false)
-    store.setPartial("")
-    store.setConnectionStatus("disconnected")
-  })
+  useTauriEvent("stt_stopped", markTranscriptionStopped)
   useTauriEvent<string>("stt_error", (msg) => {
     const store = useTranscriptStore.getState()
     store.setConnectionStatus("error")

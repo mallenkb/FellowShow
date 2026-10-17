@@ -144,6 +144,15 @@ export async function saveEasyWorshipSongs(songs: CopSong[]): Promise<void> {
   basePromise = null
 }
 
+/** Deletes the imported EasyWorship library and the edits made to its songs. */
+export async function removeEasyWorshipSongs(): Promise<void> {
+  const ids = new Set((await loadEasyWorshipSongs()).map((song) => song.id))
+  const edits = await loadSongEdits()
+  for (const id of ids) delete edits[id]
+  await writeLibraryValue(SONG_EDITS_KEY, edits)
+  await saveEasyWorshipSongs([])
+}
+
 function sanitizeSongEdits(value: unknown): Record<string, SongEdit> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {}
   const edits: Record<string, SongEdit> = {}

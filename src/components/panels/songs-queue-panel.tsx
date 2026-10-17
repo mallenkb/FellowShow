@@ -187,7 +187,7 @@ function PreparedSongPanel({ lyricItem }: { lyricItem: QueueItem }) {
                   <p className="mb-1 text-xs font-semibold text-muted-foreground">
                     {block.label}
                   </p>
-                  <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">
+                  <p className="overflow-x-auto text-sm leading-relaxed whitespace-pre text-foreground">
                     {block.text}
                   </p>
                 </div>

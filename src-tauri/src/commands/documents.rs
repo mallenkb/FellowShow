@@ -1,5 +1,6 @@
 use std::{
-    env, fs, io,
+    env, fs,
+    io::{self, Read},
     path::{Path, PathBuf},
     process::Command,
     time::{SystemTime, UNIX_EPOCH},
@@ -20,6 +21,8 @@ enum DocumentImportError {
     Missing(String),
     #[error("Unsupported document format. Choose PDF, PowerPoint, Word, OpenDocument, RTF, or an Excel spreadsheet.")]
     Unsupported,
+    #[error("The selected document is damaged or its contents do not match its file extension.")]
+    InvalidFormat,
     #[error("Could not create the document conversion workspace: {0}")]
     Workspace(#[source] io::Error),
     #[error("FellowShow's bundled document converter is missing. Reinstall FellowShow, then try again. PDFs can still be imported directly.")]
@@ -112,6 +115,7 @@ fn prepare_document(
     if !CONVERTIBLE_EXTENSIONS.contains(&extension.as_str()) {
         return Err(DocumentImportError::Unsupported);
     }
+    validate_office_format(path, &extension)?;
 
     #[cfg(target_os = "windows")]
     if microsoft_office_application(&extension).is_some() {
@@ -125,6 +129,37 @@ fn prepare_document(
     }
 
     convert_with_libreoffice(path, resource_dir)
+}
+
+fn validate_office_format(path: &Path, extension: &str) -> Result<(), DocumentImportError> {
+    if !matches!(
+        extension,
+        "docx"
+            | "docm"
+            | "dotx"
+            | "pptx"
+            | "ppsx"
+            | "potx"
+            | "xlsx"
+            | "xlsm"
+            | "odt"
+            | "odp"
+            | "ods"
+    ) {
+        return Ok(());
+    }
+    // LibreOffice can silently open a damaged Office file as plain text.
+    // These formats must be ZIP packages before format detection is allowed.
+    let mut header = [0; 4];
+    let mut file = fs::File::open(path).map_err(DocumentImportError::Read)?;
+    match file.read_exact(&mut header) {
+        Ok(()) if header == *b"PK\x03\x04" => Ok(()),
+        Ok(()) => Err(DocumentImportError::InvalidFormat),
+        Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => {
+            Err(DocumentImportError::InvalidFormat)
+        }
+        Err(error) => Err(DocumentImportError::Read(error)),
+    }
 }
 
 fn convert_with_libreoffice(
@@ -362,7 +397,10 @@ try {
 
 #[cfg(test)]
 mod tests {
-    use super::{libreoffice_candidates, microsoft_office_application, prepare_document};
+    use super::{
+        libreoffice_candidates, microsoft_office_application, prepare_document,
+        validate_office_format,
+    };
     use std::fs;
     use std::path::{Path, PathBuf};
 
@@ -414,6 +452,61 @@ mod tests {
         let _ = fs::remove_file(&path);
 
         assert_eq!(result, bytes);
+    }
+
+    #[test]
+    fn modern_office_formats_reject_plain_text_before_conversion() {
+        let directory = tempfile::tempdir().expect("create fixture directory");
+        let path = directory.path().join("broken.docx");
+        fs::write(&path, b"This is not an Office document").expect("write fixture");
+        for extension in [
+            "docx", "docm", "dotx", "pptx", "ppsx", "potx", "xlsx", "xlsm", "odt", "odp", "ods",
+        ] {
+            let result = validate_office_format(&path, extension);
+            assert!(result.is_err(), "accepted plain text for {extension}");
+        }
+    }
+
+    #[test]
+    fn truncated_office_headers_return_a_format_error() {
+        let directory = tempfile::tempdir().expect("create fixture directory");
+        let path = directory.path().join("broken.pptx");
+        fs::write(&path, b"PK").expect("write fixture");
+        let error = validate_office_format(&path, "pptx").expect_err("reject truncated header");
+        assert!(error.to_string().contains("contents do not match"));
+    }
+
+    #[test]
+    #[ignore = "requires LibreOffice and FELLOWSHOW_DOCUMENT_TEST_DIR fixtures"]
+    fn libreoffice_fixtures_convert_to_pdf() {
+        let fixture_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_TEST_DIR")
+            .map(PathBuf::from)
+            .expect("set FELLOWSHOW_DOCUMENT_TEST_DIR");
+        let resource_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_RESOURCE_DIR").map(PathBuf::from);
+        let converted_dir = fixture_dir.join("converted");
+        fs::create_dir_all(&converted_dir).expect("create converted fixture directory");
+        for name in ["e2e-two-pages.docx", "e2e-two-slides.pptx"] {
+            let pdf = prepare_document(&fixture_dir.join(name), resource_dir.as_deref())
+                .unwrap_or_else(|error| panic!("convert {name}: {error}"));
+            assert!(pdf.starts_with(b"%PDF-"), "{name} did not produce a PDF");
+            fs::write(converted_dir.join(format!("{name}.pdf")), pdf)
+                .expect("save converted fixture for visual inspection");
+        }
+    }
+
+    #[test]
+    #[ignore = "requires LibreOffice and FELLOWSHOW_DOCUMENT_TEST_DIR fixtures"]
+    fn corrupted_office_fixtures_return_errors() {
+        let fixture_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_TEST_DIR")
+            .map(PathBuf::from)
+            .expect("set FELLOWSHOW_DOCUMENT_TEST_DIR");
+        let resource_dir = std::env::var_os("FELLOWSHOW_DOCUMENT_RESOURCE_DIR").map(PathBuf::from);
+        for name in ["e2e-corrupted.docx", "e2e-corrupted.pptx"] {
+            assert!(
+                prepare_document(&fixture_dir.join(name), resource_dir.as_deref()).is_err(),
+                "{name} was accepted"
+            );
+        }
     }
 
     #[cfg(target_os = "windows")]

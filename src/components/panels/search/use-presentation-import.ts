@@ -117,7 +117,7 @@ export function usePresentationImport(
               file.type.startsWith("video/") || VIDEO_EXTENSIONS.has(extension)
                 ? "video"
                 : "image"
-            const url = await cachePresentationMedia(file, file.name)
+            const url = await cachePresentationMedia(file, file.name, mediaType)
             return createSlide(file.name, url, mediaType)
           })
         )
@@ -178,11 +178,14 @@ export function usePresentationImport(
           documentPaths.push(path)
         } else if (MEDIA_EXTENSION_SET.has(extension)) {
           try {
+            const mediaType = VIDEO_EXTENSIONS.has(extension)
+              ? "video"
+              : "image"
             mediaSlides.push(
               createSlide(
                 fileName,
-                await cachePresentationMediaPath(path),
-                VIDEO_EXTENSIONS.has(extension) ? "video" : "image"
+                await cachePresentationMediaPath(path, mediaType),
+                mediaType
               )
             )
           } catch (error) {

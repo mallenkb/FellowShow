@@ -2,6 +2,10 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import * as fabric from "fabric"
 import { useBroadcastStore } from "@/stores"
 import { renderVerse } from "@/lib/verse-renderer"
+import {
+  createCanvasPaintScheduler,
+  type CanvasPaintScheduler,
+} from "@/lib/canvas-paint-scheduler"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -103,7 +107,7 @@ export function DesignCanvas() {
   const canvasElRef = useRef<HTMLCanvasElement>(null)
   const fabricRef = useRef<fabric.Canvas | null>(null)
   const latestThemeRef = useRef<BroadcastTheme | null>(null)
-  const rafIdRef = useRef<number | null>(null)
+  const paintSchedulerRef = useRef<CanvasPaintScheduler | null>(null)
   const imageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const imageRequestsRef = useRef<Map<string, Promise<HTMLImageElement>>>(
     new Map()
@@ -130,18 +134,7 @@ export function DesignCanvas() {
   )
 
   const resyncLatestTheme = useCallback(() => {
-    const latestTheme = latestThemeRef.current
-    const canvas = fabricRef.current
-    if (!latestTheme || !canvas) return
-    void syncThemeToCanvas(
-      latestTheme,
-      objectsRef,
-      canvas,
-      imageCacheRef.current,
-      imageRequestsRef.current,
-      videoCacheRef.current,
-      sampleVerseRef.current
-    )
+    paintSchedulerRef.current?.requestSync()
   }, [])
 
   // Keep grid lines ~1px regardless of zoom (they live in canvas space).
@@ -159,6 +152,7 @@ export function DesignCanvas() {
 
     const cw = container.offsetWidth
     const ch = container.offsetHeight
+    if (cw <= 0 || ch <= 0) return
     canvas.setDimensions({ width: cw, height: ch })
 
     // Reset viewport
@@ -177,7 +171,6 @@ export function DesignCanvas() {
     vpTransform[5] = ch / 2 - wsCenter.y * vpTransform[3]
     canvas.setViewportTransform(vpTransform)
     applyGridStroke(scale)
-    canvas.requestRenderAll()
     resyncLatestTheme()
 
     setZoomLevel(Math.round(scale * 100))
@@ -305,11 +298,43 @@ export function DesignCanvas() {
     })
 
     fabricRef.current = canvas
-
-    // Auto-zoom after a tick (canvas needs to be in DOM)
-    requestAnimationFrame(() => {
-      autoZoom()
+    let needsInitialFit = true
+    const painter = createCanvasPaintScheduler({
+      synchronize: () => {
+        const container = containerRef.current
+        if (
+          needsInitialFit &&
+          container &&
+          container.offsetWidth > 0 &&
+          container.offsetHeight > 0
+        ) {
+          needsInitialFit = false
+          autoZoom()
+        }
+        const latestTheme = latestThemeRef.current
+        if (!latestTheme || fabricRef.current !== canvas) return
+        syncThemeToCanvas(
+          latestTheme,
+          objectsRef,
+          canvas,
+          imageCacheRef.current,
+          imageRequestsRef.current,
+          videoCacheRef.current,
+          sampleVerseRef.current,
+          resyncLatestTheme
+        )
+      },
+      paint: () => {
+        if (fabricRef.current === canvas) canvas.renderAll()
+      },
+      onError: (error) => {
+        console.warn("[theme-designer] Could not paint the latest theme", error)
+      },
     })
+    paintSchedulerRef.current = painter
+
+    // Fit and initial bitmap synchronization share the RAF timeout fallback.
+    painter.requestSync()
 
     // ResizeObserver for auto-zoom on container resize
     const observer = new ResizeObserver(() => autoZoom())
@@ -317,10 +342,14 @@ export function DesignCanvas() {
 
     return () => {
       observer.disconnect()
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
-      rafIdRef.current = null
-      void canvas.dispose()
+      painter.dispose()
+      if (paintSchedulerRef.current === painter)
+        paintSchedulerRef.current = null
       fabricRef.current = null
+      canvas.cancelRequestedRender()
+      void canvas.dispose().catch((error: unknown) => {
+        console.warn("[theme-designer] Could not dispose the canvas", error)
+      })
       gridLinesRef.current = []
       objectsRef.current = {
         workspace: null,
@@ -328,45 +357,13 @@ export function DesignCanvas() {
         verseRegion: null,
       }
     }
-  }, [editingThemeId, autoZoom])
+  }, [editingThemeId, autoZoom, resyncLatestTheme])
 
   // Sync draft theme to the existing Fabric objects (throttled to 1 per frame)
   useEffect(() => {
-    const canvas = fabricRef.current
-    if (!canvas || !draftTheme) return
     latestThemeRef.current = draftTheme
-
-    if (rafIdRef.current) return // already scheduled
-    rafIdRef.current = requestAnimationFrame(() => {
-      rafIdRef.current = null
-      const latest = latestThemeRef.current
-      const latestCanvas = fabricRef.current
-      if (!latest || !latestCanvas) return
-      void syncThemeToCanvas(
-        latest,
-        objectsRef,
-        latestCanvas,
-        imageCacheRef.current,
-        imageRequestsRef.current,
-        videoCacheRef.current,
-        sampleVerseRef.current,
-        () => {
-          const current = latestThemeRef.current
-          const currentCanvas = fabricRef.current
-          if (!current || !currentCanvas) return
-          void syncThemeToCanvas(
-            current,
-            objectsRef,
-            currentCanvas,
-            imageCacheRef.current,
-            imageRequestsRef.current,
-            videoCacheRef.current,
-            sampleVerseRef.current
-          )
-        }
-      )
-    })
-  }, [draftTheme])
+    if (draftTheme) resyncLatestTheme()
+  }, [draftTheme, resyncLatestTheme])
 
   useEffect(() => {
     const refRegion = objectsRef.current.referenceRegion
@@ -374,15 +371,14 @@ export function DesignCanvas() {
     if (!refRegion || !verseRegion) return
     refRegion.set({ strokeWidth: selectedElement === "reference" ? 1 : 0 })
     verseRegion.set({ strokeWidth: selectedElement === "verse" ? 1 : 0 })
-    fabricRef.current?.requestRenderAll()
+    paintSchedulerRef.current?.requestPaint()
   }, [selectedElement])
 
   // Toggle grid visibility. Keyed to editingThemeId so it re-applies after the
   // canvas (and its grid lines) is rebuilt when switching themes.
   useEffect(() => {
-    const canvas = fabricRef.current
     gridLinesRef.current.forEach((line) => line.set({ visible: showGrid }))
-    canvas?.requestRenderAll()
+    paintSchedulerRef.current?.requestPaint()
   }, [showGrid, editingThemeId])
 
   // Default the preview content to match the section being designed.
@@ -403,7 +399,6 @@ export function DesignCanvas() {
     const newZoom = Math.min(canvas.getZoom() * 1.1, 3)
     canvas.setZoom(newZoom)
     applyGridStroke(newZoom)
-    canvas.requestRenderAll()
     resyncLatestTheme()
     setZoomLevel(Math.round(newZoom * 100))
   }, [resyncLatestTheme, applyGridStroke])
@@ -414,7 +409,6 @@ export function DesignCanvas() {
     const newZoom = Math.max(canvas.getZoom() * 0.9, 0.1)
     canvas.setZoom(newZoom)
     applyGridStroke(newZoom)
-    canvas.requestRenderAll()
     resyncLatestTheme()
     setZoomLevel(Math.round(newZoom * 100))
   }, [resyncLatestTheme, applyGridStroke])
@@ -664,8 +658,6 @@ function syncThemeToCanvas(
   verseRegion.set({ strokeWidth: selected === "verse" ? 1 : 0 })
   refRegion.setCoords()
   verseRegion.setCoords()
-
-  canvas.requestRenderAll()
 }
 
 function mapLocalRectToWorkspaceRect(

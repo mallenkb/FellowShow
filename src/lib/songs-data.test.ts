@@ -99,6 +99,24 @@ describe("song library storage", () => {
     )
   })
 
+  it("removes the EasyWorship library and its edits, keeping my songs", async () => {
+    const {
+      createCustomSong,
+      loadAllSongs,
+      removeEasyWorshipSongs,
+      saveEasyWorshipSongs,
+      updateSong,
+    } = await import("./songs-data")
+    await saveEasyWorshipSongs([easyWorshipSong])
+    await updateSong(easyWorshipSong, "Way Maker", "Miracle worker")
+    const added = await createCustomSong("Quick song", "Hallelujah")
+
+    await removeEasyWorshipSongs()
+
+    expect((await loadAllSongs()).map((song) => song.id)).toEqual([added.id])
+    expect(stored.get("songEdits")).toEqual({})
+  })
+
   it("does not let a load that started before a save hide the new song", async () => {
     const { createCustomSong, loadAllSongs } = await import("./songs-data")
 

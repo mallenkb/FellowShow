@@ -1,12 +1,9 @@
 import {
   clampLowerThirdDuration,
+  isFullWidthLowerThird,
   sanitizeOverlayConfiguration,
 } from "@/lib/overlays"
-import type {
-  ActiveOverlayState,
-  LowerThirdPreset,
-  TickerMessage,
-} from "@/types"
+import type { ActiveOverlayState, TickerMessage } from "@/types"
 import type {
   BroadcastGet,
   BroadcastSet,
@@ -18,10 +15,6 @@ let suspendedFullWidthTicker: {
   id: string
   startedAt: number | null
 } | null = null
-
-function isFullWidthLowerThird(preset: LowerThirdPreset | undefined): boolean {
-  return preset?.style === "full-width-banner"
-}
 
 function restoreSuspendedTicker(
   active: ActiveOverlayState,
@@ -73,14 +66,32 @@ export function createOverlayActions(
       get().syncBroadcastOutput()
     },
     removeLogoOverlay: (id) => {
-      set((s) => ({
-        overlayConfig: {
-          ...s.overlayConfig,
-          logo: {
-            logos: s.overlayConfig.logo.logos.filter((logo) => logo.id !== id),
+      set((s) => {
+        const logos = s.overlayConfig.logo.logos.filter(
+          (logo) => logo.id !== id
+        )
+        return {
+          overlayConfig: {
+            ...s.overlayConfig,
+            logo: { logos },
+            looks:
+              logos.length === 0
+                ? s.overlayConfig.looks.map((look) => ({
+                    ...look,
+                    logo: false,
+                  }))
+                : s.overlayConfig.looks,
           },
-        },
-      }))
+          activeOverlays:
+            logos.length === 0
+              ? { ...s.activeOverlays, logoVisible: false }
+              : s.activeOverlays,
+          stagedOverlays:
+            logos.length === 0
+              ? { ...s.stagedOverlays, logoVisible: false }
+              : s.stagedOverlays,
+        }
+      })
       get().syncBroadcastOutput()
     },
     updateTickerOverlay: (updates) => {
@@ -98,6 +109,7 @@ export function createOverlayActions(
     setLogoOverlayVisible: (logoVisible) => {
       set((s) => ({
         activeOverlays: { ...s.activeOverlays, logoVisible },
+        stagedOverlays: { ...s.stagedOverlays, logoVisible },
       }))
       get().syncBroadcastOutput()
     },
@@ -142,6 +154,11 @@ export function createOverlayActions(
           tickerMessages: s.overlayConfig.tickerMessages.filter(
             (message) => message.id !== id
           ),
+          looks: s.overlayConfig.looks.map((look) =>
+            look.tickerMessageId === id
+              ? { ...look, tickerMessageId: null }
+              : look
+          ),
         },
         activeOverlays:
           s.activeOverlays.tickerMessageId === id
@@ -151,6 +168,14 @@ export function createOverlayActions(
                 tickerStartedAt: null,
               }
             : s.activeOverlays,
+        stagedOverlays:
+          s.stagedOverlays.tickerMessageId === id
+            ? {
+                ...s.stagedOverlays,
+                tickerMessageId: null,
+                tickerStartedAt: null,
+              }
+            : s.stagedOverlays,
       }))
       get().syncBroadcastOutput()
     },
@@ -158,16 +183,27 @@ export function createOverlayActions(
       if (!get().overlayConfig.tickerMessages.some((item) => item.id === id)) {
         return
       }
+      // A bar fills the bottom of the screen, so scrolling text replaces it.
+      if (get().activeOverlays.barId) get().clearBarOverlay()
       const currentLowerThird = get().activeOverlays.lowerThird
       if (isFullWidthLowerThird(currentLowerThird?.preset)) {
         suspendedFullWidthTicker = { id, startedAt: Date.now() }
         return
       }
+      const tickerStartedAt = Date.now()
       set((s) => ({
         activeOverlays: {
           ...s.activeOverlays,
           tickerMessageId: id,
-          tickerStartedAt: Date.now(),
+          tickerStartedAt,
+        },
+        // Keep Preview in step so the next Show on Live does not remove it.
+        stagedOverlays: {
+          ...s.stagedOverlays,
+          tickerMessageId: id,
+          tickerStartedAt,
+          barId: null,
+          barStartedAt: null,
         },
       }))
       get().syncBroadcastOutput()
@@ -276,6 +312,11 @@ export function createOverlayActions(
             lowerThirdPresets: s.overlayConfig.lowerThirdPresets.filter(
               (preset) => preset.id !== id
             ),
+            looks: s.overlayConfig.looks.map((look) =>
+              look.lowerThirdPresetId === id
+                ? { ...look, lowerThirdPresetId: null }
+                : look
+            ),
           },
           activeOverlays:
             deletingActive && deletingFullWidth
@@ -284,6 +325,10 @@ export function createOverlayActions(
                   s.overlayConfig.tickerMessages
                 )
               : activeOverlays,
+          stagedOverlays:
+            s.stagedOverlays.lowerThird?.preset.id === id
+              ? { ...s.stagedOverlays, lowerThird: null }
+              : s.stagedOverlays,
         }
       })
       get().syncBroadcastOutput()
@@ -293,6 +338,7 @@ export function createOverlayActions(
         (item) => item.id === id
       )
       if (!preset) return
+      if (get().activeOverlays.barId) get().clearBarOverlay()
       const startedAt = Date.now()
       const previousLowerThird = get().activeOverlays.lowerThird
       const previousWasFullWidth = isFullWidthLowerThird(
@@ -327,7 +373,15 @@ export function createOverlayActions(
             s.overlayConfig.tickerMessages
           )
         }
-        return { activeOverlays }
+        return {
+          activeOverlays,
+          stagedOverlays: {
+            ...s.stagedOverlays,
+            lowerThird: { preset, startedAt },
+            barId: null,
+            barStartedAt: null,
+          },
+        }
       })
       get().syncBroadcastOutput()
       lowerThirdExpiryTimer = setTimeout(() => {

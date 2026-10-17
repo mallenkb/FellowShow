@@ -35,7 +35,10 @@ export const useQueueStore = create<QueueState>((set, get) => ({
           i.verse.verse === item.verse.verse
       )
       if (duplicate) return state
-      return { items: [item, ...state.items] }
+      return {
+        items: [item, ...state.items],
+        activeIndex: state.activeIndex === null ? null : state.activeIndex + 1,
+      }
     }),
   removeItem: (id) =>
     set((state) => {

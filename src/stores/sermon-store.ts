@@ -40,7 +40,8 @@ interface SermonState {
   addGeneratedNotes: (
     id: string,
     drafts: SermonNoteDraft[],
-    throughSegmentIndex: number
+    throughSegmentIndex: number,
+    advanceAiCursor?: boolean
   ) => void
   addManualNote: (
     id: string,
@@ -336,26 +337,42 @@ export const useSermonStore = create<SermonState>((set) => ({
         }
       }),
     })),
-  addGeneratedNotes: (id, drafts, throughSegmentIndex) =>
+  addGeneratedNotes: (
+    id,
+    drafts,
+    throughSegmentIndex,
+    advanceAiCursor = true
+  ) =>
     set((state) => ({
       sessions: state.sessions.map((session) => {
         if (session.id !== id) return session
-        const existing = new Set(
-          session.notes.map((note) => note.text.trim().toLowerCase())
+        const notes = [...session.notes]
+        const existing = new Map(
+          notes.map((note, index) => [note.text.trim().toLowerCase(), index])
         )
-        const notes = drafts
-          .map((draft) => ({
-            ...draft,
-            text: draft.text.trim(),
-            sourceContext: draft.sourceContext.trim(),
-          }))
-          .filter(
-            (draft) =>
-              draft.text &&
-              draft.sourceContext &&
-              !existing.has(draft.text.toLowerCase())
-          )
-          .map((draft): SermonNote => ({
+        for (const input of drafts) {
+          const draft = {
+            ...input,
+            text: input.text.trim(),
+            sourceContext: input.sourceContext.trim(),
+          }
+          if (!draft.text || !draft.sourceContext) continue
+          const key = draft.text.toLowerCase()
+          const existingIndex = existing.get(key)
+          if (existingIndex !== undefined) {
+            if (!notes[existingIndex].sourceContext) {
+              notes[existingIndex] = {
+                ...notes[existingIndex],
+                sourceContext: draft.sourceContext,
+                sourceSegmentIds: draft.sourceSegmentIds,
+                sourceSegmentStartIndex: draft.sourceSegmentStartIndex,
+                sourceSegmentEndIndex: draft.sourceSegmentEndIndex,
+              }
+            }
+            continue
+          }
+          existing.set(key, notes.length)
+          notes.push({
             id: crypto.randomUUID(),
             text: draft.text,
             createdAt: Date.now(),
@@ -365,18 +382,23 @@ export const useSermonStore = create<SermonState>((set) => ({
             sourceSegmentIds: draft.sourceSegmentIds,
             sourceSegmentStartIndex: draft.sourceSegmentStartIndex,
             sourceSegmentEndIndex: draft.sourceSegmentEndIndex,
-          }))
+          })
+        }
         return {
           ...session,
-          notes: [...session.notes, ...notes],
+          notes,
           lastNoteSegmentIndex: Math.max(
             session.lastNoteSegmentIndex,
             throughSegmentIndex
           ),
-          aiNoteSegmentIndex: Math.max(
-            session.aiNoteSegmentIndex ?? session.lastNoteSegmentIndex,
-            throughSegmentIndex
-          ),
+          ...(advanceAiCursor
+            ? {
+                aiNoteSegmentIndex: Math.max(
+                  session.aiNoteSegmentIndex ?? session.lastNoteSegmentIndex,
+                  throughSegmentIndex
+                ),
+              }
+            : {}),
         }
       }),
     })),

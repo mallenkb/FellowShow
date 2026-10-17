@@ -1,4 +1,9 @@
-export const OVERLAY_CONFIGURATION_VERSION = 11 as const
+import {
+  LOWER_THIRD_DESIGN_OPTIONS,
+  type LowerThirdDesignStyle,
+} from "./lower-third-designs"
+
+export const OVERLAY_CONFIGURATION_VERSION = 12 as const
 
 export type TickerSpeed = "slow" | "standard" | "fast"
 
@@ -67,6 +72,7 @@ export interface TickerOverlayConfig {
 export type LowerThirdTheme = "preacher" | "speaker" | "notice"
 
 export type LowerThirdStyle =
+  | LowerThirdDesignStyle
   | "white-blue"
   | "dark-avatar-blue"
   | "white-amber"
@@ -74,6 +80,9 @@ export type LowerThirdStyle =
   | "white-purple-angles"
   | "dark-blue-diagonal"
   | "full-width-banner"
+  | "logo-reveal-midnight"
+  | "logo-reveal-ivory"
+  | "logo-reveal-slate"
 
 export const DEFAULT_LOWER_THIRD_STYLE: LowerThirdStyle = "white-blue"
 
@@ -127,6 +136,31 @@ export const LOWER_THIRD_STYLE_OPTIONS = [
     defaultBackgroundColor: "#071a3b",
     defaultTextColor: "#ffffff",
   },
+  {
+    value: "logo-reveal-midnight",
+    label: "Logo reveal / Midnight",
+    description:
+      "Large round logo; a navy bar with a gold line slides out from behind it",
+    defaultBackgroundColor: "#0f1b2d",
+    defaultTextColor: "#ffffff",
+  },
+  {
+    value: "logo-reveal-ivory",
+    label: "Logo reveal / Ivory",
+    description:
+      "Large round logo; a warm white bar with a deep green line slides out",
+    defaultBackgroundColor: "#f7f4ee",
+    defaultTextColor: "#1c1917",
+  },
+  {
+    value: "logo-reveal-slate",
+    label: "Logo reveal / Slate",
+    description:
+      "Large rounded-square logo; an angled slate bar with a teal line slides out",
+    defaultBackgroundColor: "#1e293b",
+    defaultTextColor: "#f8fafc",
+  },
+  ...LOWER_THIRD_DESIGN_OPTIONS,
 ] as const satisfies ReadonlyArray<{
   value: LowerThirdStyle
   label: string
@@ -186,6 +220,8 @@ export interface LowerThirdPreset {
   logoSizePercent?: number
   /** Overall lower third scale as a percentage of its default size. */
   sizePercent?: number
+  /** Design-board layouts can pin their left edge or bottom center. */
+  anchor?: "center" | "bottom-left" | "bottom-center"
   /** Width as a percentage of the output width. */
   widthPercent: number
   /** False removes the user cap while retaining the renderer's safe boundary. */
@@ -211,6 +247,7 @@ export interface LowerThirdAppearanceSettings {
   logoPosition?: LowerThirdLogoPosition
   logoSizePercent?: number
   sizePercent?: number
+  anchor?: "center" | "bottom-left" | "bottom-center"
   widthPercent: number
   xPercent: number
   yPercent: number
@@ -219,12 +256,65 @@ export interface LowerThirdAppearanceSettings {
   durationMs: number
 }
 
+/**
+ * Where a bar's words come from. "live-verse" follows the scripture currently
+ * on Program (or staged in Preview); "verse" and "text" store their words.
+ */
+export type BarSource = "live-verse" | "verse" | "text"
+
+type BarBackgroundType = "gradient" | "solid" | "image"
+
+/** Padding inside the bar. The bar itself always sits flush with the edges. */
+type BarPadding = "padded" | "none"
+
+export interface BarAppearance {
+  backgroundType: BarBackgroundType
+  /** Solid color, or the left stop of the gradient. */
+  backgroundColor: string
+  /** Right stop of the gradient. */
+  backgroundColorEnd: string
+  backgroundImageUrl?: string
+  /** 0-80; darkens an image background so text stays readable. */
+  backgroundDimPercent: number
+  textColor: string
+  padding: BarPadding
+}
+
+/** A full-width bar along the bottom of the output for scripture or notices. */
+export interface BarOverlayItem extends BarAppearance {
+  id: string
+  name: string
+  source: BarSource
+  /** Reference for verse bars, or the heading for text bars. */
+  heading: string
+  /** Translation for verse bars, or a short badge such as "This week". */
+  badge?: string
+  /** Body text. Empty for live-verse bars, which use the verse on screen. */
+  text: string
+  showBadge: boolean
+  targetOutputIds: string[]
+  createdAt: number
+  updatedAt: number
+}
+
+/** A saved combination of graphics that goes into Preview in one tap. */
+export interface OverlayLook {
+  id: string
+  name: string
+  logo: boolean
+  lowerThirdPresetId: string | null
+  tickerMessageId: string | null
+  barId: string | null
+}
+
 export interface OverlayConfiguration {
   version: typeof OVERLAY_CONFIGURATION_VERSION
   logo: LogoOverlayConfig
   ticker: TickerOverlayConfig
   tickerMessages: TickerMessage[]
   lowerThirdPresets: LowerThirdPreset[]
+  bars: BarOverlayItem[]
+  looks: OverlayLook[]
   lastLowerThirdAppearance?: LowerThirdAppearanceSettings
 }
 
@@ -238,6 +328,8 @@ export interface ActiveOverlayState {
   tickerMessageId: string | null
   tickerStartedAt: number | null
   lowerThird: ActiveLowerThirdOverlay | null
+  barId: string | null
+  barStartedAt: number | null
 }
 
 interface LogoOverlayPayload {
@@ -277,6 +369,7 @@ interface LowerThirdOverlayPayload {
   logoPosition?: LowerThirdLogoPosition
   logoSizePercent?: number
   sizePercent?: number
+  anchor?: "center" | "bottom-left" | "bottom-center"
   widthPercent: number
   /** False uses a safe output boundary instead of widthPercent as the cap. */
   maxWidthEnabled?: boolean
@@ -286,8 +379,20 @@ interface LowerThirdOverlayPayload {
   startedAt: number
 }
 
+export interface BarOverlayPayload extends BarAppearance {
+  id: string
+  heading: string
+  badge?: string
+  text: string
+  /** Verse numbers shown before each segment of a multi-verse passage. */
+  segments?: { verseNumber?: number; text: string }[]
+  startedAt: number
+}
+
 export interface BroadcastOverlayPayload {
   logos: LogoOverlayPayload[]
   lowerThird: LowerThirdOverlayPayload | null
   ticker: TickerOverlayPayload | null
+  /** Optional so payloads from older windows still parse. */
+  bar?: BarOverlayPayload | null
 }

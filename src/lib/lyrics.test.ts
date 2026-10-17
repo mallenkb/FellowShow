@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { splitLyricBlocks } from "./lyrics"
+import { lyricDisplayLines, splitLyricBlocks } from "./lyrics"
 
 describe("splitLyricBlocks", () => {
   it("labels unmarked song sections as verses", () => {
@@ -98,7 +98,7 @@ A Reed, RH 210`)
     ])
   })
 
-  it("splits long stanzas into smaller presentation blocks", () => {
+  it("keeps an authored stanza and all its line breaks together", () => {
     const blocks = splitLyricBlocks(`1. Crown Him with many crowns,
 The Lamb upon His throne;
 Hark! how the heavenly anthem drowns
@@ -111,11 +111,7 @@ Through all eternity.`)
     expect(blocks).toEqual([
       {
         label: "Verse 1",
-        text: "Crown Him with many crowns,\nThe Lamb upon His throne;\nHark! how the heavenly anthem drowns\nAll music but its own:",
-      },
-      {
-        label: "Verse 1",
-        text: "Awake, my soul, and sing\nOf Him who died for thee,\nAnd hail Him as thy matchless King\nThrough all eternity.",
+        text: "Crown Him with many crowns,\nThe Lamb upon His throne;\nHark! how the heavenly anthem drowns\nAll music but its own:\nAwake, my soul, and sing\nOf Him who died for thee,\nAnd hail Him as thy matchless King\nThrough all eternity.",
       },
     ])
   })
@@ -133,6 +129,28 @@ And grace will lead me home.`)
         label: "Verse 3",
         text: "Through many dangers,\nToils and snares,\nI have already come;\n'Tis grace hath brought\nMe safe thus far,\nAnd grace will lead me home.",
       },
+    ])
+  })
+})
+
+describe("lyricDisplayLines", () => {
+  it("keeps lowercase continuations on their authored lines", () => {
+    const text =
+      "Bearing shame and scoffing\nrude,\nSealed my pardon with his\nblood;"
+    expect(lyricDisplayLines(text)).toEqual(text.split("\n"))
+  })
+
+  it("preserves punctuation, blank lines and spacing", () => {
+    expect(
+      lyricDisplayLines("The cross\n‘twas there\n\n  More   words")
+    ).toEqual(["The cross", "‘twas there", "", "  More   words"])
+  })
+
+  it("normalizes line endings without changing the line boundaries", () => {
+    expect(lyricDisplayLines("One\r\nTwo\rThree")).toEqual([
+      "One",
+      "Two",
+      "Three",
     ])
   })
 })

@@ -131,17 +131,14 @@ export function searchSongs<TSong extends SearchableSong>(
   filters: SongSearchFilters = {}
 ) {
   const normalizedQuery = normalizeSongSearchQuery(query)
-  const applyLimit = (songs: TSong[]) =>
-    filters.limit == null ? songs : songs.slice(0, filters.limit)
-
-  if (!normalizedQuery) {
-    return applyLimit(
-      index.songs.filter((song) => matchesSongFilters(song, filters))
-    )
-  }
-
   const limit = filters.limit ?? Number.POSITIVE_INFINITY
   if (limit <= 0) return []
+
+  if (!normalizedQuery) {
+    return index.songs
+      .filter((song) => matchesSongFilters(song, filters))
+      .slice(0, limit)
+  }
 
   const queryTokens = normalizedQuery.split(" ")
   const rankedMatches: TSong[][] = [[], [], [], []]
