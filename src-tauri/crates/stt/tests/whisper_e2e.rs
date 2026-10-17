@@ -66,8 +66,10 @@ async fn generated_speech_runs_through_vad_and_real_whisper_inference() {
         std::fs::read(std::env::var_os("FELLOWSHOW_TEST_WHISPER_PCM").expect("test PCM path"))
             .expect("read generated PCM");
     let samples: Vec<i16> = pcm
-        .chunks_exact(2)
-        .map(|bytes| i16::from_le_bytes([bytes[0], bytes[1]]))
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|bytes| i16::from_le_bytes(*bytes))
         .collect();
     let provider = WhisperProvider::new(model, Some("en".into()), 4);
     let (audio_tx, audio_rx) = crossbeam_channel::unbounded();
@@ -114,8 +116,10 @@ async fn running_whisper_inference_can_be_stopped_without_an_error() {
         std::fs::read(std::env::var_os("FELLOWSHOW_TEST_WHISPER_PCM").expect("test PCM path"))
             .expect("read generated PCM");
     let samples: Vec<i16> = pcm
-        .chunks_exact(2)
-        .map(|bytes| i16::from_le_bytes([bytes[0], bytes[1]]))
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|bytes| i16::from_le_bytes(*bytes))
         .collect();
     let provider = std::sync::Arc::new(WhisperProvider::new(model, Some("en".into()), 4));
     let runner_provider = std::sync::Arc::clone(&provider);
