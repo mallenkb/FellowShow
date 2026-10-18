@@ -7,6 +7,8 @@ export interface PresentationMediaItem {
   playbackStartedAt?: number
   fit?: "contain" | "cover" | "stretch"
   scale?: number
+  /** Height multiple when stretched; same as scale when unset. */
+  scaleY?: number
   offsetX?: number
   offsetY?: number
 }

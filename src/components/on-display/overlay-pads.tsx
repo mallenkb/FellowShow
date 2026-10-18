@@ -12,6 +12,7 @@ import {
   overlaySelectionsMatch,
   resolveOverlaySelection,
 } from "@/lib/overlays"
+import { carriesGraphics } from "@/lib/broadcast-outputs"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores"
 import {
@@ -223,7 +224,7 @@ export function OverlayPads({
     .filter(
       (id) =>
         outputs.some(
-          (output) => output.id === id && output.content === "overlays"
+          (output) => output.id === id && carriesGraphics(output, outputs)
         ) && isOutputOn(runtime[id])
     )
     .map((id) => getOverlayPayloadForOutput(config, active, id))

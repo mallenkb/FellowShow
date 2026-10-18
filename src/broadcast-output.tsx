@@ -12,7 +12,6 @@ import { pruneVideoCache } from "@/lib/media-cache"
 import { drawTransitionFrame } from "@/lib/render-transition"
 import { drawBroadcastOverlays } from "@/lib/overlay-renderer"
 import { hasAnimatingOverlay } from "@/lib/overlays"
-import { drawVideoStreamPlaceholder } from "@/lib/video-stream-placeholder"
 import { playVideoSafely, syncVideoToPlaybackClock } from "@/lib/video-playback"
 import { getBuiltinPresentationBackground } from "@/lib/builtin-themes"
 import {
@@ -354,9 +353,6 @@ function BroadcastCanvas() {
         ctx.fillStyle = getBuiltinPresentationBackground()
         ctx.fillRect(0, 0, canvas.width, canvas.height)
         logDebug("renderVerse returned null; drew fallback frame")
-      }
-      if (!verse && !timer) {
-        drawVideoStreamPlaceholder(ctx, theme.resolution)
       }
       drawBroadcastOverlays(ctx, theme.resolution, overlays, {
         imageCache: imageCacheRef.current,
@@ -880,7 +876,7 @@ function BroadcastCanvas() {
               directVideo.fit === "stretch"
                 ? "fill"
                 : (directVideo.fit ?? "contain"),
-            transform: `translate(${(directVideo.offsetX ?? 0) * 100}%, ${(directVideo.offsetY ?? 0) * 100}%) scale(${directVideo.scale ?? 1})`,
+            transform: `translate(${(directVideo.offsetX ?? 0) * 100}%, ${(directVideo.offsetY ?? 0) * 100}%) scale(${directVideo.scale ?? 1}, ${directVideo.scaleY ?? directVideo.scale ?? 1})`,
             zIndex: 1,
           }}
         />

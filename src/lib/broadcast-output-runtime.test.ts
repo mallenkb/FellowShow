@@ -383,4 +383,50 @@ describe("graphics output live-state reconciliation", () => {
     ])
     expect(useBroadcastStore.getState().isLive).toBe(false)
   })
+
+  it("takes Program content off air when graphics go live, so only one shows", async () => {
+    const { output, useBroadcastStore } = await liveGraphicsOutput()
+    invoke.mockImplementation(async (command) =>
+      command === "start_ndi" ? { fps: 24, width: 1920, height: 1080 } : null
+    )
+    const { showOverlayPreviewOnLive } = await import("./overlay-live")
+    const store = useBroadcastStore.getState()
+    const tickerId = store.saveTickerMessage({ text: "Welcome" })
+    store.toggleStagedTicker(tickerId)
+    useBroadcastStore.setState({
+      isLive: true,
+      liveVerse: {
+        reference: "John 3:16",
+        segments: [{ text: "For God so loved the world" }],
+        themeSection: "bible",
+      },
+    })
+
+    await expect(showOverlayPreviewOnLive(output.id)).resolves.toBe(true)
+
+    expect(useBroadcastStore.getState().isLive).toBe(false)
+    expect(useBroadcastStore.getState().activeOverlays.tickerMessageId).toBe(
+      tickerId
+    )
+  })
+
+  it("leaves Program alone when there are no graphics to send", async () => {
+    const { output, useBroadcastStore } = await liveGraphicsOutput()
+    invoke.mockImplementation(async (command) =>
+      command === "start_ndi" ? { fps: 24, width: 1920, height: 1080 } : null
+    )
+    const { showOverlayPreviewOnLive } = await import("./overlay-live")
+    useBroadcastStore.setState({
+      isLive: true,
+      liveVerse: {
+        reference: "John 3:16",
+        segments: [{ text: "For God so loved the world" }],
+        themeSection: "bible",
+      },
+    })
+
+    await showOverlayPreviewOnLive(output.id)
+
+    expect(useBroadcastStore.getState().isLive).toBe(true)
+  })
 })

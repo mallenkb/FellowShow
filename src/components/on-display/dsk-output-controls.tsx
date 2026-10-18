@@ -12,7 +12,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
-  getOverlayOutputMode,
+  graphicsKeyMode,
+  graphicsOutputs,
   type OverlayOutputMode,
 } from "@/lib/broadcast-outputs"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
@@ -58,14 +59,13 @@ export function DskOutputControls() {
   const setSelectedOverlayOutputId = useBroadcastStore(
     (state) => state.setSelectedOverlayOutputId
   )
-  const overlayOutputs = outputs.filter(
-    (output) => output.content === "overlays"
-  )
+  // A General display carries graphics when there is no Video Overlays output.
+  const overlayOutputs = graphicsOutputs(outputs)
   const selectedOutput =
     overlayOutputs.find((output) => output.id === selectedOverlayOutputId) ??
     overlayOutputs[0] ??
     null
-  const mode = selectedOutput ? getOverlayOutputMode(selectedOutput) : null
+  const mode = selectedOutput ? graphicsKeyMode(selectedOutput) : null
   const updateOverlayMode = (nextMode: OverlayOutputMode) => {
     if (!selectedOutput) return
     useBroadcastStore

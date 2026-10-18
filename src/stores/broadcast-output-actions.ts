@@ -1,8 +1,8 @@
 import { emitTo } from "@tauri-apps/api/event"
 import { DEFAULT_ANNOUNCEMENT_THEME_ID } from "@/lib/builtin-themes"
 import {
+  carriesGraphics,
   createOutputConfig,
-  getOverlayOutputMode,
   getOutputProgramPayload,
   MAX_BROADCAST_OUTPUTS,
   resolveOutputThemeId,
@@ -10,6 +10,7 @@ import {
 } from "@/lib/broadcast-outputs"
 import { sanitizeOverlayConfiguration } from "@/lib/overlays"
 import {
+  getOutputKeyMode,
   getOutputOverlayPayload,
   hasProgramContent,
   hasSameProgramPayload,
@@ -67,8 +68,8 @@ export function createOutputActions(
           output.content === "everything" && s.isLive ? s.lowerThird : null,
         overlays: getOutputOverlayPayload(s, output, verse, timer),
         opacity: s.outputOpacity,
-        ...(getOverlayOutputMode(output)
-          ? { overlayMode: getOverlayOutputMode(output) }
+        ...(getOutputKeyMode(s, output, verse, timer)
+          ? { overlayMode: getOutputKeyMode(s, output, verse, timer) }
           : {}),
       }).catch(() => {})
     },
@@ -198,7 +199,7 @@ export function createOutputActions(
         for (const output of get().outputs) {
           if (
             output.content === "songs" ||
-            (barFollowsVerse && output.content === "overlays")
+            (barFollowsVerse && carriesGraphics(output, get().outputs))
           ) {
             get().syncBroadcastOutputFor(output.id)
           }
@@ -257,7 +258,7 @@ export function createOutputActions(
       const output = get().outputs.find(
         (candidate) => candidate.id === outputId
       )
-      if (live && (!output || output.content !== "overlays")) return
+      if (live && (!output || !carriesGraphics(output, get().outputs))) return
       set((s) => ({
         liveOverlayOutputIds: live
           ? s.liveOverlayOutputIds.includes(outputId)

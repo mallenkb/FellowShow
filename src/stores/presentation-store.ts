@@ -21,6 +21,8 @@ export interface PresentationSlide {
   locked: boolean
   fit: "contain" | "cover" | "stretch"
   scale: number
+  /** Height multiple when stretched; same as scale when unset. */
+  scaleY?: number
   offsetX: number
   offsetY: number
   layers?: PresentationLayer[]
@@ -37,6 +39,8 @@ export interface PresentationPage {
   height: number
   fit: "contain" | "cover" | "stretch"
   scale: number
+  /** Height multiple when stretched; same as scale when unset. */
+  scaleY?: number
   offsetX: number
   offsetY: number
 }
@@ -65,7 +69,10 @@ interface PresentationState {
     id: string,
     layerId: string,
     patch: Partial<
-      Pick<PresentationLayer, "fit" | "scale" | "offsetX" | "offsetY">
+      Pick<
+        PresentationLayer,
+        "fit" | "scale" | "scaleY" | "offsetX" | "offsetY"
+      >
     >
   ) => void
   removeSlideLayer: (id: string, layerId: string) => void
@@ -93,7 +100,7 @@ interface PresentationState {
   updateDocumentTransform: (
     documentId: string,
     transform: Partial<
-      Pick<PresentationPage, "fit" | "scale" | "offsetX" | "offsetY">
+      Pick<PresentationPage, "fit" | "scale" | "scaleY" | "offsetX" | "offsetY">
     >
   ) => void
   removeDocument: (id: string) => void
@@ -322,6 +329,7 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
                       ...page,
                       fit: document.pages[0].fit,
                       scale: document.pages[0].scale,
+                      scaleY: document.pages[0].scaleY,
                       offsetX: document.pages[0].offsetX,
                       offsetY: document.pages[0].offsetY,
                     }
@@ -446,6 +454,9 @@ function sanitizePage(
       typeof value.scale === "number"
         ? Math.min(2.5, Math.max(0.5, value.scale))
         : 1,
+    ...(typeof value.scaleY === "number"
+      ? { scaleY: Math.min(2.5, Math.max(0.5, value.scaleY)) }
+      : {}),
     offsetX: typeof value.offsetX === "number" ? value.offsetX : 0,
     offsetY: typeof value.offsetY === "number" ? value.offsetY : 0,
   }

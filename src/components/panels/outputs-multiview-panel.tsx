@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
   getOutputProgramPayload,
-  getOverlayOutputMode,
   MAX_BROADCAST_OUTPUTS,
   outputContentLabel,
   resolveOutputThemeId,
@@ -25,6 +24,7 @@ import {
   getOverlayPreviewPayload,
 } from "@/lib/overlays"
 import { useBroadcastStore } from "@/stores"
+import { getOutputKeyMode } from "@/stores/broadcast-store-helpers"
 import {
   ArrowUpDownIcon,
   ChevronDownIcon,
@@ -268,11 +268,19 @@ export function OutputsMultiviewPanel({
             )
             const runtime = runtimeById[output.id]
             const active = isOutputOn(runtime)
-            const overlayMode = getOverlayOutputMode(output)
+            // Same key mode and live rule the output window itself uses.
+            const overlayMode = getOutputKeyMode(
+              { outputs },
+              output,
+              verse,
+              timer
+            )
             const outputIsLive =
               output.content === "overlays"
                 ? liveOverlayOutputIds.includes(output.id)
-                : isLive
+                : isLive ||
+                  (output.content === "everything" &&
+                    liveOverlayOutputIds.length > 0)
             const overlayOutputIsOffAir =
               output.content === "overlays" && active && !outputIsLive
             const overlays =

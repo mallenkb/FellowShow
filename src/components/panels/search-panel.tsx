@@ -338,6 +338,10 @@ export function SearchPanel({
           onAddSong={() => useSongEditorStore.getState().openNew(songQuery)}
           showSource={songSourceFilter === "all"}
           onOpenSong={openSong}
+          onPresentSong={(song, index) => {
+            setSongHighlight(index)
+            presentSong(song)
+          }}
           formatReference={(song) => song.title}
           onLoadMore={() =>
             setSongRenderLimit((limit) => limit + SONG_PAGE_SIZE)

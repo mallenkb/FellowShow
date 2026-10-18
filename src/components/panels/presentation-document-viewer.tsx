@@ -60,6 +60,7 @@ function pageRenderData(page: PresentationPage): VerseRenderData {
       mediaType: "image",
       fit: page.fit,
       scale: page.scale,
+      scaleY: page.scaleY,
       offsetX: page.offsetX,
       offsetY: page.offsetY,
     },
@@ -115,7 +116,10 @@ export function PresentationDocumentViewer({
     (
       page: PresentationPage,
       transform: Partial<
-        Pick<PresentationPage, "fit" | "scale" | "offsetX" | "offsetY">
+        Pick<
+          PresentationPage,
+          "fit" | "scale" | "scaleY" | "offsetX" | "offsetY"
+        >
       >
     ) => {
       const nextPage = { ...page, ...transform }
@@ -157,12 +161,14 @@ export function PresentationDocumentViewer({
   const changeZoom = useCallback(
     (amount: number) => {
       if (!selectedPage) return
-      updateTransform(selectedPage, {
-        scale: Math.min(
-          MAX_ZOOM,
-          Math.max(MIN_ZOOM, selectedPage.scale + amount)
-        ),
-      })
+      const scale = Math.min(
+        MAX_ZOOM,
+        Math.max(MIN_ZOOM, selectedPage.scale + amount)
+      )
+      // Zooming keeps any stretch the operator gave the page.
+      const ratio =
+        (selectedPage.scaleY ?? selectedPage.scale) / selectedPage.scale
+      updateTransform(selectedPage, { scale, scaleY: scale * ratio })
     },
     [selectedPage, updateTransform]
   )
@@ -172,6 +178,7 @@ export function PresentationDocumentViewer({
     updateTransform(selectedPage, {
       fit: "contain",
       scale: 1,
+      scaleY: 1,
       offsetX: 0,
       offsetY: 0,
     })
@@ -391,6 +398,7 @@ export function PresentationDocumentViewer({
                         mediaType: "image",
                         fit: selectedPage.fit,
                         scale: selectedPage.scale,
+                        scaleY: selectedPage.scaleY,
                         offsetX: selectedPage.offsetX,
                         offsetY: selectedPage.offsetY,
                       }

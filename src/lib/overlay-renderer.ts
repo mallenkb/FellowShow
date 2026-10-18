@@ -928,22 +928,26 @@ function lumaLayersFor(ctx: CanvasRenderingContext2D): LumaLayers | null {
 }
 
 /**
- * Raises every dark pixel of the graphics to at least the luma floor, channel
- * by channel. White and bright colors are unchanged; near-black text turns a
- * deep grey that the keyer keeps.
+ * Raises every dark pixel of the graphics to at least the luma floor while
+ * keeping its hue: dark navy becomes a brighter navy, not grey. Bright
+ * colors are unchanged.
  */
 function liftForLumaKey(layers: LumaLayers): void {
   const { graphics, floor } = layers
   const { width, height } = graphics.canvas
-  // The floor color, shaped exactly like the graphics (soft edges included).
   floor.setTransform(1, 0, 0, 1, 0, 0)
+  // The graphics, recolored to the floor brightness in their own hues.
   floor.globalCompositeOperation = "copy"
   floor.drawImage(graphics.canvas, 0, 0)
-  floor.globalCompositeOperation = "source-in"
+  floor.globalCompositeOperation = "luminosity"
   floor.fillStyle = LUMA_KEY_FLOOR
   floor.fillRect(0, 0, width, height)
+  // Keep only the graphics' own shape (soft edges included).
+  floor.globalCompositeOperation = "destination-in"
+  floor.drawImage(graphics.canvas, 0, 0)
   floor.globalCompositeOperation = "source-over"
-  // "lighten" keeps the brighter of the two in each channel.
+  // "lighten" keeps the brighter of the two in each channel, so only pixels
+  // darker than the floor change.
   graphics.setTransform(1, 0, 0, 1, 0, 0)
   graphics.globalCompositeOperation = "lighten"
   graphics.drawImage(floor.canvas, 0, 0)

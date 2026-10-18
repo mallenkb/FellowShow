@@ -27,6 +27,7 @@ function media(value: unknown): PresentationLayer | null {
       value.fit === "cover" || value.fit === "stretch" ? value.fit : "contain",
     ...clampPresentationMediaTransform({
       scale: typeof value.scale === "number" ? value.scale : undefined,
+      scaleY: typeof value.scaleY === "number" ? value.scaleY : undefined,
       offsetX: typeof value.offsetX === "number" ? value.offsetX : undefined,
       offsetY: typeof value.offsetY === "number" ? value.offsetY : undefined,
     }),

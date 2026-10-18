@@ -98,6 +98,18 @@ describe("Songs tab keyboard", () => {
     expect(await screen.findByText("#12")).toBeTruthy()
   })
 
+  it("takes a song live with a double-click", async () => {
+    const user = userEvent.setup()
+    render(<SearchPanel />)
+    await user.click(screen.getByRole("button", { name: "Songs" }))
+
+    await user.dblClick(await screen.findByText("Amazing Grace"))
+
+    expect(useQueueStore.getState().items[0]?.id).toBe("song:amazing")
+    expect(useBroadcastStore.getState().isLive).toBe(true)
+    expect(useBroadcastStore.getState().liveVerse?.themeSection).toBe("songs")
+  })
+
   it("never takes a song live from a click, even when it is prepared", async () => {
     const user = userEvent.setup()
     render(<SearchPanel />)

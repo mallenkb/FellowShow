@@ -19,6 +19,7 @@ import { slideLayers, slideRenderData } from "@/lib/presentation-composition"
 import {
   PRESENTATION_MEDIA_MAX_SCALE,
   PRESENTATION_MEDIA_MIN_SCALE,
+  zoomPresentationMedia,
 } from "@/lib/presentation-media-transform"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import {
@@ -63,7 +64,7 @@ export function PresentationMediaViewer({
 
   function updateLayer(
     patch: Partial<
-      Pick<typeof selected, "fit" | "scale" | "offsetX" | "offsetY">
+      Pick<typeof selected, "fit" | "scale" | "scaleY" | "offsetX" | "offsetY">
     >
   ) {
     usePresentationStore
@@ -80,7 +81,7 @@ export function PresentationMediaViewer({
 
   function resetSelectedLayer() {
     if (slide.locked) return
-    updateLayer({ fit: "contain", scale: 1, offsetX: 0, offsetY: 0 })
+    updateLayer({ fit: "contain", scale: 1, scaleY: 1, offsetX: 0, offsetY: 0 })
   }
 
   // With one item left, deleting from the menu removes the whole slide.
@@ -169,7 +170,9 @@ export function PresentationMediaViewer({
           disabled={
             slide.locked || selected.scale <= PRESENTATION_MEDIA_MIN_SCALE
           }
-          onClick={() => updateLayer({ scale: selected.scale - 0.1 })}
+          onClick={() =>
+            updateLayer(zoomPresentationMedia(selected, selected.scale - 0.1))
+          }
         >
           <ZoomOutIcon />
         </Button>
@@ -192,7 +195,9 @@ export function PresentationMediaViewer({
           disabled={
             slide.locked || selected.scale >= PRESENTATION_MEDIA_MAX_SCALE
           }
-          onClick={() => updateLayer({ scale: selected.scale + 0.1 })}
+          onClick={() =>
+            updateLayer(zoomPresentationMedia(selected, selected.scale + 0.1))
+          }
         >
           <ZoomInIcon />
         </Button>
@@ -215,6 +220,7 @@ export function PresentationMediaViewer({
                 updateLayer({
                   fit: option.fit,
                   scale: 1,
+                  scaleY: 1,
                   offsetX: 0,
                   offsetY: 0,
                 })

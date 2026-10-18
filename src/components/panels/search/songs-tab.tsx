@@ -23,6 +23,8 @@ interface SongsTabProps {
   showSource: boolean
   query: string
   onOpenSong: (song: CopSong, index: number) => void
+  /** Double-click: prepares the song and puts its first slide live. */
+  onPresentSong: (song: CopSong, index: number) => void
   onEditSong: (song: CopSong) => void
   onAddSong: () => void
   formatReference: (song: CopSong) => string
@@ -69,6 +71,7 @@ export function SongsTab({
   showSource,
   query,
   onOpenSong,
+  onPresentSong,
   onEditSong,
   onAddSong,
   formatReference,
@@ -146,6 +149,7 @@ export function SongsTab({
                         : "border-transparent hover:bg-muted/40"
                   )}
                   onClick={() => onOpenSong(song, index)}
+                  onDoubleClick={() => onPresentSong(song, index)}
                 >
                   <div className="flex min-w-0 items-baseline gap-2">
                     <h4 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">

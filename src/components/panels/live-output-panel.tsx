@@ -7,7 +7,13 @@ import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
 import { resolveOverlayOutput } from "@/lib/overlay-live"
-import { getOverlayPayloadForOutput } from "@/lib/overlays"
+import { graphicsKeyMode } from "@/lib/broadcast-outputs"
+import {
+  getCurrentOverlayScripture,
+  getOverlayPayloadForOutput,
+  getOverlayPreviewPayload,
+  programHidesGraphics,
+} from "@/lib/overlays"
 
 type LiveOutputMode =
   | "book"
@@ -36,6 +42,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   const graphicsLive = useOverlayOutputLive(graphicsOutput?.id ?? null)
   const showsSomething = isLive || graphicsLive
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
+  const previewVerse = useBroadcastStore((s) => s.previewVerse)
   const liveTimer = useBroadcastStore((s) => s.presenterTimer)
   const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
   const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
@@ -132,20 +139,29 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
       >
         <CanvasVerse
           theme={activeTheme}
-          verse={liveVerse}
-          timer={liveTimer}
+          // With only graphics on air, show just what goes out: no leftover
+          // scripture, song or media from the last time Program was live.
+          verse={isLive || !graphicsLive ? liveVerse : null}
+          timer={isLive || !graphicsLive ? liveTimer : null}
           lowerThird={isLive ? lowerThird : null}
           overlays={
             graphicsLive && graphicsOutput
-              ? getOverlayPayloadForOutput(
-                  overlayConfig,
-                  activeOverlays,
-                  graphicsOutput.id,
-                  {
-                    verse: isLive ? liveVerse : null,
-                    timer: isLive ? liveTimer : null,
-                  }
-                )
+              ? // Live graphics are the master bus: every live graphic shows,
+                // except while Program has its own content (one at a time).
+                isLive && programHidesGraphics(liveVerse, liveTimer)
+                ? null
+                : getOverlayPreviewPayload(
+                    overlayConfig,
+                    activeOverlays,
+                    undefined,
+                    {
+                      scripture: getCurrentOverlayScripture({
+                        isLive,
+                        liveVerse,
+                        previewVerse,
+                      }),
+                    }
+                  )
               : isLive
                 ? getOverlayPayloadForOutput(
                     overlayConfig,
@@ -154,6 +170,13 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
                     { verse: liveVerse, timer: liveTimer }
                   )
                 : null
+          }
+          // With only graphics on air, show the keyable background they go
+          // out on, not a placeholder.
+          overlayMode={
+            !isLive && graphicsLive && graphicsOutput
+              ? graphicsKeyMode(graphicsOutput)
+              : undefined
           }
           className="h-full"
           fillContainer

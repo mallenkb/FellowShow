@@ -855,6 +855,18 @@ function buildBarPayload(
   }
 }
 
+/**
+ * Graphics belong over live video only. Whenever Program shows content of its
+ * own (scripture, songs, notes, media, a timer), they step aside and come back
+ * once Program clears.
+ */
+export function programHidesGraphics(
+  verse: VerseRenderData | null | undefined,
+  timer: PresenterTimerRenderData | null | undefined
+): boolean {
+  return Boolean(verse || timer)
+}
+
 function buildOverlayPayload(
   config: OverlayConfiguration,
   active: ActiveOverlayState,
@@ -870,12 +882,7 @@ function buildOverlayPayload(
 ): BroadcastOverlayPayload {
   const program = typeof programOrNow === "number" ? undefined : programOrNow
   const now = typeof programOrNow === "number" ? programOrNow : requestedNow
-  const hidesMasterOverlays =
-    Boolean(program?.timer) ||
-    program?.verse?.themeSection === "bible" ||
-    program?.verse?.themeSection === "songs" ||
-    program?.verse?.themeSection === "announcements"
-  if (hidesMasterOverlays) {
+  if (programHidesGraphics(program?.verse, program?.timer)) {
     return { logos: [], lowerThird: null, ticker: null, bar: null }
   }
   const barItem = active.barId

@@ -45,6 +45,35 @@ export function getOverlayOutputMode(
     : DEFAULT_OVERLAY_OUTPUT_MODE
 }
 
+/**
+ * The outputs that carry graphics: Video Overlays outputs, or, when there is
+ * none, the General displays, so one General output can do everything.
+ */
+export function graphicsOutputs<T extends Pick<BroadcastOutputConfig, "content">>(
+  outputs: readonly T[]
+): T[] {
+  const overlays = outputs.filter((output) => output.content === "overlays")
+  return overlays.length > 0
+    ? overlays
+    : outputs.filter((output) => output.content === "everything")
+}
+
+export function carriesGraphics(
+  output: Pick<BroadcastOutputConfig, "id" | "content">,
+  outputs: readonly Pick<BroadcastOutputConfig, "id" | "content">[]
+): boolean {
+  return graphicsOutputs(outputs).some((candidate) => candidate.id === output.id)
+}
+
+/** How a graphics carrier is keyed: its own DSK or CMK choice, DSK by default. */
+export function graphicsKeyMode(
+  output: Pick<BroadcastOutputConfig, "overlayMode">
+): OverlayOutputMode {
+  return isOverlayOutputMode(output.overlayMode)
+    ? output.overlayMode
+    : DEFAULT_OVERLAY_OUTPUT_MODE
+}
+
 export function getOverlayBackgroundColor(
   mode: OverlayOutputMode
 ): "#000000" | "#00ff00" {
@@ -314,7 +343,10 @@ export function sanitizeOutputConfigs(
               ? candidate.overlayMode
               : DEFAULT_OVERLAY_OUTPUT_MODE,
           }
-        : {}),
+        : // A General display can be the graphics output, so it keeps its key.
+          content === "everything" && isOverlayOutputMode(candidate.overlayMode)
+          ? { overlayMode: candidate.overlayMode }
+          : {}),
     } satisfies BroadcastOutputConfig
     outputs.push(output)
   }

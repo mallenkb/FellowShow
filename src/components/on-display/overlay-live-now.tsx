@@ -7,7 +7,11 @@ import {
   showOverlayPreviewOnLive,
   stopOverlayOutputLive,
 } from "@/lib/overlay-live"
-import { overlaySelectionsMatch, resolveOverlaySelection } from "@/lib/overlays"
+import {
+  overlaySelectionsMatch,
+  programHidesGraphics,
+  resolveOverlaySelection,
+} from "@/lib/overlays"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores"
 import type { ActiveOverlayState, OverlayConfiguration } from "@/types"
@@ -69,6 +73,12 @@ export function OverlayLiveNow() {
     (state) => state.selectedOverlayOutputId
   )
   const onAir = useOverlayOutputLive()
+  // Graphics pause while Program shows its own content.
+  const pausedByProgram = useBroadcastStore(
+    (state) =>
+      state.isLive &&
+      programHidesGraphics(state.liveVerse, state.presenterTimer)
+  )
   const [busy, setBusy] = useState(false)
   const output = resolveOverlayOutput(outputs, selectedOutputId)
   const resolvedActive = resolveOverlaySelection(config, active)
@@ -145,6 +155,12 @@ export function OverlayLiveNow() {
           </Button>
         )}
       </div>
+      {onAir && pausedByProgram && items.length > 0 ? (
+        <p className="border-t border-border/60 px-3 py-2 text-xs text-amber-500">
+          Hidden while Program shows content. They come back when Program is
+          back on live video.
+        </p>
+      ) : null}
       {items.length > 0 ? (
         <ul className="grid gap-1 border-t border-border/60 p-1.5">
           {items.map((item) => (

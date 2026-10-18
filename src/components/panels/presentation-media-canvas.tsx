@@ -11,6 +11,7 @@ import {
   movePresentationMedia,
   presentationMediaVisibleSize,
   resizePresentationMedia,
+  zoomPresentationMedia,
   type PresentationMediaResizeHandle,
   type PresentationMediaTransform,
 } from "@/lib/presentation-media-transform"
@@ -18,7 +19,10 @@ import type { PresentationLayer } from "@/lib/presentation-composition"
 import { PresentationMediaLayer } from "./presentation-media-layer"
 import { useMediaAspectRatio } from "./use-media-aspect-ratio"
 
-export interface PresentationMediaCanvasValue extends Required<PresentationMediaTransform> {
+export interface PresentationMediaCanvasValue extends Required<
+  Omit<PresentationMediaTransform, "scaleY">
+> {
+  scaleY?: number
   name: string
   url: string
   mediaType?: "image" | "video"
@@ -41,7 +45,7 @@ interface ResizeInteraction {
   pointerId: number
   startX: number
   startY: number
-  startScale: number
+  start: Required<PresentationMediaTransform>
 }
 
 type CanvasInteraction = MoveInteraction | ResizeInteraction
@@ -132,7 +136,7 @@ export function PresentationMediaCanvas({
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
-        startScale: media.scale,
+        start: clampPresentationMediaTransform(media),
       }
       interactionRef.current = nextInteraction
       setInteraction(nextInteraction)
@@ -172,18 +176,21 @@ export function PresentationMediaCanvas({
         return
       }
 
-      onTransform({
-        scale: resizePresentationMedia(
-          active.startScale,
+      // Shift keeps the shape; Option/Alt resizes from the centre.
+      onTransform(
+        resizePresentationMedia(
+          active.start,
           deltaX,
           deltaY,
           active.handle,
           bounds.width,
-          bounds.height
-        ),
-      })
+          bounds.height,
+          visible,
+          { keepAspect: event.shiftKey, fromCenter: event.altKey }
+        )
+      )
     },
-    [frameBounds, media, onTransform]
+    [frameBounds, media, onTransform, visible]
   )
 
   const endInteraction = useCallback((event: PointerEvent<HTMLElement>) => {
@@ -200,12 +207,7 @@ export function PresentationMediaCanvas({
       if (!media || disabled) return
       event.preventDefault()
       const amount = event.deltaY < 0 ? 0.05 : -0.05
-      onTransform(
-        clampPresentationMediaTransform({
-          ...media,
-          scale: media.scale + amount,
-        })
-      )
+      onTransform(zoomPresentationMedia(media, media.scale + amount))
     },
     [disabled, media, onTransform]
   )
@@ -240,7 +242,7 @@ export function PresentationMediaCanvas({
             }
           }}
           style={{
-            transform: `translate(${layer.offsetX * 100}%, ${layer.offsetY * 100}%) scale(${layer.scale})`,
+            transform: `translate(${layer.offsetX * 100}%, ${layer.offsetY * 100}%) scale(${layer.scale}, ${layer.scaleY ?? layer.scale})`,
           }}
         >
           <PresentationMediaLayer media={layer} />
@@ -252,9 +254,9 @@ export function PresentationMediaCanvas({
           className="pointer-events-none absolute z-10 border border-white/60"
           style={{
             width: `${media.scale * visible.width * 100}%`,
-            height: `${media.scale * visible.height * 100}%`,
+            height: `${(media.scaleY ?? media.scale) * visible.height * 100}%`,
             left: `${(0.5 + media.offsetX - (media.scale * visible.width) / 2) * 100}%`,
-            top: `${(0.5 + media.offsetY - (media.scale * visible.height) / 2) * 100}%`,
+            top: `${(0.5 + media.offsetY - ((media.scaleY ?? media.scale) * visible.height) / 2) * 100}%`,
           }}
         >
           {RESIZE_HANDLES.map(([handle, classes]) => (

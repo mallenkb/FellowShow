@@ -119,6 +119,83 @@ describe("Video Overlays staging", () => {
     expect(payload.bar).toMatchObject({ startedAt: 1_000, changedAt: 5_000 })
   })
 
+  it("shows live graphics on the DSK output only while Program is on live video", async () => {
+    const { useBroadcastStore, tickerId } = await loadStore()
+    const { getOutputOverlayPayload } =
+      await import("./broadcast-store-helpers")
+    const { createOutputConfig } = await import("@/lib/broadcast-outputs")
+    const output = {
+      ...createOutputConfig([], { content: "overlays", outputType: "display" }),
+      id: "graphics",
+    }
+    const store = useBroadcastStore.getState()
+    store.toggleStagedTicker(tickerId)
+    store.commitStagedOverlays()
+    useBroadcastStore.setState({ liveOverlayOutputIds: ["graphics"] })
+    const payload = () =>
+      getOutputOverlayPayload(useBroadcastStore.getState(), output, null, null)
+
+    expect(payload()?.ticker?.id).toBe(tickerId)
+    for (const themeSection of [
+      "bible",
+      "songs",
+      "announcements",
+      "presentation",
+      undefined,
+    ] as const) {
+      useBroadcastStore.setState({
+        isLive: true,
+        liveVerse: { reference: "x", segments: [{ text: "x" }], themeSection },
+      })
+      expect(payload()?.ticker ?? null).toBeNull()
+    }
+    // Graphics come back as soon as Program goes off air.
+    useBroadcastStore.setState({ isLive: false })
+    expect(payload()?.ticker?.id).toBe(tickerId)
+  })
+
+  it("lets live graphics take over General displays while Program is clear", async () => {
+    const { useBroadcastStore, tickerId } = await loadStore()
+    const { getOutputOverlayPayload } =
+      await import("./broadcast-store-helpers")
+    // A General display the message shows on (every display, by default).
+    const general = useBroadcastStore
+      .getState()
+      .outputs.find((output) => output.content === "everything")
+    if (!general) throw new Error("expected a General display")
+    const store = useBroadcastStore.getState()
+    store.toggleStagedTicker(tickerId)
+    store.commitStagedOverlays()
+    const payload = () =>
+      getOutputOverlayPayload(useBroadcastStore.getState(), general, null, null)
+
+    // Graphics not on air: General shows nothing extra.
+    useBroadcastStore.setState({ isLive: false, liveOverlayOutputIds: [] })
+    expect(payload()).toBeNull()
+
+    // Graphics on air and Program clear: they show on General too.
+    useBroadcastStore.setState({ liveOverlayOutputIds: ["graphics"] })
+    expect(payload()?.ticker?.id).toBe(tickerId)
+
+    // Program content takes over again.
+    useBroadcastStore.setState({
+      isLive: true,
+      liveVerse: {
+        reference: "x",
+        segments: [{ text: "x" }],
+        themeSection: "songs",
+      },
+    })
+    expect(
+      getOutputOverlayPayload(
+        useBroadcastStore.getState(),
+        general,
+        useBroadcastStore.getState().liveVerse,
+        null
+      )?.ticker ?? null
+    ).toBeNull()
+  })
+
   it("swaps scrolling text and a full-width lower third in Preview", async () => {
     const { useBroadcastStore, tickerId } = await loadStore()
     const store = useBroadcastStore.getState()

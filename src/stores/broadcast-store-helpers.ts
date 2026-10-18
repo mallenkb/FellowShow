@@ -7,17 +7,21 @@ import {
   DEFAULT_OVERLAY_OUTPUT_MODE,
   getOverlayOutputMode,
   getOutputProgramPayload,
+  graphicsKeyMode,
+  graphicsOutputs,
   getSectionThemeId,
   inferThemeSection,
   isOverlayOutputMode,
   resolveOutputThemeId,
   windowLabelForOutput,
   type BroadcastOutputConfig,
+  type OverlayOutputMode,
 } from "@/lib/broadcast-outputs"
 import {
   getCurrentOverlayScripture,
   getOverlayPayloadForOutput,
   getOverlayPreviewPayload,
+  programHidesGraphics,
 } from "@/lib/overlays"
 import type {
   BroadcastTheme,
@@ -88,15 +92,11 @@ export function selectOverlayOutputId(
   currentId: string | null,
   outputs: BroadcastOutputConfig[]
 ): string | null {
-  if (
-    currentId &&
-    outputs.some(
-      (output) => output.id === currentId && output.content === "overlays"
-    )
-  ) {
+  const carriers = graphicsOutputs(outputs)
+  if (currentId && carriers.some((output) => output.id === currentId)) {
     return currentId
   }
-  return outputs.find((output) => output.content === "overlays")?.id ?? null
+  return carriers[0]?.id ?? null
 }
 
 export function normalizeLiveOverlayOutputIds(
@@ -104,9 +104,7 @@ export function normalizeLiveOverlayOutputIds(
   outputs: readonly BroadcastOutputConfig[]
 ): string[] {
   const overlayOutputIds = new Set(
-    outputs
-      .filter((output) => output.content === "overlays")
-      .map((output) => output.id)
+    graphicsOutputs(outputs).map((output) => output.id)
   )
   return outputIds.filter((outputId) => overlayOutputIds.has(outputId))
 }
@@ -116,6 +114,13 @@ export function normalizeOutputUpdate(
   updates: Partial<Omit<BroadcastOutputConfig, "id">>
 ): BroadcastOutputConfig {
   const next = { ...output, ...updates }
+  // A General display may be the graphics output, so it may keep a key mode.
+  if (next.content === "everything") {
+    if (isOverlayOutputMode(next.overlayMode)) return next
+    const normalOutput = { ...next }
+    delete normalOutput.overlayMode
+    return normalOutput
+  }
   if (next.content !== "overlays") {
     const normalOutput = { ...next }
     delete normalOutput.overlayMode
@@ -137,17 +142,28 @@ export function getOutputOverlayPayload(
 ): ReturnType<typeof getOverlayPayloadForOutput> | null {
   // Normal outputs follow the global Program on-air state. Graphics outputs
   // have their own explicit Show on Live state so they can go on air without
-  // sending their master overlays into the staged Program preview.
+  // sending their master overlays into the staged Program preview. General
+  // displays also take over with live graphics, one thing at a time like the
+  // rest: graphics show there while they are live and Program is clear.
+  const graphicsLive = state.liveOverlayOutputIds.length > 0
   if (
     output.content === "overlays"
       ? !state.liveOverlayOutputIds.includes(output.id)
-      : !state.isLive
+      : !state.isLive && !(output.content === "everything" && graphicsLive)
   ) {
     return null
   }
   // Video Overlays is the master graphics bus: its preview and live output
   // intentionally share the same all-active overlay payload. Per-output
   // targeting remains in effect for normal program outputs.
+  // Graphics show only over live video, never over Program content.
+  if (
+    output.content === "overlays" &&
+    state.isLive &&
+    programHidesGraphics(state.liveVerse, state.presenterTimer)
+  ) {
+    return { logos: [], lowerThird: null, ticker: null, bar: null }
+  }
   const scripture = getCurrentOverlayScripture(state)
   return output.content === "overlays"
     ? getOverlayPreviewPayload(
@@ -164,6 +180,27 @@ export function getOutputOverlayPayload(
         Date.now(),
         scripture
       )
+}
+
+/**
+ * How an output is keyed this frame. A Video Overlays output always is. A
+ * General display switches to the keyable background whenever Program is
+ * clear, so one input on the switcher does both jobs: never a theme
+ * background with graphics on it. It follows the graphics output's DSK or
+ * CMK choice.
+ */
+export function getOutputKeyMode(
+  state: Pick<BroadcastState, "outputs">,
+  output: BroadcastOutputConfig,
+  verse: VerseRenderData | null,
+  timer: PresenterTimerRenderData | null
+): OverlayOutputMode | null {
+  const overlayMode = getOverlayOutputMode(output)
+  if (overlayMode) return overlayMode
+  if (output.content === "everything" && !verse && !timer) {
+    return graphicsKeyMode(graphicsOutputs(state.outputs)[0] ?? output)
+  }
+  return null
 }
 
 export function emitDraftToBroadcast(state: BroadcastState): void {
@@ -193,8 +230,8 @@ export function emitDraftToBroadcast(state: BroadcastState): void {
           : null,
       overlays: getOutputOverlayPayload(state, output, verse, timer),
       opacity: state.outputOpacity,
-      ...(getOverlayOutputMode(output)
-        ? { overlayMode: getOverlayOutputMode(output) }
+      ...(getOutputKeyMode(state, output, verse, timer)
+        ? { overlayMode: getOutputKeyMode(state, output, verse, timer) }
         : {}),
     }).catch(() => {})
   }

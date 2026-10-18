@@ -105,7 +105,7 @@ describe("graphics on a luma key", () => {
       keyMode: "dsk-luma",
       now: 5_000,
     })
-    expect(steps).toContain("floor:fill #666666 source-in")
+    expect(steps).toContain("floor:fill #666666 luminosity")
     expect(steps).toContain("graphics:draw lighten")
     expect(steps.at(-1)).toBe("output:draw")
   })

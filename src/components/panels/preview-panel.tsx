@@ -7,13 +7,14 @@ import { bibleActions } from "@/hooks/use-bible"
 import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
 import { stageVerse } from "@/lib/preview-staging"
 import {
-  getOverlayOutputMode,
+  graphicsKeyMode,
   resolveOutputThemeId,
 } from "@/lib/broadcast-outputs"
 import {
   getCurrentOverlayScripture,
   getOverlayPayloadForOutput,
   getOverlayPreviewPayload,
+  programHidesGraphics,
   overlaySelectionsMatch,
   resolveOverlaySelection,
 } from "@/lib/overlays"
@@ -140,7 +141,7 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     )
     return themes.find((theme) => theme.id === themeId) ?? activeTheme
   }, [activeTheme, overlayOutput, sectionThemeIds, themes])
-  const overlayMode = overlayOutput ? getOverlayOutputMode(overlayOutput) : null
+  const overlayMode = overlayOutput ? graphicsKeyMode(overlayOutput) : null
   const overlayOutputIsLive = useOverlayOutputLive(overlayOutput?.id ?? null)
   // Video Overlays Preview shows what is staged, not what is on air.
   const resolvedStaged = resolveOverlaySelection(overlayConfig, stagedOverlays)
@@ -248,16 +249,21 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
             verse={isOverlayPreview ? null : previewVerse}
             timer={isOverlayPreview ? null : previewTimer}
             overlays={
-              isOverlayPreview || overlayPreviewPayload
+              isOverlayPreview
                 ? overlayPreviewPayload
-                : isProgramLive
-                  ? getOverlayPayloadForOutput(
-                      overlayConfig,
-                      activeOverlays,
-                      "main",
-                      { verse: previewVerse, timer: previewTimer }
-                    )
-                  : null
+                : // Graphics show only over live video, on air and here.
+                  programHidesGraphics(previewVerse, previewTimer)
+                  ? null
+                  : overlayPreviewPayload
+                    ? overlayPreviewPayload
+                    : isProgramLive
+                      ? getOverlayPayloadForOutput(
+                          overlayConfig,
+                          activeOverlays,
+                          "main",
+                          { verse: previewVerse, timer: previewTimer }
+                        )
+                      : null
             }
             overlayMode={
               isOverlayPreview ? (overlayMode ?? undefined) : undefined

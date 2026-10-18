@@ -356,7 +356,9 @@ function drawImageToRect(
   fit: "cover" | "contain" | "stretch",
   scale = 1,
   offsetX = 0,
-  offsetY = 0
+  offsetY = 0,
+  /** Height multiple when the media is stretched; defaults to scale. */
+  scaleY = scale
 ): void {
   const frame = img instanceof HTMLVideoElement ? videoFrameForCanvas(img) : img
   if (!frame) return
@@ -387,7 +389,7 @@ function drawImageToRect(
   }
 
   const scaledW = drawW * scale
-  const scaledH = drawH * scale
+  const scaledH = drawH * scaleY
   drawX = drawX + (drawW - scaledW) / 2 + offsetX * width
   drawY = drawY + (drawH - scaledH) / 2 + offsetY * height
   drawW = scaledW
@@ -418,13 +420,14 @@ export function drawPresentationImage(
     if (!media) continue
 
     const scale = layer.scale ?? 1
+    const scaleY = layer.scaleY ?? scale
     ctx.save()
     ctx.beginPath()
     ctx.rect(
       width * (0.5 + (layer.offsetX ?? 0) - scale / 2),
-      height * (0.5 + (layer.offsetY ?? 0) - scale / 2),
+      height * (0.5 + (layer.offsetY ?? 0) - scaleY / 2),
       width * scale,
-      height * scale
+      height * scaleY
     )
     ctx.clip()
 
@@ -438,7 +441,8 @@ export function drawPresentationImage(
       layer.fit ?? "contain",
       scale,
       layer.offsetX ?? 0,
-      layer.offsetY ?? 0
+      layer.offsetY ?? 0,
+      scaleY
     )
     ctx.restore()
   }

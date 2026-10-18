@@ -12,6 +12,7 @@ import { TooltipProvider } from "@/components/ui/tooltip.tsx"
 import { hydrateSettings } from "@/stores/settings-store"
 import { hydrateBibleStore, initBiblePersistence } from "@/stores/bible-store"
 import { hydrateBroadcastThemes } from "@/stores/broadcast-store-persistence"
+import { initProgramOutputAutostart } from "@/lib/program-output-autostart"
 import { hydrateAnnouncements } from "@/stores/announcement-store"
 import { hydratePresentationDocuments } from "@/stores/presentation-store"
 import { hydrateSermonSessions } from "@/stores/sermon-store"
@@ -54,9 +55,10 @@ if (isTauri()) {
         resetTranscriptSession(),
       ])
     )
-    .then(() =>
-      Promise.all([initBiblePersistence(), initTranscriptPersistence()])
-    )
+    .then(() => {
+      initProgramOutputAutostart()
+      return Promise.all([initBiblePersistence(), initTranscriptPersistence()])
+    })
     .catch((error) => {
       console.error("Failed to hydrate app state", error)
     })

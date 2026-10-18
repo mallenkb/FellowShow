@@ -17,7 +17,7 @@ export function PresentationCompositionThumbnail({
           key={layer.id}
           className="absolute inset-0"
           style={{
-            transform: `translate(${layer.offsetX * 100}%, ${layer.offsetY * 100}%) scale(${layer.scale})`,
+            transform: `translate(${layer.offsetX * 100}%, ${layer.offsetY * 100}%) scale(${layer.scale}, ${layer.scaleY ?? layer.scale})`,
           }}
         >
           <PresentationMediaLayer media={layer} playing={false} />

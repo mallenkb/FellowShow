@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { invoke } from "@/lib/ipc"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
 import {
+  carriesGraphics,
   outputWindowTitle,
   windowLabelForOutput,
   type BroadcastOutputConfig,
@@ -177,7 +178,7 @@ function reconcileLiveOverlayOutputs() {
     store.outputs.some(
       (output) =>
         output.id === id &&
-        output.content === "overlays" &&
+        carriesGraphics(output, store.outputs) &&
         isOutputOn(runtimeById[id])
     )
   )

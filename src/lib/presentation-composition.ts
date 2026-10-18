@@ -10,6 +10,7 @@ export type PresentationLayer = Pick<
   | "playbackStartedAt"
   | "fit"
   | "scale"
+  | "scaleY"
   | "offsetX"
   | "offsetY"
 >
@@ -26,6 +27,7 @@ export function slideLayers(slide: PresentationSlide): PresentationLayer[] {
           playbackStartedAt: slide.playbackStartedAt,
           fit: slide.fit,
           scale: slide.scale,
+          scaleY: slide.scaleY,
           offsetX: slide.offsetX,
           offsetY: slide.offsetY,
         },
@@ -58,6 +60,7 @@ export function arrangeMedia(layers: PresentationLayer[]): PresentationLayer[] {
     ...layer,
     fit: "contain",
     scale: 1 / columns,
+    scaleY: 1 / columns,
     offsetX: ((index % columns) + 0.5) / columns - 0.5,
     offsetY: (Math.floor(index / columns) + 0.5) / rows - 0.5,
   }))

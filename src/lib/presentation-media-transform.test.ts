@@ -4,6 +4,7 @@ import {
   movePresentationMedia,
   presentationMediaVisibleSize,
   resizePresentationMedia,
+  zoomPresentationMedia,
 } from "@/lib/presentation-media-transform"
 
 describe("presentation media transforms", () => {
@@ -13,10 +14,65 @@ describe("presentation media transforms", () => {
     ).toEqual({ offsetX: 1, offsetY: -1 })
   })
 
-  it("resizes media from a handle while respecting scale limits", () => {
-    expect(resizePresentationMedia(1, 50, 0, "e", 200, 100)).toBe(1.5)
-    expect(resizePresentationMedia(1, -1000, 0, "w", 200, 100)).toBe(6)
-    expect(resizePresentationMedia(1, -1000, 0, "e", 200, 100)).toBe(0.25)
+  const start = { scale: 1, scaleY: 1, offsetX: 0, offsetY: 0 }
+  const full = { width: 1, height: 1 }
+
+  it("stretches one side while the opposite edge stays put", () => {
+    // Dragging the right handle 50px in a 200px frame widens by a quarter.
+    expect(resizePresentationMedia(start, 50, 0, "e", 200, 100, full)).toEqual({
+      scale: 1.25,
+      scaleY: 1,
+      offsetX: 0.125,
+      offsetY: 0,
+    })
+    const top = resizePresentationMedia(start, 0, 20, "n", 200, 100, full)
+    expect(top.scale).toBe(1)
+    expect(top.scaleY).toBeCloseTo(0.8)
+    expect(top.offsetY).toBeCloseTo(0.1)
+  })
+
+  it("changes width and height separately from a corner", () => {
+    const result = resizePresentationMedia(start, 50, 10, "se", 200, 100, full)
+    expect(result.scale).toBeCloseTo(1.25)
+    expect(result.scaleY).toBeCloseTo(1.1)
+  })
+
+  it("keeps the shape with Shift and resizes from the centre with Option/Alt", () => {
+    const shaped = resizePresentationMedia(
+      start,
+      50,
+      10,
+      "se",
+      200,
+      100,
+      full,
+      {
+        keepAspect: true,
+      }
+    )
+    expect(shaped.scale).toBeCloseTo(1.25)
+    expect(shaped.scaleY).toBeCloseTo(1.25)
+    expect(
+      resizePresentationMedia(start, 50, 0, "e", 200, 100, full, {
+        fromCenter: true,
+      })
+    ).toEqual({ scale: 1.5, scaleY: 1, offsetX: 0, offsetY: 0 })
+  })
+
+  it("respects scale limits", () => {
+    expect(
+      resizePresentationMedia(start, 10_000, 0, "e", 200, 100, full).scale
+    ).toBe(6)
+    expect(
+      resizePresentationMedia(start, -10_000, 0, "e", 200, 100, full).scale
+    ).toBe(0.25)
+  })
+
+  it("zooms without losing a stretch", () => {
+    expect(zoomPresentationMedia({ scale: 1, scaleY: 2 }, 1.5)).toMatchObject({
+      scale: 1.5,
+      scaleY: 3,
+    })
   })
 
   it("normalizes persisted transforms to safe presentation bounds", () => {
@@ -26,7 +82,7 @@ describe("presentation media transforms", () => {
         offsetX: -4,
         offsetY: 4,
       })
-    ).toEqual({ scale: 6, offsetX: -1, offsetY: 1 })
+    ).toEqual({ scale: 6, scaleY: 6, offsetX: -1, offsetY: 1 })
   })
 
   it("sizes the selection outline to the visible media", () => {

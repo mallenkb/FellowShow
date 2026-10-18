@@ -40,15 +40,24 @@ describe("media and theme fuzzing", () => {
             (v) => Number.isFinite(v) && Math.abs(v) <= 1
           )
         ).toBe(true)
-        const scale = resizePresentationMedia(
-          start.scale,
+        const resized = resizePresentationMedia(
+          start,
           x,
           y,
           handle,
           width,
-          height
+          height,
+          { width: 1, height: 1 },
+          { keepAspect: x > 0, fromCenter: y > 0 }
         )
-        expect(Number.isFinite(scale) && scale >= 0.25 && scale <= 6).toBe(true)
+        for (const scale of [resized.scale, resized.scaleY]) {
+          expect(Number.isFinite(scale) && scale >= 0.25 && scale <= 6).toBe(
+            true
+          )
+        }
+        expect(
+          Math.abs(resized.offsetX) <= 1 && Math.abs(resized.offsetY) <= 1
+        ).toBe(true)
       },
       40
     )

@@ -289,9 +289,8 @@ describe("broadcast fuzzing", () => {
           },
           now
         )
-        expect(protectedPayload.logos.length).toBe(
-          section === "presentation" ? 1 : 0
-        )
+        // Graphics show only over live video, so any Program content hides them.
+        expect(protectedPayload.logos).toHaveLength(0)
       },
       34
     )
