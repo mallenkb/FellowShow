@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -51,7 +51,7 @@ jobs:
 
       - name: Restore Bible database cache
         id: bible-db-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: data/fellowshow.db
           key: bible-db-catalog-${{ hashFiles('data/schema.sql', 'data/build-bible-db.ts', 'data/prepare-release-bible.ts') }}
@@ -70,7 +70,7 @@ jobs:
           bun -e "const { Database } = require('bun:sqlite'); const db = new Database('data/fellowshow.db'); const translations = db.query('select count(*) as count from translations').get().count; const verses = db.query('select count(*) as count from verses').get().count; console.log(translations + ' translation catalog entries'); console.log(verses + ' embedded verses'); if (verses !== 0) process.exit(1);"
 
       - name: Upload Bible database
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fellowshow-bible-db
           path: data/fellowshow.db
@@ -115,7 +115,7 @@ jobs:
               src-tauri/target/release/bundle/dmg/latest.json
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -128,7 +128,7 @@ jobs:
         run: rustup toolchain install
 
       - name: Set up compiler cache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        uses: mozilla-actions/sccache-action@v0.0.11
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
@@ -180,7 +180,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Download Bible database
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: fellowshow-bible-db
           path: data
@@ -232,7 +232,7 @@ jobs:
 
       - name: Upload bundle artifact
         if: env.WARM_CACHE_ONLY != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_path }}
@@ -249,7 +249,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -257,7 +257,7 @@ jobs:
           bun-version: ${{ env.BUN_VERSION }}
 
       - name: Download bundle artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: release-artifacts
           merge-multiple: true
