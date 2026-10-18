@@ -29,6 +29,7 @@
     "prepare:document-converter": "bun run scripts/prepare-document-converter.ts",
     "lint": "eslint .",
     "knip": "knip",
+    "check:tauri-versions": "bun run scripts/check-tauri-versions.ts",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx}\"",
     "typecheck": "tsc -b --pretty false",

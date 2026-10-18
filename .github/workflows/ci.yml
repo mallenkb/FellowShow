@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Release calls this so a tag never ships code that fails these checks.
+  workflow_call:
 
 # A newer push makes results from an older run irrelevant. Cancelling it also
 # keeps the limited macOS/Linux runner pool available for the newest commit.
@@ -19,9 +21,47 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # Pull requests that only touch docs or the web app skip the Rust jobs.
+  # Pushes to main and release calls always run everything.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      rust: ${{ github.event_name != 'pull_request' || steps.filter.outputs.rust == 'true' }}
+      frontend: ${{ github.event_name != 'pull_request' || steps.filter.outputs.frontend == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            rust:
+              - "src-tauri/**"
+              - "data/schema.sql"
+              - "package.json"
+              - "bun.lock"
+              - ".github/workflows/**"
+            frontend:
+              - "src/**"
+              - "scripts/**"
+              - "data/**"
+              - "public/**"
+              - "*.json"
+              - "*.ts"
+              - "*.js"
+              - "bun.lock"
+              - "index.html"
+              - ".github/workflows/**"
+
   frontend-quality:
     name: Frontend quality
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -38,11 +78,17 @@ jobs:
       - run: bun run lint
       - run: bun run knip
       - run: bun run format:check
+      # Tauri refuses to bundle mismatched JS and Rust versions; catch it here
+      # instead of in the release build.
+      - run: bun run check:tauri-versions
       - run: bun audit --audit-level=high
 
   frontend-test-build:
     name: Frontend test and build
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -62,22 +108,27 @@ jobs:
 
   rust-quality:
     name: Rust format and audit
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: src-tauri
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
+      # Installs the version pinned in src-tauri/rust-toolchain.toml.
+      - run: rustup toolchain install
       - run: cargo fmt --all -- --check
       - uses: taiki-e/install-action@cargo-audit
       - run: cargo audit
 
   rust-compile:
     name: Rust ${{ matrix.check.name }}
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     env:
       # These settings affect CI test/check artifacts only. Release builds use
       # the unchanged release workflow and Cargo profiles.
@@ -99,11 +150,7 @@ jobs:
         working-directory: src-tauri
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          # Installing the small component in both matrix jobs avoids passing
-          # an empty component value to the setup action.
-          components: clippy
+      - run: rustup toolchain install
       - uses: mozilla-actions/sccache-action@v0.0.9
       - uses: Swatinem/rust-cache@v2
         with:
@@ -137,3 +184,69 @@ jobs:
           PY
         working-directory: .
       - run: ${{ matrix.check.command }}
+
+  # FellowShow is mostly run on Windows, and some code only compiles there.
+  # This catches those errors before a release build does.
+  rust-windows:
+    name: Rust Windows check
+    needs: changes
+    if: needs.changes.outputs.rust == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      CARGO_INCREMENTAL: "0"
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    defaults:
+      run:
+        working-directory: src-tauri
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          shared-key: ci-windows-check
+          cache-on-failure: true
+      - name: Point bindgen at LLVM
+        shell: pwsh
+        working-directory: .
+        run: |
+          $llvmBin = Join-Path ${env:ProgramFiles} "LLVM\bin"
+          if (-not (Test-Path (Join-Path $llvmBin "libclang.dll"))) {
+            choco install llvm -y --no-progress
+          }
+          "LIBCLANG_PATH=$llvmBin" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Prepare test database resource
+        shell: pwsh
+        working-directory: .
+        run: |
+          python -c "import sqlite3, pathlib; c = sqlite3.connect('data/fellowshow.db'); c.executescript(pathlib.Path('data/schema.sql').read_text()); c.close()"
+      - run: cargo check --workspace --all-targets --locked
+
+  # The one check branch protection needs. Skipped jobs count as passing, so
+  # a docs-only pull request can still merge.
+  ci-ok:
+    name: CI passed
+    if: always()
+    needs:
+      - changes
+      - frontend-quality
+      - frontend-test-build
+      - rust-quality
+      - rust-compile
+      - rust-windows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check job results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              exit 1
+            fi
+          done

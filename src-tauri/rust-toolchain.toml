@@ -1,0 +1,6 @@
+# A fixed toolchain keeps new Clippy lints and compiler changes from failing
+# CI on code that did not change. Raise it on purpose, in its own commit.
+[toolchain]
+channel = "1.95.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

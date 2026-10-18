@@ -1,0 +1,37 @@
+# Weekly, grouped updates keep dependencies current without a flood of PRs.
+# Major versions arrive one at a time so breaking changes are easy to review.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Tauri's JS packages must move with its Rust crates, so they are kept
+      # out of the general group and reviewed together with Cargo updates.
+      tauri:
+        patterns: ["@tauri-apps/*"]
+      minor-and-patch:
+        update-types: [minor, patch]
+        exclude-patterns: ["@tauri-apps/*"]
+
+  - package-ecosystem: cargo
+    directory: /src-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      tauri:
+        patterns: ["tauri", "tauri-*"]
+      minor-and-patch:
+        update-types: [minor, patch]
+        exclude-patterns: ["tauri", "tauri-*"]

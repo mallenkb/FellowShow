@@ -5,18 +5,40 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+  # Tags cannot reuse another tag's build cache, only main's. This nightly run
+  # on main compiles the release app (without bundling or publishing) so the
+  # next tag starts from a warm cache instead of compiling everything.
+  schedule:
+    - cron: "0 3 * * *"
 
+# Jobs that need more ask for it themselves.
 permissions:
-  contents: write
+  contents: read
+
+# Never cancel a release that is already building.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
+  BUN_VERSION: 1.3.14
   MACOSX_DEPLOYMENT_TARGET: "11.0"
   CMAKE_OSX_DEPLOYMENT_TARGET: "11.0"
+  # The nightly run only warms the cache.
+  WARM_CACHE_ONLY: ${{ github.event_name == 'schedule' }}
 
 jobs:
+  # The same checks as pull requests. They run alongside the builds so they
+  # add no time, and nothing is published unless they pass.
+  ci:
+    name: CI
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/ci.yml
+
   prepare-bible-db:
     name: Prepare Bible database
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -25,7 +47,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Restore Bible database cache
         id: bible-db-cache
@@ -58,6 +80,7 @@ jobs:
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     needs: prepare-bible-db
+    timeout-minutes: 60
     env:
       # sccache caches compiler outputs by toolchain, target, flags, and source
       # inputs, so source and patch-version changes reuse unaffected crates.
@@ -97,10 +120,12 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
 
+      # Installs the version pinned in src-tauri/rust-toolchain.toml.
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+        working-directory: src-tauri
+        run: rustup toolchain install
 
       - name: Set up compiler cache
         uses: mozilla-actions/sccache-action@v0.0.9
@@ -111,6 +136,9 @@ jobs:
           workspaces: src-tauri -> target
           shared-key: release-${{ runner.os }}-${{ runner.arch }}
           cache-on-failure: true
+          # Only main's cache is visible to later tags, so tag runs restore
+          # it without saving copies that would push it out of storage.
+          save-if: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
       - name: Install Linux build prerequisites
         if: runner.os == 'Linux'
@@ -163,14 +191,19 @@ jobs:
       - name: Stage bundled document converter
         run: bun run prepare:document-converter
 
+      - name: Build release app to warm the cache
+        if: env.WARM_CACHE_ONLY == 'true'
+        run: bunx tauri build --no-bundle
+
       - name: Build bundles
+        if: env.WARM_CACHE_ONLY != 'true'
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: bunx tauri build ${{ matrix.bundle_args }}
 
       - name: Verify installer silently installs
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && env.WARM_CACHE_ONLY != 'true'
         shell: pwsh
         run: |
           $installer = Get-ChildItem -Path "src-tauri\target\release\bundle\nsis" -Filter "*.exe" -Recurse | Select-Object -First 1
@@ -198,6 +231,7 @@ jobs:
           "Verified $($installer.Name) installs to $installDir"
 
       - name: Upload bundle artifact
+        if: env.WARM_CACHE_ONLY != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
@@ -206,9 +240,12 @@ jobs:
 
   publish-release:
     name: Publish GitHub release
-    runs-on: ubuntu-latest
-    needs: build
+    runs-on: ubuntu-24.04
+    needs: [ci, build]
     if: startsWith(github.ref, 'refs/tags/')
+    timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -217,7 +254,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Download bundle artifacts
         uses: actions/download-artifact@v4
@@ -249,8 +286,16 @@ jobs:
             "$tag" \
             "${{ github.repository }}"
           find release-upload -maxdepth 1 -type f -print | sort
-          gh release delete "$tag" --yes 2>/dev/null || true
-          gh release create "$tag" \
-            --title "Fellow Show $tag" \
-            --generate-notes \
-            release-upload/*
+          if gh release view "$tag" >/dev/null 2>&1; then
+            # A re-run replaces the files and keeps the release, its notes
+            # and its download counts.
+            gh release upload "$tag" release-upload/* --clobber
+          else
+            # Draft first, so nobody downloads a half-uploaded release.
+            gh release create "$tag" \
+              --draft \
+              --title "Fellow Show $tag" \
+              --generate-notes \
+              release-upload/*
+            gh release edit "$tag" --draft=false
+          fi
