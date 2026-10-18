@@ -6,10 +6,7 @@ import { PanelHeader } from "@/components/ui/panel-header"
 import { bibleActions } from "@/hooks/use-bible"
 import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
 import { stageVerse } from "@/lib/preview-staging"
-import {
-  graphicsKeyMode,
-  resolveOutputThemeId,
-} from "@/lib/broadcast-outputs"
+import { graphicsKeyMode, resolveOutputThemeId } from "@/lib/broadcast-outputs"
 import {
   getCurrentOverlayScripture,
   getOverlayPayloadForOutput,

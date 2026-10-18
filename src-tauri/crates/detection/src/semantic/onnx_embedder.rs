@@ -65,7 +65,10 @@ impl OnnxEmbedder {
             "OnnxEmbedder: configuring session with {intra_threads} intra-op threads (of {num_cpus} CPUs), graph optimization ALL",
         );
 
-        let session = Session::builder()
+        let environment = ort::init()
+            .build()
+            .map_err(|e| DetectionError::Internal(format!("ort environment: {e}")))?;
+        let session = Session::builder(&environment)
             .map_err(|e| DetectionError::Internal(format!("ort session builder: {e}")))?
             .with_optimization_level(ort::session::builder::GraphOptimizationLevel::Level3)
             .map_err(|e| DetectionError::Internal(format!("ort optimization level: {e}")))?

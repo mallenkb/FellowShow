@@ -49,9 +49,9 @@ export function getOverlayOutputMode(
  * The outputs that carry graphics: Video Overlays outputs, or, when there is
  * none, the General displays, so one General output can do everything.
  */
-export function graphicsOutputs<T extends Pick<BroadcastOutputConfig, "content">>(
-  outputs: readonly T[]
-): T[] {
+export function graphicsOutputs<
+  T extends Pick<BroadcastOutputConfig, "content">,
+>(outputs: readonly T[]): T[] {
   const overlays = outputs.filter((output) => output.content === "overlays")
   return overlays.length > 0
     ? overlays
@@ -62,7 +62,9 @@ export function carriesGraphics(
   output: Pick<BroadcastOutputConfig, "id" | "content">,
   outputs: readonly Pick<BroadcastOutputConfig, "id" | "content">[]
 ): boolean {
-  return graphicsOutputs(outputs).some((candidate) => candidate.id === output.id)
+  return graphicsOutputs(outputs).some(
+    (candidate) => candidate.id === output.id
+  )
 }
 
 /** How a graphics carrier is keyed: its own DSK or CMK choice, DSK by default. */
