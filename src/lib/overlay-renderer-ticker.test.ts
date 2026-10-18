@@ -59,6 +59,58 @@ function draw(keyMode?: "dsk-luma" | "chroma-key") {
   return fills
 }
 
+/** A scratch canvas whose context records composite steps. */
+function scratchCanvas(steps: string[], name: string) {
+  const canvas = { width: 0, height: 0 }
+  const layer = {
+    ...recordingContext().ctx,
+    fillStyle: "",
+    canvas,
+    globalCompositeOperation: "source-over",
+    setTransform() {},
+    clearRect() {},
+    fillRect() {
+      steps.push(
+        `${name}:fill ${layer.fillStyle} ${layer.globalCompositeOperation}`
+      )
+    },
+    drawImage() {
+      steps.push(`${name}:draw ${layer.globalCompositeOperation}`)
+    },
+  }
+  return { getContext: () => layer, ...canvas }
+}
+
+describe("graphics on a luma key", () => {
+  it("lifts dark parts above black so the keyer keeps them", () => {
+    const { ctx } = recordingContext()
+    const steps: string[] = []
+    const scratch = ["graphics", "floor"].map((name) =>
+      scratchCanvas(steps, name)
+    )
+    let made = 0
+    Object.assign(ctx, {
+      canvas: {
+        width: 1920,
+        height: 1080,
+        ownerDocument: { createElement: () => scratch[made++] },
+      },
+      getTransform: () => ({}),
+      setTransform() {},
+      drawImage() {
+        steps.push("output:draw")
+      },
+    })
+    drawBroadcastOverlays(ctx, { width: 1920, height: 1080 }, overlays, {
+      keyMode: "dsk-luma",
+      now: 5_000,
+    })
+    expect(steps).toContain("floor:fill #666666 source-in")
+    expect(steps).toContain("graphics:draw lighten")
+    expect(steps.at(-1)).toBe("output:draw")
+  })
+})
+
 describe("ticker on keyed outputs", () => {
   it("keeps the configured colors on luma, chroma and normal outputs", () => {
     for (const keyMode of ["dsk-luma", "chroma-key", undefined] as const) {

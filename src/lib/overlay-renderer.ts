@@ -12,7 +12,8 @@ import {
 interface OverlayRenderOptions {
   /**
    * Keyer the output feeds. Graphics keep the operator's colors whatever the
-   * keyer, so Preview matches what goes to air.
+   * keyer, so Preview matches what goes to air. On a luma key, anything dark
+   * is lifted just above black so the keyer does not cut it out.
    */
   keyMode?: "dsk-luma" | "chroma-key"
   now?: number
@@ -887,6 +888,68 @@ function drawLowerThird(
 }
 
 /** Draws master overlays in z-order: logo, lower third, bar, ticker. */
+/**
+ * The darkest any part of a graphic may be on a luma-keyed output. A luma key
+ * treats black as see-through, so dark text or a dark bar would show the video
+ * behind it. 40% grey stays fully solid on a keyer left at its usual defaults
+ * (GoStream Duet: Clip 15%, Gain 50%), so no switcher settings need changing.
+ */
+const LUMA_KEY_FLOOR = "#666666"
+
+interface LumaLayers {
+  graphics: CanvasRenderingContext2D
+  floor: CanvasRenderingContext2D
+}
+
+const lumaLayersByCanvas = new WeakMap<object, LumaLayers>()
+
+/** Two scratch canvases the size of the output, reused every frame. */
+function lumaLayersFor(ctx: CanvasRenderingContext2D): LumaLayers | null {
+  const canvas = ctx.canvas as HTMLCanvasElement | undefined
+  const owner = canvas?.ownerDocument
+  if (!canvas?.width || !canvas.height || !owner || !ctx.getTransform) {
+    return null
+  }
+  let layers = lumaLayersByCanvas.get(canvas)
+  if (!layers) {
+    const graphics = owner.createElement("canvas").getContext("2d")
+    const floor = owner.createElement("canvas").getContext("2d")
+    if (!graphics || !floor) return null
+    layers = { graphics, floor }
+    lumaLayersByCanvas.set(canvas, layers)
+  }
+  for (const layer of [layers.graphics, layers.floor]) {
+    if (layer.canvas.width !== canvas.width) layer.canvas.width = canvas.width
+    if (layer.canvas.height !== canvas.height) {
+      layer.canvas.height = canvas.height
+    }
+  }
+  return layers
+}
+
+/**
+ * Raises every dark pixel of the graphics to at least the luma floor, channel
+ * by channel. White and bright colors are unchanged; near-black text turns a
+ * deep grey that the keyer keeps.
+ */
+function liftForLumaKey(layers: LumaLayers): void {
+  const { graphics, floor } = layers
+  const { width, height } = graphics.canvas
+  // The floor color, shaped exactly like the graphics (soft edges included).
+  floor.setTransform(1, 0, 0, 1, 0, 0)
+  floor.globalCompositeOperation = "copy"
+  floor.drawImage(graphics.canvas, 0, 0)
+  floor.globalCompositeOperation = "source-in"
+  floor.fillStyle = LUMA_KEY_FLOOR
+  floor.fillRect(0, 0, width, height)
+  floor.globalCompositeOperation = "source-over"
+  // "lighten" keeps the brighter of the two in each channel.
+  graphics.setTransform(1, 0, 0, 1, 0, 0)
+  graphics.globalCompositeOperation = "lighten"
+  graphics.drawImage(floor.canvas, 0, 0)
+  graphics.globalCompositeOperation = "source-over"
+}
+
 export function drawBroadcastOverlays(
   ctx: CanvasRenderingContext2D,
   resolution: { width: number; height: number },
@@ -894,6 +957,29 @@ export function drawBroadcastOverlays(
   options: OverlayRenderOptions = {}
 ): void {
   if (!overlays) return
+  const layers = options.keyMode === "dsk-luma" ? lumaLayersFor(ctx) : null
+  if (layers) {
+    const { graphics } = layers
+    graphics.setTransform(1, 0, 0, 1, 0, 0)
+    graphics.clearRect(0, 0, graphics.canvas.width, graphics.canvas.height)
+    graphics.setTransform(ctx.getTransform())
+    drawGraphics(graphics, resolution, overlays, options)
+    liftForLumaKey(layers)
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.drawImage(graphics.canvas, 0, 0)
+    ctx.restore()
+    return
+  }
+  drawGraphics(ctx, resolution, overlays, options)
+}
+
+function drawGraphics(
+  ctx: CanvasRenderingContext2D,
+  resolution: { width: number; height: number },
+  overlays: BroadcastOverlayPayload,
+  options: OverlayRenderOptions
+): void {
   const scale = options.scale ?? 1
   const width = resolution.width * scale
   const height = resolution.height * scale
