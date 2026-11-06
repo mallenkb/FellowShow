@@ -1,6 +1,11 @@
 import { create } from "zustand"
+import { recoverSermon, sanitizeSermonCapture } from "@/lib/sermon-session"
+import { useTranscriptStore } from "@/stores/transcript-store"
 import { load, type Store } from "@tauri-apps/plugin-store"
-import { sanitizeAnnouncementDocument } from "@/lib/announcements"
+import {
+  announcementPlainText,
+  sanitizeAnnouncementDocument,
+} from "@/lib/announcements"
 import type {
   AnnouncementDocument,
   PreachingSummary,
@@ -12,8 +17,26 @@ import type { SermonNoteDraft } from "@/types/sermon"
 interface SermonState {
   sessions: SermonSession[]
   activeSessionId: string | null
+  transition: "starting" | "ending" | "pausing" | "deleting" | null
+  recoverySessionId: string | null
+  saveError: string | null
+  pauseSession: (id: string, interrupted?: boolean) => void
+  resumeSession: (id: string, transcriptStartIndex: number) => void
+  setSummaryDocument: (id: string, document: AnnouncementDocument) => void
+  setAiSummaryDraft: (
+    id: string,
+    document: AnnouncementDocument,
+    draft: AnnouncementDocument,
+    title: string
+  ) => void
   selectedSessionId: string | null
-  startSession: (transcriptStartIndex: number) => string
+  pendingSummaryDocument: AnnouncementDocument | null
+  pendingSummaryTitle: string
+  setPendingSummaryDocument: (document: AnnouncementDocument) => void
+  setPendingSummaryTitle: (title: string) => void
+  startSession: (transcriptStartIndex: number, id?: string) => string
+  prepareSession: (title: string, details?: SermonDetails) => string
+  updateSessionDetails: (id: string, details: SermonDetails) => void
   completeSession: (
     id: string,
     summary: PreachingSummary | null,
@@ -63,16 +86,38 @@ interface SermonState {
   selectSession: (id: string) => void
 }
 
+interface SermonDetails {
+  title?: string
+  speaker?: string
+  series?: string
+}
+
 const STORE_FILE = "sermon-sessions.json"
 const STORE_KEY = "sessions"
 const MAX_SESSIONS = 50
+function retainSession(
+  session: SermonSession,
+  index: number,
+  sessions: SermonSession[]
+) {
+  // History limits must never discard a sermon the operator intends to resume.
+  return session.endedAt === null || index >= sessions.length - MAX_SESSIONS
+}
 let sermonStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 let pendingPersist: Promise<void> = Promise.resolve()
+let pendingSummaryRevision = 0
+let pendingSummaryTitleRevision = 0
 
 function defaultTitle() {
   return "Sermon"
+}
+
+function optionalSessionText(value: unknown): string | undefined {
+  return typeof value === "string"
+    ? value.trim().slice(0, 120) || undefined
+    : undefined
 }
 
 function sanitizeSessionTitle(value: unknown, startedAt: number) {
@@ -112,7 +157,16 @@ function sanitizeSessions(value: unknown): SermonSession[] {
     )
     .map((item) => {
       const startedAt =
-        typeof item.startedAt === "number" ? item.startedAt : Date.now()
+        typeof item.startedAt === "number" &&
+        Number.isFinite(item.startedAt) &&
+        item.startedAt >= 0
+          ? item.startedAt
+          : Date.now()
+      const endedAt =
+        typeof item.endedAt === "number" && Number.isFinite(item.endedAt)
+          ? item.endedAt
+          : null
+      const capture = sanitizeSermonCapture(item, startedAt, endedAt)
       const notes = Array.isArray(item.notes)
         ? item.notes
             .filter((note): note is Record<string, unknown> =>
@@ -174,17 +228,27 @@ function sanitizeSessions(value: unknown): SermonSession[] {
       return {
         id: typeof item.id === "string" ? item.id : crypto.randomUUID(),
         title: sanitizeSessionTitle(item.title, startedAt),
+        speaker: optionalSessionText(item.speaker),
+        series: optionalSessionText(item.series),
+        prepared:
+          item.prepared === true &&
+          endedAt === null &&
+          capture.recordingSpans.length === 0,
         startedAt,
-        endedAt: typeof item.endedAt === "number" ? item.endedAt : null,
+        endedAt,
+        ...capture,
         transcriptStartIndex:
           typeof item.transcriptStartIndex === "number"
             ? Math.max(0, item.transcriptStartIndex)
             : 0,
-        transcript: Array.isArray(item.transcript)
-          ? item.transcript.filter(
-              (line): line is string => typeof line === "string"
-            )
-          : [],
+        transcript:
+          capture.transcriptSegments.length > 0
+            ? capture.transcriptSegments.map((segment) => segment.text)
+            : Array.isArray(item.transcript)
+              ? item.transcript.filter(
+                  (line): line is string => typeof line === "string"
+                )
+              : [],
         lastNoteSegmentIndex:
           typeof item.lastNoteSegmentIndex === "number"
             ? Math.max(0, item.lastNoteSegmentIndex)
@@ -205,14 +269,19 @@ function sanitizeSessions(value: unknown): SermonSession[] {
         summaryTitle:
           typeof item.summaryTitle === "string" && item.summaryTitle.trim()
             ? item.summaryTitle
-            : "Preaching Summary",
+            : "Sermon notes",
         summaryDocument:
           item.summaryDocument && typeof item.summaryDocument === "object"
             ? sanitizeAnnouncementDocument(item.summaryDocument)
             : null,
+        summaryAiDraft:
+          item.summaryAiDraft && typeof item.summaryAiDraft === "object"
+            ? sanitizeAnnouncementDocument(item.summaryAiDraft)
+            : null,
+        summaryAiTitle: optionalSessionText(item.summaryAiTitle),
       }
     })
-    .slice(-MAX_SESSIONS)
+    .filter(retainSession)
 }
 
 async function getStore() {
@@ -223,54 +292,260 @@ async function getStore() {
 async function persist(state: SermonState) {
   try {
     const store = await getStore()
-    await store.set("version", 1)
-    await store.set(STORE_KEY, state.sessions.slice(-MAX_SESSIONS))
+    await store.set("version", 5)
+    await store.set(STORE_KEY, state.sessions.filter(retainSession))
     await store.set("selectedSessionId", state.selectedSessionId)
+    await store.set("pendingSummaryDocument", state.pendingSummaryDocument)
+    await store.set("pendingSummaryTitle", state.pendingSummaryTitle)
     await store.save()
+    useSermonStore.setState({ saveError: null })
   } catch (error) {
     console.warn("[sermon] Failed to save sermon sessions", error)
+    useSermonStore.setState({
+      saveError:
+        "Could not save this sermon. Keep the app open and try saving again.",
+    })
+    throw error
   }
 }
 
 function queuePersist(state: SermonState) {
-  pendingPersist = pendingPersist.then(() => persist(state))
+  pendingPersist = pendingPersist.catch(() => {}).then(() => persist(state))
   return pendingPersist
 }
 
 export const useSermonStore = create<SermonState>((set) => ({
   sessions: [],
   activeSessionId: null,
+  transition: null,
+  recoverySessionId: null,
+  saveError: null,
   selectedSessionId: null,
-  startSession: (transcriptStartIndex) => {
-    const startedAt = Date.now()
+  pendingSummaryDocument: null,
+  pendingSummaryTitle: "",
+  setPendingSummaryDocument: (document) => {
+    const sanitized = sanitizeAnnouncementDocument(document)
+    pendingSummaryRevision += 1
+    set({
+      pendingSummaryDocument: announcementPlainText(sanitized)
+        ? sanitized
+        : null,
+    })
+  },
+  setPendingSummaryTitle: (title) => {
+    pendingSummaryTitleRevision += 1
+    set({ pendingSummaryTitle: title.slice(0, 120) })
+  },
+  prepareSession: (title, details) => {
+    const now = Date.now()
     const id = crypto.randomUUID()
-    const session: SermonSession = {
-      id,
-      title: defaultTitle(),
-      startedAt,
-      endedAt: null,
-      transcriptStartIndex,
-      transcript: [],
-      lastNoteSegmentIndex: transcriptStartIndex,
-      aiNoteSegmentIndex: transcriptStartIndex,
-      notes: [],
-      queuedNoteIds: [],
-      finalSummary: null,
-      summaryTitle: "Preaching Summary",
-      summaryDocument: null,
-    }
     set((state) => ({
-      sessions: [...state.sessions, session].slice(-MAX_SESSIONS),
-      activeSessionId: id,
+      sessions: [
+        ...state.sessions,
+        {
+          id,
+          title: title.trim().slice(0, 120) || defaultTitle(),
+          speaker: optionalSessionText(details?.speaker),
+          series: optionalSessionText(details?.series),
+          prepared: true,
+          startedAt: now,
+          endedAt: null,
+          transcriptStartIndex: 0,
+          transcript: [],
+          lastNoteSegmentIndex: 0,
+          notes: [],
+          queuedNoteIds: [],
+          finalSummary: null,
+          summaryTitle: state.pendingSummaryTitle.trim() || "Sermon notes",
+          summaryDocument: state.pendingSummaryDocument,
+          directScriptures: [],
+          recordingSpans: [],
+          pausedAt: null,
+          lastCheckpointAt: now,
+        },
+      ].filter(retainSession),
       selectedSessionId: id,
+      pendingSummaryDocument: null,
+      pendingSummaryTitle: "",
     }))
     return id
   },
+  updateSessionDetails: (id, details) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === id
+          ? {
+              ...session,
+              title: details.title?.trim().slice(0, 120) || session.title,
+              speaker: optionalSessionText(details.speaker),
+              series: optionalSessionText(details.series),
+            }
+          : session
+      ),
+    })),
+  startSession: (transcriptStartIndex, id = crypto.randomUUID()) => {
+    const startedAt = Date.now()
+    set((state) => {
+      const session: SermonSession = {
+        id,
+        title: defaultTitle(),
+        startedAt,
+        endedAt: null,
+        transcriptStartIndex,
+        transcript: [],
+        lastNoteSegmentIndex: transcriptStartIndex,
+        aiNoteSegmentIndex: transcriptStartIndex,
+        notes: [],
+        queuedNoteIds: [],
+        finalSummary: null,
+        summaryTitle: state.pendingSummaryTitle.trim() || "Sermon notes",
+        summaryDocument: state.pendingSummaryDocument,
+        transcriptSegments: [],
+        scriptures: [],
+        directScriptures: [],
+        recordingSpans: [{ startedAt, endedAt: null }],
+        pausedAt: null,
+        lastCheckpointAt: startedAt,
+      }
+      return {
+        sessions: [...state.sessions, session].filter(retainSession),
+        activeSessionId: id,
+        selectedSessionId: id,
+        pendingSummaryDocument: null,
+        pendingSummaryTitle: "",
+      }
+    })
+    return id
+  },
+  pauseSession: (id, interrupted = false) => {
+    const now = Date.now()
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === id
+          ? {
+              ...session,
+              pausedAt: now,
+              interrupted,
+              lastCheckpointAt: now,
+              recordingSpans: (
+                session.recordingSpans ?? [
+                  { startedAt: session.startedAt, endedAt: null },
+                ]
+              ).map((span) => ({
+                ...span,
+                endedAt: span.endedAt ?? now,
+              })),
+            }
+          : session
+      ),
+      activeSessionId:
+        state.activeSessionId === id ? null : state.activeSessionId,
+      selectedSessionId: id,
+    }))
+  },
+  resumeSession: (id, transcriptStartIndex) => {
+    const now = Date.now()
+    set((state) => ({
+      sessions: state.sessions.map((session) => {
+        if (session.id !== id) return session
+        const offset = transcriptStartIndex - session.transcriptStartIndex
+        return {
+          ...session,
+          prepared: false,
+          ...(session.prepared && !session.directScriptures
+            ? { directScriptures: [] }
+            : {}),
+          startedAt: session.prepared ? now : session.startedAt,
+          transcriptStartIndex,
+          lastNoteSegmentIndex: Math.max(
+            transcriptStartIndex,
+            session.lastNoteSegmentIndex + offset
+          ),
+          aiNoteSegmentIndex: Math.max(
+            transcriptStartIndex,
+            (session.aiNoteSegmentIndex ?? session.lastNoteSegmentIndex) +
+              offset
+          ),
+          notes: session.notes.map((note) => ({
+            ...note,
+            ...(note.sourceSegmentStartIndex !== undefined
+              ? {
+                  sourceSegmentStartIndex: Math.max(
+                    transcriptStartIndex,
+                    note.sourceSegmentStartIndex + offset
+                  ),
+                }
+              : {}),
+            ...(note.sourceSegmentEndIndex !== undefined
+              ? {
+                  sourceSegmentEndIndex: Math.max(
+                    transcriptStartIndex,
+                    note.sourceSegmentEndIndex + offset
+                  ),
+                }
+              : {}),
+          })),
+          recordingSpans: [
+            ...(session.recordingSpans ?? []),
+            { startedAt: now, endedAt: null },
+          ],
+          pausedAt: null,
+          interrupted: false,
+          lastCheckpointAt: now,
+        }
+      }),
+      activeSessionId: id,
+      selectedSessionId: id,
+      recoverySessionId: null,
+    }))
+  },
+  setSummaryDocument: (id, document) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === id
+          ? {
+              ...session,
+              summaryDocument: sanitizeAnnouncementDocument(document),
+            }
+          : session
+      ),
+    })),
+  setAiSummaryDraft: (id, document, draft, title) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) => {
+        if (session.id !== id) return session
+        const updateTitle =
+          !session.summaryTitle.trim() ||
+          session.summaryTitle === "Sermon notes" ||
+          session.summaryTitle === session.summaryAiTitle
+        return {
+          ...session,
+          summaryDocument: sanitizeAnnouncementDocument(document),
+          summaryAiDraft: sanitizeAnnouncementDocument(draft),
+          ...(updateTitle
+            ? { summaryTitle: title, summaryAiTitle: title }
+            : {}),
+        }
+      }),
+    })),
   completeSession: (id, finalSummary, transcript) =>
     set((state) => ({
       sessions: state.sessions.map((session) =>
         session.id === id
-          ? { ...session, endedAt: Date.now(), finalSummary, transcript }
+          ? {
+              ...session,
+              endedAt: Date.now(),
+              finalSummary,
+              transcript,
+              recordingSpans: (
+                session.recordingSpans ?? [
+                  { startedAt: session.startedAt, endedAt: null },
+                ]
+              ).map((span) => ({
+                ...span,
+                endedAt: span.endedAt ?? Date.now(),
+              })),
+            }
           : session
       ),
       activeSessionId:
@@ -509,18 +784,23 @@ export const useSermonStore = create<SermonState>((set) => ({
 
 export function hydrateSermonSessions(): Promise<void> {
   if (hydrationPromise) return hydrationPromise
+  const pendingRevisionAtStart = pendingSummaryRevision
+  const pendingTitleRevisionAtStart = pendingSummaryTitleRevision
   hydrationPromise = (async () => {
     try {
       const store = await getStore()
-      const recoveredAt = Date.now()
       const sessions = sanitizeSessions(
         await store.get<unknown>(STORE_KEY)
-      ).map((session) =>
-        session.endedAt === null
-          ? { ...session, endedAt: recoveredAt }
-          : session
-      )
+      ).map(recoverSermon)
       const storedSelected = await store.get<string>("selectedSessionId")
+      const storedPending = await store.get<unknown>("pendingSummaryDocument")
+      const storedPendingTitle = await store.get<unknown>("pendingSummaryTitle")
+      const pendingDocument = storedPending
+        ? sanitizeAnnouncementDocument(storedPending)
+        : null
+      const pendingChanged = pendingSummaryRevision !== pendingRevisionAtStart
+      const pendingTitleChanged =
+        pendingSummaryTitleRevision !== pendingTitleRevisionAtStart
       const selected =
         sessions.find((session) => session.id === storedSelected) ??
         sessions.at(-1) ??
@@ -528,21 +808,66 @@ export function hydrateSermonSessions(): Promise<void> {
       useSermonStore.setState({
         sessions,
         activeSessionId: null,
+        recoverySessionId:
+          [...sessions]
+            .reverse()
+            .find((session) => session.endedAt === null && !session.prepared)
+            ?.id ?? null,
         selectedSessionId: selected?.id ?? null,
+        ...(pendingChanged
+          ? {}
+          : {
+              pendingSummaryDocument:
+                pendingDocument && announcementPlainText(pendingDocument)
+                  ? pendingDocument
+                  : null,
+            }),
+        ...(pendingTitleChanged
+          ? {}
+          : {
+              pendingSummaryTitle:
+                typeof storedPendingTitle === "string"
+                  ? storedPendingTitle.slice(0, 120)
+                  : "",
+            }),
       })
       useSermonStore.subscribe((state, previous) => {
         if (
           state.sessions === previous.sessions &&
-          state.selectedSessionId === previous.selectedSessionId
+          state.selectedSessionId === previous.selectedSessionId &&
+          state.pendingSummaryDocument === previous.pendingSummaryDocument &&
+          state.pendingSummaryTitle === previous.pendingSummaryTitle
         ) {
           return
         }
-        if (saveTimer) clearTimeout(saveTimer)
+        // Coalesce changes without indefinitely postponing a save while typing
+        // or receiving a rapid stream of final transcript segments.
+        if (saveTimer) return
         saveTimer = setTimeout(() => {
           saveTimer = null
-          void queuePersist(useSermonStore.getState())
+          void queuePersist(useSermonStore.getState()).catch(() => {
+            /* saveError is surfaced in the lifecycle UI. */
+          })
         }, 500)
       })
+      useTranscriptStore.subscribe((state, previous) => {
+        if (
+          state.segments !== previous.segments ||
+          state.highlightedScriptures !== previous.highlightedScriptures
+        ) {
+          checkpointActiveSermon()
+        }
+      })
+      // A heartbeat bounds the interruption time even during a silent passage.
+      setInterval(checkpointActiveSermon, 5_000)
+      if (
+        pendingChanged ||
+        pendingTitleChanged ||
+        sessions.some((session) => session.interrupted)
+      )
+        void queuePersist(useSermonStore.getState()).catch(() => {
+          /* saveError is surfaced in the lifecycle UI. */
+        })
     } catch (error) {
       console.warn("[sermon] Failed to load sermon sessions", error)
     }
@@ -556,4 +881,79 @@ export function flushSermonSessions(): Promise<void> {
     saveTimer = null
   }
   return queuePersist(useSermonStore.getState())
+}
+
+/** Remove one inactive session, restoring it if the save fails. */
+export async function removeSermonSession(id: string): Promise<void> {
+  const before = useSermonStore.getState()
+  const index = before.sessions.findIndex((session) => session.id === id)
+  const removed = before.sessions[index]
+  if (!removed) throw new Error("This session is no longer available.")
+  if (before.activeSessionId === id)
+    throw new Error("Stop listening before deleting this session.")
+
+  const remaining = before.sessions.filter((session) => session.id !== id)
+  const replacementId = before.activeSessionId ?? remaining.at(-1)?.id ?? null
+  useSermonStore.setState({
+    sessions: remaining,
+    selectedSessionId:
+      before.selectedSessionId === id
+        ? replacementId
+        : before.selectedSessionId,
+    recoverySessionId:
+      before.recoverySessionId === id ? null : before.recoverySessionId,
+  })
+
+  try {
+    await flushSermonSessions()
+  } catch (error) {
+    useSermonStore.setState((current) => {
+      if (current.sessions.some((session) => session.id === id)) return current
+      const sessions = [...current.sessions]
+      sessions.splice(Math.min(index, sessions.length), 0, removed)
+      return {
+        sessions,
+        selectedSessionId:
+          before.selectedSessionId === id &&
+          current.selectedSessionId === replacementId
+            ? id
+            : current.selectedSessionId,
+        recoverySessionId:
+          before.recoverySessionId === id && current.recoverySessionId === null
+            ? id
+            : current.recoverySessionId,
+      }
+    })
+    // A save queued during the failed removal must not overwrite the rollback.
+    try {
+      await flushSermonSessions()
+    } catch {
+      // saveError remains visible until the restored session can be saved.
+    }
+    throw error
+  }
+}
+
+/** Copy live capture into its durable sermon, independently of finishing it. */
+export function checkpointActiveSermon(): void {
+  const state = useSermonStore.getState()
+  const session = state.sessions.find(
+    (candidate) => candidate.id === state.activeSessionId
+  )
+  if (!session) return
+  const live = useTranscriptStore.getState()
+  const transcriptSegments = live.segments.slice(session.transcriptStartIndex)
+  useSermonStore.setState({
+    sessions: state.sessions.map((candidate) =>
+      candidate.id === session.id
+        ? {
+            ...candidate,
+            transcriptSegments,
+            transcript: transcriptSegments.map((segment) => segment.text),
+            scriptures: [...live.highlightedScriptures],
+            lastCheckpointAt: Date.now(),
+          }
+        : candidate
+    ),
+  })
 }

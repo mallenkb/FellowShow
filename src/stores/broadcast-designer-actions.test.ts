@@ -15,8 +15,10 @@ async function editAnnouncements() {
 describe("saving built-in theme copies", () => {
   it("preserves undo and redo without restoring the built-in identity or creating extra copies", async () => {
     const store = await editAnnouncements()
+    const originalAlign = store.getState().draftTheme!.verseText.horizontalAlign
+    const editedAlign = originalAlign === "right" ? "left" : "right"
     store.getState().updateDraftDeep((draft) => {
-      draft.verseText.horizontalAlign = "center"
+      draft.verseText.horizontalAlign = editedAlign
     }, "verseText.horizontalAlign")
     store.getState().saveDraft()
     const customId = store.getState().editingThemeId
@@ -27,7 +29,7 @@ describe("saving built-in theme copies", () => {
       id: customId,
       name: customName,
       builtin: false,
-      verseText: { horizontalAlign: "left" },
+      verseText: { horizontalAlign: originalAlign },
     })
     expect(store.getState().isDirty).toBe(true)
     store.getState().saveDraft()
@@ -35,7 +37,7 @@ describe("saving built-in theme copies", () => {
     expect(store.getState().draftTheme).toMatchObject({
       id: customId,
       builtin: false,
-      verseText: { horizontalAlign: "center" },
+      verseText: { horizontalAlign: editedAlign },
     })
     store.getState().saveDraft()
 
@@ -47,19 +49,21 @@ describe("saving built-in theme copies", () => {
         .getState()
         .themes.find((theme) => theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID)
         ?.verseText.horizontalAlign
-    ).toBe("left")
+    ).toBe(originalAlign)
     store.getState().setDesignerOpen(false)
     store.getState().startEditing(customId!)
     expect(store.getState().draftTheme?.verseText.horizontalAlign).toBe(
-      "center"
+      editedAlign
     )
     expect(store.getState().isDirty).toBe(false)
   })
 
   it("rebases an existing redo branch onto the custom copy", async () => {
     const store = await editAnnouncements()
+    const originalAlign = store.getState().draftTheme!.verseText.horizontalAlign
+    const firstAlign = originalAlign === "left" ? "center" : "left"
     store.getState().updateDraftDeep((draft) => {
-      draft.verseText.horizontalAlign = "center"
+      draft.verseText.horizontalAlign = firstAlign
     }, "first")
     store.getState().updateDraftDeep((draft) => {
       draft.verseText.horizontalAlign = "right"

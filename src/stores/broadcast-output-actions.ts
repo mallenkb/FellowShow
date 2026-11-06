@@ -39,7 +39,6 @@ export function createOutputActions(
       // the staged song verse without taking that verse to the main program.
       const mirrorsSongPreview = output.content === "songs"
       const outputVerse = mirrorsSongPreview ? s.previewVerse : s.liveVerse
-      const outputTimer = mirrorsSongPreview ? s.previewTimer : s.presenterTimer
       // Theme follows the staged content even off-air, so the background is
       // already right before going live; program content itself is gated below.
       const themeId = resolveOutputThemeId(
@@ -54,22 +53,20 @@ export function createOutputActions(
       // Outputs only carry program content while live — and only the content
       // routed to them; off-air (or when other content is live) they fall back
       // to the theme background instead of freezing on the last verse.
-      const { verse, timer } = getOutputProgramPayload(
+      const { verse } = getOutputProgramPayload(
         output.content,
         mirrorsSongPreview || s.isLive,
-        outputVerse,
-        outputTimer
+        outputVerse
       )
       void emitTo(windowLabelForOutput(output.id), "broadcast:verse-update", {
         theme,
         verse,
-        timer,
         lowerThird:
           output.content === "everything" && s.isLive ? s.lowerThird : null,
-        overlays: getOutputOverlayPayload(s, output, verse, timer),
+        overlays: getOutputOverlayPayload(s, output, verse),
         opacity: s.outputOpacity,
-        ...(getOutputKeyMode(s, output, verse, timer)
-          ? { overlayMode: getOutputKeyMode(s, output, verse, timer) }
+        ...(getOutputKeyMode(s, output, verse)
+          ? { overlayMode: getOutputKeyMode(s, output, verse) }
           : {}),
       }).catch(() => {})
     },
@@ -173,7 +170,7 @@ export function createOutputActions(
       })
       get().syncBroadcastOutputFor(id)
     },
-    setPreviewOutput: (previewVerse, previewTimer) => {
+    setPreviewOutput: (previewVerse) => {
       let previewChanged = false
       set((s) => {
         const nextPreviewVerse = withPresentationPlaybackClock(
@@ -182,13 +179,11 @@ export function createOutputActions(
         )
         const samePreview = hasSameProgramPayload(
           s.previewVerse,
-          s.previewTimer,
-          nextPreviewVerse,
-          previewTimer
+          nextPreviewVerse
         )
         if (samePreview) return s
         previewChanged = true
-        return { previewVerse: nextPreviewVerse, previewTimer }
+        return { previewVerse: nextPreviewVerse }
       })
       if (previewChanged) {
         // A live-verse bar on air follows the staged verse while Program is off.
@@ -213,24 +208,22 @@ export function createOutputActions(
       })
       get().syncBroadcastOutput()
     },
-    presentOnLive: (previewVerse, previewTimer, source = "manual") => {
+    presentOnLive: (previewVerse, source = "manual") => {
       const nextVerse = withPresentationPlaybackClock(
         previewVerse,
         get().previewVerse
       )
       set({
         previewVerse: nextVerse,
-        previewTimer,
         isLive: true,
         liveVerse: nextVerse,
-        presenterTimer: previewTimer,
         liveSource: source,
       })
       get().syncBroadcastOutput()
     },
     showPreviewOnLive: (source = "preview") => {
       set((s) => {
-        if (!hasProgramContent(s.previewVerse, s.previewTimer)) {
+        if (!hasProgramContent(s.previewVerse)) {
           return {
             isLive: true,
             liveSource: source,
@@ -239,7 +232,6 @@ export function createOutputActions(
         return {
           isLive: true,
           liveVerse: s.previewVerse,
-          presenterTimer: s.previewTimer,
           liveSource: source,
         }
       })
@@ -249,7 +241,6 @@ export function createOutputActions(
       set((s) => ({
         isLive: true,
         liveVerse: s.previewVerse,
-        presenterTimer: s.previewTimer,
         liveSource: source,
       }))
       get().syncBroadcastOutput()
@@ -272,10 +263,6 @@ export function createOutputActions(
       set((s) => ({
         liveVerse: withPresentationPlaybackClock(liveVerse, s.liveVerse),
       }))
-      get().syncBroadcastOutput()
-    },
-    setPresenterTimer: (presenterTimer) => {
-      set({ presenterTimer })
       get().syncBroadcastOutput()
     },
     setLowerThird: (lowerThird) => {

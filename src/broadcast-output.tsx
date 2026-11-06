@@ -30,7 +30,6 @@ import {
 import type {
   BroadcastTheme,
   LowerThirdRenderData,
-  PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types/broadcast"
 import type { BroadcastOverlayPayload, NdiConfigEventPayload } from "@/types"
@@ -83,7 +82,6 @@ function setVideoOverlaysWindowTitle(): void {
 interface BroadcastPayload {
   theme: BroadcastTheme
   verse: VerseRenderData | null
-  timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
   overlays?: BroadcastOverlayPayload | null
   overlayMode?: OverlayOutputMode
@@ -103,7 +101,6 @@ function directVideoFor(payload: BroadcastPayload): DirectVideo | null {
     payload.overlayMode ||
     Boolean(video?.layers?.length) ||
     video?.mediaType !== "video" ||
-    payload.timer ||
     payload.verse?.tickerText ||
     (payload.overlays?.logos.length ?? 0) > 0 ||
     payload.overlays?.lowerThird ||
@@ -133,8 +130,6 @@ function transitionKey(data: BroadcastPayload | null): string {
       ]) ?? null,
     presentationPlaybackStartedAt:
       data.verse?.presentationImage?.playbackStartedAt ?? null,
-    timerVisible: Boolean(data.timer),
-    timerFinished: data.timer?.isFinished ?? false,
     overlayMode: data.overlayMode ?? null,
     lowerThirdVisible: includeLowerThird
       ? (data.lowerThird?.visible ?? false)
@@ -320,7 +315,7 @@ function BroadcastCanvas() {
         return
       }
 
-      const { theme, verse, timer, lowerThird, overlays, overlayMode } = data
+      const { theme, verse, lowerThird, overlays, overlayMode } = data
       // Assigning a canvas dimension clears its backing store and forces a
       // reallocation. This runs for every video frame, so only resize when
       // the output resolution actually changes.
@@ -346,7 +341,6 @@ function BroadcastCanvas() {
         now: Date.now(),
         imageCache: imageCacheRef.current,
         videoCache: videoCacheRef.current,
-        timer,
         lowerThird,
       })
       if (!result) {
@@ -456,13 +450,6 @@ function BroadcastCanvas() {
           url: item.url,
           playbackStartedAt: item.playbackStartedAt,
         })),
-      payload.timer?.backgroundMediaType === "video" &&
-      payload.timer.backgroundUrl
-        ? {
-            url: payload.timer.backgroundUrl,
-            playbackStartedAt: payload.timer.backgroundPlaybackStartedAt,
-          }
-        : null,
     ].filter(
       (
         item
@@ -516,13 +503,6 @@ function BroadcastCanvas() {
           url: bg.image.url,
           mediaType: bg.image.mediaType ?? "image",
           playbackStartedAt: bg.image.playbackStartedAt,
-        })
-      }
-      if (payload.timer?.backgroundUrl) {
-        media.push({
-          url: payload.timer.backgroundUrl,
-          mediaType: payload.timer.backgroundMediaType ?? "image",
-          playbackStartedAt: payload.timer.backgroundPlaybackStartedAt,
         })
       }
       for (const item of presentationMedia(payload.verse?.presentationImage)) {

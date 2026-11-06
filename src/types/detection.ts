@@ -5,6 +5,9 @@ export interface DetectionResult {
   book_number: number
   chapter: number
   verse: number
+  verse_end?: number | null
+  verse_parts?: { verse: number; text: string }[]
+  translation_id?: number
   confidence: number
   source: "direct" | "semantic"
   auto_queued: boolean

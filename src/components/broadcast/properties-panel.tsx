@@ -37,12 +37,23 @@ export function PropertiesPanel() {
         defaultValue="text"
         className="flex min-h-0 flex-1 flex-col overflow-hidden"
       >
-        <div className="shrink-0 px-4 pt-3">
-          <TabsList variant="default" className="w-full">
-            <TabsTrigger value="text">Text</TabsTrigger>
-            <TabsTrigger value="colors">Colors</TabsTrigger>
-            <TabsTrigger value="background">Background</TabsTrigger>
-            <TabsTrigger value="layout">Layout</TabsTrigger>
+        <div className="shrink-0 px-4 pt-3 dark:overflow-x-auto">
+          <TabsList
+            variant="default"
+            className="workspace-segment-track w-full dark:w-max dark:min-w-full"
+          >
+            <TabsTrigger className="workspace-segment" value="text">
+              Text
+            </TabsTrigger>
+            <TabsTrigger className="workspace-segment" value="colors">
+              Colors
+            </TabsTrigger>
+            <TabsTrigger className="workspace-segment" value="background">
+              Background
+            </TabsTrigger>
+            <TabsTrigger className="workspace-segment" value="layout">
+              Layout
+            </TabsTrigger>
           </TabsList>
         </div>
 

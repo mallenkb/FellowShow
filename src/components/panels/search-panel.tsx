@@ -5,6 +5,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react"
+import { createPortal } from "react-dom"
 import {
   BookOpenIcon,
   ImageIcon,
@@ -12,11 +13,9 @@ import {
   MusicIcon,
   PlusIcon,
   NotebookTextIcon,
-  TimerIcon,
   type LucideIcon,
 } from "lucide-react"
 import { toast } from "sonner"
-import { DskOutputControls } from "@/components/on-display/dsk-output-controls"
 import { OnDisplayOverview } from "@/components/on-display/on-display-overview"
 import { AnnouncementsTab } from "@/components/panels/search/announcements-tab"
 import { PresentationSearchTab } from "@/components/panels/search/presentation-search-tab"
@@ -24,8 +23,8 @@ import { ScriptureSearchTab } from "@/components/panels/search/scripture-search-
 import type { ScriptureSearchMode } from "@/components/panels/search/use-scripture-search"
 import { SongFilterDropdown } from "@/components/panels/search/song-filter-dropdown"
 import { SongsTab } from "@/components/panels/search/songs-tab"
-import { TimerTab } from "@/components/panels/search/timer-tab"
 import { useSongSearch } from "@/components/panels/search/use-song-search"
+import { useSearchShortcut } from "@/components/panels/search/use-search-shortcut"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { CopSong } from "@/lib/cop-songs"
@@ -41,13 +40,7 @@ import { EasyWorshipRemoveDialog } from "@/components/songs/easyworship-remove-d
 import { isOptionalSearchTab, useSettingsStore } from "@/stores/settings-store"
 
 type SearchTab =
-  | "book"
-  | "context"
-  | "songs"
-  | "announcements"
-  | "presentation"
-  | "timer"
-  | "on-display"
+  "book" | "context" | "songs" | "announcements" | "presentation" | "on-display"
 const SONG_PAGE_SIZE = 50
 
 interface SearchTabOption {
@@ -59,8 +52,10 @@ interface SearchTabOption {
 
 export function SearchPanel({
   onSearchModeChange,
+  navigationTarget,
 }: {
   onSearchModeChange?: (mode: SearchTab) => void
+  navigationTarget?: HTMLElement | null
 }) {
   const [selectedTab, setSelectedTab] = useState<SearchTab>("book")
   const extraSearchTabs = useSettingsStore((state) => state.extraSearchTabs)
@@ -76,13 +71,36 @@ export function SearchPanel({
   const setSongSourceFilter = useSongFilterStore((s) => s.setSource)
   const [songRenderLimit, setSongRenderLimit] = useState(SONG_PAGE_SIZE)
   const [songHighlight, setSongHighlight] = useState(0)
+  const [songSearchFocused, setSongSearchFocused] = useState(false)
   const [allSongs, setAllSongs] = useState<CopSong[]>([])
+  const [songsLoaded, setSongsLoaded] = useState(false)
   const [confirmingEasyWorshipRemoval, setConfirmingEasyWorshipRemoval] =
     useState(false)
   const easyWorshipSongCount = useMemo(
     () => allSongs.filter((song) => song.source === "easyworship").length,
     [allSongs]
   )
+  const songSources = useMemo(() => {
+    const sources = new Map<
+      Exclude<CopSong["source"], undefined | "built-in">,
+      string
+    >()
+    for (const song of allSongs) {
+      if (song.source && song.source !== "built-in") {
+        sources.set(song.source, song.sourceLabel ?? song.languageLabel)
+      }
+    }
+    return [...sources].map(([value, label]) => ({ value, label }))
+  }, [allSongs])
+  useEffect(() => {
+    if (
+      songsLoaded &&
+      songSourceFilter !== "all" &&
+      !songSources.some((item) => item.value === songSourceFilter)
+    ) {
+      setSongSourceFilter("all")
+    }
+  }, [songsLoaded, songSourceFilter, songSources, setSongSourceFilter])
   const songSearchKey = `${songQuery}\u0000${songSourceFilter}`
   const [previousSongSearchKey, setPreviousSongSearchKey] =
     useState(songSearchKey)
@@ -101,7 +119,10 @@ export function SearchPanel({
     let active = true
     void loadAllSongs()
       .then((songs) => {
-        if (active) setAllSongs(songs)
+        if (active) {
+          setAllSongs(songs)
+          setSongsLoaded(true)
+        }
       })
       .catch(() => toast.error("Could not reload songs."))
     return () => {
@@ -115,10 +136,16 @@ export function SearchPanel({
 
   const setSearchTab = useCallback((tab: SearchTab) => {
     setSelectedTab(tab)
+    if (tab !== "songs") setSongSearchFocused(false)
     if (tab === "book" || tab === "context") {
       setScriptureMode(tab)
     }
   }, [])
+
+  const { scriptureSearchRef, songSearchRef } = useSearchShortcut(
+    activeTab,
+    setSearchTab
+  )
 
   useEffect(() => {
     onSearchModeChange?.(activeTab)
@@ -129,7 +156,10 @@ export function SearchPanel({
     let active = true
     void loadAllSongs()
       .then((songs) => {
-        if (active) setAllSongs(songs)
+        if (active) {
+          setAllSongs(songs)
+          setSongsLoaded(true)
+        }
       })
       .catch((error) => {
         console.warn("[songs] Could not prepare song catalog", error)
@@ -182,20 +212,31 @@ export function SearchPanel({
     }
   }
 
+  const isTabActive = (tab: SearchTab) =>
+    tab === "book"
+      ? activeTab === "book" || activeTab === "context"
+      : activeTab === tab
+  const isHeaderNavigation = navigationTarget !== undefined
+
   const tabButtonClass = (tab: SearchTab) =>
     cn(
-      "search-tab flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium whitespace-nowrap transition-colors",
-      activeTab === tab
-        ? "border-[#101084]/50 bg-[#101084]/15 text-[#101084] dark:border-[#F1E600]/50 dark:bg-[#F1E600]/15 dark:text-[#F1E600]"
-        : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40"
+      "search-tab flex shrink-0 items-center gap-1.5 border text-xs font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+      isHeaderNavigation
+        ? "h-8 rounded-[calc(var(--workspace-nav-radius,10px)_-_4px)] px-3"
+        : "h-7 rounded-md px-2.5",
+      isTabActive(tab)
+        ? isHeaderNavigation
+          ? "border-transparent bg-card text-secondary-foreground dark:bg-secondary"
+          : "border-primary-emphasis/50 bg-primary/15 text-primary-emphasis"
+        : isHeaderNavigation
+          ? "border-transparent bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40 dark:hover:bg-muted/40"
     )
 
   const tabIconClass = (tab: SearchTab) =>
     cn(
       "size-3.5",
-      activeTab === tab
-        ? "text-[#101084] dark:text-[#F1E600]"
-        : "text-muted-foreground"
+      isTabActive(tab) ? "text-primary-emphasis" : "text-muted-foreground"
     )
 
   const tabs = useMemo((): SearchTabOption[] => {
@@ -205,14 +246,13 @@ export function SearchPanel({
         label: "Video Overlays",
         icon: LayersIcon,
       },
-      { id: "timer" as const, label: "Timer", icon: TimerIcon },
     ].filter(
       (tab) => isOptionalSearchTab(tab.id) && extraSearchTabs.includes(tab.id)
     )
     return [
       {
         id: "book" as const,
-        label: "Sermon",
+        label: "Bible",
         icon: BookOpenIcon,
         tour: "book-search",
       },
@@ -228,55 +268,73 @@ export function SearchPanel({
   }, [extraSearchTabs])
 
   const isScriptureActive = activeTab === "book" || activeTab === "context"
-  // Sermon, Notes, and Media draw their own controls and divider under the tabs.
-  const headerHasControls =
-    activeTab === "songs" || activeTab === "timer" || activeTab === "on-display"
+  const headerHasControls = activeTab === "songs"
+  const navigation = (
+    <nav
+      aria-label="Workspaces"
+      className={cn(
+        "flex min-w-0 items-center",
+        isHeaderNavigation ? "gap-0" : "gap-1"
+      )}
+    >
+      {tabs.map((tab) => {
+        const Icon = tab.icon
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            data-tour={tab.tour}
+            onClick={() => setSearchTab(tab.id)}
+            className={tabButtonClass(tab.id)}
+            title={tab.label}
+            aria-label={tab.label}
+            aria-pressed={isTabActive(tab.id)}
+          >
+            {isHeaderNavigation ? null : (
+              <Icon className={tabIconClass(tab.id)} />
+            )}
+            <span>{tab.label}</span>
+          </button>
+        )
+      })}
+    </nav>
+  )
 
   return (
     <div
       data-slot="search-panel"
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors outline-none"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card transition-colors outline-none"
     >
+      {navigationTarget ? createPortal(navigation, navigationTarget) : null}
       <div
         className={cn(
-          "flex shrink-0 flex-col gap-2.5 px-3 pt-2",
-          headerHasControls ? "border-b border-border pb-3" : "pb-0"
+          "flex shrink-0 flex-col gap-2.5",
+          navigationTarget === undefined || headerHasControls
+            ? "bg-muted/40 px-3 pt-2"
+            : "hidden",
+          headerHasControls ? "pb-3" : "pb-0"
         )}
       >
-        <div className="-mx-1 flex min-w-0 [scrollbar-width:none] items-center gap-1 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:hidden">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                data-tour={tab.tour}
-                onClick={() => setSearchTab(tab.id)}
-                className={tabButtonClass(tab.id)}
-                title={tab.label}
-                aria-label={tab.label}
-                aria-pressed={activeTab === tab.id}
-              >
-                <Icon className={tabIconClass(tab.id)} />
-                <span className="search-tab-label">{tab.label}</span>
-              </button>
-            )
-          })}
-        </div>
+        {navigationTarget === undefined ? navigation : null}
 
         {activeTab === "songs" ? (
           <div className="flex min-w-0 items-center gap-2">
             <Input
+              ref={songSearchRef}
               placeholder="Search songs · ↑↓ then Enter"
               aria-label="Search songs"
+              aria-keyshortcuts="/"
               value={songQuery}
               onChange={(event) => setSongQuery(event.target.value)}
+              onFocus={() => setSongSearchFocused(true)}
+              onBlur={() => setSongSearchFocused(false)}
               onKeyDown={handleSongKeyDown}
               className="h-10 min-w-0 flex-1 text-sm"
             />
             <SongFilterDropdown
               sourceValue={songSourceFilter}
               onSourceChange={setSongSourceFilter}
+              sources={songSources}
               onRemoveEasyWorship={
                 easyWorshipSongCount > 0
                   ? () => setConfirmingEasyWorshipRemoval(true)
@@ -309,13 +367,6 @@ export function SearchPanel({
               onSongsChanged={setAllSongs}
             />
           </div>
-        ) : activeTab === "timer" ? (
-          <TabDescription>Timer controls</TabDescription>
-        ) : activeTab === "on-display" ? (
-          // The graphics output and keying replace a caption here.
-          <div className="flex h-10 items-center">
-            <DskOutputControls />
-          </div>
         ) : null}
       </div>
 
@@ -323,6 +374,7 @@ export function SearchPanel({
         mode={scriptureMode}
         isActive={isScriptureActive}
         onRequestMode={setSearchTab}
+        searchInputRef={scriptureSearchRef}
       />
 
       {activeTab === "songs" ? (
@@ -333,7 +385,7 @@ export function SearchPanel({
           isSearching={isSongSearching}
           activeSongId={activeSongItem?.id ?? null}
           query={effectiveSongQuery}
-          highlightIndex={songHighlight}
+          highlightIndex={songSearchFocused ? songHighlight : -1}
           onEditSong={(song) => useSongEditorStore.getState().openEdit(song.id)}
           onAddSong={() => useSongEditorStore.getState().openNew(songQuery)}
           showSource={songSourceFilter === "all"}
@@ -353,17 +405,6 @@ export function SearchPanel({
       <PresentationSearchTab isActive={activeTab === "presentation"} />
       {activeTab === "announcements" ? <AnnouncementsTab /> : null}
       {activeTab === "on-display" ? <OnDisplayOverview /> : null}
-      {activeTab === "timer" ? <TimerTab /> : null}
-    </div>
-  )
-}
-
-function TabDescription({ children }: { children: string }) {
-  return (
-    <div className="flex h-10 items-center">
-      <span className="text-xs font-medium text-muted-foreground">
-        {children}
-      </span>
     </div>
   )
 }

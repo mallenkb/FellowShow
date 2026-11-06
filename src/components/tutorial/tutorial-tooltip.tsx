@@ -52,7 +52,7 @@ export function TutorialTooltip({
     >
       <div className="flex items-center gap-2.5 border-b border-border/40 px-4 pt-4 pb-3">
         <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-          <SparklesIcon className="size-3.5 text-primary" />
+          <SparklesIcon className="size-3.5 text-primary-emphasis" />
         </div>
         <h3 className="text-sm leading-tight font-semibold tracking-tight text-foreground">
           {step.title ?? `Step ${index + 1}`}

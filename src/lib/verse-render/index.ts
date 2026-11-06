@@ -11,11 +11,10 @@ import type {
   VerseRenderData,
 } from "@/types/broadcast"
 
-import { drawPresenterTimer, drawTickerLayer, lyricFooterTheme } from "./color"
+import { drawTickerLayer, lyricFooterTheme } from "./color"
 import {
   drawBackground,
   drawPresentationImage,
-  drawPresenterTimerBackground,
   drawReference,
   drawVerseText,
   roundRect,
@@ -55,19 +54,6 @@ function renderVerseImpl(
 
   // Draw background
   drawBackground(ctx, scaledTheme, options?.imageCache, options?.videoCache)
-
-  if (options?.timer) {
-    drawPresenterTimerBackground(
-      ctx,
-      scaledTheme,
-      options.timer,
-      options.imageCache,
-      options.videoCache
-    )
-    drawPresenterTimer(ctx, scaledTheme, options.timer)
-    ctx.restore()
-    return metrics
-  }
 
   if (!shouldRenderStandardBroadcastContent(scaledTheme)) {
     if (options?.lowerThird && shouldRenderLowerThirdLayer(scaledTheme)) {
@@ -122,7 +108,7 @@ function renderVerseImpl(
     ctx.restore()
   }
 
-  // If no verse data, just draw the background, text box, and timer
+  // If no verse data, just draw the background and text box.
   if (!verse) {
     ctx.restore()
     return metrics

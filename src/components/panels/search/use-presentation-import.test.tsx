@@ -11,6 +11,8 @@ import {
 import { usePresentationStore } from "@/stores/presentation-store"
 import { usePresentationImport } from "./use-presentation-import"
 
+const { importDocuments } = vi.hoisted(() => ({ importDocuments: vi.fn() }))
+
 vi.mock("@tauri-apps/api/core", () => ({ isTauri: vi.fn(() => true) }))
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }))
 vi.mock("@tauri-apps/plugin-fs", () => ({ remove: vi.fn(async () => {}) }))
@@ -22,7 +24,7 @@ vi.mock("@/lib/presentation-media", () => ({
 }))
 vi.mock("./use-presentation-document-import", () => ({
   usePresentationDocumentImport: () => ({
-    importPresentationDocuments: vi.fn(),
+    importPresentationDocuments: importDocuments,
     isImportingDocuments: false,
   }),
 }))
@@ -34,6 +36,25 @@ beforeEach(() => {
 })
 
 describe("presentation import error handling", () => {
+  it("offers PDFs in the native library picker and sends the selected file to the document importer", async () => {
+    vi.mocked(open).mockResolvedValue(["/source/two-pages.pdf"])
+    const { result } = renderHook(() => usePresentationImport())
+
+    await act(async () => result.current.importContent())
+
+    expect(open).toHaveBeenCalledWith(
+      expect.objectContaining({
+        multiple: true,
+        filters: expect.arrayContaining([
+          expect.objectContaining({
+            extensions: expect.arrayContaining(["pdf"]),
+          }),
+        ]),
+      })
+    )
+    expect(importDocuments).toHaveBeenCalledWith(["/source/two-pages.pdf"])
+  })
+
   it("keeps the valid native image when another selected image cannot decode", async () => {
     vi.mocked(open).mockResolvedValue([
       "/source/broken.png",

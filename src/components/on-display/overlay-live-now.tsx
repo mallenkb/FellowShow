@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { RadioIcon, SquareIcon, XIcon } from "lucide-react"
+import { XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LiveActionButton } from "@/components/ui/live-action-button"
 import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
 import {
   resolveOverlayOutput,
@@ -63,8 +64,12 @@ function liveGraphics(
   return items
 }
 
-/** What the congregation sees right now, with one action to change it. */
-export function OverlayLiveNow() {
+/** Shows the live graphics and, when requested, output controls. */
+export function OverlayLiveNow({
+  showControls = true,
+}: {
+  showControls?: boolean
+}) {
   const config = useBroadcastStore((state) => state.overlayConfig)
   const active = useBroadcastStore((state) => state.activeOverlays)
   const staged = useBroadcastStore((state) => state.stagedOverlays)
@@ -75,9 +80,7 @@ export function OverlayLiveNow() {
   const onAir = useOverlayOutputLive()
   // Graphics pause while Program shows its own content.
   const pausedByProgram = useBroadcastStore(
-    (state) =>
-      state.isLive &&
-      programHidesGraphics(state.liveVerse, state.presenterTimer)
+    (state) => state.isLive && programHidesGraphics(state.liveVerse)
   )
   const [busy, setBusy] = useState(false)
   const output = resolveOverlayOutput(outputs, selectedOutputId)
@@ -118,7 +121,7 @@ export function OverlayLiveNow() {
           id="overlay-live-heading"
           className={cn(
             "inline-flex items-center gap-2 text-[0.6875rem] font-semibold tracking-wider uppercase",
-            onAir ? "text-red-500" : "text-muted-foreground"
+            onAir ? "text-red-700 dark:text-red-500" : "text-muted-foreground"
           )}
         >
           <span
@@ -130,33 +133,22 @@ export function OverlayLiveNow() {
           />
           {onAir ? "On air" : "Off air"}
         </h3>
-        {onAir && !pending ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 text-red-500 hover:text-red-500"
+        {!showControls ? null : onAir && !pending ? (
+          <LiveActionButton
+            action="stop-live"
             disabled={busy}
             onClick={() => void run("stop")}
-          >
-            <SquareIcon className="size-3" /> Stop
-          </Button>
+          />
         ) : (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="h-7"
+          <LiveActionButton
+            action={pending ? "update" : "show"}
             disabled={busy || !output || (previewEmpty && !onAir)}
             onClick={() => void run("show")}
-          >
-            <RadioIcon className="size-3.5" />
-            {pending ? "Update Live" : "Show on Live"}
-          </Button>
+          />
         )}
       </div>
       {onAir && pausedByProgram && items.length > 0 ? (
-        <p className="border-t border-border/60 px-3 py-2 text-xs text-amber-500">
+        <p className="border-t border-border/60 px-3 py-2 text-xs text-amber-800 dark:text-amber-500">
           Hidden while Program shows content. They come back when Program is
           back on live video.
         </p>

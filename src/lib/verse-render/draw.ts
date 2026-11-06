@@ -1,10 +1,6 @@
 import { presentationMedia } from "@/lib/presentation-composition"
 import { videoFrameForCanvas } from "@/lib/video-frame-cache"
-import type {
-  BroadcastTheme,
-  PresenterTimerRenderData,
-  VerseRenderData,
-} from "@/types/broadcast"
+import type { BroadcastTheme, VerseRenderData } from "@/types/broadcast"
 import { lyricDisplayLines } from "@/lib/lyrics"
 import { splitOversizedWord } from "./word-wrap"
 
@@ -447,29 +443,6 @@ export function drawPresentationImage(
     ctx.restore()
   }
   return true
-}
-
-export function drawPresenterTimerBackground(
-  ctx: CanvasRenderingContext2D,
-  theme: BroadcastTheme,
-  timer: PresenterTimerRenderData,
-  imageCache?: Map<string, HTMLImageElement>,
-  videoCache?: Map<string, HTMLVideoElement>
-): void {
-  const { width, height } = theme.resolution
-  const media = timer.backgroundUrl
-    ? timer.backgroundMediaType === "video"
-      ? videoCache?.get(timer.backgroundUrl)
-      : imageCache?.get(timer.backgroundUrl)
-    : null
-
-  if (!media) {
-    ctx.fillStyle = "#020712"
-    ctx.fillRect(0, 0, width, height)
-    return
-  }
-
-  drawImageToRect(ctx, media, 0, 0, width, height, "cover")
 }
 
 export function drawReference(

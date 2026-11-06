@@ -51,6 +51,7 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
   const selectedDocumentId = usePresentationStore(
     (state) => state.selectedDocumentId
   )
+  const hasMedia = slides.length > 0 || documents.length > 0
   const { orderedSlides, pinnedCount } = useMemo(() => {
     const pinned: PresentationSlide[] = []
     const unpinned: PresentationSlide[] = []
@@ -73,7 +74,7 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
 
   const presentSlide = useCallback((slide: PresentationSlide) => {
     usePresentationStore.getState().selectSlide(slide.id)
-    useBroadcastStore.getState().presentOnLive(slideRenderData(slide), null)
+    useBroadcastStore.getState().presentOnLive(slideRenderData(slide))
   }, [])
 
   const updateDropTarget = useCallback(
@@ -167,36 +168,38 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
       }}
       onDrop={handleExternalDrop}
     >
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 pt-2.5 pb-3">
-        <input
-          ref={inputRef}
-          type="file"
-          accept={PRESENTATION_FILE_ACCEPT}
-          multiple
-          className="hidden"
-          onChange={(event) => {
-            void importFiles(event.target.files)
-            event.target.value = ""
-          }}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="h-10 flex-1 justify-center"
-          disabled={isImportingDocuments}
-          onClick={() => void importContent()}
-        >
-          {isImportingDocuments ? (
-            <LoaderCircleIcon className="size-4 animate-spin" />
-          ) : (
-            <UploadIcon className="size-4" />
-          )}
-          <span>{isImportingDocuments ? "Importing…" : "Import"}</span>
-        </Button>
-      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={PRESENTATION_FILE_ACCEPT}
+        multiple
+        className="hidden"
+        onChange={(event) => {
+          void importFiles(event.target.files)
+          event.target.value = ""
+        }}
+      />
+      {hasMedia ? (
+        <div className="flex shrink-0 items-center gap-2 bg-surface-header px-3 pt-2.5 pb-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 flex-1 justify-center"
+            disabled={isImportingDocuments}
+            onClick={() => void importContent()}
+          >
+            {isImportingDocuments ? (
+              <LoaderCircleIcon className="size-4 animate-spin" />
+            ) : (
+              <UploadIcon className="size-4" />
+            )}
+            <span>{isImportingDocuments ? "Importing…" : "Import"}</span>
+          </Button>
+        </div>
+      ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto select-none">
-        {slides.length === 0 && documents.length === 0 ? (
+        {!hasMedia ? (
           <div className="flex h-full items-center justify-center p-6 text-center">
             <div className="max-w-xs">
               <ImageIcon className="mx-auto mb-3 size-6 text-muted-foreground/70" />
@@ -207,10 +210,24 @@ export function PresentationSearchTab({ isActive }: { isActive: boolean }) {
                 Add images, videos, PDFs, PowerPoint, Word, or other documents
                 to preview and present them.
               </p>
+              <Button
+                type="button"
+                size="sm"
+                className="mt-4"
+                disabled={isImportingDocuments}
+                onClick={() => void importContent()}
+              >
+                {isImportingDocuments ? (
+                  <LoaderCircleIcon className="size-4 animate-spin" />
+                ) : (
+                  <UploadIcon className="size-4" />
+                )}
+                {isImportingDocuments ? "Importing…" : "Import media"}
+              </Button>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2 p-2">
+          <div className="grid grid-cols-1 gap-2 px-3 py-2">
             {pinnedCount > 0 ? (
               <SectionDivider label="Pinned" />
             ) : slides.length > 0 && documents.length > 0 ? (

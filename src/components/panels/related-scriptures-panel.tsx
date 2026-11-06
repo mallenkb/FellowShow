@@ -1,119 +1,20 @@
-import { useMemo } from "react"
 import { BookMarkedIcon, ListPlusIcon, PlayIcon } from "lucide-react"
 import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
 import { verseContent } from "@/components/on-display/overlay-content"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { LIVE_STATUS_BADGE_CLASS } from "@/components/ui/live-status-styles"
 import { toast } from "sonner"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
-import {
-  useBibleStore,
-  useBroadcastStore,
-  useDetectionStore,
-  useQueueStore,
-  useTranscriptStore,
-} from "@/stores"
-import type { DetectionResult, TranscriptSegment, Verse } from "@/types"
+import { useBibleStore, useBroadcastStore, useQueueStore } from "@/stores"
+import type { DetectionResult, Verse } from "@/types"
 import {
   activeTranslationAbbreviation,
   stageVerse,
 } from "@/lib/preview-staging"
-
-const MAX_CONTEXT_SEGMENTS = 6
-const MAX_CONTEXT_CHARACTERS = 1_200
-const MAX_RELATED_SCRIPTURES = 6
-const MIN_RELATED_CONFIDENCE = 0.74
-const REVIEW_CONFIDENCE_THRESHOLD = 0.82
-const HIGH_CONFIDENCE_THRESHOLD = 0.86
-
-type RelatedScriptureConfidenceTier = "high" | "review" | "uncertain"
-
-function recentSermonContext(segments: TranscriptSegment[]) {
-  return segments
-    .slice(-MAX_CONTEXT_SEGMENTS)
-    .map((segment) => segment.text.trim())
-    .filter(Boolean)
-    .join("\n")
-    .slice(-MAX_CONTEXT_CHARACTERS)
-    .trim()
-}
-
-function normalizeTranscript(value: string) {
-  return value
-    .toLocaleLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
-function detectionKey(detection: DetectionResult) {
-  return `${detection.book_number}:${detection.chapter}:${detection.verse}`
-}
-
-function confidenceTier(confidence: number): RelatedScriptureConfidenceTier {
-  if (confidence >= HIGH_CONFIDENCE_THRESHOLD) return "high"
-  if (confidence >= REVIEW_CONFIDENCE_THRESHOLD) return "review"
-  return "uncertain"
-}
-
-function confidenceLabel(tier: RelatedScriptureConfidenceTier) {
-  switch (tier) {
-    case "high":
-      return "High confidence"
-    case "review":
-      return "Review"
-    case "uncertain":
-      return "Uncertain"
-  }
-}
-
-function confidenceClassName(tier: RelatedScriptureConfidenceTier) {
-  switch (tier) {
-    case "high":
-      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-    case "review":
-      return "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-    case "uncertain":
-      return "border-destructive/30 bg-destructive/10 text-destructive"
-  }
-}
-
-function getRelatedScriptureDetections(
-  detections: DetectionResult[],
-  transcriptContext: string,
-  directReferences: Set<string>
-) {
-  const normalizedContext = normalizeTranscript(transcriptContext)
-  const unique = new Map<string, DetectionResult>()
-
-  for (const detection of detections) {
-    if (
-      detection.source !== "semantic" ||
-      detection.confidence < MIN_RELATED_CONFIDENCE ||
-      detection.is_chapter_only ||
-      !detection.transcript_snippet.trim() ||
-      directReferences.has(detectionKey(detection))
-    ) {
-      continue
-    }
-
-    const normalizedSnippet = normalizeTranscript(detection.transcript_snippet)
-    if (!normalizedSnippet || !normalizedContext.includes(normalizedSnippet)) {
-      continue
-    }
-
-    const key = detectionKey(detection)
-    const current = unique.get(key)
-    if (!current || detection.confidence > current.confidence) {
-      unique.set(key, detection)
-    }
-  }
-
-  return [...unique.values()]
-    .sort((left, right) => right.confidence - left.confidence)
-    .slice(0, MAX_RELATED_SCRIPTURES)
-}
+import { cn } from "@/lib/utils"
+import { detectionKey } from "@/lib/related-scriptures"
+import { scriptureRowStatusClasses } from "@/components/panels/content-row-styles"
 
 function resultAsVerse(result: DetectionResult): Verse {
   return {
@@ -137,9 +38,12 @@ function selectScripture(result: DetectionResult) {
 
 function presentScripture(result: DetectionResult) {
   const abbreviation = activeTranslationAbbreviation()
+  const verse = resultAsVerse(result)
+  bibleActions.selectVerse(verse)
+  bibleActions.navigateToVerse(result.book_number, result.chapter, result.verse)
   useBroadcastStore
     .getState()
-    .presentOnLive(toVerseRenderData(resultAsVerse(result), abbreviation), null)
+    .presentOnLive(toVerseRenderData(verse, abbreviation))
 }
 
 function queueScripture(result: DetectionResult) {
@@ -165,118 +69,133 @@ function queueScripture(result: DetectionResult) {
   toast.success(result.verse_ref + " added to the queue")
 }
 
-function RelatedScriptureRow({ result }: { result: DetectionResult }) {
-  const tier = confidenceTier(result.confidence)
+function RelatedScriptureRow({
+  result,
+  isShowingLive,
+  isShowingPreview,
+  isBestMatch,
+}: {
+  result: DetectionResult
+  isShowingLive: boolean
+  isShowingPreview: boolean
+  isBestMatch: boolean
+}) {
+  const descriptionId = `related-scripture-${result.book_number}-${result.chapter}-${result.verse}`
+  const status = isShowingLive ? "live" : isShowingPreview ? "in preview" : null
 
   return (
     <article
-      role="button"
-      tabIndex={0}
-      onClick={() => selectScripture(result)}
-      onDoubleClick={() => presentScripture(result)}
-      onKeyDown={(event) => {
-        if (event.key !== "Enter" && event.key !== " ") return
-        event.preventDefault()
-        selectScripture(result)
-      }}
-      className="group cursor-pointer rounded-lg border border-border p-2.5 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className={cn(
+        "group flex min-w-0 items-start gap-2 rounded-lg border border-transparent px-3 py-2 transition-colors hover:bg-muted/40",
+        isBestMatch && !isShowingLive && !isShowingPreview && "bg-sky-500/10",
+        scriptureRowStatusClasses(isShowingLive, isShowingPreview)
+      )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <h3 className="truncate text-xs font-semibold text-foreground">
-              {result.verse_ref}
-            </h3>
-            <Badge
-              variant="secondary"
-              className="h-4 bg-ai-semantic/15 px-1.5 text-[0.5rem] text-ai-semantic uppercase hover:bg-ai-semantic/15"
+      <button
+        type="button"
+        data-scripture-live-control
+        aria-label={`Preview ${result.verse_ref}${status ? `, ${status}` : ""}`}
+        aria-describedby={descriptionId}
+        title={`Preview ${result.verse_ref}. Double-click to show on Live.`}
+        onClick={() => selectScripture(result)}
+        onDoubleClick={() => presentScripture(result)}
+        className="min-w-0 flex-1 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="flex flex-wrap items-center gap-1.5">
+          <span className="truncate text-xs font-semibold text-foreground">
+            {result.verse_ref}
+          </span>
+          <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-[0.625rem] font-medium text-sky-800 dark:text-sky-300">
+            {isBestMatch ? "Best word match" : "Word match"}
+          </span>
+          {isShowingLive || isShowingPreview ? (
+            <span
+              className={cn(
+                "shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] font-medium uppercase",
+                isShowingLive
+                  ? LIVE_STATUS_BADGE_CLASS
+                  : "bg-blue-500/10 text-blue-700 dark:text-blue-300"
+              )}
             >
-              Deepgram match
-            </Badge>
-            <Badge
-              variant="outline"
-              className={
-                "h-4 px-1.5 text-[0.5rem] " + confidenceClassName(tier)
-              }
+              {isShowingLive ? "Live" : "In preview"}
+            </span>
+          ) : null}
+        </span>
+        <span id={descriptionId} className="block">
+          {result.verse_text ? (
+            <span
+              className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/85"
+              title={result.verse_text}
             >
-              {confidenceLabel(tier)} · {Math.round(result.confidence * 100)}%
-            </Badge>
-          </div>
-          <p className="mt-1 line-clamp-2 text-[0.625rem] leading-relaxed text-muted-foreground">
-            <span className="font-medium text-foreground">Transcript:</span> “
+              {result.verse_text}
+            </span>
+          ) : null}
+          <span
+            className="mt-1 line-clamp-2 text-[0.6875rem] leading-relaxed text-muted-foreground"
+            title={result.transcript_snippet}
+          >
+            <span className="font-medium">Heard:</span> “
             {result.transcript_snippet}”
-          </p>
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-            {result.verse_text}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={"Show " + result.verse_ref + " full screen"}
-            aria-label={"Show " + result.verse_ref + " full screen"}
-            onClick={(event) => {
-              event.stopPropagation()
-              presentScripture(result)
-            }}
-          >
-            <PlayIcon className="size-3" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={`Add ${result.verse_ref} to queue`}
-            aria-label={`Add ${result.verse_ref} to queue`}
-            onClick={(event) => {
-              event.stopPropagation()
-              queueScripture(result)
-            }}
-          >
-            <ListPlusIcon className="size-3" />
-          </Button>
-          <SendToOverlayButton
-            label={result.verse_ref}
-            getContent={() => verseContent(resultAsVerse(result))}
-          />
-        </div>
+          </span>
+        </span>
+      </button>
+      <div className="flex shrink-0 items-center gap-0.5">
+        <Button
+          type="button"
+          data-scripture-live-control
+          variant="ghost"
+          size="icon-xs"
+          title={`Show ${result.verse_ref} on Live`}
+          aria-label={`Show ${result.verse_ref} on Live`}
+          onClick={() => presentScripture(result)}
+        >
+          <PlayIcon className="size-3" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          title={`Add ${result.verse_ref} to queue`}
+          aria-label={`Add ${result.verse_ref} to queue`}
+          onClick={() => queueScripture(result)}
+        >
+          <ListPlusIcon className="size-3" />
+        </Button>
+        <SendToOverlayButton
+          label={result.verse_ref}
+          getContent={() => verseContent(resultAsVerse(result))}
+          className="border-transparent bg-transparent shadow-none dark:border-transparent dark:bg-transparent"
+        />
       </div>
     </article>
   )
 }
 
-export function RelatedScripturesPanel() {
-  const segments = useTranscriptStore((state) => state.segments)
-  const detections = useDetectionStore((state) => state.detections)
-  const context = useMemo(() => recentSermonContext(segments), [segments])
-  const directReferences = useMemo(
-    () =>
-      new Set(
-        detections
-          .filter((detection) => detection.source === "direct")
-          .map(detectionKey)
-      ),
-    [detections]
+export function RelatedScripturesPanel({
+  results,
+  hasTranscript,
+  bestMatchKey,
+}: {
+  results: DetectionResult[]
+  hasTranscript: boolean
+  bestMatchKey: string | null
+}) {
+  const liveScriptureKey = useBroadcastStore((state) =>
+    state.isLive ? (state.liveVerse?.scriptureKey ?? null) : null
   )
-  const results = useMemo(
-    () => getRelatedScriptureDetections(detections, context, directReferences),
-    [context, detections, directReferences]
+  const previewScriptureKey = useBroadcastStore(
+    (state) => state.previewVerse?.scriptureKey ?? null
   )
-  const hasTranscript = context.length > 0
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
         {!hasTranscript ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
             <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/25 text-muted-foreground">
               <BookMarkedIcon className="size-4" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Related scriptures will appear when Deepgram transcribes a quoted
-              Bible passage.
+              Suggested scriptures will appear as the sermon is transcribed.
             </p>
           </div>
         ) : results.length === 0 ? (
@@ -284,10 +203,19 @@ export function RelatedScripturesPanel() {
             No related scripture matches found in the recent transcript.
           </div>
         ) : (
-          <div className="space-y-1.5">
-            {results.map((result) => (
-              <RelatedScriptureRow key={detectionKey(result)} result={result} />
-            ))}
+          <div className="space-y-1">
+            {results.map((result) => {
+              const key = detectionKey(result)
+              return (
+                <RelatedScriptureRow
+                  key={key}
+                  result={result}
+                  isShowingLive={liveScriptureKey === key}
+                  isShowingPreview={previewScriptureKey === key}
+                  isBestMatch={bestMatchKey === key}
+                />
+              )
+            })}
           </div>
         )}
       </div>

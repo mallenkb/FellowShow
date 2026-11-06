@@ -41,7 +41,7 @@ export function OverlayPadMenu({
         </ContextMenuItem>
         <ContextMenuItem onSelect={onShowLive}>
           <RadioIcon />
-          Show on Live now
+          Show on Live
         </ContextMenuItem>
         <ContextMenuItem onSelect={onEdit}>
           <PencilIcon />

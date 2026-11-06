@@ -104,13 +104,6 @@ function phrasePatterns(annotation: TranscriptVerseAnnotation): {
     specificity: CandidateMatch["specificity"]
   }[] = []
 
-  if (annotation.transcriptSnippet?.trim()) {
-    patterns.push({
-      pattern: patternForText(annotation.transcriptSnippet.trim()),
-      specificity: "explicit",
-    })
-  }
-
   for (const book of bookAliases(annotation.bookName)) {
     for (const chapter of chapterOptions) {
       for (const verse of verseOptions) {
@@ -121,6 +114,10 @@ function phrasePatterns(annotation: TranscriptVerseAnnotation): {
           },
           {
             pattern: patternForText(`${book} ${chapter} verse ${verse}`),
+            specificity: "explicit",
+          },
+          {
+            pattern: patternForText(`${book} ${chapter} and verse ${verse}`),
             specificity: "explicit",
           },
           {
@@ -138,6 +135,12 @@ function phrasePatterns(annotation: TranscriptVerseAnnotation): {
             specificity: "explicit",
           },
           {
+            pattern: patternForText(
+              `${book} chapter ${chapter} and verse ${verse}`
+            ),
+            specificity: "explicit",
+          },
+          {
             pattern: patternForText(`${book} chapter ${chapter} vs ${verse}`),
             specificity: "explicit",
           }
@@ -150,6 +153,20 @@ function phrasePatterns(annotation: TranscriptVerseAnnotation): {
     pattern: patternForText(`${annotation.chapter}:${annotation.verse}`),
     specificity: "explicit",
   })
+
+  // Detector snippets can include surrounding speech. Only use one as a
+  // replacement when it resembles a short, standalone spoken reference.
+  const snippet = annotation.transcriptSnippet?.trim()
+  if (
+    snippet &&
+    snippet.split(/\s+/).length <= 7 &&
+    bookAliases(annotation.bookName).some((book) =>
+      new RegExp(`^${escapeRegExp(book)}\\b`, "i").test(snippet)
+    ) &&
+    /\b(?:verse|verses|vs)\b|\d\s*:\s*\d/i.test(snippet)
+  ) {
+    patterns.push({ pattern: patternForText(snippet), specificity: "explicit" })
+  }
   for (const verse of verseOptions) {
     patterns.push({
       pattern: patternForText(`verse ${verse}`),

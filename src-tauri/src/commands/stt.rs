@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -50,7 +50,7 @@ fn finish_transcription_session(app: &AppHandle, session_id: u64, finished: &tok
 
     finished.notify_waiters();
     if is_current_session {
-        let _ = app.emit("stt_stopped", ());
+        let _ = app.emit("stt_stopped", session_id);
     }
 }
 
@@ -203,7 +203,8 @@ pub async fn start_transcription(
     device_id: Option<String>,
     gain: Option<f32>,
     provider: Option<String>,
-) -> Result<(), String> {
+    sermon_id: Option<String>,
+) -> Result<u64, String> {
     let provider_name = provider.as_deref().unwrap_or("deepgram");
 
     // ── 2. Build the STT provider ───────────────────────────────────────
@@ -364,6 +365,8 @@ pub async fn start_transcription(
     let gain_val = gain.unwrap_or(1.0).clamp(0.0, 2.0);
     let fan_cancelled = cancelled.clone();
     let fan_app = app.clone();
+    let audio_started_at = Arc::new(AtomicU64::new(0));
+    let fan_audio_started_at = audio_started_at.clone();
 
     let fanout_result = std::thread::Builder::new()
         .name("audio-fanout".into())
@@ -376,8 +379,19 @@ pub async fn start_transcription(
 
             let (audio_tx, audio_rx) = crossbeam_channel::bounded::<AudioFrame>(64);
 
+            let (recording, writer) = match sermon_id {
+                Some(id) => match super::sermon_audio::start(&fan_app, &id) {
+                    Ok((sink, writer)) => (Some(sink), Some(writer)),
+                    Err(error) => {
+                        let _ = fan_app.emit("sermon_audio_error", error);
+                        (None, None)
+                    }
+                },
+                None => (None, None),
+            };
+
             // Start capture on THIS thread — AudioCapture stays here.
-            let capture = match fellowshow_audio::capture::start(config, audio_tx) {
+            let capture = match fellowshow_audio::capture::start(config, audio_tx, recording) {
                 Ok(c) => c,
                 Err(e) => {
                     let message = format!("Failed to start audio capture: {e}");
@@ -401,6 +415,13 @@ pub async fn start_transcription(
                 match audio_rx.recv_timeout(std::time::Duration::from_millis(100)) {
                     Ok(frame) => {
                         frame_count += 1;
+                        if frame_count == 1 {
+                            let duration_ms = frame.samples.len() as u64 * 1_000 / 16_000;
+                            fan_audio_started_at.store(
+                                frame.timestamp_ms.saturating_sub(duration_ms),
+                                Ordering::Release,
+                            );
+                        }
 
                         // (a) Compute audio levels at ~15 Hz
                         //     At 16 kHz with ~1024-sample frames, every 4th frame is ~15 Hz.
@@ -433,6 +454,14 @@ pub async fn start_transcription(
 
             // Dropping `capture` stops the cpal stream.
             capture.stop();
+            if let Some(writer) = writer {
+                if writer.join().is_err() {
+                    let _ = fan_app.emit(
+                        "sermon_audio_error",
+                        "The audio writer stopped unexpectedly.",
+                    );
+                }
+            }
             log::info!("Audio capture stopped on fanout thread");
         });
 
@@ -536,7 +565,12 @@ pub async fn start_transcription(
             let app_clone = det_app.clone();
             let _ = tokio::task::spawn_blocking(move || {
                 let direct_found = run_direct_detection(&app_clone, &transcript);
-                check_reading_mode(&app_clone, &transcript, direct_found);
+                let reading_text = if is_next_verse_request(&transcript) {
+                    "next verse"
+                } else {
+                    &transcript
+                };
+                check_reading_mode(&app_clone, reading_text, direct_found);
             })
             .await;
         }
@@ -547,6 +581,8 @@ pub async fn start_transcription(
         let mut dropped_direct_jobs: u64 = 0;
         let mut dropped_semantic_jobs: u64 = 0;
         let mut last_error = None;
+        let mut partial_next_handled = false;
+        let mut unavailable_translation = None;
         while let Some(event) = event_rx.recv().await {
             if evt_cancelled.load(Ordering::SeqCst)
                 && matches!(
@@ -569,12 +605,24 @@ pub async fn start_transcription(
                                 text: transcript.clone(),
                                 is_final: false,
                                 confidence: 0.0,
+                                timestamp: None,
                             },
                         );
 
                         // Check for translation commands on partials too (cheap string matching)
                         // This makes translation switching feel instant without waiting for speech_final
-                        check_translation_command(&event_app, &transcript);
+                        if let Some(version) = check_translation_command(&event_app, &transcript) {
+                            if unavailable_translation.as_ref() != Some(&version) {
+                                let _ = event_app.emit("translation_unavailable", &version);
+                                unavailable_translation = Some(version);
+                            }
+                        }
+                        if !partial_next_handled
+                            && transcript.to_ascii_lowercase().contains("verse")
+                            && try_advance_next_verse(&event_app, &transcript)
+                        {
+                            partial_next_handled = true;
+                        }
                         log::debug!("[EVT] Partial processed in {:?}", t0.elapsed());
                     }
                 }
@@ -582,6 +630,7 @@ pub async fn start_transcription(
                     transcript,
                     confidence,
                     speech_final,
+                    start_offset,
                     ..
                 } => {
                     if !transcript.is_empty() {
@@ -594,6 +643,11 @@ pub async fn start_transcription(
                                 text: transcript.clone(),
                                 is_final: true,
                                 confidence,
+                                timestamp: start_offset.and_then(|offset| {
+                                    let start = audio_started_at.load(Ordering::Acquire);
+                                    let offset_ms = u64::try_from(offset.as_millis()).ok()?;
+                                    (start != 0).then(|| start.saturating_add(offset_ms))
+                                }),
                             },
                         );
 
@@ -601,11 +655,26 @@ pub async fn start_transcription(
                         if evt_cancelled.load(Ordering::SeqCst) {
                             continue;
                         }
-                        check_translation_command(&event_app, &transcript);
+                        if let Some(version) = check_translation_command(&event_app, &transcript) {
+                            if unavailable_translation.as_ref() != Some(&version) {
+                                let _ = event_app.emit("translation_unavailable", &version);
+                                unavailable_translation = Some(version);
+                            }
+                        }
+
+                        // A bare "next" waits for a final fragment so a partial
+                        // "next chapter" cannot accidentally advance one verse.
+                        if !partial_next_handled && try_advance_next_verse(&event_app, &transcript)
+                        {
+                            partial_next_handled = true;
+                        }
 
                         // Fire-and-forget: detection runs in background thread pool.
                         // Event consumer proceeds immediately to next transcript.
-                        if detect_tx.try_send(transcript.clone()).is_err() {
+                        let next_already_handled =
+                            partial_next_handled && is_next_verse_request(&transcript);
+                        if !next_already_handled && detect_tx.try_send(transcript.clone()).is_err()
+                        {
                             dropped_direct_jobs += 1;
                             if dropped_direct_jobs == 1 || dropped_direct_jobs.is_multiple_of(25) {
                                 log::warn!(
@@ -617,17 +686,19 @@ pub async fn start_transcription(
                         // Also inspect the completed utterance. This recovers
                         // references split across chunks such as "John
                         // chapter" followed by "1:14".
-                        if let Some(sentence) = direct_sentence_buffer.append(&transcript) {
-                            if sentence.trim() != transcript.trim()
-                                && detect_tx.try_send(sentence).is_err()
-                            {
-                                dropped_direct_jobs += 1;
-                                if dropped_direct_jobs == 1
-                                    || dropped_direct_jobs.is_multiple_of(25)
+                        if !next_already_handled {
+                            if let Some(sentence) = direct_sentence_buffer.append(&transcript) {
+                                if sentence.trim() != transcript.trim()
+                                    && detect_tx.try_send(sentence).is_err()
                                 {
-                                    log::warn!(
+                                    dropped_direct_jobs += 1;
+                                    if dropped_direct_jobs == 1
+                                        || dropped_direct_jobs.is_multiple_of(25)
+                                    {
+                                        log::warn!(
                                         "Detection backpressure dropped {dropped_direct_jobs} direct job(s)"
                                     );
+                                    }
                                 }
                             }
                         }
@@ -647,6 +718,8 @@ pub async fn start_transcription(
                                     }
                                 }
                             }
+                            partial_next_handled = false;
+                            unavailable_translation = None;
                         }
 
                         // Send every is_final fragment to FTS5 immediately so
@@ -704,6 +777,7 @@ pub async fn start_transcription(
                     }
                 }
                 TranscriptEvent::UtteranceEnd => {
+                    partial_next_handled = false;
                     if let Some(sentence) = direct_sentence_buffer.force_flush() {
                         if detect_tx.try_send(sentence).is_err() {
                             dropped_direct_jobs += 1;
@@ -728,6 +802,7 @@ pub async fn start_transcription(
                     }
                 }
                 TranscriptEvent::SpeechStarted => {
+                    partial_next_handled = false;
                     let _ = event_app.emit("stt_speech_started", ());
                 }
                 TranscriptEvent::Error(msg) => {
@@ -752,7 +827,7 @@ pub async fn start_transcription(
         log::info!("Transcript event consumer task exited");
     });
 
-    Ok(())
+    Ok(session_id)
 }
 
 async fn wait_for_session_cancellation(cancelled: &AtomicBool) {
@@ -813,7 +888,12 @@ fn run_direct_detection(app: &AppHandle, transcript: &str) -> bool {
             return false;
         }
     };
-    let direct_results = detector.detect(transcript);
+    let direct_results = detector
+        .detect(transcript)
+        .into_iter()
+        .last()
+        .into_iter()
+        .collect::<Vec<_>>();
     drop(detector); // Release immediately
 
     if direct_results.is_empty() {
@@ -939,6 +1019,9 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
                 book_number: hit.book_number,
                 chapter: hit.chapter,
                 verse: hit.verse,
+                verse_end: None,
+                verse_parts: Vec::new(),
+                translation_id: app_state.active_translation_id,
                 confidence,
                 source: "semantic".to_string(),
                 auto_queued: rank == 0 && confidence >= 0.80,
@@ -967,6 +1050,46 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
     log::info!("[DET-SEMANTIC] Total: {:?}", t0.elapsed());
 }
 
+fn is_next_verse_request(text: &str) -> bool {
+    let normalized = text
+        .trim()
+        .trim_matches(|ch: char| !ch.is_alphanumeric())
+        .to_ascii_lowercase();
+    matches!(
+        normalized.as_str(),
+        "next"
+            | "next please"
+            | "go next"
+            | "go to the next"
+            | "next verse"
+            | "next verse please"
+            | "the next verse"
+            | "go to next verse"
+            | "go to the next verse"
+            | "move to next verse"
+            | "move to the next verse"
+    )
+}
+
+fn try_advance_next_verse(app: &AppHandle, transcript: &str) -> bool {
+    if !is_next_verse_request(transcript) {
+        return false;
+    }
+    let mode = app.state::<Mutex<fellowshow_detection::ReadingMode>>();
+    let advance = {
+        let Ok(mut mode) = mode.try_lock() else {
+            return false;
+        };
+        mode.check_transcript("next verse")
+    };
+    if let Some(advance) = advance {
+        let _ = app.emit("reading_mode_verse", advance);
+        true
+    } else {
+        false
+    }
+}
+
 /// Check reading mode: if active, test transcript against expected verse.
 /// If direct detection just found a new verse, start/restart reading mode.
 /// Returns `true` when reading mode handled the transcript (suppresses semantic).
@@ -977,10 +1100,8 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
 fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> bool {
     use fellowshow_detection::ReadingMode;
 
-    // If direct detection found a verse, consider starting/restarting reading mode.
-    // BUT: if reading mode is already active on a book/chapter, do NOT restart
-    // on a different book — false positives from bare numbers (e.g., "verse 5"
-    // getting matched as "Job 3:5") would hijack the reading session.
+    // Explicit requests reset the reading position, including same-chapter
+    // corrections. Start after the last verse of a requested range.
     if direct_found {
         let verse_info = {
             let detector_state: State<'_, Mutex<fellowshow_detection::DirectDetector>> =
@@ -992,49 +1113,7 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
         };
 
         if let Some(recent) = verse_info {
-            // Get the confidence of the detection to distinguish explicit refs from false positives
-            let detection_confidence = {
-                let detector_state: State<'_, Mutex<fellowshow_detection::DirectDetector>> =
-                    app.state();
-                detector_state
-                    .lock()
-                    .ok()
-                    .and_then(|d| d.recent_detections().front().map(|_| 0.95)) // Direct detections are always high confidence
-                    .unwrap_or(0.0)
-            };
-
-            let should_start = {
-                let rm_managed: &Mutex<ReadingMode> = app.state::<Mutex<ReadingMode>>().inner();
-                match rm_managed.lock() {
-                    Ok(rm) => {
-                        if !rm.is_active() && !rm.has_verses() {
-                            true // Not active, no verses loaded — start fresh
-                        } else if !rm.is_active() && rm.has_verses() {
-                            // Paused — restart on any new explicit reference
-                            true
-                        } else if rm.current_book() == recent.book_number
-                            && rm.current_chapter() == recent.chapter
-                        {
-                            false // Same book+chapter — already tracking this
-                        } else if rm.current_book() != recent.book_number
-                            && detection_confidence >= 0.90
-                        {
-                            // Different book with high confidence — explicit new reference
-                            // (e.g., "John 1:1" after reading Exodus). Restart.
-                            true
-                        } else if rm.current_book() == recent.book_number {
-                            // Same book, different chapter — natural progression
-                            true
-                        } else {
-                            // Different book, low confidence — likely false positive
-                            false
-                        }
-                    }
-                    Err(_) => false,
-                }
-            };
-
-            if should_start {
+            {
                 let chapter_data = {
                     let t_db = std::time::Instant::now();
                     let app_managed: State<'_, Mutex<crate::state::AppState>> = app.state();
@@ -1069,23 +1148,20 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
                             recent.book_number,
                             &recent.book_name,
                             recent.chapter,
-                            recent.verse_start,
+                            recent
+                                .verse_end
+                                .filter(|end| *end - recent.verse_start < 2)
+                                .unwrap_or(recent.verse_start),
                             verses,
                         );
-
-                        // Check if transcript contains "chapter" keyword - if so, expect chapter number next
-                        // This handles "Genesis chapter" → pause → "5" → go to chapter 5
-                        let lower = transcript.to_lowercase();
-                        if lower.contains("chapter")
-                            && !lower.contains("next")
-                            && !lower.contains("previous")
-                        {
-                            rm.set_expecting_chapter();
-                        }
                     }
                 }
             }
         }
+    }
+
+    if direct_found {
+        return true;
     }
 
     let rm_managed: &Mutex<ReadingMode> = app.state::<Mutex<ReadingMode>>().inner();
@@ -1195,46 +1271,99 @@ fn check_reading_mode(app: &AppHandle, transcript: &str, direct_found: bool) -> 
     false
 }
 
-/// Check for voice translation commands like "read in NIV", "switch to ESV".
-fn check_translation_command(app: &AppHandle, transcript: &str) {
+pub(crate) fn refresh_reading_translation(
+    app: &AppHandle,
+    translation_id: i64,
+) -> Option<fellowshow_bible::Verse> {
+    let reading = app.state::<Mutex<fellowshow_detection::ReadingMode>>();
+    let position = {
+        let reading = reading.lock().ok()?;
+        (
+            reading.current_book(),
+            reading.current_book_name().to_string(),
+            reading.current_chapter(),
+            reading.current_verse()?,
+        )
+    };
+    let chapter = {
+        let state = app.state::<Mutex<AppState>>();
+        let state = state.lock().ok()?;
+        if state.active_translation_id != translation_id {
+            return None;
+        }
+        state
+            .bible_db
+            .as_ref()?
+            .get_chapter(translation_id, position.0, position.2)
+            .ok()?
+    };
+    let verse = chapter
+        .iter()
+        .find(|item| item.verse == position.3)?
+        .clone();
+    let mut reading = reading.lock().ok()?;
+    if reading.current_book() != position.0
+        || reading.current_chapter() != position.2
+        || reading.current_verse() != Some(position.3)
+    {
+        return None;
+    }
+    reading.start(
+        position.0,
+        &position.1,
+        position.2,
+        position.3,
+        chapter
+            .into_iter()
+            .map(|item| (item.verse, item.text))
+            .collect(),
+    );
+    Some(verse)
+}
+
+/// Returns an unavailable version name so the caller can notify once per utterance.
+fn check_translation_command(app: &AppHandle, transcript: &str) -> Option<String> {
     #[derive(serde::Serialize, Clone)]
     struct TranslationSwitch {
         abbreviation: String,
         translation_id: i64,
+        verse: Option<fellowshow_bible::Verse>,
     }
 
-    let detector_state: State<'_, Mutex<fellowshow_detection::DirectDetector>> = app.state();
-    let Ok(detector) = detector_state.lock() else {
-        return;
-    };
-
-    if let Some(abbrev) = detector.detect_translation_command(transcript) {
-        drop(detector);
-
-        // Find the translation ID for this abbreviation
+    let detector: State<'_, Mutex<fellowshow_detection::DirectDetector>> = app.state();
+    let abbreviation = detector
+        .lock()
+        .ok()?
+        .detect_translation_command(transcript)?;
+    let translation_id = {
         let managed: State<'_, Mutex<AppState>> = app.state();
-        let Ok(mut app_state) = managed.try_lock() else {
-            return;
+        let mut state = managed.try_lock().ok()?;
+        let translations = state.bible_db.as_ref()?.list_translations().ok()?;
+        let Some(translation) = translations
+            .iter()
+            .find(|item| item.abbreviation == abbreviation)
+        else {
+            return Some(abbreviation);
         };
-
-        if let Some(ref db) = app_state.bible_db {
-            if let Ok(translations) = db.list_translations() {
-                if let Some(t) = translations.iter().find(|t| t.abbreviation == abbrev) {
-                    app_state.active_translation_id = t.id;
-                    log::info!("[STT] Voice command: switched to {abbrev} (id={})", t.id);
-                    drop(app_state);
-
-                    let _ = app.emit(
-                        "translation_command",
-                        TranslationSwitch {
-                            abbreviation: abbrev,
-                            translation_id: t.id,
-                        },
-                    );
-                }
-            }
+        if !translation.is_downloaded {
+            return Some(abbreviation);
         }
-    }
+        if state.active_translation_id == translation.id {
+            return None;
+        }
+        state.active_translation_id = translation.id;
+        translation.id
+    };
+    let verse = refresh_reading_translation(app, translation_id);
+    let _ = app.emit(
+        "translation_command",
+        TranslationSwitch {
+            abbreviation,
+            translation_id,
+            verse,
+        },
+    );
+    None
 }
 
 /// Stop the transcription pipeline (audio capture + STT provider).

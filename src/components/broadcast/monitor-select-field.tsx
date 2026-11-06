@@ -24,6 +24,7 @@ export function MonitorSelectField({
   refreshing,
   onRefresh,
   takenMonitors,
+  showRefresh = true,
 }: {
   monitors: MonitorInfo[]
   value: string
@@ -31,6 +32,7 @@ export function MonitorSelectField({
   refreshing: boolean
   onRefresh: () => void
   takenMonitors: TakenMonitor[]
+  showRefresh?: boolean
 }) {
   const collidingWith =
     value === ""
@@ -49,18 +51,20 @@ export function MonitorSelectField({
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <label className="text-xs text-muted-foreground">Screen</label>
-        <Button
-          variant="ghost"
-          size="xs"
-          disabled={refreshing}
-          onClick={onRefresh}
-          className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
-        >
-          <RefreshCwIcon
-            className={cn("size-3", refreshing && "animate-spin")}
-          />
-          Refresh
-        </Button>
+        {showRefresh ? (
+          <Button
+            variant="ghost"
+            size="xs"
+            disabled={refreshing}
+            onClick={onRefresh}
+            className="h-5 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
+          >
+            <RefreshCwIcon
+              className={cn("size-3", refreshing && "animate-spin")}
+            />
+            Refresh
+          </Button>
+        ) : null}
       </div>
       <Select
         value={value}
@@ -94,7 +98,7 @@ export function MonitorSelectField({
         </SelectContent>
       </Select>
       {collidingWith.length > 0 && (
-        <div className="flex items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[0.6875rem] text-amber-500 dark:text-amber-400">
+        <div className="flex items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[0.6875rem] text-amber-800 dark:text-amber-400">
           <span className="flex items-center gap-1.5">
             <TriangleAlertIcon className="size-3 shrink-0" />
             Same screen as{" "}

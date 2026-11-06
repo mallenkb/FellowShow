@@ -425,7 +425,11 @@ async fn parse_and_send(
         .unwrap_or_default();
 
     let event = if is_final {
+        let start_offset = words
+            .first()
+            .and_then(|word| Duration::try_from_secs_f64(word.start).ok());
         TranscriptEvent::Final {
+            start_offset,
             transcript,
             words,
             confidence,

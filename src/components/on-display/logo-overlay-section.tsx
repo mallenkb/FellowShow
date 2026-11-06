@@ -132,7 +132,7 @@ export function LogoOverlaySection() {
                 <div
                   key={logo.id}
                   data-selected={logo.id === settingsLogo?.id}
-                  className="flex items-center gap-3 rounded-md border border-border bg-muted/20 p-2.5 data-[selected=true]:border-primary/50"
+                  className="flex items-center gap-3 rounded-md border border-border bg-muted/20 p-2.5 data-[selected=true]:border-primary-emphasis/50"
                 >
                   <button
                     type="button"

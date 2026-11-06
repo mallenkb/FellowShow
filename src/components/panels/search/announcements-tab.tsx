@@ -58,7 +58,7 @@ export function AnnouncementsTab() {
 
   return (
     <>
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 pt-2.5 pb-3">
+      <div className="flex shrink-0 items-center gap-2 bg-surface-header px-3 pt-2.5 pb-3">
         <Select
           value={selectedSetId ?? ""}
           onValueChange={(value) =>

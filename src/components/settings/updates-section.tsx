@@ -102,7 +102,7 @@ export function UpdatesSection() {
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <RefreshCwIcon className="size-4 text-primary" />
+              <RefreshCwIcon className="size-4 text-primary-emphasis" />
             </div>
             <div>
               <p className="text-sm font-medium">Current Version</p>
@@ -158,7 +158,6 @@ export function UpdatesSection() {
                 size="sm"
                 variant="outline"
                 onClick={handleOpenLatestRelease}
-                className="text-xs"
               >
                 Open release
               </Button>
@@ -167,7 +166,6 @@ export function UpdatesSection() {
                 size="sm"
                 disabled={isBusy}
                 onClick={() => void handleCheckForUpdates()}
-                className="text-xs"
               >
                 <RefreshCwIcon
                   className={`size-3.5 ${isBusy ? "animate-spin" : ""}`}

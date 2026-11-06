@@ -127,6 +127,37 @@ describe("OverlayPads", () => {
     ).toBe("true")
   })
 
+  it("handles assigned shortcuts outside the overlay panel before song navigation", () => {
+    const onPreviewRequest = vi.fn()
+    const onSongKeyDown = vi.fn()
+    render(
+      <>
+        <div
+          role="region"
+          aria-label="Song workspace"
+          tabIndex={0}
+          onKeyDown={onSongKeyDown}
+        />
+        <OverlayPads
+          onAddRequest={vi.fn()}
+          onEdit={vi.fn()}
+          onPreviewRequest={onPreviewRequest}
+        />
+      </>
+    )
+    const songWorkspace = screen.getByRole("region", { name: "Song workspace" })
+    songWorkspace.focus()
+    fireEvent.keyDown(songWorkspace, { key: "1" })
+    expect(useBroadcastStore.getState().stagedOverlays.tickerMessageId).toBe(
+      "ticker-1"
+    )
+    expect(onPreviewRequest).toHaveBeenCalledOnce()
+    expect(onSongKeyDown).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(songWorkspace, { key: "2" })
+    expect(onSongKeyDown).toHaveBeenCalledOnce()
+  })
+
   it("replaces the browser menu with pad actions and confirms deletion", async () => {
     render(<OverlayPads onAddRequest={vi.fn()} onEdit={vi.fn()} />)
     const pad = screen.getByRole("button", {
@@ -136,9 +167,7 @@ describe("OverlayPads", () => {
     expect(
       await screen.findByRole("menuitem", { name: "Add to Preview" })
     ).toBeTruthy()
-    expect(
-      screen.getByRole("menuitem", { name: "Show on Live now" })
-    ).toBeTruthy()
+    expect(screen.getByRole("menuitem", { name: "Show on Live" })).toBeTruthy()
     expect(screen.getByRole("menuitem", { name: "Edit" })).toBeTruthy()
     fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }))
     expect(await screen.findByRole("dialog")).toBeTruthy()
@@ -166,17 +195,49 @@ describe("OverlayPads", () => {
     render(
       <>
         <input aria-label="Search" />
+        <div contentEditable role="textbox" aria-label="Notes editor" />
         <OverlayPads onAddRequest={vi.fn()} onEdit={vi.fn()} />
       </>
     )
-    fireEvent.keyDown(screen.getByLabelText("Search"), { key: "1" })
+    const search = screen.getByLabelText("Search")
+    search.focus()
+    fireEvent.keyDown(search, { key: "1" })
+    fireEvent.keyDown(search, { key: "Enter", metaKey: true })
+    const editor = screen.getByRole("textbox", { name: "Notes editor" })
+    editor.focus()
+    fireEvent.keyDown(editor, { key: "1" })
     expect(useBroadcastStore.getState().stagedOverlays.tickerMessageId).toBe(
       null
     )
+    expect(showOverlayPreviewOnLive).not.toHaveBeenCalled()
+    editor.blur()
     fireEvent.keyDown(window, { key: "1" })
     expect(useBroadcastStore.getState().stagedOverlays.tickerMessageId).toBe(
       "ticker-1"
     )
+  })
+
+  it("can send the overlay preview live from a dialog when no field is active", () => {
+    const onPreviewRequest = vi.fn()
+    render(
+      <>
+        <div role="dialog" aria-label="Settings">
+          <button type="button">Settings action</button>
+        </div>
+        <OverlayPads
+          onAddRequest={vi.fn()}
+          onEdit={vi.fn()}
+          onPreviewRequest={onPreviewRequest}
+        />
+      </>
+    )
+    const action = screen.getByRole("button", { name: "Settings action" })
+    action.focus()
+    fireEvent.keyDown(action, { key: "Enter", metaKey: true })
+    expect(showOverlayPreviewOnLive).toHaveBeenCalledExactlyOnceWith(
+      "overlay-output"
+    )
+    expect(onPreviewRequest).toHaveBeenCalledOnce()
   })
 
   it("dims pads that would swap out the bar or scrolling text", () => {
@@ -256,7 +317,7 @@ describe("OverlayPads", () => {
     })
     render(<OverlayPads onAddRequest={vi.fn()} onEdit={vi.fn()} />)
     const sent = screen.getByRole("region", {
-      name: "Sent from Sermon, Notes and Songs",
+      name: "Sent from Bible, Notes and Songs",
     })
     expect(within(sent).getByText(/John 3:16/)).toBeTruthy()
     expect(within(sent).queryByText("Youth camp closes Sunday")).toBeNull()

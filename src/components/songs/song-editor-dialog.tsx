@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import type { CopSong } from "@/lib/cop-songs"
 import { splitLyricBlocks } from "@/lib/lyrics"
@@ -26,8 +27,10 @@ import {
   createCustomSong,
   deleteCustomSong,
   loadAllSongs,
+  loadSongCollections,
   resetSongEdits,
   updateSong,
+  type SongCollection,
 } from "@/lib/songs-data"
 import { useBroadcastStore, useQueueStore } from "@/stores"
 import { useSongEditorStore } from "@/stores/song-editor-store"
@@ -49,6 +52,8 @@ function SongEditorForm({
   const [song, setSong] = useState<CopSong | null>(null)
   const [title, setTitle] = useState(initialTitle)
   const [lyrics, setLyrics] = useState("")
+  const [collections, setCollections] = useState<SongCollection[]>([])
+  const [collectionId, setCollectionId] = useState("my-songs")
   // The lyrics as first shown, so an unchanged song keeps its stored text.
   const [openedLyrics, setOpenedLyrics] = useState("")
   const [isSaving, setIsSaving] = useState(false)
@@ -57,6 +62,19 @@ function SongEditorForm({
   const themes = useBroadcastStore((state) => state.themes)
   const activeThemeId = useBroadcastStore((state) => state.activeThemeId)
   const sectionThemeIds = useBroadcastStore((state) => state.sectionThemeIds)
+
+  useEffect(() => {
+    if (songId) return
+    let active = true
+    void loadSongCollections()
+      .then((items) => {
+        if (active) setCollections(items.filter((item) => item.enabled))
+      })
+      .catch(() => toast.error("Could not load song collections."))
+    return () => {
+      active = false
+    }
+  }, [songId])
 
   useEffect(() => {
     if (!songId) return
@@ -125,7 +143,14 @@ function SongEditorForm({
   const save = () =>
     run(async () => {
       if (!song) {
-        finish(await createCustomSong(title, lyrics), "Song added")
+        finish(
+          await createCustomSong(
+            title,
+            lyrics,
+            collectionId === "my-songs" ? undefined : collectionId
+          ),
+          "Song added"
+        )
         return
       }
       const lyricsChanged = lyrics !== openedLyrics
@@ -170,17 +195,38 @@ function SongEditorForm({
         aria-label="Song title"
         autoFocus={!songId}
       />
+      {!songId && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-medium">Collection</span>
+          <Select value={collectionId} onValueChange={setCollectionId}>
+            <SelectTrigger
+              aria-label="Song collection"
+              className="w-full sm:w-64"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="my-songs">My songs</SelectItem>
+              {collections.map((collection) => (
+                <SelectItem key={collection.id} value={collection.id}>
+                  {collection.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       <div className="grid min-h-0 flex-1 gap-4 sm:grid-cols-[minmax(0,1.1fr)_minmax(16rem,0.9fr)]">
         <div className="flex min-h-0 flex-col gap-2">
           <label htmlFor="song-lyrics" className="text-xs font-medium">
             Lyrics
           </label>
-          <textarea
+          <Textarea
             id="song-lyrics"
             value={lyrics}
             onChange={(event) => setLyrics(event.target.value)}
             placeholder={"Verse 1\nPaste or type the lyrics here\n\nChorus\n…"}
-            className="min-h-56 min-w-0 flex-1 resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm leading-relaxed outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+            className="min-h-56 flex-1 resize-none leading-relaxed"
           />
           <p className="text-xs text-muted-foreground">
             {sections.length === 0
@@ -251,7 +297,7 @@ function SongEditorForm({
       </div>
       <DialogFooter className="sm:justify-between">
         <div className="flex gap-2">
-          {song?.source === "custom" ? (
+          {song?.source === "custom" || song?.userCreated ? (
             <Button
               type="button"
               variant="ghost"

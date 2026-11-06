@@ -35,7 +35,7 @@ import {
   isTickerStyle,
   type TickerStyle,
 } from "@/types/ticker-designs"
-import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
+import type { VerseRenderData } from "@/types"
 
 const DEFAULT_OVERLAY_OUTPUT_ID = "main"
 const DEFAULT_TICKER_BACKGROUND_COLOR = "#f8fafc"
@@ -831,7 +831,7 @@ function buildBarPayload(
         ...appearance,
         id: bar.id,
         heading: "Verse on screen",
-        text: "The verse on Program, or staged in Preview, appears here.",
+        text: "The verse on Live or in Preview appears here.",
         startedAt,
       }
     }
@@ -857,14 +857,13 @@ function buildBarPayload(
 
 /**
  * Graphics belong over live video only. Whenever Program shows content of its
- * own (scripture, songs, notes, media, a timer), they step aside and come back
+ * own (scripture, songs, notes, or media), they step aside and come back
  * once Program clears.
  */
 export function programHidesGraphics(
-  verse: VerseRenderData | null | undefined,
-  timer: PresenterTimerRenderData | null | undefined
+  verse: VerseRenderData | null | undefined
 ): boolean {
-  return Boolean(verse || timer)
+  return Boolean(verse)
 }
 
 function buildOverlayPayload(
@@ -874,7 +873,6 @@ function buildOverlayPayload(
   programOrNow?:
     | {
         verse: VerseRenderData | null
-        timer: PresenterTimerRenderData | null
       }
     | number,
   requestedNow = Date.now(),
@@ -882,7 +880,7 @@ function buildOverlayPayload(
 ): BroadcastOverlayPayload {
   const program = typeof programOrNow === "number" ? undefined : programOrNow
   const now = typeof programOrNow === "number" ? programOrNow : requestedNow
-  if (programHidesGraphics(program?.verse, program?.timer)) {
+  if (programHidesGraphics(program?.verse)) {
     return { logos: [], lowerThird: null, ticker: null, bar: null }
   }
   const barItem = active.barId
@@ -991,7 +989,6 @@ export function getOverlayPayloadForOutput(
   programOrNow?:
     | {
         verse: VerseRenderData | null
-        timer: PresenterTimerRenderData | null
       }
     | number,
   requestedNow = Date.now(),

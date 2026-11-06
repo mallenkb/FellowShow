@@ -25,7 +25,7 @@ export function HighlightedText({
           return (
             <mark
               key={i}
-              className="rounded-[2px] bg-foreground/20 px-0.5 text-black text-foreground dark:bg-[#F1E600]/90 dark:text-black"
+              className="rounded-[2px] bg-primary/35 px-0.5 text-primary-foreground dark:bg-primary/90"
             >
               {part}
             </mark>

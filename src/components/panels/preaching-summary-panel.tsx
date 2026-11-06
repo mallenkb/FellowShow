@@ -9,20 +9,16 @@ import {
 } from "react"
 import {
   AlertCircleIcon,
-  BookOpenTextIcon,
-  LoaderCircleIcon,
   NotebookTextIcon,
-  PlayIcon,
-  RefreshCwIcon,
   SaveIcon,
-  SparklesIcon,
   XIcon,
 } from "lucide-react"
 import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { LiveActionButton } from "@/components/ui/live-action-button"
 import { Input } from "@/components/ui/input"
 import { PreachingSummarySessionBar } from "@/components/panels/preaching-summary-session-bar"
+import { SermonNotesHeader } from "@/components/panels/sermon-notes-header"
 import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
 import {
   announcementDocumentToVerse,
@@ -34,8 +30,13 @@ import {
   SUMMARY_REFRESH_INTERVAL_MS,
   type SermonAiSummary,
 } from "@/lib/sermon-ai-summary"
+import {
+  mergeSermonAiDraft,
+  summaryDocumentFromBullets,
+} from "@/lib/sermon-ai-draft"
 import { summaryToDocument } from "@/lib/sermon-actions"
 import { normalizeSummaryDocument } from "@/lib/scripture-format"
+import { openSettings } from "@/lib/settings-dialog"
 import {
   useAnnouncementStore,
   useBroadcastStore,
@@ -63,28 +64,6 @@ function formatTime(timestamp: number) {
   })
 }
 
-function summaryDocumentFromBullets(
-  bullets: readonly string[]
-): AnnouncementDocument {
-  return {
-    type: "doc",
-    content: [
-      {
-        type: "bulletList",
-        content: bullets.map((bullet) => ({
-          type: "listItem",
-          content: [
-            {
-              type: "paragraph",
-              content: [{ type: "text", text: bullet }],
-            },
-          ],
-        })),
-      },
-    ],
-  }
-}
-
 function summaryFromAiDraft(draft: SermonAiSummary): PreachingSummary {
   return {
     overview: "",
@@ -93,27 +72,20 @@ function summaryFromAiDraft(draft: SermonAiSummary): PreachingSummary {
   }
 }
 
-function DraftPreview({ draft }: { draft: SermonAiSummary }) {
-  return (
-    <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5">
-      <div className="flex items-center gap-2">
-        <SparklesIcon className="size-3 text-primary" />
-        <p className="text-[0.6875rem] font-semibold">AI draft</p>
-      </div>
-      <p className="mt-2 text-xs font-medium">{draft.title}</p>
-      <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-muted-foreground">
-        {draft.bullets.map((bullet, index) => (
-          <li key={`${index}-${bullet}`}>{bullet}</li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-export function PreachingSummaryPanel() {
+export function PreachingSummaryPanel({
+  isActive = true,
+}: {
+  isActive?: boolean
+}) {
   const sessions = useSermonStore((state) => state.sessions)
   const selectedSessionId = useSermonStore((state) => state.selectedSessionId)
   const activeSessionId = useSermonStore((state) => state.activeSessionId)
+  const pendingSummaryDocument = useSermonStore(
+    (state) => state.pendingSummaryDocument
+  )
+  const pendingSummaryTitle = useSermonStore(
+    (state) => state.pendingSummaryTitle
+  )
   const transcriptSegments = useTranscriptStore((state) => state.segments)
   const aiProvider = useSettingsStore((state) => state.aiProvider)
   const aiConfigured = useSettingsStore((state) =>
@@ -154,6 +126,11 @@ export function PreachingSummaryPanel() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationError, setGenerationError] = useState<string | null>(null)
   const [lastGeneratedAt, setLastGeneratedAt] = useState<number | null>(null)
+  const [showSessions, setShowSessions] = useState(false)
+  const currentDocument = session
+    ? editorDocument
+    : (pendingSummaryDocument ?? EMPTY_SUMMARY_DOCUMENT)
+  const currentTitle = session ? editorTitle : pendingSummaryTitle
   const [manualEditIds, setManualEditIds] = useState<ReadonlySet<string>>(
     () => new Set()
   )
@@ -175,7 +152,7 @@ export function PreachingSummaryPanel() {
     if (session.finalSummary) return summaryToDocument(session.finalSummary)
     return EMPTY_SUMMARY_DOCUMENT
   }, [session])
-  const storedTitle = session?.summaryTitle.trim() || "Preaching Summary"
+  const storedTitle = session?.summaryTitle.trim() || "Sermon notes"
 
   useEffect(() => {
     const sessionId = session?.id ?? null
@@ -189,8 +166,6 @@ export function PreachingSummaryPanel() {
     }
 
     if (!session) {
-      // The empty editor state is already the render-time fallback.
-      // Persisted editor state is synchronized when a session is present.
       return
     }
 
@@ -236,21 +211,45 @@ export function PreachingSummaryPanel() {
           return
         }
 
+        const store = useSermonStore.getState()
+        const currentSession =
+          store.sessions.find((item) => item.id === store.selectedSessionId) ??
+          store.sessions.at(-1)
+        if (!currentSession || currentSession.id !== session.id) return
+
         lastSourceRef.current = sourceText
         lastGeneratedAtRef.current = Date.now()
         setLastGeneratedAt(lastGeneratedAtRef.current)
         setDraft(nextDraft)
-        const canAutoApply =
-          !manualEditIdsRef.current.has(session.id) &&
-          !session.summaryDocument &&
-          !session.finalSummary
-        if (canAutoApply) {
-          const nextDocument = summaryDocumentFromBullets(nextDraft.bullets)
-          editorDocumentsRef.current.set(session.id, nextDocument)
-          editorTitlesRef.current.set(session.id, nextDraft.title)
-          setEditorDocument(nextDocument)
-          setEditorTitle(nextDraft.title)
-        }
+        const nextAiDocument = normalizeSummaryDocument(
+          summaryDocumentFromBullets(nextDraft.bullets)
+        )
+        const currentDocument =
+          editorDocumentsRef.current.get(session.id) ??
+          currentSession.summaryDocument ??
+          (currentSession.finalSummary
+            ? summaryToDocument(currentSession.finalSummary)
+            : EMPTY_SUMMARY_DOCUMENT)
+        const nextDocument = mergeSermonAiDraft(
+          currentDocument,
+          currentSession.summaryAiDraft,
+          nextAiDocument
+        )
+        editorDocumentsRef.current.set(session.id, nextDocument)
+        store.setAiSummaryDraft(
+          session.id,
+          nextDocument,
+          nextAiDocument,
+          nextDraft.title
+        )
+        const nextTitle =
+          useSermonStore
+            .getState()
+            .sessions.find((item) => item.id === session.id)?.summaryTitle ??
+          nextDraft.title
+        editorTitlesRef.current.set(session.id, nextTitle)
+        setEditorDocument(nextDocument)
+        setEditorTitle(nextTitle)
       } catch (error: unknown) {
         if (
           controller.signal.aborted ||
@@ -261,7 +260,7 @@ export function PreachingSummaryPanel() {
         setGenerationError(
           error instanceof Error
             ? error.message
-            : "Could not generate an AI summary."
+            : "Could not generate AI notes."
         )
       } finally {
         if (generationId === generationIdRef.current) {
@@ -274,23 +273,37 @@ export function PreachingSummaryPanel() {
     [aiConfigured, hasEnoughTranscript, session, sourceText]
   )
 
+  const shouldGenerate =
+    isActive || (session !== null && session.id === activeSessionId)
+  const refreshSummaryRef = useRef(refreshSummary)
   useEffect(() => {
+    refreshSummaryRef.current = refreshSummary
+  }, [refreshSummary])
+  useEffect(() => {
+    if (!shouldGenerate) return
     const timer = window.setTimeout(() => {
       void refreshSummary().catch(() => undefined)
     }, 800)
-    const interval = window.setInterval(() => {
-      void refreshSummary().catch(() => undefined)
-    }, SUMMARY_REFRESH_INTERVAL_MS)
+    return () => window.clearTimeout(timer)
+  }, [shouldGenerate, refreshSummary])
 
+  useEffect(() => {
+    if (!shouldGenerate) return
+    const interval = window.setInterval(() => {
+      void refreshSummaryRef.current().catch(() => undefined)
+    }, SUMMARY_REFRESH_INTERVAL_MS)
+    return () => window.clearInterval(interval)
+  }, [shouldGenerate])
+
+  useEffect(() => {
     return () => {
-      window.clearTimeout(timer)
-      window.clearInterval(interval)
+      generationIdRef.current += 1
       activeControllerRef.current?.abort()
       activeControllerRef.current = null
       isGeneratingRef.current = false
       setIsGenerating(false)
     }
-  }, [refreshSummary])
+  }, [session?.id, shouldGenerate, aiConfigured, aiModel, aiProvider])
 
   const markManualEdit = useCallback((sessionId: string) => {
     manualEditIdsRef.current.add(sessionId)
@@ -302,9 +315,14 @@ export function PreachingSummaryPanel() {
 
   const handleDocumentChange = useCallback(
     (document: AnnouncementDocument) => {
-      if (!session) return
+      if (!session) {
+        useSermonStore.getState().setPendingSummaryDocument(document)
+        setEditorDocument(document)
+        return
+      }
       markManualEdit(session.id)
       editorDocumentsRef.current.set(session.id, document)
+      useSermonStore.getState().setSummaryDocument(session.id, document)
       setEditorDocument(document)
     },
     [markManualEdit, session]
@@ -312,9 +330,13 @@ export function PreachingSummaryPanel() {
 
   const handleTitleChange = useCallback(
     (title: string) => {
-      if (!session) return
+      if (!session) {
+        useSermonStore.getState().setPendingSummaryTitle(title)
+        return
+      }
       markManualEdit(session.id)
       editorTitlesRef.current.set(session.id, title)
+      useSermonStore.getState().setSummaryTitle(session.id, title)
       setEditorTitle(title)
     },
     [markManualEdit, session]
@@ -329,7 +351,7 @@ export function PreachingSummaryPanel() {
     if (!session) return
     const document = normalizeSummaryDocument(editorDocument)
     const plainText = announcementPlainText(document)
-    if (!plainText && !draft) return
+    if (!plainText && !draft && !hasStoredSummary) return
 
     const summary =
       draft && !hasManualEdits
@@ -343,7 +365,7 @@ export function PreachingSummaryPanel() {
       editorTitle.trim() ||
       draft?.title.trim() ||
       session.summaryTitle ||
-      "Preaching Summary"
+      "Sermon notes"
     const store = useSermonStore.getState()
     store.setSummaryTitle(session.id, title)
     store.setFinalSummary(session.id, summary, document)
@@ -358,225 +380,213 @@ export function PreachingSummaryPanel() {
     })
     setEditorDocument(document)
     setEditorTitle(title)
-    toast.success("Summary saved")
-  }, [draft, editorDocument, editorTitle, hasManualEdits, session])
+    toast.success("Sermon notes saved")
+  }, [
+    draft,
+    editorDocument,
+    editorTitle,
+    hasManualEdits,
+    hasStoredSummary,
+    session,
+  ])
 
   const showSummaryLive = useCallback(() => {
-    if (!session) return
-    const document = normalizeSummaryDocument(editorDocument)
+    const document = normalizeSummaryDocument(currentDocument)
     if (!announcementPlainText(document)) return
     const heading =
-      editorTitle.trim() ||
+      currentTitle.trim() ||
       draft?.title.trim() ||
-      session.summaryTitle ||
-      "Preaching Summary"
+      session?.summaryTitle ||
+      "Sermon notes"
     useBroadcastStore
       .getState()
-      .presentOnLive(announcementDocumentToVerse(document, heading), null)
-  }, [draft, editorDocument, editorTitle, session])
+      .presentOnLive(announcementDocumentToVerse(document, heading))
+  }, [currentDocument, currentTitle, draft, session])
 
   const sendSummaryToNotes = useCallback(() => {
-    if (!session) return
-    const document = normalizeSummaryDocument(editorDocument)
+    const document = normalizeSummaryDocument(currentDocument)
     if (!announcementPlainText(document)) return
     const title =
-      editorTitle.trim() ||
+      currentTitle.trim() ||
       draft?.title.trim() ||
-      session.summaryTitle ||
-      "Preaching summary"
+      session?.summaryTitle ||
+      "Sermon notes"
     useAnnouncementStore
       .getState()
       .addNoteFromDocument(SUMMARY_NOTES_SET, title, document)
     toast.success(`Added to Notes › ${SUMMARY_NOTES_SET}`)
-  }, [draft, editorDocument, editorTitle, session])
+  }, [currentDocument, currentTitle, draft, session])
 
-  const hasSummaryContent = Boolean(announcementPlainText(editorDocument))
-  const summaryStatus = hasManualEdits
-    ? "Unsaved changes"
-    : hasStoredSummary
-      ? "Saved"
-      : draft
-        ? "AI draft"
-        : "New"
+  const hasSummaryContent = Boolean(announcementPlainText(currentDocument))
+  const showFooter =
+    hasSummaryContent || Boolean(session && hasManualEdits && hasStoredSummary)
+  const aiLabel = isGenerating
+    ? "Drafting…"
+    : !aiConfigured
+      ? "AI off"
+      : generationError
+        ? "AI draft failed"
+        : draft
+          ? "AI draft ready"
+          : "AI draft pending"
+  const aiHelp = !aiConfigured
+    ? "Set up or unlock an AI key in Settings"
+    : !session
+      ? "Start a sermon to generate AI notes"
+      : !hasEnoughTranscript
+        ? "More transcript is needed for AI notes"
+        : `Generate notes with ${aiProviderName} · ${aiModel}${lastGeneratedAt ? ` · Updated ${formatTime(lastGeneratedAt)}` : ""}`
+  const handleAiClick = () => {
+    if (!aiConfigured) {
+      openSettings("ai-model")
+      return
+    }
+    if (!session || !hasEnoughTranscript) {
+      toast.info(aiHelp)
+      return
+    }
+    void refreshSummary(true).catch(() => undefined)
+  }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <PreachingSummarySessionBar
-        key={session?.id ?? "none"}
-        session={session}
-        sessions={sessions}
-      >
-        {session ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="xs"
-            disabled={!aiConfigured || !hasEnoughTranscript || isGenerating}
-            title={
-              !aiConfigured
-                ? "Set up or unlock an AI key in Settings to generate a summary"
-                : !hasEnoughTranscript
-                  ? "More transcript is needed for an AI summary"
-                  : "Generate an AI summary from the sermon transcript"
-            }
-            onClick={() => void refreshSummary(true).catch(() => undefined)}
+    <div className="@container/summary flex min-h-0 flex-1 flex-col">
+      <SermonNotesHeader
+        aiLabel={aiLabel}
+        aiHelp={aiHelp}
+        isGenerating={isGenerating}
+        hasSessions={sessions.length > 0}
+        showSessions={showSessions}
+        onAiClick={handleAiClick}
+        onToggleSessions={() => setShowSessions((current) => !current)}
+      />
+      {showSessions && session ? (
+        <PreachingSummarySessionBar
+          key={session.id}
+          session={session}
+          sessions={sessions}
+        />
+      ) : null}
+
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 py-2">
+        {generationError ? (
+          <div
+            role="alert"
+            className="flex items-start justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive"
           >
-            {isGenerating ? (
-              <LoaderCircleIcon className="size-3 animate-spin" />
-            ) : (
-              <RefreshCwIcon className="size-3" />
-            )}
-            {draft || hasStoredSummary ? "Regenerate" : "AI summary"}
-          </Button>
+            <AlertCircleIcon className="mt-0.5 size-3.5 shrink-0" />
+            <p className="min-w-0 flex-1">{generationError}</p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className="-mt-1 -mr-1 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              aria-label="Dismiss notes error"
+              title="Dismiss error"
+              onClick={() => setGenerationError(null)}
+            >
+              <XIcon className="size-3" />
+            </Button>
+          </div>
         ) : null}
-      </PreachingSummarySessionBar>
-
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
-        {!session ? (
-          <div className="flex min-h-full flex-col items-center justify-center gap-2 p-6 text-center">
-            <BookOpenTextIcon className="size-5 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">
-              Completed sermon summaries appear here.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <section className="space-y-3 rounded-md border border-border bg-card p-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex min-w-0 items-center gap-2">
-                  <h3 className="text-xs font-semibold">Summary</h3>
-                  <Badge variant={hasManualEdits ? "outline" : "secondary"}>
-                    {summaryStatus}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] text-muted-foreground">
-                <SparklesIcon className="size-3 shrink-0 text-primary" />
-                <span>
-                  {aiConfigured
-                    ? `AI summary · ${aiProviderName} · ${aiModel}`
-                    : "AI summary is off. Set up or unlock an AI key in Settings; manual editing still works."}
-                </span>
-                {lastGeneratedAt ? (
-                  <span>Updated {formatTime(lastGeneratedAt)}</span>
-                ) : null}
-                {aiConfigured && !hasEnoughTranscript ? (
-                  <span>More transcript is needed to generate a draft.</span>
-                ) : null}
-              </div>
-
-              {generationError ? (
-                <div className="flex items-start justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-xs text-destructive">
-                  <AlertCircleIcon className="mt-0.5 size-3.5 shrink-0" />
-                  <p className="min-w-0 flex-1">{generationError}</p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    className="-mt-1 -mr-1 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    aria-label="Dismiss summary error"
-                    title="Dismiss error"
-                    onClick={() => setGenerationError(null)}
-                  >
-                    <XIcon className="size-3" />
-                  </Button>
-                </div>
-              ) : null}
-
-              {draft && (hasManualEdits || hasStoredSummary) ? (
-                <details className="rounded-md border border-border bg-muted/10">
-                  <summary className="cursor-pointer px-2.5 py-2 text-xs font-medium">
-                    View latest AI draft
-                  </summary>
-                  <div className="border-t border-border p-2">
-                    <DraftPreview draft={draft} />
-                  </div>
-                </details>
-              ) : null}
-
-              <label className="grid gap-1">
-                <span className="text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
-                  Title
-                </span>
-                <Input
-                  value={editorTitle}
-                  className="normal-case"
-                  onChange={(event) => handleTitleChange(event.target.value)}
-                  placeholder="Preaching Summary"
-                />
-              </label>
-
-              <Suspense
-                fallback={
-                  <div className="h-40 animate-pulse rounded-md bg-muted/40" />
-                }
-              >
-                <AnnouncementEditor
-                  content={editorDocument}
-                  onChange={handleDocumentChange}
-                />
-              </Suspense>
-
-              <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-border/70 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  disabled={!hasSummaryContent}
-                  onClick={saveSummary}
-                >
-                  <SaveIcon className="size-3" /> Save summary
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  disabled={!hasSummaryContent}
-                  onClick={sendSummaryToNotes}
-                >
-                  <NotebookTextIcon className="size-3" /> Send to Notes
-                </Button>
-                {hasSummaryContent ? (
-                  <SendToOverlayButton
-                    label="the summary"
-                    className="size-6"
-                    getContent={() => ({
-                      heading:
-                        editorTitle.trim() ||
-                        session?.summaryTitle ||
-                        "Preaching summary",
-                      text: announcementPlainText(
-                        normalizeSummaryDocument(editorDocument)
-                      ),
-                      source: "text",
-                    })}
-                  />
-                ) : null}
-                <Button
-                  type="button"
-                  size="xs"
-                  disabled={!hasSummaryContent}
-                  onClick={showSummaryLive}
-                >
-                  <PlayIcon className="size-3" /> Show Live
-                </Button>
-              </div>
-            </section>
-
-            {sourceSegments.length > 0 ? (
-              <details className="rounded-md border border-border bg-muted/10">
-                <summary className="cursor-pointer px-2.5 py-2 text-xs font-semibold text-foreground marker:text-muted-foreground">
-                  Source transcript · {sourceSegments.length} segments
-                </summary>
-                <p className="max-h-48 overflow-y-auto border-t border-border px-2.5 py-2 text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                  {sourceSegments.join("\n\n")}
-                </p>
-              </details>
-            ) : null}
-          </div>
-        )}
+        <Input
+          value={currentTitle}
+          className="h-10 text-sm"
+          aria-label="Sermon notes title"
+          onChange={(event) => handleTitleChange(event.target.value)}
+          placeholder="Sermon title"
+          maxLength={120}
+        />
+        <Suspense
+          fallback={
+            <div className="min-h-32 flex-1 animate-pulse bg-muted/40" />
+          }
+        >
+          <AnnouncementEditor
+            content={currentDocument}
+            onChange={handleDocumentChange}
+            contentLabel="Sermon notes content"
+            placeholder="Write or paste your sermon outline here."
+            isActive={isActive}
+            fill
+            compactToolbar
+            seamless
+          />
+        </Suspense>
       </div>
+
+      {showFooter ? (
+        <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-1 border-t border-border px-3 py-2">
+          {session ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="px-1.5 @[21rem]/summary:px-2.5"
+              aria-label="Save sermon notes"
+              title="Save sermon notes"
+              onClick={saveSummary}
+            >
+              <SaveIcon className="size-3.5" />
+              <span className="hidden @[21rem]/summary:inline">Save</span>
+            </Button>
+          ) : null}
+          {hasSummaryContent ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="px-1.5 @[21rem]/summary:px-2.5"
+                aria-label="Send sermon notes to Notes"
+                title="Send sermon notes to Notes"
+                onClick={sendSummaryToNotes}
+              >
+                <NotebookTextIcon className="size-3.5" />
+                <span className="hidden @[21rem]/summary:inline">Notes</span>
+              </Button>
+              <SendToOverlayButton
+                label="the sermon notes"
+                className="size-8 [&_svg]:size-3.5"
+                getContent={() => ({
+                  heading:
+                    currentTitle.trim() ||
+                    session?.summaryTitle ||
+                    "Sermon notes",
+                  text: announcementPlainText(
+                    normalizeSummaryDocument(currentDocument)
+                  ),
+                  source: "text",
+                })}
+              />
+            </>
+          ) : null}
+          {hasManualEdits ? (
+            <span
+              className="shrink-0 text-[0.625rem] text-muted-foreground"
+              title="Unsaved changes"
+            >
+              <span className="sr-only">Unsaved changes</span>
+              <span aria-hidden="true" className="@[26rem]/summary:hidden">
+                •
+              </span>
+              <span
+                aria-hidden="true"
+                className="hidden @[26rem]/summary:inline"
+              >
+                Unsaved changes
+              </span>
+            </span>
+          ) : null}
+          {hasSummaryContent ? (
+            <LiveActionButton
+              action="show"
+              className="ml-auto shrink"
+              aria-label="Show sermon notes on Live"
+              onClick={showSummaryLive}
+            />
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }

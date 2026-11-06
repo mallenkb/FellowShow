@@ -8,6 +8,8 @@ export interface SermonDirectReference {
   bookNumber: number
   chapter: number
   verse: number
+  verseEnd?: number | null
+  verseParts?: Verse["verse_parts"]
   confidence: number
   transcriptSnippet: string
   evidence: "direct-detection" | "transcript-highlight"
@@ -70,11 +72,8 @@ function hasReferenceData(detection: DetectionResult): boolean {
 
 /**
  * Returns only scripture references supported by direct transcription
- * evidence. Semantic detections are ignored unless the exact same reference
- * was independently recorded as a transcript highlight by the direct path.
- * A direct detector event or that exact highlight is authoritative; matching
- * live transcript snippets are retained as additional evidence for the UI
- * label, not used to make semantic guesses.
+ * evidence. Word matches remain separate related suggestions, even if they
+ * happen to reference a verse that was also mentioned directly.
  */
 export function getSermonDirectReferences({
   detections,
@@ -95,12 +94,8 @@ export function getSermonDirectReferences({
   for (const detection of detections) {
     const reference = detection.verse_ref.trim()
     const highlightedMatch = highlighted.has(normalizeReference(reference))
-    // A semantic result is allowed only when the exact reference was also
-    // recorded as a transcript highlight by the direct-detection path. This
-    // recovers a direct result that was later replaced in the store by a
-    // higher-confidence semantic result without admitting an AI-only guess.
     if (!hasReferenceData(detection)) continue
-    if (!isDirectDetection(detection) && !highlightedMatch) continue
+    if (!isDirectDetection(detection)) continue
 
     const key = `${detection.book_number}:${detection.chapter}:${detection.verse}`
     const snippetMatch = hasTranscriptSnippet(detection, transcript)
@@ -112,6 +107,8 @@ export function getSermonDirectReferences({
       bookNumber: detection.book_number,
       chapter: detection.chapter,
       verse: detection.verse,
+      verseEnd: detection.verse_end,
+      verseParts: detection.verse_parts,
       confidence: detection.confidence,
       transcriptSnippet: detection.transcript_snippet.trim(),
       evidence:
@@ -146,6 +143,8 @@ export function directReferenceToVerse(
       book_abbreviation: "",
       chapter: reference.chapter,
       verse: reference.verse,
+      verse_end: reference.verseEnd,
+      verse_parts: reference.verseParts,
       text: reference.verseText,
     }
   }
@@ -158,6 +157,8 @@ export function directReferenceToVerse(
     book_abbreviation: "",
     chapter: reference.chapter,
     verse: reference.verse,
+    verse_end: reference.verse_end,
+    verse_parts: reference.verse_parts,
     text: reference.verse_text,
   }
 }

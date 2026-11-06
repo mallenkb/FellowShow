@@ -1,13 +1,7 @@
 import type { BroadcastThemeSection, VerseRenderData } from "@/types"
 
 export type ThemeAwareMode =
-  | "book"
-  | "context"
-  | "songs"
-  | "announcements"
-  | "presentation"
-  | "timer"
-  | "on-display"
+  "book" | "context" | "songs" | "announcements" | "presentation" | "on-display"
 
 export const THEME_SECTION_LABELS: Record<BroadcastThemeSection, string> = {
   bible: "Scriptures",

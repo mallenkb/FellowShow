@@ -17,6 +17,7 @@ import {
   ZoomOutIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LiveActionButton } from "@/components/ui/live-action-button"
 import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import {
@@ -69,12 +70,12 @@ function pageRenderData(page: PresentationPage): VerseRenderData {
 
 function stagePage(page: PresentationPage) {
   usePresentationStore.getState().selectDocumentPage(page.documentId, page.id)
-  useBroadcastStore.getState().setPreviewOutput(pageRenderData(page), null)
+  useBroadcastStore.getState().setPreviewOutput(pageRenderData(page))
 }
 
 function presentPage(page: PresentationPage) {
   usePresentationStore.getState().selectDocumentPage(page.documentId, page.id)
-  useBroadcastStore.getState().presentOnLive(pageRenderData(page), null)
+  useBroadcastStore.getState().presentOnLive(pageRenderData(page))
 }
 
 export function PresentationDocumentViewer({
@@ -126,9 +127,7 @@ export function PresentationDocumentViewer({
       usePresentationStore
         .getState()
         .updateDocumentTransform(page.documentId, transform)
-      useBroadcastStore
-        .getState()
-        .setPreviewOutput(pageRenderData(nextPage), null)
+      useBroadcastStore.getState().setPreviewOutput(pageRenderData(nextPage))
     },
     []
   )
@@ -246,9 +245,9 @@ export function PresentationDocumentViewer({
     <section
       onKeyDown={handlePageNavigationKey}
       onContextMenu={(event) => event.preventDefault()}
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card"
     >
-      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border p-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5 px-3 py-2">
         <div className="flex items-center rounded-md border border-border bg-background/40">
           <Button
             type="button"
@@ -305,15 +304,12 @@ export function PresentationDocumentViewer({
         >
           <TrashIcon />
         </Button>
-        <Button
-          type="button"
-          size="sm"
+        <LiveActionButton
+          action="show"
           className="ml-auto"
           disabled={!selectedPage}
           onClick={() => selectedPage && takePageLive(selectedPage)}
-        >
-          Show on Live
-        </Button>
+        />
       </div>
 
       {document.status === "error" ? (
@@ -330,7 +326,7 @@ export function PresentationDocumentViewer({
       ) : (
         <div className="flex min-h-0 flex-1">
           <aside
-            className="shrink-0 overflow-y-auto bg-muted/10 p-2"
+            className="shrink-0 overflow-y-auto bg-muted/10 px-3 py-2"
             style={{ width: thumbnailRailWidth }}
           >
             <div className="grid gap-2">
@@ -343,7 +339,7 @@ export function PresentationDocumentViewer({
                   className={cn(
                     "overflow-hidden rounded border bg-black text-left transition",
                     page.id === selectedPage?.id
-                      ? "border-[#101084] ring-2 ring-[#101084]/20 dark:border-[#F1E600] dark:ring-[#F1E600]/20"
+                      ? "border-primary-emphasis ring-2 ring-primary-emphasis/20"
                       : "border-border hover:border-foreground/30"
                   )}
                 >
@@ -423,7 +419,7 @@ export function PresentationDocumentViewer({
         </div>
       )}
 
-      <div className="flex shrink-0 items-center justify-between border-t border-border px-2 py-1.5 text-xs text-muted-foreground">
+      <div className="flex shrink-0 items-center justify-between border-t border-border px-3 py-1.5 text-xs text-muted-foreground">
         <span>
           {selectedPage
             ? `Page ${selectedPage.pageNumber}`

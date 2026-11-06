@@ -10,9 +10,15 @@ import { bibleActions, useBible } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { formatBibleBookName } from "@/lib/bible-book-names"
 import { getChapterCount } from "@/lib/bible-chapter-counts"
-import { stageVerse, stageVerseInBackground } from "@/lib/preview-staging"
+import {
+  activeTranslationAbbreviation as getActiveTranslationAbbreviation,
+  stageVerse,
+  stageVerseInBackground,
+} from "@/lib/preview-staging"
 import { useContextSearch } from "./use-context-search"
 import { invoke } from "@/lib/ipc"
+import { switchScriptureTranslation } from "@/lib/switch-scripture-translation"
+import { toast } from "sonner"
 import {
   getAutocompleteSuggestion,
   getTabNavigationResult,
@@ -27,6 +33,29 @@ import type { Book, Verse } from "@/types"
 
 export type ScriptureSearchMode = "book" | "context"
 type ScripturePickerStage = "books" | "chapters" | "verses"
+
+function isScriptureShortcutBlocked(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(
+      target.closest(
+        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="combobox"], [role="listbox"], [role="menu"], [role="slider"], [role="spinbutton"], [role="dialog"], [role="alertdialog"], [role="tablist"], [role="separator"]'
+      )
+    )
+  )
+}
+
+function isScriptureOnLive(verse: Verse | null | undefined): boolean {
+  if (!verse) return false
+  const key = `${verse.book_number}:${verse.chapter}:${verse.verse}`
+  const broadcast = useBroadcastStore.getState()
+  return (
+    broadcast.isLive &&
+    broadcast.liveVerse?.themeSection === "bible" &&
+    broadcast.liveVerse.scriptureKey === key &&
+    broadcast.previewVerse?.scriptureKey === key
+  )
+}
 
 export function useScriptureSearch({
   mode,
@@ -60,6 +89,9 @@ export function useScriptureSearch({
   } = useBible()
   const pinnedTranslationIds = useSettingsStore(
     (state) => state.pinnedTranslationIds
+  )
+  const hasDownloadedTranslations = useBibleStore((state) =>
+    state.translations.some((translation) => translation.is_downloaded)
   )
   const queueItems = useQueueStore((state) => state.items)
   const queuedVerseKeys = useMemo(
@@ -114,8 +146,9 @@ export function useScriptureSearch({
         activeTranslationAbbreviation
       )
     : null
-  const hasAvailableScripture =
-    activeTranslationId > 0 && translations.length > 0
+  const hasAvailableScripture = translations.some(
+    (translation) => translation.id === activeTranslationId
+  )
 
   useEffect(() => {
     bibleActions.loadTranslations().catch(console.error)
@@ -324,16 +357,72 @@ export function useScriptureSearch({
           ?.abbreviation ?? "KJV"
       useBroadcastStore
         .getState()
-        .presentOnLive(toVerseRenderData(verse, translation), null)
+        .presentOnLive(toVerseRenderData(verse, translation))
     },
     [activeTranslationId, handleVerseClick, translations]
+  )
+
+  const stepVerse = useCallback(
+    (direction: "ArrowDown" | "ArrowUp") => {
+      if (currentChapter.length === 0) return
+
+      // Read the store for repeated key presses before React has re-rendered.
+      const selectedId = effectiveSelectedVerseId
+        ? (useBibleStore.getState().selectedVerse?.id ??
+          effectiveSelectedVerseId)
+        : null
+      let selectedIndex = selectedId
+        ? currentChapter.findIndex((verse) => verse.id === selectedId)
+        : -1
+      if (selectedIndex < 0 && effectiveSelectedVerseId) {
+        selectedIndex = currentChapter.findIndex(
+          (verse) => verse.id === effectiveSelectedVerseId
+        )
+      }
+      const currentIndex =
+        selectedIndex >= 0
+          ? selectedIndex
+          : direction === "ArrowDown"
+            ? -1
+            : currentChapter.length
+      const nextIndex =
+        direction === "ArrowDown"
+          ? Math.min(currentIndex + 1, currentChapter.length - 1)
+          : Math.max(currentIndex - 1, 0)
+      const nextVerse = currentChapter[nextIndex]
+      if (!nextVerse || nextIndex === currentIndex) return
+
+      const followsLive = isScriptureOnLive(currentChapter[currentIndex])
+
+      setSelectedVerseId(nextVerse.id)
+      bibleActions.selectVerse(nextVerse)
+      if (followsLive) {
+        useBroadcastStore
+          .getState()
+          .presentOnLive(
+            toVerseRenderData(nextVerse, getActiveTranslationAbbreviation()),
+            "preview"
+          )
+      } else {
+        stageVerse(nextVerse)
+      }
+      document
+        .getElementById(`verse-${nextVerse.id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    },
+    [currentChapter, effectiveSelectedVerseId]
   )
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (
-        event.target instanceof HTMLElement &&
-        event.target.closest("input, textarea, [contenteditable='true']")
+        event.defaultPrevented ||
+        event.nativeEvent.isComposing ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        isScriptureShortcutBlocked(event.target)
       )
         return
       if (pickerStage !== "verses") return
@@ -349,30 +438,82 @@ export function useScriptureSearch({
       }
       if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
       event.preventDefault()
-      if (currentChapter.length === 0) return
-
-      const currentIndex = effectiveSelectedVerseId
-        ? currentChapter.findIndex(
-            (verse) => verse.id === effectiveSelectedVerseId
-          )
-        : event.key === "ArrowDown"
-          ? -1
-          : currentChapter.length
-      const nextIndex =
-        event.key === "ArrowDown"
-          ? Math.min(currentIndex + 1, currentChapter.length - 1)
-          : Math.max(currentIndex - 1, 0)
-      const nextVerse = currentChapter[nextIndex]
-      if (!nextVerse) return
-      setSelectedVerseId(nextVerse.id)
-      bibleActions.selectVerse(nextVerse)
-      stageVerse(nextVerse)
-      document
-        .getElementById(`verse-${nextVerse.id}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+      stepVerse(event.key)
     },
-    [currentChapter, effectiveSelectedVerseId, pickerStage, stepChapter]
+    [pickerStage, stepChapter, stepVerse]
   )
+
+  // Show on Live can remove its own button and leave focus on the document.
+  useEffect(() => {
+    if (!isActive || mode !== "book" || pickerStage !== "verses") return
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      const isChapterKey =
+        event.key === "ArrowLeft" || event.key === "ArrowRight"
+      if (
+        (!isChapterKey &&
+          event.key !== "ArrowDown" &&
+          event.key !== "ArrowUp") ||
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        document.querySelector(
+          'dialog[open], [role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]'
+        )
+      )
+        return
+
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (
+        isScriptureShortcutBlocked(target) ||
+        isScriptureShortcutBlocked(document.activeElement)
+      )
+        return
+      if (
+        target !== document.body &&
+        target !== document.documentElement &&
+        !target.closest(
+          '[data-slot="preview-panel"][data-preview-mode="content"]'
+        ) &&
+        !target.matches('[data-slot="sermon-scripture-row"]') &&
+        !target.closest("[data-scripture-live-control]")
+      )
+        return
+
+      if (isChapterKey) {
+        event.preventDefault()
+        stepChapter(event.key === "ArrowLeft" ? -1 : 1)
+        return
+      }
+
+      const selected = useBibleStore.getState().selectedVerse
+      if (
+        !effectiveSelectedVerseId ||
+        !selected ||
+        !currentChapter.some((verse) => verse.id === selected.id) ||
+        !isScriptureOnLive(selected)
+      )
+        return
+
+      event.preventDefault()
+      stepVerse(event.key)
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [
+    currentChapter,
+    effectiveSelectedVerseId,
+    isActive,
+    mode,
+    pickerStage,
+    stepChapter,
+    stepVerse,
+  ])
 
   const autocompleteResult = useMemo(
     () => getAutocompleteSuggestion(quickInput, books),
@@ -471,10 +612,11 @@ export function useScriptureSearch({
 
   const setActiveTranslation = useCallback(async (id: number) => {
     try {
-      await invoke("set_active_translation", { translationId: id })
-      useBibleStore.getState().setActiveTranslation(id)
+      await switchScriptureTranslation(id)
     } catch (error) {
-      console.error(error)
+      toast.error("Could not switch translations", {
+        description: String(error),
+      })
     }
   }, [])
 
@@ -512,6 +654,7 @@ export function useScriptureSearch({
     handleVerseClick,
     handleVerseDoubleClick,
     hasAvailableScripture,
+    hasDownloadedTranslations,
     isActive,
     pickerStage,
     pinnedTranslations,

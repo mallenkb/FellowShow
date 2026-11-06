@@ -548,8 +548,8 @@ const ANNOUNCEMENTS_THEME: BroadcastTheme = {
   verseText: {
     ...CLASSIC_DARK.verseText,
     fontSize: 72,
-    horizontalAlign: "left",
-    verticalAlign: "top",
+    horizontalAlign: "center",
+    verticalAlign: "middle",
     lineHeight: 1.25,
   },
   reference: {
@@ -557,7 +557,7 @@ const ANNOUNCEMENTS_THEME: BroadcastTheme = {
     fontSize: 84,
     fontWeight: 700,
     horizontalAlign: "center",
-    verticalAlign: "top",
+    verticalAlign: "middle",
     position: "above",
     color: "#F1E600",
     uppercase: false,

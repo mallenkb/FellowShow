@@ -95,67 +95,6 @@ export async function pickThemeBackgroundMedia(): Promise<{
 }
 
 /**
- * Opens a native file dialog to pick a timer background image or video and
- * returns a base64 data URL that persists in app state.
- */
-export async function pickTimerBackgroundMedia(): Promise<{
-  url: string
-  name: string
-  mediaType: "image" | "video"
-  playbackStartedAt?: number
-} | null> {
-  const selected = await open({
-    multiple: false,
-    filters: [
-      {
-        name: "Images and Videos",
-        extensions: [
-          "png",
-          "jpg",
-          "jpeg",
-          "webp",
-          "gif",
-          "bmp",
-          "svg",
-          "mp4",
-          "webm",
-          "mov",
-          "m4v",
-        ],
-      },
-      {
-        name: "Videos",
-        extensions: ["mp4", "webm", "mov", "m4v"],
-      },
-    ],
-  })
-  if (!selected) return null
-
-  const path = typeof selected === "string" ? selected : selected
-  const bytes = await readFile(path)
-  const extension = path.split(".").pop()?.toLowerCase() ?? "png"
-  const name =
-    path
-      .split(/[\\/]/)
-      .pop()
-      ?.replace(/\.[^.]+$/, "") ?? "Uploaded background"
-  const mime = MEDIA_MIME_BY_EXTENSION[extension] ?? "image/png"
-  const mediaType = mime.startsWith("video/") ? "video" : "image"
-  const url =
-    mediaType === "video"
-      ? (await cacheMediaBytes(bytes, path.split(/[\\/]/).pop() ?? name, mime))
-          .url
-      : bytesToDataUrl(bytes, mime)
-
-  return {
-    url,
-    name,
-    mediaType,
-    playbackStartedAt: mediaType === "video" ? Date.now() : undefined,
-  }
-}
-
-/**
  * Exports a theme as JSON via native save dialog.
  */
 export async function exportTheme(theme: BroadcastTheme): Promise<void> {

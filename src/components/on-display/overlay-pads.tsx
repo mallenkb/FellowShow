@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { PencilIcon, PlusIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LIVE_STATUS_BADGE_CLASS } from "@/components/ui/live-status-styles"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   resolveOverlayOutput,
@@ -9,8 +10,6 @@ import {
 import {
   isFullWidthLowerThird,
   getOverlayPayloadForOutput,
-  overlaySelectionsMatch,
-  resolveOverlaySelection,
 } from "@/lib/overlays"
 import { carriesGraphics } from "@/lib/broadcast-outputs"
 import { cn } from "@/lib/utils"
@@ -30,6 +29,9 @@ const SPEED_LABELS = {
   standard: "Normal scroll",
   fast: "Fast scroll",
 } as const
+
+const PAD_GRID_CLASS =
+  "grid auto-rows-fr grid-cols-2 gap-2 @[32rem]/pads:grid-cols-3 @[42rem]/pads:grid-cols-4"
 
 interface OverlayPad {
   key: string
@@ -179,40 +181,26 @@ function deletePad(pad: OverlayPad): void {
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName))
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    (target instanceof HTMLElement && target.isContentEditable) ||
+    target.closest(
+      'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="searchbox"], [role="combobox"], [role="spinbutton"], [role="listbox"], [role="menu"]'
+    )
   )
-}
-
-/** What Show on Live will change, one colored chip per graphic. */
-function changeSummary(
-  config: OverlayConfiguration,
-  staged: ActiveOverlayState,
-  active: ActiveOverlayState,
-  onAir: boolean
-): { kind: OverlayPadKind; text: string; removed: boolean }[] {
-  const pads = buildPads(config)
-  const before = onAir ? active : null
-  const changes: { kind: OverlayPadKind; text: string; removed: boolean }[] = []
-  for (const pad of pads) {
-    const next = isSelected(pad, staged)
-    const now = before ? isSelected(pad, before) : false
-    if (next !== now) {
-      changes.push({ kind: pad.kind, text: pad.name, removed: !next })
-    }
-  }
-  return changes
 }
 
 /** Every saved graphic as a pad. Tapping one adds it to or removes it from Preview. */
 export function OverlayPads({
   onAddRequest,
   onEdit,
+  onPreviewRequest,
+  compact = false,
 }: {
   onAddRequest: () => void
   onEdit: (kind: OverlayPadKind, id: string) => void
+  onPreviewRequest?: () => void
+  compact?: boolean
 }) {
   const config = useBroadcastStore((state) => state.overlayConfig)
   const staged = useBroadcastStore((state) => state.stagedOverlays)
@@ -228,26 +216,25 @@ export function OverlayPads({
         ) && isOutputOn(runtime[id])
     )
     .map((id) => getOverlayPayloadForOutput(config, active, id))
-  const graphicsOnAir = livePayloads.length > 0
   const pads = buildPads(config)
-  const resolvedStaged = resolveOverlaySelection(config, staged)
-  const resolvedActive = resolveOverlaySelection(config, active)
-  const changes = changeSummary(
-    config,
-    resolvedStaged,
-    resolvedActive,
-    graphicsOnAir
-  )
   const [pendingDelete, setPendingDelete] = useState<OverlayPad | null>(null)
   const [clearSentOpen, setClearSentOpen] = useState(false)
-  const matchesLive =
-    graphicsOnAir && overlaySelectionsMatch(resolvedStaged, resolvedActive)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (isTypingTarget(event.target)) return
-      if (document.querySelector('[role="dialog"]')) return
-      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      if (
+        event.defaultPrevented ||
+        event.isComposing ||
+        isTypingTarget(event.target) ||
+        isTypingTarget(document.activeElement)
+      )
+        return
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key === "Enter"
+      ) {
         const state = useBroadcastStore.getState()
         const output = resolveOverlayOutput(
           state.outputs,
@@ -255,6 +242,9 @@ export function OverlayPads({
         )
         if (!output) return
         event.preventDefault()
+        event.stopPropagation()
+        if (event.repeat) return
+        onPreviewRequest?.()
         void showOverlayPreviewOnLive(output.id).catch((error: unknown) => {
           console.error("[overlays] Show on Live failed", error)
         })
@@ -267,11 +257,14 @@ export function OverlayPads({
       ]
       if (!pad) return
       event.preventDefault()
+      event.stopPropagation()
+      if (event.repeat) return
       togglePad(pad)
+      onPreviewRequest?.()
     }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+    window.addEventListener("keydown", onKeyDown, true)
+    return () => window.removeEventListener("keydown", onKeyDown, true)
+  }, [onPreviewRequest])
 
   const sentPads = pads.filter((pad) => pad.sent)
   const renderPad = (pad: OverlayPad) => {
@@ -290,8 +283,14 @@ export function OverlayPads({
         key={pad.key}
         selected={selected}
         deleteLabel={pad.kind === "logo" ? "Delete logos" : "Delete"}
-        onToggle={() => togglePad(pad)}
-        onShowLive={() => showPadOnLive(pad)}
+        onToggle={() => {
+          togglePad(pad)
+          onPreviewRequest?.()
+        }}
+        onShowLive={() => {
+          showPadOnLive(pad)
+          onPreviewRequest?.()
+        }}
         onEdit={() => onEdit(pad.kind, pad.id)}
         onDelete={() => setPendingDelete(pad)}
       >
@@ -300,24 +299,35 @@ export function OverlayPads({
             type="button"
             aria-pressed={selected}
             aria-label={`${selected ? "Remove" : "Add"} ${pad.name} ${selected ? "from" : "to"} Preview`}
+            aria-keyshortcuts={index < 9 ? String(index + 1) : undefined}
             title="Click to preview. Double-click to show on Live."
             onClick={(event) => {
-              if (event.detail < 2) togglePad(pad)
+              if (event.detail < 2) {
+                togglePad(pad)
+                onPreviewRequest?.()
+              }
             }}
-            onDoubleClick={() => showPadOnLive(pad)}
+            onDoubleClick={() => {
+              showPadOnLive(pad)
+              onPreviewRequest?.()
+            }}
             className={cn(
-              "group flex h-full min-h-36 w-full flex-col justify-between gap-2 rounded-lg border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
+              "group flex h-full w-full flex-col justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none @[18rem]/pads:py-3",
+              compact ? "min-h-24" : "min-h-36",
               selected || live
                 ? style.active
-                : cn("border-border bg-card", style.hover),
+                : cn(
+                    "border-border/85 bg-card dark:border-border",
+                    style.hover
+                  ),
               (selected || live) && "ring-1",
               conflict && "opacity-60 hover:opacity-100"
             )}
           >
-            <span className="flex w-full items-center justify-between gap-2 text-[0.6875rem]">
+            <span className="flex w-full min-w-0 items-start justify-between gap-1 text-[0.6875rem]">
               <span
                 className={cn(
-                  "truncate font-medium",
+                  "min-w-0 leading-tight font-medium break-words",
                   selected || live
                     ? style.text
                     : cn("text-muted-foreground", style.hoverText)
@@ -326,7 +336,7 @@ export function OverlayPads({
                 {pad.kindLabel}
               </span>
               {index < 9 ? (
-                <kbd className="rounded border border-border bg-background/40 px-1.5 font-mono text-[0.625rem] text-muted-foreground">
+                <kbd className="inline-flex size-6 shrink-0 items-center justify-center rounded bg-background font-mono text-[0.7rem] font-semibold text-foreground @[18rem]/pads:size-7 @[18rem]/pads:text-[0.8rem]">
                   {index + 1}
                 </kbd>
               ) : null}
@@ -334,28 +344,33 @@ export function OverlayPads({
             {pad.imageUrls?.length ? (
               // A logo pad shows the logo itself; its name stays in the
               // button's label for screen readers.
-              <span className="flex min-w-0 items-center gap-2">
+              <span className="flex min-w-0 flex-wrap items-center gap-1">
                 {pad.imageUrls.map((url) => (
                   <img
                     key={url}
                     src={url}
                     alt=""
-                    className="h-14 max-w-24 rounded-md bg-black/40 object-contain p-1.5"
+                    className="h-12 max-w-full rounded-md bg-black/40 object-contain p-1.5 @[18rem]/pads:h-14 @[18rem]/pads:max-w-24"
                   />
                 ))}
               </span>
             ) : (
-              <span className="line-clamp-3 min-w-0 text-sm font-medium break-words">
+              <span className="line-clamp-3 min-w-0 text-xs font-medium break-words @[18rem]/pads:text-sm">
                 {pad.name}
               </span>
             )}
             {live ? (
-              <span className="mr-8 inline-flex w-fit items-center gap-1 rounded bg-red-500/15 px-1.5 py-0.5 text-[0.625rem] font-semibold tracking-wide text-red-500 uppercase">
+              <span
+                className={cn(
+                  "mr-8 inline-flex w-fit items-center gap-1 rounded px-1.5 py-0.5 text-[0.625rem] font-semibold tracking-wide uppercase",
+                  LIVE_STATUS_BADGE_CLASS
+                )}
+              >
                 <span className="size-1.5 rounded-full bg-current" />
                 Live
               </span>
             ) : (
-              <span className="truncate pr-8 text-[0.6875rem] text-muted-foreground">
+              <span className="min-w-0 pr-8 text-[0.6875rem] leading-tight text-muted-foreground">
                 {pad.detail}
               </span>
             )}
@@ -378,13 +393,16 @@ export function OverlayPads({
   }
 
   return (
-    <div className="grid gap-3">
-      <div className="grid grid-cols-2 gap-2 xl:grid-cols-3">
+    <div className="@container/pads grid gap-3">
+      <div className={PAD_GRID_CLASS}>
         {pads.filter((pad) => !pad.sent).map(renderPad)}
         <button
           type="button"
           onClick={onAddRequest}
-          className="flex min-h-36 items-center justify-center gap-2 rounded-lg border border-dashed border-border text-sm text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className={cn(
+            "flex min-w-0 flex-wrap items-center justify-center gap-1.5 rounded-lg border border-dashed border-border px-3 text-center text-xs text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none @[18rem]/pads:text-sm",
+            compact ? "min-h-24" : "min-h-36"
+          )}
         >
           <PlusIcon className="size-4" /> Add graphic
         </button>
@@ -394,15 +412,18 @@ export function OverlayPads({
           aria-labelledby="sent-pads-heading"
           className="grid gap-2 pt-1"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2">
             <h3
               id="sent-pads-heading"
-              className="shrink-0 text-[0.6875rem] font-medium tracking-wider text-muted-foreground uppercase"
+              className="min-w-0 text-[0.6875rem] font-medium tracking-wider text-muted-foreground uppercase"
             >
-              Sent from Sermon, Notes and Songs
+              Sent from Bible, Notes and Songs
             </h3>
             {/* The divider runs through the heading row. */}
-            <span aria-hidden="true" className="h-px flex-1 bg-border" />
+            <span
+              aria-hidden="true"
+              className="hidden h-px flex-1 bg-border @[24rem]/pads:block"
+            />
             <Button
               type="button"
               variant="ghost"
@@ -413,52 +434,14 @@ export function OverlayPads({
               Clear
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-2 xl:grid-cols-3">
-            {sentPads.map(renderPad)}
-          </div>
+          <div className={PAD_GRID_CLASS}>{sentPads.map(renderPad)}</div>
         </section>
       ) : null}
-      <div
-        aria-live="polite"
-        className="flex min-h-6 flex-wrap items-center gap-1.5 text-[0.6875rem] text-muted-foreground"
-      >
-        {matchesLive ? (
-          "Live matches Preview."
-        ) : changes.length === 0 ? (
-          "Nothing in Preview yet. Tap a pad or a Look."
-        ) : (
-          <>
-            <span>Show on Live will</span>
-            {changes.map((change) => (
-              <span
-                key={`${change.kind}:${change.text}`}
-                className={cn(
-                  "inline-flex max-w-56 items-center gap-1 rounded border px-1.5 py-0.5",
-                  OVERLAY_KIND_STYLES[change.kind].tile,
-                  change.removed && "line-through opacity-70"
-                )}
-              >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "size-1.5 shrink-0 rounded-full",
-                    OVERLAY_KIND_STYLES[change.kind].dot
-                  )}
-                />
-                <span className="truncate text-foreground">
-                  {change.removed ? "remove " : "show "}
-                  {change.text}
-                </span>
-              </span>
-            ))}
-          </>
-        )}
-      </div>
       <ConfirmDialog
         open={clearSentOpen}
         onOpenChange={setClearSentOpen}
         title="Clear sent graphics?"
-        description="Everything sent from Sermon, Notes and Songs is removed from its pad, Preview and Live."
+        description="Everything sent from Bible, Notes and Songs is removed from its pad, Preview and Live."
         confirmLabel="Clear"
         destructive
         onConfirm={() => {

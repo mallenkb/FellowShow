@@ -59,9 +59,7 @@ export function prepareSong(song: CopSong) {
     },
     "song"
   )
-  useBroadcastStore
-    .getState()
-    .setPreviewOutput(toVerseRenderData(verse, ""), null)
+  useBroadcastStore.getState().setPreviewOutput(toVerseRenderData(verse, ""))
 
   return verse
 }
@@ -72,5 +70,5 @@ export function presentSong(song: CopSong) {
 
   useBroadcastStore
     .getState()
-    .presentOnLive(toVerseRenderData(verse, translation), null)
+    .presentOnLive(toVerseRenderData(verse, translation))
 }

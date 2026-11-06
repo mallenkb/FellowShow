@@ -14,8 +14,10 @@ export function OnDisplayOverview() {
     setLookEditor((state) => ({ open: true, id, key: state.key + 1 }))
 
   return (
-    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
-      <OverlayLiveNow />
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="bg-muted/40 px-3 pt-2.5">
+        <OverlayLiveNow showControls={false} />
+      </div>
       <OverlayLooks onSave={() => openLook(null)} onEdit={openLook} />
       <OverlayLookDialog
         key={lookEditor.key}

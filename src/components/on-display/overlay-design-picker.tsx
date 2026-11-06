@@ -95,7 +95,7 @@ export function OverlayDesignPicker<T extends string>({
                   className={cn(
                     "relative grid w-full min-w-0 gap-1 overflow-hidden rounded-lg border p-1 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                     selected
-                      ? "border-primary ring-1 ring-primary"
+                      ? "border-primary-emphasis ring-1 ring-primary-emphasis"
                       : "border-border hover:border-muted-foreground"
                   )}
                 >

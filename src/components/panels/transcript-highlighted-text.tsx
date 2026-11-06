@@ -1,9 +1,18 @@
-import { Fragment } from "react"
+import { Fragment, type KeyboardEvent } from "react"
 import { selectAnnotation } from "@/lib/transcript-annotations"
 import {
   buildTranscriptHighlightParts,
   type TranscriptVerseAnnotation,
 } from "@/lib/transcript-verse-highlights"
+
+function handleLiveShortcut(
+  event: KeyboardEvent<HTMLButtonElement>,
+  annotation: TranscriptVerseAnnotation
+) {
+  if (event.key !== "Enter" || !event.shiftKey) return
+  event.preventDefault()
+  selectAnnotation(annotation, true, true)
+}
 
 export function HighlightedTranscriptText({
   text,
@@ -27,14 +36,35 @@ export function HighlightedTranscriptText({
         if (part.type === "quote") {
           return (
             <Fragment key={`${index}-${part.annotation.id}`}>
-              <mark className="rounded-[3px] bg-sky-400/25 box-decoration-clone px-0.5 text-sky-950 dark:bg-sky-400/25 dark:text-sky-50">
-                {part.text}
-              </mark>
               <button
                 type="button"
+                aria-keyshortcuts="Shift+Enter"
                 onClick={() => selectAnnotation(part.annotation)}
+                onDoubleClick={() =>
+                  selectAnnotation(part.annotation, true, true)
+                }
+                onKeyDown={(event) =>
+                  handleLiveShortcut(event, part.annotation)
+                }
+                className="inline rounded-[3px] text-inherit focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none"
+                title={`Preview ${part.annotation.reference}; double-click or Shift+Enter to show on Live`}
+              >
+                <mark className="rounded-[3px] bg-sky-400/25 box-decoration-clone px-0.5 text-sky-950 dark:bg-sky-400/25 dark:text-sky-50">
+                  {part.text}
+                </mark>
+              </button>
+              <button
+                type="button"
+                aria-keyshortcuts="Shift+Enter"
+                onClick={() => selectAnnotation(part.annotation)}
+                onDoubleClick={() =>
+                  selectAnnotation(part.annotation, true, true)
+                }
+                onKeyDown={(event) =>
+                  handleLiveShortcut(event, part.annotation)
+                }
                 className="mx-0.5 inline rounded-[6px] border border-sky-500/35 bg-sky-400/15 px-1.5 py-0.5 align-baseline text-[0.8125rem] leading-none font-semibold text-sky-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-colors hover:bg-sky-400/25 focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:outline-none dark:text-sky-100"
-                title={`Load ${part.annotation.reference} (quoted)`}
+                title={`Preview ${part.annotation.reference}; double-click or Shift+Enter to show on Live`}
               >
                 {part.annotation.reference}
               </button>
@@ -45,9 +75,12 @@ export function HighlightedTranscriptText({
           <button
             key={`${index}-${part.annotation.id}`}
             type="button"
+            aria-keyshortcuts="Shift+Enter"
             onClick={() => selectAnnotation(part.annotation)}
+            onDoubleClick={() => selectAnnotation(part.annotation, true, true)}
+            onKeyDown={(event) => handleLiveShortcut(event, part.annotation)}
             className="mx-0.5 inline rounded-[6px] border border-yellow-500/35 bg-yellow-300/20 px-1.5 py-0.5 align-baseline text-[0.8125rem] leading-none font-semibold text-yellow-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-colors hover:bg-yellow-300/30 focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:outline-none dark:text-yellow-100"
-            title={`Load ${part.text}`}
+            title={`Preview ${part.text}; double-click or Shift+Enter to show on Live`}
           >
             {part.text}
           </button>

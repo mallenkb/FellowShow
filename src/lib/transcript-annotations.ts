@@ -1,5 +1,5 @@
 import { bibleActions } from "@/hooks/use-bible"
-import { useBibleStore } from "@/stores"
+import { useBibleStore, useBroadcastStore } from "@/stores"
 import type { DetectionResult, ReadingAdvance, Verse } from "@/types"
 import type { TranscriptVerseAnnotation } from "@/lib/transcript-verse-highlights"
 import { stageVerse, stageVerseInBackground } from "@/lib/preview-staging"
@@ -93,7 +93,8 @@ async function loadAnnotationVerse(annotation: TranscriptVerseAnnotation) {
 /** Opens the annotated verse in the scripture library and selects it for preview. */
 export function selectAnnotation(
   annotation: TranscriptVerseAnnotation,
-  activate = true
+  activate = true,
+  sendLive = false
 ) {
   const requestId = ++annotationRequestId
   const { selectedVerse, activeTranslationId } = useBibleStore.getState()
@@ -113,7 +114,10 @@ export function selectAnnotation(
   )
   const selectAndStage = (verse: Verse) => {
     bibleActions.selectVerse(verse)
-    if (activate) stageVerse(verse)
+    if (sendLive) {
+      stageVerse(verse)
+      useBroadcastStore.getState().takePreviewLive("manual")
+    } else if (activate) stageVerse(verse)
     else stageVerseInBackground(verse)
   }
   void loadAnnotationVerse(annotation)

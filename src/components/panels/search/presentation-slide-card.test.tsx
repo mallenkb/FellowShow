@@ -74,7 +74,6 @@ describe("PresentationSlideCard", () => {
     })
     useBroadcastStore.setState({
       previewVerse: stagedVerse,
-      previewTimer: null,
     })
   })
 

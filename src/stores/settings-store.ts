@@ -23,7 +23,7 @@ export function isAiProvider(value: unknown): value is AiProvider {
 export const DEFAULT_PINNED_TRANSLATION_IDS = [6, 2]
 
 /** Search tabs that stay hidden unless the operator turns them on in Settings. */
-const OPTIONAL_SEARCH_TABS = ["on-display", "timer"] as const
+const OPTIONAL_SEARCH_TABS = ["on-display"] as const
 export type OptionalSearchTab = (typeof OPTIONAL_SEARCH_TABS)[number]
 
 export function isOptionalSearchTab(
@@ -53,6 +53,7 @@ interface SettingsState {
   sttProvider: SttProvider
   hiddenTranslationIds: number[]
   pinnedTranslationIds: number[]
+  translationOrderIds: number[]
   defaultPinnedTranslationsApplied: boolean
   /** Set once the Video Overlays tab has been turned on by default. */
   videoOverlaysTabApplied: boolean
@@ -76,6 +77,7 @@ interface SettingsState {
   setHiddenTranslationIds: (ids: number[]) => void
   toggleHiddenTranslation: (id: number) => void
   setPinnedTranslationIds: (ids: number[]) => void
+  setTranslationOrderIds: (ids: number[]) => void
   togglePinnedTranslation: (id: number) => void
   toggleExtraSearchTab: (tab: OptionalSearchTab) => void
 }
@@ -101,6 +103,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   sttProvider: "deepgram",
   hiddenTranslationIds: [],
   pinnedTranslationIds: DEFAULT_PINNED_TRANSLATION_IDS,
+  translationOrderIds: [],
   defaultPinnedTranslationsApplied: false,
   videoOverlaysTabApplied: false,
   extraSearchTabs: ["on-display"],
@@ -131,6 +134,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         ? state.pinnedTranslationIds
         : state.pinnedTranslationIds.filter((pinnedId) => pinnedId !== id),
     })),
+  setTranslationOrderIds: (ids) =>
+    set({ translationOrderIds: sanitizeTranslationIds(ids) }),
   setPinnedTranslationIds: (pinnedTranslationIds) =>
     set({ pinnedTranslationIds }),
   togglePinnedTranslation: (id) =>
@@ -161,6 +166,7 @@ const PERSISTED_KEYS = [
   "sttProvider",
   "hiddenTranslationIds",
   "pinnedTranslationIds",
+  "translationOrderIds",
   "defaultPinnedTranslationsApplied",
   "videoOverlaysTabApplied",
   "extraSearchTabs",
@@ -389,6 +395,10 @@ async function loadValidatedSettings(
         if (Array.isArray(value)) {
           patch.hiddenTranslationIds = sanitizeTranslationIds(value)
         }
+        break
+      case "translationOrderIds":
+        if (Array.isArray(value))
+          patch.translationOrderIds = sanitizeTranslationIds(value)
         break
       case "pinnedTranslationIds":
         if (Array.isArray(value)) {

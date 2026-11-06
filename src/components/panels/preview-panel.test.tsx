@@ -73,9 +73,7 @@ describe("PreviewPanel", () => {
       isLive: false,
       liveSource: null,
       liveVerse: null,
-      presenterTimer: null,
       previewVerse: stagedNotice,
-      previewTimer: null,
     })
     useOutputRuntimeStore.setState({ byId: {} })
   })
@@ -83,6 +81,21 @@ describe("PreviewPanel", () => {
   afterEach(() => {
     cleanup()
     useBroadcastStore.getState().setLive(false)
+  })
+
+  it("can show graphics Preview from the Bible workspace and return to content", async () => {
+    const onPreviewModeChange = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <PreviewPanel
+        mode="book"
+        previewMode="overlays"
+        onPreviewModeChange={onPreviewModeChange}
+      />
+    )
+    expect(screen.getByText("Preview")).toBeTruthy()
+    await user.click(screen.getByRole("button", { name: "Content Preview" }))
+    expect(onPreviewModeChange).toHaveBeenCalledWith("content")
   })
 
   it("keeps what is staged when the operator switches tabs", () => {
@@ -114,13 +127,12 @@ describe("PreviewPanel", () => {
 
     await user.click(screen.getByRole("button", { name: "Show on Live" }))
     expect(screen.queryByRole("button", { name: "Show on Live" })).toBeNull()
-
     await user.click(screen.getByRole("button", { name: "Stop Live" }))
     expect(useBroadcastStore.getState().isLive).toBe(false)
     expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
   })
 
-  it("offers Stop next to Show on Live when something else is on air", async () => {
+  it("offers Show on Live and Stop when another item is on air", async () => {
     const user = userEvent.setup()
     render(<PreviewPanel mode="book" />)
     await user.click(screen.getByRole("button", { name: "Show on Live" }))
@@ -129,6 +141,19 @@ describe("PreviewPanel", () => {
 
     expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "Stop" })).toBeTruthy()
+  })
+
+  it("does not take content live while a graphics action is pending", async () => {
+    const user = userEvent.setup()
+    render(<PreviewPanel mode="book" overlayActionPending />)
+
+    const showButton = screen.getByRole<HTMLButtonElement>("button", {
+      name: "Show on Live",
+    })
+    expect(showButton.disabled).toBe(true)
+    await user.dblClick(screen.getByTestId("canvas-verse"))
+
+    expect(useBroadcastStore.getState().isLive).toBe(false)
   })
 
   it("shows Show on Live and no live Look for stale graphics flags whose transport is off", () => {

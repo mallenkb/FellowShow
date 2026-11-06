@@ -11,18 +11,20 @@ export const useDetectionStore = create<DetectionState>((set) => ({
   addDetections: (incoming) =>
     set((state) => {
       const map = new Map<string, DetectionResult>()
+      const key = (d: DetectionResult) =>
+        `${d.source}:${d.book_number}:${d.chapter}:${d.verse}`
       // Incoming first — they take priority for recency/position
       for (const d of incoming) {
-        const existing = map.get(d.verse_ref)
+        const existing = map.get(key(d))
         if (!existing || d.confidence > existing.confidence) {
-          map.set(d.verse_ref, d)
+          map.set(key(d), d)
         }
       }
-      // Existing detections — keep if no duplicate, or if higher confidence than incoming
+      // A fresh correction takes precedence over an older detection.
       for (const d of state.detections) {
-        const existing = map.get(d.verse_ref)
-        if (!existing || d.confidence > existing.confidence) {
-          map.set(d.verse_ref, d)
+        const existing = map.get(key(d))
+        if (!existing) {
+          map.set(key(d), d)
         }
       }
       // Sort by confidence so high-confidence direct detections appear above semantic

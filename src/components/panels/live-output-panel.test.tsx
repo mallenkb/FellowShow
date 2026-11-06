@@ -35,25 +35,36 @@ describe("LiveOutputPanel", () => {
       isLive: false,
       liveSource: null,
       liveVerse: null,
-      presenterTimer: null,
       previewVerse,
-      previewTimer: null,
     })
   })
 
   afterEach(() => {
     cleanup()
     useBroadcastStore.getState().setLive(false)
+    vi.mocked(useOverlayOutputLive).mockReturnValue(false)
+    vi.restoreAllMocks()
   })
 
-  it("takes the preview live when the operator enables Go live", async () => {
+  it("takes the preview live and stops it with the on-air toggle", async () => {
     const user = userEvent.setup()
     render(<LiveOutputPanel mode="book" />)
 
-    await user.click(screen.getByRole("switch"))
-
+    await user.click(screen.getByRole("switch", { name: "Program on air" }))
     expect(useBroadcastStore.getState().isLive).toBe(true)
     expect(useBroadcastStore.getState().liveVerse).toEqual(previewVerse)
+
+    await user.click(screen.getByRole("switch", { name: "Program on air" }))
+    expect(useBroadcastStore.getState().isLive).toBe(false)
+    expect(useBroadcastStore.getState().previewVerse).toEqual(previewVerse)
+  })
+
+  it("disables the on-air toggle while a graphics action is pending", () => {
+    render(<LiveOutputPanel mode="book" overlayActionPending />)
+    expect(
+      screen.getByRole<HTMLButtonElement>("switch", { name: "Program on air" })
+        .disabled
+    ).toBe(true)
   })
 
   it("shows live graphics while Program itself is off air", () => {

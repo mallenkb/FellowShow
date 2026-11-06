@@ -3,6 +3,7 @@ import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Switch } from "@/components/ui/switch"
+import { LIVE_STATUS_TEXT_CLASS } from "@/components/ui/live-status-styles"
 import { cn } from "@/lib/utils"
 import {
   getOutputProgramPayload,
@@ -38,13 +39,7 @@ import {
 } from "lucide-react"
 
 type DisplaysPanelMode =
-  | "book"
-  | "context"
-  | "songs"
-  | "announcements"
-  | "presentation"
-  | "timer"
-  | "on-display"
+  "book" | "context" | "songs" | "announcements" | "presentation" | "on-display"
 
 function contentForMode(mode: DisplaysPanelMode): OutputContent | null {
   switch (mode) {
@@ -54,8 +49,6 @@ function contentForMode(mode: DisplaysPanelMode): OutputContent | null {
       return "announcements"
     case "presentation":
       return "presentation"
-    case "timer":
-      return "timer"
     case "book":
     case "context":
       return "bible"
@@ -86,9 +79,7 @@ export function OutputsMultiviewPanel({
   const isLive = useBroadcastStore((s) => s.isLive)
   const liveOverlayOutputIds = useBroadcastStore((s) => s.liveOverlayOutputIds)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
-  const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
-  const presenterTimer = useBroadcastStore((s) => s.presenterTimer)
   const lowerThird = useBroadcastStore((s) => s.lowerThird)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
@@ -201,9 +192,9 @@ export function OutputsMultiviewPanel({
   return (
     <div
       data-slot="outputs-multiview-panel"
-      className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className="flex shrink-0 flex-col overflow-hidden bg-card"
     >
-      <div className="flex h-11 shrink-0 items-center border-b border-border">
+      <div className="flex h-11 shrink-0 items-center bg-surface-header">
         <button
           type="button"
           onClick={() => setIsOpen((open) => !open)}
@@ -224,35 +215,42 @@ export function OutputsMultiviewPanel({
           <Button
             variant={isReordering ? "secondary" : "ghost"}
             size="xs"
+            aria-label={
+              isReordering ? "Finish reordering displays" : "Reorder displays"
+            }
+            title={
+              isReordering ? "Finish reordering displays" : "Reorder displays"
+            }
             onClick={() => {
               setIsReordering((reordering) => !reordering)
               setDraggedOutputId(null)
             }}
-            className="h-6 gap-1 px-1.5 text-[0.625rem] text-muted-foreground hover:text-foreground"
+            className="displays-icon-action h-6 gap-1 px-1.5 text-[0.625rem] text-muted-foreground hover:text-foreground"
           >
             <ArrowUpDownIcon className="size-3" />
-            {isReordering ? "Done" : "Reorder"}
+            <span className="displays-action-label">
+              {isReordering ? "Done" : "Reorder"}
+            </span>
           </Button>
         )}
         <Button
           variant="ghost"
           size="xs"
+          aria-label="Manage displays"
+          title="Manage displays"
           onClick={() => openBroadcastSettings()}
-          className="h-6 gap-1 px-1.5 text-[0.625rem] text-muted-foreground hover:text-foreground"
+          className="displays-icon-action h-6 gap-1 px-1.5 text-[0.625rem] text-muted-foreground hover:text-foreground"
         >
           <Settings2Icon className="size-3" />
-          Manage
+          <span className="displays-action-label">Manage</span>
         </Button>
       </div>
 
       {isOpen && (
-        <div className="grid grid-cols-3 gap-2 p-2">
+        <div className="displays-grid grid grid-cols-2 gap-2 px-3 py-2">
           {orderedOutputs.map((output, index) => {
             const mirrorsSongPreview = output.content === "songs"
             const outputVerse = mirrorsSongPreview ? previewVerse : liveVerse
-            const outputTimer = mirrorsSongPreview
-              ? previewTimer
-              : presenterTimer
             const themeId = resolveOutputThemeId(
               output,
               themeState,
@@ -260,21 +258,15 @@ export function OutputsMultiviewPanel({
               selectedThemeSection
             )
             const theme = themes.find((t) => t.id === themeId) ?? themes[0]
-            const { verse, timer } = getOutputProgramPayload(
+            const { verse } = getOutputProgramPayload(
               output.content,
               mirrorsSongPreview || isLive,
-              outputVerse,
-              outputTimer
+              outputVerse
             )
             const runtime = runtimeById[output.id]
             const active = isOutputOn(runtime)
             // Same key mode and live rule the output window itself uses.
-            const overlayMode = getOutputKeyMode(
-              { outputs },
-              output,
-              verse,
-              timer
-            )
+            const overlayMode = getOutputKeyMode({ outputs }, output, verse)
             const outputIsLive =
               output.content === "overlays"
                 ? liveOverlayOutputIds.includes(output.id)
@@ -298,7 +290,6 @@ export function OutputsMultiviewPanel({
                       output.id,
                       {
                         verse: active ? verse : null,
-                        timer: active ? timer : null,
                       },
                       undefined,
                       overlayScripture
@@ -314,7 +305,7 @@ export function OutputsMultiviewPanel({
                     overlays?.lowerThird ||
                     overlays?.ticker
                   )
-                : Boolean(verse || timer)
+                : Boolean(verse)
             const pending = pendingId === output.id
 
             return (
@@ -347,7 +338,7 @@ export function OutputsMultiviewPanel({
                     "cursor-grab ring-1 ring-border active:cursor-grabbing",
                   draggedOutputId === output.id && "opacity-50",
                   matchesTab && active
-                    ? "border-primary/70 shadow-[0_0_0_1px_hsl(var(--primary)/0.45)]"
+                    ? "border-primary-emphasis/70 shadow-[0_0_0_1px_hsl(var(--primary)/0.45)]"
                     : active
                       ? "border-emerald-500/35"
                       : "border-border"
@@ -358,7 +349,6 @@ export function OutputsMultiviewPanel({
                     <CanvasVerse
                       theme={theme}
                       verse={active ? verse : null}
-                      timer={active ? timer : null}
                       lowerThird={
                         active && isLive && output.content === "everything"
                           ? lowerThird
@@ -405,11 +395,11 @@ export function OutputsMultiviewPanel({
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between gap-1.5 border-t border-border bg-card px-1.5 py-1">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 border-t border-border bg-card px-3 py-1">
                   <button
                     type="button"
                     disabled={isReordering}
-                    className="min-w-0 flex-1 text-left"
+                    className="min-w-16 flex-1 text-left"
                     onClick={() => openBroadcastSettings(output.id)}
                     title={`Manage ${output.name}`}
                   >
@@ -422,7 +412,12 @@ export function OutputsMultiviewPanel({
                       ) : (
                         <MonitorIcon className="size-2.5 shrink-0" />
                       )}
-                      <span className="truncate">
+                      <span
+                        className={cn(
+                          "truncate",
+                          active && showingContent && LIVE_STATUS_TEXT_CLASS
+                        )}
+                      >
                         {active
                           ? showingContent
                             ? "Live"
@@ -482,7 +477,7 @@ export function OutputsMultiviewPanel({
             <button
               type="button"
               onClick={() => openBroadcastSettings()}
-              className="flex aspect-video flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-foreground"
+              className="flex aspect-video flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border px-3 text-muted-foreground transition-colors hover:border-muted-foreground/50 hover:text-foreground"
             >
               <PlusIcon className="size-4" />
               <span className="text-[0.625rem] font-medium">Add display</span>

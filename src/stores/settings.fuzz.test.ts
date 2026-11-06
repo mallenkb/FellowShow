@@ -45,7 +45,7 @@ describe("persisted settings fuzzing", () => {
         ["hiddenTranslationIds", [random.number(), random.value()]],
         [
           "extraSearchTabs",
-          [random.text(10), "timer", "timer", "on-display", random.value()],
+          [random.text(10), "retired", "retired", "on-display", random.value()],
         ],
       ])
       const { hydrateSettings, useSettingsStore } =
@@ -82,7 +82,7 @@ describe("persisted settings fuzzing", () => {
         ).toBe(true)
         expect(new Set(ids).size, replay).toBe(ids.length)
       }
-      expect(state.extraSearchTabs, replay).toEqual(["timer", "on-display"])
+      expect(state.extraSearchTabs, replay).toEqual(["on-display"])
       expect(typeof state.autoMode, replay).toBe("boolean")
       expect(invoke, replay).not.toHaveBeenCalled()
     }

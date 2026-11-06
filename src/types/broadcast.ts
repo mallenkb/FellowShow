@@ -23,6 +23,8 @@ export interface VerseRenderData {
   sourceId?: number
   /** Canonical book:chapter:verse identity, independent of translation. */
   scriptureKey?: string
+  scriptureVerseEnd?: number | null
+  scriptureVerseNumberColor?: string
   /** Sermon queue identity so edits only update their own output. */
   sermonSessionId?: string
   reference: string
@@ -39,17 +41,6 @@ export interface VerseRenderData {
   presentationImage?: PresentationMediaItem & {
     layers?: PresentationMediaItem[]
   }
-}
-
-export interface PresenterTimerRenderData {
-  remainingSeconds: number
-  totalSeconds: number
-  isRunning: boolean
-  isFinished: boolean
-  fontFamily?: string
-  backgroundUrl?: string
-  backgroundMediaType?: "image" | "video"
-  backgroundPlaybackStartedAt?: number
 }
 
 export interface LowerThirdRenderData {
@@ -70,7 +61,6 @@ export interface RenderOptions {
   now?: number
   imageCache?: Map<string, HTMLImageElement>
   videoCache?: Map<string, HTMLVideoElement>
-  timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
 }
 

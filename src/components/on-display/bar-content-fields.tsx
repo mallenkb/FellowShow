@@ -2,14 +2,12 @@ import { BookOpenIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { getOverlayScripture } from "@/lib/overlays"
 import { activeTranslationAbbreviation } from "@/lib/preview-staging"
 import { useBibleStore, useBroadcastStore } from "@/stores"
 import type { BarSource } from "@/types"
-
-const TEXTAREA_CLASS =
-  "min-h-24 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
 
 export interface BarContentDraft {
   source: BarSource
@@ -73,12 +71,12 @@ export function BarContentFields({
           </label>
           <label className="grid gap-1 text-xs font-medium">
             Message
-            <textarea
+            <Textarea
               value={value.text}
               rows={4}
               autoFocus
               placeholder="Type what people should see"
-              className={TEXTAREA_CLASS}
+              className="min-h-24 resize-y"
               onChange={(event) => update({ text: event.target.value })}
             />
           </label>
@@ -107,8 +105,8 @@ export function BarContentFields({
             disabled={!canInsert}
             title={
               canInsert
-                ? "Fill in the verse selected in the Sermon tab"
-                : "Select a verse in the Sermon tab first"
+                ? "Fill in the verse selected in the Bible tab"
+                : "Select a verse in the Bible tab first"
             }
             onClick={insertVerse}
           >

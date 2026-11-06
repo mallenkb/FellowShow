@@ -13,4 +13,5 @@ pub struct TranscriptPayload {
     pub text: String,
     pub is_final: bool,
     pub confidence: f64,
+    pub timestamp: Option<u64>,
 }

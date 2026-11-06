@@ -14,8 +14,8 @@ pub struct ReferenceContext {
     last_timestamp: Option<Instant>,
 }
 
-/// How long context remains valid (60 seconds).
-const CONTEXT_TIMEOUT_SECS: u64 = 60;
+/// Keep the passage through a short explanation between reading requests.
+const CONTEXT_TIMEOUT_SECS: u64 = 300;
 
 impl ReferenceContext {
     pub fn new() -> Self {
@@ -74,6 +74,9 @@ impl ReferenceContext {
     /// Update context with the latest detection.
     pub fn update(&mut self, verse_ref: &VerseRef) {
         if verse_ref.book_number != 0 {
+            if self.last_book != Some(verse_ref.book_number) {
+                self.last_chapter = None;
+            }
             self.last_book = Some(verse_ref.book_number);
             self.last_book_name = Some(verse_ref.book_name.clone());
         }

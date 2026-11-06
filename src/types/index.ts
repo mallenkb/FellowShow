@@ -18,7 +18,6 @@ export type {
   BroadcastTheme,
   BroadcastThemeSection,
   LowerThirdRenderData,
-  PresenterTimerRenderData,
   VerseRenderData,
 } from "./broadcast"
 export type {

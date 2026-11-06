@@ -173,6 +173,52 @@ describe("use-transcription", () => {
       expect(useTranscriptStore.getState().connectionStatus).not.toBe("error")
     })
 
+    it("waits for an ongoing stop before starting another session", async () => {
+      let resolveStop: () => void = () => {}
+      mockInvoke.mockImplementation((command: string) => {
+        if (command === "stop_transcription") {
+          return new Promise<void>((resolve) => {
+            resolveStop = resolve
+          })
+        }
+        return Promise.resolve(7)
+      })
+      const { useTranscriptStore, transcriptionActions } = await loadModules()
+      useTranscriptStore.setState({
+        isTranscribing: true,
+        connectionStatus: "connected",
+      })
+
+      const stopping = transcriptionActions.stop()
+      const starting = transcriptionActions.start()
+      expect(useTranscriptStore.getState().transition).toBe("starting")
+      expect(mockInvoke).toHaveBeenCalledTimes(1)
+      expect(mockInvoke).toHaveBeenCalledWith("stop_transcription")
+
+      resolveStop()
+      await Promise.all([stopping, starting])
+
+      expect(mockInvoke).toHaveBeenCalledTimes(2)
+      expect(useTranscriptStore.getState().isTranscribing).toBe(true)
+      expect(useTranscriptStore.getState().transition).toBeNull()
+    })
+
+    it("clears the starting state when secure settings cannot be unlocked", async () => {
+      const { useTranscriptStore, transcriptionActions, unlockSecureSettings } =
+        await loadModules()
+      unlockSecureSettings.mockRejectedValue(new Error("Keychain unavailable"))
+
+      await transcriptionActions.start()
+
+      expect(mockInvoke).not.toHaveBeenCalled()
+      expect(useTranscriptStore.getState().transition).toBeNull()
+      expect(useTranscriptStore.getState().isTranscribing).toBe(false)
+      expect(mockToastError).toHaveBeenCalledWith(
+        "Could not start transcription",
+        { description: "Error: Keychain unavailable" }
+      )
+    })
+
     it("routes a missing-Deepgram-key error to onMissingApiKey (no toast)", async () => {
       mockInvoke.mockRejectedValue(
         "No Deepgram API key provided. Set it in Settings or via DEEPGRAM_API_KEY env var."
@@ -217,6 +263,92 @@ describe("use-transcription", () => {
   })
 
   describe("transcriptionActions.stop", () => {
+    it("cancels preparation without starting the microphone, even if hydration finishes later", async () => {
+      let finishHydration: () => void = () => {}
+      const hydration = new Promise<void>((resolve) => {
+        finishHydration = resolve
+      })
+      const {
+        transcriptionActions,
+        hydrateSettings,
+        unlockSecureSettings,
+        useSettingsStore,
+        useTranscriptStore,
+      } = await loadModules()
+      useSettingsStore.setState({ sttProvider: "openai" })
+      hydrateSettings.mockReturnValue(hydration)
+
+      const starting = transcriptionActions.start()
+      await vi.waitFor(() => expect(hydrateSettings).toHaveBeenCalled())
+      const stopping = transcriptionActions.stop()
+      await Promise.all([starting, stopping])
+      finishHydration()
+      await Promise.resolve()
+
+      expect(mockInvoke).not.toHaveBeenCalled()
+      expect(unlockSecureSettings).not.toHaveBeenCalled()
+      expect(useTranscriptStore.getState()).toMatchObject({
+        isTranscribing: false,
+        connectionStatus: "disconnected",
+        transition: null,
+      })
+    })
+
+    it("stops the native session when cancellation arrives during native startup", async () => {
+      let finishStart: (id: number) => void = () => {}
+      const nativeStart = new Promise<number>((resolve) => {
+        finishStart = resolve
+      })
+      mockInvoke.mockImplementation((command: string) =>
+        command === "start_transcription" ? nativeStart : Promise.resolve()
+      )
+      const { transcriptionActions, useTranscriptStore } = await loadModules()
+
+      const starting = transcriptionActions.start()
+      await vi.waitFor(() =>
+        expect(mockInvoke).toHaveBeenCalledWith(
+          "start_transcription",
+          expect.anything()
+        )
+      )
+      const stopping = transcriptionActions.stop()
+      expect(mockInvoke).not.toHaveBeenCalledWith("stop_transcription")
+      finishStart(17)
+      await Promise.all([starting, stopping])
+
+      expect(mockInvoke).toHaveBeenCalledWith("stop_transcription")
+      expect(useTranscriptStore.getState()).toMatchObject({
+        isTranscribing: false,
+        connectionStatus: "disconnected",
+        transition: null,
+      })
+    })
+
+    it("cancels a restart that is waiting for an earlier stop", async () => {
+      let finishStop: () => void = () => {}
+      const nativeStop = new Promise<void>((resolve) => {
+        finishStop = resolve
+      })
+      mockInvoke.mockImplementation((command: string) =>
+        command === "stop_transcription" ? nativeStop : Promise.resolve(1)
+      )
+      const { transcriptionActions, useTranscriptStore } = await loadModules()
+      useTranscriptStore.setState({
+        isTranscribing: true,
+        connectionStatus: "connected",
+      })
+
+      const firstStop = transcriptionActions.stop()
+      const restart = transcriptionActions.start()
+      const cancelRestart = transcriptionActions.stop()
+      finishStop()
+      await Promise.all([firstStop, restart, cancelRestart])
+
+      expect(mockInvoke).toHaveBeenCalledTimes(1)
+      expect(mockInvoke).toHaveBeenCalledWith("stop_transcription")
+      expect(useTranscriptStore.getState().isTranscribing).toBe(false)
+    })
+
     it("resets transcript state on success", async () => {
       mockInvoke.mockResolvedValue(undefined)
       const { useTranscriptStore, useAudioStore, transcriptionActions } =

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { invoke, type MonitorInfo } from "@/lib/ipc"
 import { listen } from "@tauri-apps/api/event"
 import {
@@ -35,6 +35,7 @@ export function BroadcastSettings({
   onOpenChange: (open: boolean) => void
 }) {
   const outputs = useBroadcastStore((s) => s.outputs)
+  const titleRef = useRef<HTMLHeadingElement>(null)
   const focusOutputId = useBroadcastSettingsDialogStore((s) => s.focusOutputId)
   const [monitors, setMonitors] = useState<MonitorInfo[]>([])
   const [refreshing, setRefreshing] = useState(false)
@@ -130,133 +131,141 @@ export function BroadcastSettings({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[85vh] gap-4 overflow-y-auto sm:max-w-[640px]"
+        className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
         showCloseButton={true}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          titleRef.current?.focus({ preventScroll: true })
+        }}
       >
-        <DialogHeader>
-          <DialogTitle>Displays</DialogTitle>
-          <DialogDescription>
-            Give each display a job and a screen. Turn them on here or from the
-            Displays strip on the right during service.
-          </DialogDescription>
+        <DialogHeader className="shrink-0 flex-row items-center justify-between px-5 pt-5 pr-14 pb-3">
+          <div>
+            <DialogTitle ref={titleRef} tabIndex={-1} className="outline-none">
+              Displays
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Choose what each display shows and where it goes.
+            </DialogDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="xs"
+            aria-label="Refresh screens"
+            disabled={refreshing}
+            onClick={() => void fetchMonitors()}
+            className="h-7 gap-1 text-xs text-muted-foreground"
+          >
+            <RefreshCwIcon
+              className={cn("size-3", refreshing && "animate-spin")}
+            />
+            Refresh
+          </Button>
         </DialogHeader>
 
-        {/* Connected screens map */}
-        <div className="space-y-2 rounded-lg border border-border bg-background p-3">
-          <div className="flex items-center justify-between">
+        <div className="@container/displays min-h-0 [scrollbar-gutter:stable] space-y-4 overflow-y-auto px-5 pb-5">
+          {/* Connected screens map */}
+          <div className="space-y-2 rounded-lg border border-border bg-background p-3">
             <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
               Connected screens
             </span>
-            <Button
-              variant="ghost"
-              size="xs"
-              disabled={refreshing}
-              onClick={() => void fetchMonitors()}
-              className="h-6 gap-1 px-1.5 text-[0.625rem] text-muted-foreground"
-            >
-              <RefreshCwIcon
-                className={cn("size-3", refreshing && "animate-spin")}
-              />
-              Refresh
-            </Button>
-          </div>
-          {monitors.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
-              No screens detected. Connect a screen and hit Refresh.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {monitors.map((monitor) => {
-                const owners = outputs.filter(
-                  (output) =>
-                    output.outputType === "display" &&
-                    output.monitorIndex === monitor.index
-                )
-                return (
-                  <div
-                    key={monitor.index}
-                    className={cn(
-                      "rounded-md border px-2 py-2 text-center",
-                      owners.length > 0
-                        ? "border-emerald-500/40 bg-emerald-500/5"
-                        : "border-border bg-card",
-                      monitor.isPrimary && owners.length === 0 && "opacity-70"
-                    )}
-                  >
-                    <div className="text-[0.6875rem] font-semibold">
-                      {monitor.isPrimary
-                        ? "Laptop"
-                        : `Screen ${monitor.index + 1}`}
-                    </div>
-                    <div className="text-[0.5625rem] text-muted-foreground">
-                      {monitor.width}×{monitor.height}
-                    </div>
+            {monitors.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                No screens detected. Connect a screen and hit Refresh.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {monitors.map((monitor) => {
+                  const owners = outputs.filter(
+                    (output) =>
+                      output.outputType === "display" &&
+                      output.monitorIndex === monitor.index
+                  )
+                  return (
                     <div
+                      key={monitor.index}
                       className={cn(
-                        "mt-0.5 truncate text-[0.5625rem] font-medium",
+                        "rounded-md border px-2 py-2 text-center",
                         owners.length > 0
-                          ? "text-emerald-400"
-                          : "text-muted-foreground"
+                          ? "border-emerald-500/40 bg-emerald-500/5"
+                          : "border-border bg-card",
+                        monitor.isPrimary && owners.length === 0 && "opacity-70"
                       )}
                     >
-                      {owners.length > 0
-                        ? owners.map((o) => o.name).join(", ")
-                        : monitor.isPrimary
-                          ? "Operator"
-                          : "Free"}
+                      <div className="text-[0.6875rem] font-semibold">
+                        {monitor.isPrimary
+                          ? "Laptop"
+                          : `Screen ${monitor.index + 1}`}
+                      </div>
+                      <div className="text-[0.5625rem] text-muted-foreground">
+                        {monitor.width}×{monitor.height}
+                      </div>
+                      <div
+                        className={cn(
+                          "mt-0.5 truncate text-[0.5625rem] font-medium",
+                          owners.length > 0
+                            ? "text-emerald-700 dark:text-emerald-400"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {owners.length > 0
+                          ? owners.map((o) => o.name).join(", ")
+                          : monitor.isPrimary
+                            ? "Operator"
+                            : "Free"}
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
+              Your displays
+            </span>
+            <div className="flex flex-col gap-3">
+              {outputs.map((output) => (
+                <OutputCard
+                  key={output.id}
+                  output={output}
+                  monitors={monitors}
+                  refreshing={refreshing}
+                  onRefresh={() => void fetchMonitors()}
+                  takenMonitors={takenMonitorsFor(output.id)}
+                  canRemove={output.id !== "main"}
+                  compact
+                />
+              ))}
             </div>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
-            Your displays
-          </span>
-          <div className="flex flex-col gap-3">
-            {outputs.map((output) => (
-              <OutputCard
-                key={output.id}
-                output={output}
-                monitors={monitors}
-                refreshing={refreshing}
-                onRefresh={() => void fetchMonitors()}
-                takenMonitors={takenMonitorsFor(output.id)}
-                canRemove={output.id !== "main"}
-                compact
-              />
-            ))}
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
-            Add display
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {OUTPUT_CONTENT_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                variant="outline"
-                size="xs"
-                className="h-7 gap-1 rounded-full px-2.5 text-[0.6875rem]"
-                disabled={outputs.length >= MAX_BROADCAST_OUTPUTS}
-                onClick={() => handleAddOutput(option.value)}
-              >
-                <PlusIcon className="size-3" />
-                {userFacingOutputLabel(option.value)}
-              </Button>
-            ))}
+          <div className="space-y-2">
+            <span className="text-[0.625rem] font-medium tracking-wider text-muted-foreground uppercase">
+              Add display
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {OUTPUT_CONTENT_OPTIONS.map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  className="h-7 gap-1 rounded-full px-2.5 text-[0.6875rem]"
+                  disabled={outputs.length >= MAX_BROADCAST_OUTPUTS}
+                  onClick={() => handleAddOutput(option.value)}
+                >
+                  <PlusIcon className="size-3" />
+                  {userFacingOutputLabel(option.value)}
+                </Button>
+              ))}
+            </div>
+            {outputs.length >= MAX_BROADCAST_OUTPUTS && (
+              <p className="text-[0.6875rem] text-muted-foreground">
+                Maximum of {MAX_BROADCAST_OUTPUTS} displays.
+              </p>
+            )}
           </div>
-          {outputs.length >= MAX_BROADCAST_OUTPUTS && (
-            <p className="text-[0.6875rem] text-muted-foreground">
-              Maximum of {MAX_BROADCAST_OUTPUTS} displays.
-            </p>
-          )}
         </div>
       </DialogContent>
     </Dialog>

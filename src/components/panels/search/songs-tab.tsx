@@ -8,6 +8,8 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import { cn } from "@/lib/utils"
+import { openSettings } from "@/lib/settings-dialog"
+import { SELECTED_CONTENT_ROW_CLASS } from "@/components/panels/content-row-styles"
 import type { CopSong } from "@/lib/cop-songs"
 import { SendToOverlayMenuItems } from "@/components/on-display/send-to-overlay"
 import { type OverlayContent } from "@/components/on-display/overlay-content"
@@ -53,7 +55,11 @@ function songContent(song: CopSong, heading: string): OverlayContent | null {
 function songMeta(song: CopSong, showSource: boolean): string {
   const parts: string[] = []
   // EasyWorship and My songs numbers carry no meaning, so they are not shown.
-  if (song.source !== "easyworship" && song.source !== "custom") {
+  if (
+    song.number > 0 &&
+    song.source !== "easyworship" &&
+    song.source !== "custom"
+  ) {
     parts.push(`#${song.number}`)
   }
   if (showSource && song.sourceLabel) parts.push(song.sourceLabel)
@@ -94,7 +100,9 @@ export function SongsTab({
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {isSearching
               ? "Preparing the fast song index."
-              : "Try a title or a line from the lyrics, or add it as a new song."}
+              : query.trim()
+                ? "Try another title or a line from the lyrics."
+                : "Add a song or import a collection in Settings."}
           </p>
           {isSearching ? null : (
             <Button
@@ -108,6 +116,17 @@ export function SongsTab({
               {query.trim()
                 ? `Add “${query.trim()}” as a new song`
                 : "Add a new song"}
+            </Button>
+          )}
+          {!isSearching && !query.trim() && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mt-2"
+              onClick={() => openSettings("songs")}
+            >
+              Manage collections
             </Button>
           )}
         </div>
@@ -124,7 +143,7 @@ export function SongsTab({
         if (scrollHeight - scrollTop - clientHeight <= 160) onLoadMore()
       }}
     >
-      <div className="flex flex-col gap-0.5 p-2" role="listbox">
+      <div className="flex flex-col gap-0.5 px-3 py-2" role="listbox">
         {songs.map((song, index) => {
           const isActive = activeSongId === `song:${song.id}`
           const isHighlighted = index === highlightIndex
@@ -138,15 +157,15 @@ export function SongsTab({
                     else rowRefs.current.delete(index)
                   }}
                   role="option"
-                  aria-selected={isHighlighted}
+                  aria-selected={isActive}
                   className={cn(
                     // Off-screen rows skip layout, so long scrolled lists stay smooth.
-                    "cursor-pointer rounded-lg border px-3 py-2 transition-colors [contain-intrinsic-size:auto_58px] [content-visibility:auto]",
+                    "cursor-pointer rounded-lg border border-transparent px-3 py-2 transition-colors [contain-intrinsic-size:auto_58px] [content-visibility:auto]",
                     isActive
-                      ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
+                      ? SELECTED_CONTENT_ROW_CLASS
                       : isHighlighted
                         ? "border-border bg-muted/50"
-                        : "border-transparent hover:bg-muted/40"
+                        : "hover:bg-muted/40"
                   )}
                   onClick={() => onOpenSong(song, index)}
                   onDoubleClick={() => onPresentSong(song, index)}

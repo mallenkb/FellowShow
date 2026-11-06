@@ -4,6 +4,7 @@ import {
   ChevronRightIcon,
   FilePlus2Icon,
   PanelBottomIcon,
+  PencilIcon,
   TextIcon,
 } from "lucide-react"
 import {
@@ -37,7 +38,11 @@ function noteContent(item: AnnouncementItem): OverlayContent {
   }
 }
 
-export function AnnouncementWorkspace() {
+export function AnnouncementWorkspace({
+  isActive = true,
+}: {
+  isActive?: boolean
+}) {
   const sets = useAnnouncementStore((state) => state.sets)
   const selectedSetId = useAnnouncementStore((state) => state.selectedSetId)
   const selectedItemId = useAnnouncementStore((state) => state.selectedItemId)
@@ -79,8 +84,7 @@ export function AnnouncementWorkspace() {
           selectedSet,
           pages[index],
           useBroadcastStore.getState().themes
-        ),
-        null
+        )
       )
   }
 
@@ -103,13 +107,12 @@ export function AnnouncementWorkspace() {
           set,
           nextPages[index],
           useBroadcastStore.getState().themes
-        ),
-        null
+        )
       )
   }
 
   return (
-    <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card">
+    <section className="@container/announcement flex min-h-0 flex-col overflow-hidden bg-card">
       {!selectedSet || !selectedItem ? (
         <div className="flex h-full items-center justify-center p-6 text-center">
           <div className="max-w-xs">
@@ -121,48 +124,69 @@ export function AnnouncementWorkspace() {
           </div>
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3">
-          <Input
-            value={selectedItem.title}
-            onChange={(event) => {
-              useAnnouncementStore
-                .getState()
-                .renameItem(selectedSet.id, selectedItem.id, event.target.value)
-              stageEditedPage(selectedSet.id, selectedItem.id)
-            }}
-            placeholder="Note title"
-            aria-label="Note title"
-            className="mb-2 h-10 shrink-0 border-transparent bg-transparent px-2 text-base font-semibold shadow-none hover:border-border focus-visible:border-primary"
-          />
-          <NoteShowUntilField
-            setId={selectedSet.id}
-            item={selectedItem}
-            onChange={() => stageEditedPage(selectedSet.id, selectedItem.id)}
-          />
-          <div className="mb-2 shrink-0 px-2">
-            <SlideBackgroundPicker
-              value={selectedItem.background}
-              onChange={(background) => {
-                useAnnouncementStore
-                  .getState()
-                  .setItemBackground(
-                    selectedSet.id,
-                    selectedItem.id,
-                    background
-                  )
-                stageEditedPage(selectedSet.id, selectedItem.id)
-              }}
-            />
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="shrink-0 px-3 pt-2">
+            <div className="relative mb-1">
+              <Input
+                value={selectedItem.title}
+                onChange={(event) => {
+                  useAnnouncementStore
+                    .getState()
+                    .renameItem(
+                      selectedSet.id,
+                      selectedItem.id,
+                      event.target.value
+                    )
+                  stageEditedPage(selectedSet.id, selectedItem.id)
+                }}
+                placeholder="Note title"
+                aria-label="Note title"
+                className="h-9 px-2 pr-8 text-sm font-semibold"
+              />
+              <PencilIcon
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-muted-foreground"
+              />
+            </div>
           </div>
-          <div className="min-h-0 flex-1">
+          <div className="flex min-h-0 flex-1 flex-col px-3 pb-2">
             <Suspense
               fallback={
-                <div className="h-40 animate-pulse rounded-md bg-muted/40" />
+                <div className="min-h-32 flex-1 animate-pulse rounded-md bg-muted/40" />
               }
             >
               <AnnouncementEditor
                 key={selectedItem.id}
                 content={selectedItem.content}
+                isActive={isActive}
+                fill
+                compactToolbar
+                seamless
+                placeholder="Write or paste your note here."
+                toolbarActions={
+                  <>
+                    <NoteShowUntilField
+                      setId={selectedSet.id}
+                      item={selectedItem}
+                      onChange={() =>
+                        stageEditedPage(selectedSet.id, selectedItem.id)
+                      }
+                    />
+                    <SlideBackgroundPicker
+                      value={selectedItem.background}
+                      onChange={(background) => {
+                        useAnnouncementStore
+                          .getState()
+                          .setItemBackground(
+                            selectedSet.id,
+                            selectedItem.id,
+                            background
+                          )
+                        stageEditedPage(selectedSet.id, selectedItem.id)
+                      }}
+                    />
+                  </>
+                }
                 onChange={(content) => {
                   useAnnouncementStore
                     .getState()
@@ -173,8 +197,8 @@ export function AnnouncementWorkspace() {
             </Suspense>
           </div>
 
-          <div className="mt-4 flex items-center gap-1 border-t border-border pt-3">
-            <span className="mr-auto text-xs text-muted-foreground tabular-nums">
+          <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-1 border-t border-border px-3 py-2">
+            <span className="mr-auto min-w-0 truncate text-xs text-muted-foreground tabular-nums">
               {pages.length > 0
                 ? `Page ${safePageIndex + 1} of ${pages.length}`
                 : "Add text to create a page"}
@@ -185,7 +209,7 @@ export function AnnouncementWorkspace() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7"
+                  className="size-8"
                   aria-label="Previous page"
                   disabled={safePageIndex <= 0}
                   onClick={() => stagePage(safePageIndex - 1)}
@@ -196,7 +220,7 @@ export function AnnouncementWorkspace() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7"
+                  className="size-8"
                   aria-label="Next page"
                   disabled={safePageIndex >= pages.length - 1}
                   onClick={() => stagePage(safePageIndex + 1)}
@@ -209,29 +233,37 @@ export function AnnouncementWorkspace() {
               type="button"
               variant="ghost"
               size="sm"
-              className="ml-1 h-7"
+              className="h-8 px-2"
+              aria-label="Send to bar"
+              title="Send to bar"
               disabled={!announcementPlainText(selectedItem.content)}
               onClick={() => sendToBar(noteContent(selectedItem))}
             >
               <PanelBottomIcon className="size-3.5" />
-              Send to bar
+              <span className="hidden @[28rem]/announcement:inline">
+                Send to bar
+              </span>
             </Button>
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-7"
+              className="h-8 px-2"
+              aria-label="Send to scroll"
+              title="Send to scroll"
               disabled={!announcementPlainText(selectedItem.content)}
               onClick={() => sendToScroll(noteContent(selectedItem))}
             >
               <TextIcon className="size-3.5" />
-              Send to scroll
+              <span className="hidden @[28rem]/announcement:inline">
+                Send to scroll
+              </span>
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-7"
+              className="h-8"
               disabled={!selectedPage}
               onClick={() => stagePage(safePageIndex)}
             >

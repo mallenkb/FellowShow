@@ -114,12 +114,15 @@ export function RemoteControlSection() {
             variant={oscStatus.running ? "destructive" : "default"}
             onClick={() => void handleOscToggle()}
             disabled={oscPending || !oscStatusKnown}
-            className="text-xs"
           >
             {oscStatus.running ? "Stop" : "Start"}
           </Button>
         </div>
-        {oscError && <p className="text-[0.625rem] text-red-500">{oscError}</p>}
+        {oscError && (
+          <p className="text-[0.625rem] text-red-700 dark:text-red-500">
+            {oscError}
+          </p>
+        )}
         {oscStatus.running && oscStatus.port && (
           <p className="text-[0.625rem] text-muted-foreground">
             Listening on UDP port {oscStatus.port}
@@ -157,13 +160,14 @@ export function RemoteControlSection() {
             variant={httpStatus.running ? "destructive" : "default"}
             onClick={() => void handleHttpToggle()}
             disabled={httpPending || !httpStatusKnown}
-            className="text-xs"
           >
             {httpStatus.running ? "Stop" : "Start"}
           </Button>
         </div>
         {httpError && (
-          <p className="text-[0.625rem] text-red-500">{httpError}</p>
+          <p className="text-[0.625rem] text-red-700 dark:text-red-500">
+            {httpError}
+          </p>
         )}
         {httpStatus.running && httpStatus.port && (
           <p className="text-[0.625rem] text-muted-foreground">
@@ -195,8 +199,7 @@ export function RemoteControlSection() {
           {commandLog.length > 0 && (
             <Button
               variant="ghost"
-              size="sm"
-              className="h-5 px-1.5 text-[0.5rem]"
+              size="xs"
               onClick={() => useRemoteControlStore.setState({ commandLog: [] })}
             >
               Clear

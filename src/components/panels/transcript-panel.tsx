@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
+import { SermonTranscriptGap } from "@/components/panels/sermon-transcript-gap"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { LevelMeter } from "@/components/ui/level-meter"
 import { Button } from "@/components/ui/button"
-import { ApiKeyPrompt } from "@/components/ui/api-key-prompt"
-import { MicIcon, MicOffIcon } from "lucide-react"
+import { SermonControl } from "@/components/controls/sermon-control"
+import { MicIcon } from "lucide-react"
 import {
   useAudioStore,
   useDetectionStore,
+  useBroadcastStore,
   useQueueStore,
   useBibleStore,
   useSermonStore,
@@ -15,7 +17,11 @@ import {
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { useTranscription } from "@/hooks/use-transcription"
 import { bibleActions } from "@/hooks/use-bible"
-import type { DetectionResult, ReadingAdvance } from "@/types"
+import { toVerseRenderData } from "@/hooks/use-broadcast"
+import type { DetectionResult, ReadingAdvance, Verse } from "@/types"
+import { bestSpokenScriptureMatch } from "@/lib/related-scriptures"
+import { switchScriptureTranslation } from "@/lib/switch-scripture-translation"
+import { toast } from "sonner"
 import type { TranscriptVerseAnnotation } from "@/lib/transcript-verse-highlights"
 import {
   annotationFromAdvance,
@@ -25,12 +31,16 @@ import {
   selectAnnotation,
 } from "@/lib/transcript-annotations"
 import type { TranscriptSegment } from "@/types"
-import { endSermon } from "@/lib/sermon-actions"
-import { stageVerseInBackground } from "@/lib/preview-staging"
+import {
+  activeTranslationAbbreviation,
+  stageVerseInBackground,
+} from "@/lib/preview-staging"
+import { useAppNavigationStore } from "@/stores/app-navigation-store"
 import { HighlightedTranscriptText } from "./transcript-highlighted-text"
 
 const MAX_TRANSCRIPT_ANNOTATIONS = 120
-const SEGMENT_ANNOTATION_GRACE_MS = 2_000
+// Detection can finish after the transcript segment has already arrived.
+const SEGMENT_ANNOTATION_GRACE_MS = 30_000
 function annotationsForSegment(
   segment: TranscriptSegment,
   annotations: TranscriptVerseAnnotation[]
@@ -68,26 +78,30 @@ function LivePartialLine({
     <HighlightedTranscriptText
       text={currentPartial}
       annotations={annotations}
-      className="border-l-2 border-primary pl-2 text-base leading-relaxed text-foreground"
+      className="border-l-2 border-primary-emphasis pl-2 text-base leading-relaxed text-foreground"
       pulse
     />
   )
 }
 
-export function TranscriptPanel() {
-  const [showKeyPrompt, setShowKeyPrompt] = useState(false)
-  const onMissingApiKey = useCallback(() => setShowKeyPrompt(true), [])
-  const {
-    segments,
-    isTranscribing,
-    connectionStatus,
-    startTranscription,
-    stopTranscription,
-  } = useTranscription({ onMissingApiKey })
+export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
+  const { segments, isTranscribing, connectionStatus, transition } =
+    useTranscription()
   const hasPartial = useTranscriptStore((s) => s.currentPartial.length > 0)
-  const hasActiveSermon = useSermonStore(
-    (state) => state.activeSessionId !== null
+  const sermonTransition = useSermonStore((state) => state.transition)
+  const isBusy = transition !== null || sermonTransition !== null
+  const workspaceVisible = useAppNavigationStore(
+    (state) => state.screen === "workspace"
   )
+  const transcriptVisible = isVisible && workspaceVisible
+  const connectionLabel =
+    connectionStatus === "connecting"
+      ? "Connecting…"
+      : connectionStatus === "disconnected"
+        ? "Reconnecting…"
+        : connectionStatus === "error"
+          ? "Connection error"
+          : null
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const shouldFollowTranscriptRef = useRef(true)
@@ -137,18 +151,58 @@ export function TranscriptPanel() {
   })
 
   // Listen for voice translation commands: "read in NIV", "switch to ESV"
-  useTauriEvent<{ abbreviation: string; translation_id: number }>(
-    "translation_command",
-    (data) => {
-      useBibleStore.getState().setActiveTranslation(data.translation_id)
-      console.log(`[VOICE] Translation switched to ${data.abbreviation}`)
-    }
-  )
+  useTauriEvent<{
+    abbreviation: string
+    translation_id: number
+    verse?: Verse | null
+  }>("translation_command", (data) => {
+    void switchScriptureTranslation(data.translation_id, {
+      alreadySet: true,
+      verse: data.verse,
+    }).catch((error: unknown) => {
+      toast.error(`Could not switch to ${data.abbreviation}`, {
+        description: String(error),
+      })
+    })
+  })
+
+  useTauriEvent<string>("translation_unavailable", (abbreviation) => {
+    toast.warning(
+      `Download ${abbreviation} in Settings to use this translation`
+    )
+  })
 
   // Listen for detection results from the backend (batch replaces previous detections)
   useTauriEvent<DetectionResult[]>("verse_detections", (detections) => {
     useDetectionStore.getState().addDetections(detections)
     const highlightedDetections = detections.filter(isHighlightedDetection)
+    const references = highlightedDetections
+      .map((detection) => detection.verse_ref.trim())
+      .filter(Boolean)
+    if (references.length > 0) {
+      useSermonStore.setState((state) => {
+        const session = state.sessions.find(
+          (item) => item.id === state.activeSessionId
+        )
+        if (!session) return state
+        const existing = session.directScriptures ?? []
+        const updated = [...new Set([...existing, ...references])]
+        if (updated.length === existing.length) return state
+        return {
+          sessions: state.sessions.map((item) =>
+            item.id === session.id
+              ? {
+                  ...item,
+                  directScriptures: updated,
+                  directScripturesIncomplete:
+                    item.directScripturesIncomplete ??
+                    item.directScriptures === undefined,
+                }
+              : item
+          ),
+        }
+      })
+    }
     addTranscriptAnnotations(
       highlightedDetections.map((detection) =>
         annotationFromDetection(detection)
@@ -161,9 +215,58 @@ export function TranscriptPanel() {
     )
 
     // Auto-navigate book search + select verse for preview/live
-    const directHit = highlightedDetections[0]
+    const directHit = highlightedDetections.at(-1)
     if (directHit && directHit.book_number > 0) {
-      selectAnnotation(annotationFromDetection(directHit), false)
+      if (useSermonStore.getState().activeSessionId && directHit.verse_text) {
+        const verse = {
+          id: 0,
+          translation_id:
+            directHit.translation_id ??
+            useBibleStore.getState().activeTranslationId,
+          book_number: directHit.book_number,
+          book_name: directHit.book_name,
+          book_abbreviation: "",
+          chapter: directHit.chapter,
+          verse: directHit.verse,
+          verse_end: directHit.verse_end,
+          verse_parts: directHit.verse_parts,
+          text: directHit.verse_text,
+        }
+        bibleActions.selectVerse(verse)
+        useBibleStore.getState().setPendingNavigation({
+          activate: false,
+          bookNumber: verse.book_number,
+          chapter: verse.chapter,
+          verse: verse.verse,
+        })
+        useBroadcastStore
+          .getState()
+          .presentOnLive(
+            toVerseRenderData(verse, activeTranslationAbbreviation()),
+            "preview"
+          )
+      } else {
+        selectAnnotation(annotationFromDetection(directHit), false)
+      }
+    }
+
+    // Strong word matches may fill an unattended Preview. They never replace
+    // the explicit passage on Live or an operator's staged selection.
+    if (!directHit && useSermonStore.getState().activeSessionId) {
+      const match = bestSpokenScriptureMatch(detections)
+      if (match)
+        stageVerseInBackground({
+          id: 0,
+          translation_id:
+            match.translation_id ??
+            useBibleStore.getState().activeTranslationId,
+          book_number: match.book_number,
+          book_name: match.book_name,
+          book_abbreviation: "",
+          chapter: match.chapter,
+          verse: match.verse,
+          text: match.verse_text,
+        })
     }
 
     // Automatic queue entries must come from the exact set rendered as
@@ -189,6 +292,8 @@ export function TranscriptPanel() {
             book_abbreviation: "",
             chapter: d.chapter,
             verse: d.verse,
+            verse_end: d.verse_end,
+            verse_parts: d.verse_parts,
             text: d.verse_text,
           },
           reference: d.verse_ref,
@@ -217,7 +322,15 @@ export function TranscriptPanel() {
         text: advance.verse_text,
       }
       bibleActions.selectVerse(verse)
-      stageVerseInBackground(verse)
+      const broadcast = useBroadcastStore.getState()
+      if (useSermonStore.getState().activeSessionId) {
+        broadcast.presentOnLive(
+          toVerseRenderData(verse, activeTranslationAbbreviation()),
+          "preview"
+        )
+      } else {
+        stageVerseInBackground(verse)
+      }
       useBibleStore.getState().setPendingNavigation({
         activate: false,
         bookNumber: advance.book_number,
@@ -249,12 +362,12 @@ export function TranscriptPanel() {
 
   const handleTranscriptScroll = useCallback(() => {
     const element = scrollRef.current
-    if (!element) return
+    if (!element || !transcriptVisible || element.clientHeight === 0) return
     const isAtBottom =
       element.scrollHeight - element.scrollTop - element.clientHeight <= 24
     shouldFollowTranscriptRef.current = isAtBottom
     setIsFollowingTranscript(isAtBottom)
-  }, [])
+  }, [transcriptVisible])
 
   const jumpToLatest = useCallback(() => {
     const element = scrollRef.current
@@ -264,16 +377,42 @@ export function TranscriptPanel() {
     element.scrollTop = element.scrollHeight
   }, [])
 
+  useEffect(() => {
+    if (!transcriptVisible) {
+      shouldFollowTranscriptRef.current = true
+      return
+    }
+    const frame = requestAnimationFrame(jumpToLatest)
+    return () => cancelAnimationFrame(frame)
+  }, [transcriptVisible, jumpToLatest])
+
+  useEffect(() => {
+    const followOnReturn = () => {
+      if (transcriptVisible && !document.hidden) jumpToLatest()
+    }
+    window.addEventListener("focus", followOnReturn)
+    document.addEventListener("visibilitychange", followOnReturn)
+    return () => {
+      window.removeEventListener("focus", followOnReturn)
+      document.removeEventListener("visibilitychange", followOnReturn)
+    }
+  }, [transcriptVisible, jumpToLatest])
+
   return (
     <div
       data-slot="transcript-panel"
-      className="flex flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className="flex flex-col overflow-hidden bg-card"
     >
       <PanelHeader
         title="Live transcript"
         icon={<MicIcon className="size-3" />}
       >
         <div className="flex items-end gap-2 pb-px">
+          {isTranscribing && !isBusy && connectionLabel ? (
+            <span role="status" className="text-xs text-muted-foreground">
+              {connectionLabel}
+            </span>
+          ) : null}
           {isTranscribing && (
             <span
               className={`mb-1 size-1.5 rounded-full ${
@@ -308,7 +447,11 @@ export function TranscriptPanel() {
           ref={scrollRef}
           onScroll={handleTranscriptScroll}
           onWheel={(event) => {
-            if (event.deltaY < 0) {
+            if (
+              event.deltaY < 0 &&
+              event.currentTarget.scrollHeight >
+                event.currentTarget.clientHeight
+            ) {
               shouldFollowTranscriptRef.current = false
               setIsFollowingTranscript(false)
             }
@@ -321,31 +464,36 @@ export function TranscriptPanel() {
 
             {segments.length === 0 && !hasPartial && !isTranscribing && (
               <p className="text-sm text-muted-foreground">
-                Click "Start transcribing" to begin
+                Start a sermon to begin transcribing.
               </p>
             )}
 
-            {/* Final segments — recent ones brighter, older ones fade */}
+            {/* Keep older transcript text readable while distinguishing recent speech. */}
             {segments.map((seg, idx) => {
               const distFromEnd = segments.length - 1 - idx
               const opacity =
                 distFromEnd === 0
-                  ? "text-foreground/80"
+                  ? "text-foreground dark:text-foreground/80"
                   : distFromEnd === 1
-                    ? "text-foreground/60"
+                    ? "text-foreground/80 dark:text-foreground/60"
                     : distFromEnd <= 3
-                      ? "text-foreground/40"
-                      : "text-foreground/25"
+                      ? "text-muted-foreground dark:text-foreground/40"
+                      : "text-muted-foreground dark:text-foreground/25"
               return (
-                <HighlightedTranscriptText
-                  key={seg.id}
-                  text={seg.text}
-                  annotations={annotationsForSegment(
-                    seg,
-                    transcriptAnnotations
-                  )}
-                  className={`text-sm leading-relaxed transition-colors duration-300 ${opacity}`}
-                />
+                <Fragment key={seg.id}>
+                  <SermonTranscriptGap
+                    timestamp={seg.timestamp}
+                    previousTimestamp={segments[idx - 1]?.timestamp}
+                  />
+                  <HighlightedTranscriptText
+                    text={seg.text}
+                    annotations={annotationsForSegment(
+                      seg,
+                      transcriptAnnotations
+                    )}
+                    className={`text-sm leading-relaxed transition-colors duration-300 ${opacity}`}
+                  />
+                </Fragment>
               )
             })}
 
@@ -356,37 +504,8 @@ export function TranscriptPanel() {
       </div>
 
       <div className="flex gap-2 px-3 py-2">
-        {isTranscribing ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() =>
-              void (hasActiveSermon ? endSermon() : stopTranscription()).catch(
-                console.error
-              )
-            }
-          >
-            <MicIcon className="size-3" />
-            {hasActiveSermon ? "Stop sermon" : "Stop transcribing"}
-          </Button>
-        ) : (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => void startTranscription()}
-          >
-            <MicOffIcon className="size-3" />
-            Start transcribing
-          </Button>
-        )}
+        <SermonControl />
       </div>
-
-      <ApiKeyPrompt
-        open={showKeyPrompt}
-        onOpenChange={setShowKeyPrompt}
-        service="Deepgram"
-        description="Live transcription needs a Deepgram API key. Add it in settings so the app can start listening."
-      />
     </div>
   )
 }

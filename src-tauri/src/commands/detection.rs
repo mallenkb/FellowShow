@@ -22,6 +22,12 @@ pub(crate) const FTS5_CONFIDENCE_DECAY: f64 = 0.04;
 /// FTS5 results below this confidence are not included.
 pub(crate) const FTS5_MIN_CONFIDENCE: f64 = 0.50;
 
+#[derive(Clone, Serialize)]
+pub struct PassageVerse {
+    pub verse: i32,
+    pub text: String,
+}
+
 /// Serializable detection result for the frontend
 #[derive(Clone, Serialize)]
 pub struct DetectionResult {
@@ -31,6 +37,9 @@ pub struct DetectionResult {
     pub book_number: i32,
     pub chapter: i32,
     pub verse: i32,
+    pub verse_end: Option<i32>,
+    pub verse_parts: Vec<PassageVerse>,
+    pub translation_id: i64,
     pub confidence: f64,
     pub source: String,
     pub auto_queued: bool,
@@ -86,21 +95,50 @@ pub fn to_result(state: &AppState, merged: &MergedDetection) -> Option<Detection
     };
     let has_verse_text = resolved.is_some();
 
-    let (reference, verse_text, book_name, book_number, chapter, verse) = if let Some(v) = resolved
-    {
-        let r = format!("{} {}:{}", v.book_name, v.chapter, v.verse);
-        (r, v.text, v.book_name, v.book_number, v.chapter, v.verse)
-    } else {
-        let r = format!("{} {}:{}", vr.book_name, vr.chapter, vr.verse_start);
-        (
-            r,
-            String::new(),
-            vr.book_name.clone(),
-            vr.book_number,
-            vr.chapter,
-            vr.verse_start,
-        )
-    };
+    let (mut reference, mut verse_text, book_name, book_number, chapter, verse) =
+        if let Some(v) = resolved {
+            let r = format!("{} {}:{}", v.book_name, v.chapter, v.verse);
+            (r, v.text, v.book_name, v.book_number, v.chapter, v.verse)
+        } else {
+            let r = format!("{} {}:{}", vr.book_name, vr.chapter, vr.verse_start);
+            (
+                r,
+                String::new(),
+                vr.book_name.clone(),
+                vr.book_number,
+                vr.chapter,
+                vr.verse_start,
+            )
+        };
+
+    let mut verse_parts = Vec::new();
+    let verse_end = vr.verse_end.filter(|end| *end > verse && *end <= 176);
+    if let Some(end) = verse_end {
+        let db = state.bible_db.as_ref()?;
+        let chapter_verses = db
+            .get_chapter(state.active_translation_id, book_number, chapter)
+            .ok()?;
+        let passage: Vec<_> = chapter_verses
+            .iter()
+            .filter(|v| v.verse >= verse && v.verse <= end)
+            .collect();
+        if passage.len() != usize::try_from(end - verse + 1).ok()? {
+            return None;
+        }
+        verse_parts = passage
+            .iter()
+            .map(|v| PassageVerse {
+                verse: v.verse,
+                text: v.text.clone(),
+            })
+            .collect();
+        reference = format!("{book_name} {chapter}:{verse}-{end}");
+        verse_text = passage
+            .iter()
+            .map(|v| format!("{} {}", v.verse, v.text))
+            .collect::<Vec<_>>()
+            .join("\n");
+    }
 
     Some(DetectionResult {
         verse_ref: reference,
@@ -109,6 +147,9 @@ pub fn to_result(state: &AppState, merged: &MergedDetection) -> Option<Detection
         book_number,
         chapter,
         verse,
+        verse_end,
+        verse_parts,
+        translation_id: state.active_translation_id,
         confidence: merged.detection.confidence,
         source: source_to_string(&merged.detection.source),
         auto_queued: merged.auto_queued && has_verse_text,

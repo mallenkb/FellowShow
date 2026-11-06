@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import { ArrowLeftIcon, ArrowRightIcon, ChevronRightIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { SELECTED_CONTENT_ROW_CLASS } from "@/components/panels/content-row-styles"
 import { ScriptureBookGrid } from "./scripture-book-grid"
 import { ScriptureNumberGrid } from "./scripture-number-grid"
 import { VerseQueueAction } from "./verse-queue-action"
@@ -100,6 +101,8 @@ export function ScriptureBookResults({
               variant="ghost"
               size="icon-lg"
               aria-label="Previous chapter"
+              aria-keyshortcuts="ArrowLeft"
+              title="Previous chapter (Left arrow)"
               onClick={() => controller.stepChapter(-1)}
               disabled={controller.chapter <= 1}
             >
@@ -109,6 +112,8 @@ export function ScriptureBookResults({
               variant="ghost"
               size="icon-lg"
               aria-label="Next chapter"
+              aria-keyshortcuts="ArrowRight"
+              title="Next chapter (Right arrow)"
               onClick={() => controller.stepChapter(1)}
               disabled={isLastChapter}
             >
@@ -173,11 +178,12 @@ export function ScriptureBookResults({
             />
           )
         ) : (
-          <div className="flex flex-col gap-0 p-2">
+          <div className="flex flex-col gap-0 px-3 py-2">
             {controller.currentChapter.map((verse) => {
               const verseKey = `${verse.book_number}:${verse.chapter}:${verse.verse}`
               const isSelected =
                 verse.id === controller.effectiveSelectedVerseId
+              const isQueued = controller.queuedVerseKeys.has(verseKey)
               return (
                 <VerseOverlayMenu
                   key={verse.id}
@@ -185,43 +191,67 @@ export function ScriptureBookResults({
                   translation={controller.activeTranslationAbbreviation}
                 >
                   <div
-                    id={`verse-${verse.id}`}
-                    aria-current={isSelected ? "true" : undefined}
-                    tabIndex={0}
-                    onClick={() => controller.handleVerseClick(verse)}
-                    onDoubleClick={() =>
-                      controller.handleVerseDoubleClick(verse)
-                    }
                     className={cn(
-                      "group flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                      "group relative flex items-center rounded-lg border border-transparent transition-colors",
                       isSelected
-                        ? "border border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-                        : "border border-transparent hover:bg-muted/50"
+                        ? SELECTED_CONTENT_ROW_CLASS
+                        : "hover:bg-muted/50"
                     )}
                   >
-                    <span className="w-6 shrink-0 text-right text-sm font-semibold text-[#101084] dark:text-[#F1E600]">
-                      {verse.verse}
-                    </span>
-                    <p className="flex-1 text-sm leading-relaxed text-foreground/80">
-                      {verse.text}
-                    </p>
-                    <SendToOverlayButton
-                      label={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
-                      getContent={() =>
-                        verseContent(
-                          verse,
-                          controller.activeTranslationAbbreviation
-                        )
+                    <button
+                      id={`verse-${verse.id}`}
+                      type="button"
+                      aria-current={isSelected ? "true" : undefined}
+                      aria-label={`${verse.book_name} ${verse.chapter}:${verse.verse}. ${verse.text}`}
+                      onClick={() => controller.handleVerseClick(verse)}
+                      onDoubleClick={() =>
+                        controller.handleVerseDoubleClick(verse)
                       }
-                      className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
-                    />
-                    <VerseQueueAction
-                      verse={verse}
-                      reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
-                      confidence={1}
-                      isQueued={controller.queuedVerseKeys.has(verseKey)}
-                      isSelected={isSelected}
-                    />
+                      className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg p-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+                    >
+                      <span className="w-6 shrink-0 text-right text-sm font-semibold text-primary-emphasis">
+                        {verse.verse}
+                      </span>
+                      <span className="min-w-0 flex-1 text-sm leading-relaxed text-foreground/80">
+                        {verse.text}
+                      </span>
+                    </button>
+                    {isQueued ? (
+                      <div className="mr-3 shrink-0">
+                        <VerseQueueAction
+                          verse={verse}
+                          reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
+                          confidence={1}
+                          isQueued
+                          isSelected={isSelected}
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      className={cn(
+                        "pointer-events-none absolute top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-md border border-border bg-card/95 p-1 opacity-0 shadow-sm transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 group-has-data-[state=open]:pointer-events-auto group-has-data-[state=open]:opacity-100",
+                        isQueued ? "right-10" : "right-2"
+                      )}
+                    >
+                      <SendToOverlayButton
+                        label={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
+                        getContent={() =>
+                          verseContent(
+                            verse,
+                            controller.activeTranslationAbbreviation
+                          )
+                        }
+                      />
+                      {!isQueued ? (
+                        <VerseQueueAction
+                          verse={verse}
+                          reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
+                          confidence={1}
+                          isQueued={false}
+                          isSelected={isSelected}
+                        />
+                      ) : null}
+                    </div>
                   </div>
                 </VerseOverlayMenu>
               )

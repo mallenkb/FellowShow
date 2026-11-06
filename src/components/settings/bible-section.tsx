@@ -2,224 +2,34 @@ import { invoke } from "@/lib/ipc"
 import { Fragment, useEffect, useRef, useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Switch } from "@/components/ui/switch"
+import { RadioGroup } from "@/components/ui/radio-group"
+import { switchScriptureTranslation } from "@/lib/switch-scripture-translation"
 import { bibleActions } from "@/hooks/use-bible"
 import { useBibleStore } from "@/stores/bible-store"
 import { useSettingsStore } from "@/stores/settings-store"
-import { PinIcon } from "lucide-react"
-
-interface TranslationInfo {
-  id: number
-  abbreviation: string
-  title: string
-  language: string
-  is_downloaded: boolean
-  is_copyrighted: boolean
-}
-
-function TranslationGroup({
-  title,
-  translations,
-  activeId,
-  hiddenTranslationIds,
-  pinnedTranslationIds,
-  onToggleHidden,
-  onTogglePinned,
-  onSelectTranslation,
-  onDownloadTranslation,
-  onCancelDownload,
-  onTranslationDragStart,
-  onTranslationDragOver,
-  onTranslationDrop,
-  onTranslationDragEnd,
-  renderTranslationDropMarker,
-  downloadingTranslation,
-  downloadProgress,
-}: {
-  title: string
-  translations: TranslationInfo[]
-  activeId: number
-  hiddenTranslationIds: number[]
-  pinnedTranslationIds: number[]
-  onToggleHidden: (id: number) => void
-  onTogglePinned: (id: number) => void
-  onSelectTranslation: (id: number) => void
-  onDownloadTranslation: (translation: TranslationInfo) => void
-  onCancelDownload: (abbreviation: string) => void
-  onTranslationDragStart: (
-    event: React.DragEvent<HTMLElement>,
-    id: number
-  ) => void
-  onTranslationDragOver: (
-    event: React.DragEvent<HTMLElement>,
-    targetId: number
-  ) => void
-  onTranslationDrop: (
-    event: React.DragEvent<HTMLElement>,
-    targetId: number
-  ) => void
-  onTranslationDragEnd: () => void
-  renderTranslationDropMarker: (
-    id: number,
-    edge: "before" | "after"
-  ) => React.ReactNode
-  downloadingTranslation: string | null
-  downloadProgress: number | null
-}) {
-  if (translations.length === 0) return null
-
-  return (
-    <section className="space-y-2">
-      <div className="flex items-center gap-3">
-        <h3 className="text-[0.65rem] font-semibold tracking-wider text-muted-foreground uppercase">
-          {title}
-        </h3>
-      </div>
-      <div className="rounded-md border border-border">
-        {translations.map((t) => {
-          const isDownloaded = t.is_downloaded
-          const isPinned = isDownloaded && pinnedTranslationIds.includes(t.id)
-          const isHidden = hiddenTranslationIds.includes(t.id)
-          const isDownloading = downloadingTranslation === t.abbreviation
-          const isAnotherDownloadActive =
-            downloadingTranslation !== null && !isDownloading
-
-          return (
-            <Fragment key={t.id}>
-              {renderTranslationDropMarker(t.id, "before")}
-              <div
-                draggable={isDownloaded}
-                onDragStart={(event) => {
-                  if (!isDownloaded) return
-                  onTranslationDragStart(event, t.id)
-                }}
-                onDragOver={(event) => {
-                  if (!isDownloaded) return
-                  onTranslationDragOver(event, t.id)
-                }}
-                onDrop={(event) => {
-                  if (!isDownloaded) return
-                  onTranslationDrop(event, t.id)
-                }}
-                onDragEnd={onTranslationDragEnd}
-                onClick={() => {
-                  if (isDownloaded) onSelectTranslation(t.id)
-                }}
-                className={`flex min-h-10 items-center gap-3 px-3 py-2 transition hover:bg-muted/35 ${
-                  isDownloaded ? "cursor-pointer" : "cursor-default"
-                }`}
-              >
-                <RadioGroupItem
-                  value={String(t.id)}
-                  id={`translation-${t.id}`}
-                  disabled={!isDownloaded}
-                />
-                <span className="w-14 shrink-0 text-xs font-medium text-foreground">
-                  {t.abbreviation}
-                </span>
-                <span className="min-w-0 text-xs text-muted-foreground">
-                  {t.title}
-                </span>
-                <span
-                  className="ml-auto flex shrink-0 items-center gap-2 text-[0.625rem] text-muted-foreground"
-                  onClick={(event) => event.stopPropagation()}
-                  onPointerDown={(event) => event.stopPropagation()}
-                >
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    className={
-                      isPinned ? "text-primary" : "text-muted-foreground"
-                    }
-                    onClick={() => onTogglePinned(t.id)}
-                    disabled={!isDownloaded}
-                    aria-label={`${isPinned ? "Unpin" : "Pin"} ${t.abbreviation}`}
-                  >
-                    <PinIcon
-                      className={
-                        isPinned ? "size-3.5 fill-current" : "size-3.5"
-                      }
-                    />
-                  </Button>
-                  {t.id === activeId && (
-                    <Badge
-                      variant="secondary"
-                      className="shrink-0 text-[0.625rem]"
-                    >
-                      Default
-                    </Badge>
-                  )}
-                  {isDownloaded ? (
-                    <>
-                      <span>{isHidden ? "Hidden" : "Shown"}</span>
-                      <Switch
-                        checked={!isHidden}
-                        onCheckedChange={() => onToggleHidden(t.id)}
-                        disabled={t.id === activeId}
-                        aria-label={`${isHidden ? "Show" : "Hide"} ${t.abbreviation}`}
-                      />
-                    </>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className={`group relative h-7 min-w-28 overflow-hidden px-3 text-[0.625rem] font-semibold text-primary disabled:border-border disabled:bg-muted/40 disabled:text-muted-foreground dark:text-white ${
-                        isDownloading
-                          ? "hover:text-destructive-foreground border-destructive/50 bg-primary/10 hover:border-destructive hover:bg-destructive"
-                          : "border-primary/45 bg-primary/10 hover:bg-primary/15 hover:text-primary dark:hover:text-white"
-                      }`}
-                      disabled={isAnotherDownloadActive}
-                      onClick={() =>
-                        isDownloading
-                          ? onCancelDownload(t.abbreviation)
-                          : onDownloadTranslation(t)
-                      }
-                    >
-                      {isDownloading ? (
-                        <>
-                          <span
-                            className="absolute inset-y-0 left-0 bg-primary/40 transition-[width] duration-150 ease-out group-hover:hidden"
-                            style={{ width: `${downloadProgress ?? 5}%` }}
-                            aria-hidden
-                          />
-                          <span className="relative tabular-nums group-hover:hidden">
-                            {downloadProgress != null
-                              ? `${t.abbreviation} ${downloadProgress}%`
-                              : `Downloading ${t.abbreviation}`}
-                          </span>
-                          <span className="relative hidden group-hover:inline">
-                            Cancel
-                          </span>
-                        </>
-                      ) : (
-                        "Download"
-                      )}
-                    </Button>
-                  )}
-                </span>
-              </div>
-              {renderTranslationDropMarker(t.id, "after")}
-            </Fragment>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
+import {
+  translationDownloadActions,
+  useTranslationDownloadStore,
+} from "@/stores/translation-download-store"
+import { TranslationGroup, type TranslationInfo } from "./translation-group"
 
 export function BibleSection() {
-  const [translations, setTranslations] = useState<TranslationInfo[]>([])
+  const translations = useBibleStore((state) => state.translations)
   const [activeId, setActiveId] = useState<number>(0)
   const [loading, setLoading] = useState(true)
-  const [downloadingTranslation, setDownloadingTranslation] = useState<
-    string | null
-  >(null)
-  const [downloadError, setDownloadError] = useState<string | null>(null)
-  const [downloadProgress, setDownloadProgress] = useState<number | null>(null)
+  const downloadingTranslation = useTranslationDownloadStore(
+    (state) => state.abbreviation
+  )
+  const downloadError = useTranslationDownloadStore((state) => state.error)
+  const downloadProgress = useTranslationDownloadStore(
+    (state) => state.progress
+  )
+  const downloadCancelling = useTranslationDownloadStore(
+    (state) => state.cancelling
+  )
+  const suppressSelection = useRef(false)
+  const selectionCooldown = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const translationOrderIds = useSettingsStore((s) => s.translationOrderIds)
   const [pinnedDropIndex, setPinnedDropIndex] = useState<number | null>(null)
   const [draggedPinnedTranslationId, setDraggedPinnedTranslationId] = useState<
     number | null
@@ -228,7 +38,6 @@ export function BibleSection() {
     id: number
     edge: "before" | "after"
   } | null>(null)
-  const cancelledDownloadsRef = useRef(new Set<string>())
   const hiddenTranslationIds = useSettingsStore((s) => s.hiddenTranslationIds)
   const pinnedTranslationIds = useSettingsStore((s) => s.pinnedTranslationIds)
   const toggleHiddenTranslation = useSettingsStore(
@@ -248,7 +57,7 @@ export function BibleSection() {
           invoke("list_translations"),
           invoke("get_active_translation"),
         ])
-        setTranslations(trans)
+        useBibleStore.getState().setTranslations(trans)
         setActiveId(active)
       } catch (e) {
         console.error("Failed to load translations:", e)
@@ -259,17 +68,11 @@ export function BibleSection() {
     void load()
   }, [])
 
-  const reloadTranslations = async () => {
-    const trans = await invoke("list_translations")
-    setTranslations(trans)
-    useBibleStore.getState().setTranslations(trans)
-    return trans
-  }
-
   const handleChange = async (value: string) => {
+    if (suppressSelection.current) return
     const id = parseInt(value)
     try {
-      await invoke("set_active_translation", { translationId: id })
+      await switchScriptureTranslation(id)
       setActiveId(id)
       // Update frontend stores so all panels use the new translation
       useBibleStore.getState().setActiveTranslation(id)
@@ -284,82 +87,17 @@ export function BibleSection() {
     }
   }
 
-  const handleDownloadTranslation = async (translation: TranslationInfo) => {
-    const { abbreviation } = translation
-    cancelledDownloadsRef.current.delete(abbreviation)
-    setDownloadingTranslation(abbreviation)
-    setDownloadProgress(null)
-    setDownloadError(null)
-    const { listen } = await import("@tauri-apps/api/event")
-    const unlisten = await listen<{
-      abbreviation: string
-      downloaded: number
-      total: number | null
-    }>("translation:download-progress", (event) => {
-      if (event.payload.abbreviation !== abbreviation) return
-      const { downloaded, total } = event.payload
-      setDownloadProgress(
-        total ? Math.min(100, Math.round((downloaded / total) * 100)) : null
-      )
-    })
-    try {
-      const downloaded = await invoke("download_translation", {
-        abbreviation,
-      })
-      if (cancelledDownloadsRef.current.has(abbreviation)) {
-        cancelledDownloadsRef.current.delete(abbreviation)
-        return
-      }
-      setTranslations((current) =>
-        current.map((translation) =>
-          translation.id === downloaded.id ? downloaded : translation
-        )
-      )
-      useBibleStore
-        .getState()
-        .setTranslations(
-          translations.map((translation) =>
-            translation.id === downloaded.id ? downloaded : translation
-          )
-        )
-      await reloadTranslations()
-      // Just install it: don't make it the active/default translation, and keep
-      // it hidden until the user turns on "Shown" themselves.
-      const hiddenIds = useSettingsStore.getState().hiddenTranslationIds
-      if (!hiddenIds.includes(downloaded.id)) {
-        useSettingsStore
-          .getState()
-          .setHiddenTranslationIds([...hiddenIds, downloaded.id])
-      }
-    } catch (e) {
-      if (cancelledDownloadsRef.current.has(abbreviation)) {
-        cancelledDownloadsRef.current.delete(abbreviation)
-        return
-      }
-      console.error(`Failed to download ${abbreviation}:`, e)
-      setDownloadError(e instanceof Error ? e.message : String(e))
-    } finally {
-      unlisten()
-      setDownloadProgress(null)
-      setDownloadingTranslation((current) =>
-        current === abbreviation ? null : current
-      )
-    }
-  }
-
-  const handleCancelDownload = (abbreviation: string) => {
-    cancelledDownloadsRef.current.add(abbreviation)
-    setDownloadError(null)
-    setDownloadProgress(null)
-    setDownloadingTranslation((current) =>
-      current === abbreviation ? null : current
-    )
-  }
-
   const preferredEnglishOrder = ["NKJV", "NIV", "KJV", "AMP", "NLT"]
   const englishTranslations = translations
     .filter((t) => t.language === "en")
     .sort((a, b) => {
+      const savedA = translationOrderIds.indexOf(a.id)
+      const savedB = translationOrderIds.indexOf(b.id)
+      if (savedA !== -1 || savedB !== -1)
+        return (
+          (savedA === -1 ? Infinity : savedA) -
+          (savedB === -1 ? Infinity : savedB)
+        )
       const aIndex = preferredEnglishOrder.indexOf(a.abbreviation)
       const bIndex = preferredEnglishOrder.indexOf(b.abbreviation)
       if (aIndex !== -1 || bIndex !== -1) {
@@ -374,6 +112,13 @@ export function BibleSection() {
   const otherTranslations = translations
     .filter((t) => t.language !== "en")
     .sort((a, b) => {
+      const savedA = translationOrderIds.indexOf(a.id)
+      const savedB = translationOrderIds.indexOf(b.id)
+      if (savedA !== -1 || savedB !== -1)
+        return (
+          (savedA === -1 ? Infinity : savedA) -
+          (savedB === -1 ? Infinity : savedB)
+        )
       const aIndex = preferredOtherOrder.indexOf(a.abbreviation)
       const bIndex = preferredOtherOrder.indexOf(b.abbreviation)
       if (aIndex !== -1 || bIndex !== -1) {
@@ -398,61 +143,10 @@ export function BibleSection() {
         translation !== undefined && translation.is_downloaded
     )
   const pinnedTranslations = orderedPinnedTranslations
-  const previewPinnedTranslations =
-    draggedPinnedTranslationId !== null && pinnedDropIndex !== null
-      ? (() => {
-          const fromIndex = pinnedTranslations.findIndex(
-            (translation) => translation.id === draggedPinnedTranslationId
-          )
-          if (fromIndex === -1) return pinnedTranslations
-
-          const nextTranslations = [...pinnedTranslations]
-          const [movedTranslation] = nextTranslations.splice(fromIndex, 1)
-          const adjustedIndex =
-            fromIndex < pinnedDropIndex ? pinnedDropIndex - 1 : pinnedDropIndex
-          nextTranslations.splice(
-            Math.min(adjustedIndex, nextTranslations.length),
-            0,
-            movedTranslation
-          )
-          return nextTranslations
-        })()
-      : pinnedTranslations
-
-  const previewTranslationGroup = (groupTranslations: TranslationInfo[]) => {
-    if (!translationDropTarget || draggedPinnedTranslationId === null) {
-      return groupTranslations
-    }
-
-    const fromIndex = groupTranslations.findIndex(
-      (translation) => translation.id === draggedPinnedTranslationId
-    )
-    const targetIndex = groupTranslations.findIndex(
-      (translation) => translation.id === translationDropTarget.id
-    )
-    if (fromIndex === -1 || targetIndex === -1) return groupTranslations
-
-    const nextTranslations = [...groupTranslations]
-    const [movedTranslation] = nextTranslations.splice(fromIndex, 1)
-    const targetIndexAfterRemoval = nextTranslations.findIndex(
-      (translation) => translation.id === translationDropTarget.id
-    )
-    const insertIndex =
-      targetIndexAfterRemoval === -1
-        ? targetIndex
-        : targetIndexAfterRemoval +
-          (translationDropTarget.edge === "after" ? 1 : 0)
-    nextTranslations.splice(
-      Math.min(insertIndex, nextTranslations.length),
-      0,
-      movedTranslation
-    )
-    return nextTranslations
-  }
-
-  const previewEnglishTranslations =
-    previewTranslationGroup(englishTranslations)
-  const previewOtherTranslations = previewTranslationGroup(otherTranslations)
+  // Keep hit targets stationary while dragging. Mark the insertion edge instead.
+  const previewPinnedTranslations = pinnedTranslations
+  const previewEnglishTranslations = englishTranslations
+  const previewOtherTranslations = otherTranslations
 
   const pinTranslation = (id: number, index = pinnedTranslations.length) => {
     if (hiddenTranslationIds.includes(id)) {
@@ -465,32 +159,33 @@ export function BibleSection() {
     }
   }
 
-  const moveTranslationToPinnedPosition = (
+  const moveTranslationToPosition = (
     fromId: number,
     targetId: number,
     edge: "before" | "after"
   ) => {
-    const targetTranslation = translations.find(
-      (translation) => translation.id === targetId
+    const source = translations.find((t) => t.id === fromId)
+    const target = translations.find((t) => t.id === targetId)
+    if (
+      !source?.is_downloaded ||
+      !target ||
+      fromId === targetId ||
+      source.language !== target.language
     )
-    if (!targetTranslation?.is_downloaded || fromId === targetId) return
-    if (hiddenTranslationIds.includes(fromId)) {
-      toggleHiddenTranslation(fromId)
-    }
-
-    const orderedIds = pinnedTranslations
-      .map((translation) => translation.id)
+      return
+    const ids = [...englishTranslations, ...otherTranslations]
+      .map((t) => t.id)
       .filter((id) => id !== fromId)
-    const targetIndex = orderedIds.indexOf(targetId)
-    const insertIndex =
-      targetIndex === -1
-        ? edge === "before"
-          ? 0
-          : orderedIds.length
-        : targetIndex + (edge === "after" ? 1 : 0)
-
-    orderedIds.splice(Math.min(insertIndex, orderedIds.length), 0, fromId)
-    setPinnedTranslationIds(orderedIds)
+    const targetIndex = ids.indexOf(targetId)
+    if (targetIndex < 0) return
+    ids.splice(targetIndex + (edge === "after" ? 1 : 0), 0, fromId)
+    useSettingsStore.getState().setTranslationOrderIds(ids)
+    // Reordering does not pin, unhide, or select a translation.
+    if (pinnedTranslationIds.includes(fromId)) {
+      setPinnedTranslationIds(
+        ids.filter((id) => pinnedTranslationIds.includes(id))
+      )
+    }
   }
 
   const handleTogglePinned = (id: number) => {
@@ -504,10 +199,12 @@ export function BibleSection() {
 
   const handlePinnedDrop = (
     event: React.DragEvent<HTMLElement>,
-    fallbackIndex = pinnedTranslations.length
+    fallbackIndex?: number
   ) => {
     event.preventDefault()
-    const dropIndex = pinnedDropIndex ?? fallbackIndex
+    event.stopPropagation()
+    const dropIndex =
+      pinnedDropIndex ?? fallbackIndex ?? pinnedTranslations.length
 
     const pinnedTranslationId = event.dataTransfer.getData(
       "application/x-cop-pinned-translation-id"
@@ -548,6 +245,7 @@ export function BibleSection() {
     index: number
   ) => {
     event.preventDefault()
+    event.stopPropagation()
     const rect = event.currentTarget.getBoundingClientRect()
     const after = event.clientX > rect.left + rect.width / 2
     event.dataTransfer.dropEffect = Array.from(
@@ -562,6 +260,8 @@ export function BibleSection() {
     event: React.DragEvent<HTMLElement>,
     id: number
   ) => {
+    suppressSelection.current = true
+    if (selectionCooldown.current) clearTimeout(selectionCooldown.current)
     setDraggedPinnedTranslationId(id)
     event.dataTransfer.setData("application/x-cop-translation-id", String(id))
     event.dataTransfer.effectAllowed = "copyMove"
@@ -572,13 +272,10 @@ export function BibleSection() {
     targetId: number
   ) => {
     event.preventDefault()
+    event.stopPropagation()
     const rect = event.currentTarget.getBoundingClientRect()
     const edge = event.clientY > rect.top + rect.height / 2 ? "after" : "before"
-    event.dataTransfer.dropEffect = Array.from(
-      event.dataTransfer.types
-    ).includes("application/x-cop-pinned-translation-id")
-      ? "move"
-      : "copy"
+    event.dataTransfer.dropEffect = "move"
     setTranslationDropTarget({ id: targetId, edge })
   }
 
@@ -587,6 +284,7 @@ export function BibleSection() {
     targetId: number
   ) => {
     event.preventDefault()
+    event.stopPropagation()
     const edge =
       translationDropTarget?.id === targetId
         ? translationDropTarget.edge
@@ -598,7 +296,7 @@ export function BibleSection() {
       pinnedTranslationId ||
       event.dataTransfer.getData("application/x-cop-translation-id")
     if (translationId) {
-      moveTranslationToPinnedPosition(Number(translationId), targetId, edge)
+      moveTranslationToPosition(Number(translationId), targetId, edge)
     }
     setTranslationDropTarget(null)
     setPinnedDropIndex(null)
@@ -606,6 +304,10 @@ export function BibleSection() {
   }
 
   const clearTranslationDragState = () => {
+    if (selectionCooldown.current) clearTimeout(selectionCooldown.current)
+    selectionCooldown.current = setTimeout(() => {
+      suppressSelection.current = false
+    }, 300)
     setTranslationDropTarget(null)
     setPinnedDropIndex(null)
     setDraggedPinnedTranslationId(null)
@@ -613,8 +315,8 @@ export function BibleSection() {
 
   const renderTranslationDropMarker = (id: number, edge: "before" | "after") =>
     translationDropTarget?.id === id && translationDropTarget.edge === edge ? (
-      <div className="px-3" aria-hidden="true">
-        <div className="h-0.5 rounded-full bg-primary" />
+      <div className="relative h-0 px-3" aria-hidden="true">
+        <div className="pointer-events-none absolute inset-x-3 -top-px z-10 h-0.5 rounded-full bg-primary-emphasis" />
       </div>
     ) : null
 
@@ -658,7 +360,7 @@ export function BibleSection() {
                   setTranslationDropTarget(null)
                 }
               }}
-              onDrop={handlePinnedDrop}
+              onDrop={(event) => handlePinnedDrop(event)}
               className="flex min-h-16 items-center justify-between rounded-lg border border-dashed border-border bg-muted/20 p-3 transition-colors"
             >
               <div className="min-w-0">
@@ -668,15 +370,16 @@ export function BibleSection() {
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   {pinnedTranslations.length > 0 ? (
                     <>
-                      {draggedPinnedTranslationId === null
-                        ? renderPinnedDropMarker(0)
-                        : null}
+                      {renderPinnedDropMarker(0)}
                       {previewPinnedTranslations.map((translation, index) => (
                         <Fragment key={translation.id}>
                           <button
                             type="button"
                             draggable
                             onDragStart={(event) => {
+                              suppressSelection.current = true
+                              if (selectionCooldown.current)
+                                clearTimeout(selectionCooldown.current)
                               setDraggedPinnedTranslationId(translation.id)
                               event.dataTransfer.setData(
                                 "application/x-cop-pinned-translation-id",
@@ -690,15 +393,12 @@ export function BibleSection() {
                             onDrop={(event) =>
                               handlePinnedDrop(event, index + 1)
                             }
-                            onDragEnd={() => {
-                              setDraggedPinnedTranslationId(null)
-                              setPinnedDropIndex(null)
-                              setTranslationDropTarget(null)
+                            onDragEnd={clearTranslationDragState}
+                            onClick={() => {
+                              if (!suppressSelection.current)
+                                togglePinnedTranslation(translation.id)
                             }}
-                            onClick={() =>
-                              togglePinnedTranslation(translation.id)
-                            }
-                            className={`cursor-grab rounded-md border border-primary/35 bg-primary/10 px-2 py-1 text-xs font-medium text-primary transition hover:bg-primary/15 active:cursor-grabbing ${
+                            className={`cursor-grab rounded-md border border-primary-emphasis/35 bg-primary/10 px-2 py-1 text-xs font-medium text-primary-emphasis transition hover:bg-primary/15 active:cursor-grabbing ${
                               draggedPinnedTranslationId === translation.id
                                 ? "opacity-50"
                                 : ""
@@ -706,9 +406,7 @@ export function BibleSection() {
                           >
                             {translation.abbreviation}
                           </button>
-                          {draggedPinnedTranslationId === null
-                            ? renderPinnedDropMarker(index + 1)
-                            : null}
+                          {renderPinnedDropMarker(index + 1)}
                         </Fragment>
                       ))}
                     </>
@@ -736,10 +434,15 @@ export function BibleSection() {
               onToggleHidden={toggleHiddenTranslation}
               onTogglePinned={handleTogglePinned}
               onSelectTranslation={(id) => void handleChange(String(id))}
-              onDownloadTranslation={(abbreviation) =>
-                void handleDownloadTranslation(abbreviation)
+              onDownloadTranslation={(translation) =>
+                void translationDownloadActions
+                  .start(translation)
+                  .catch(console.error)
               }
-              onCancelDownload={handleCancelDownload}
+              onCancelDownload={() =>
+                void translationDownloadActions.cancel().catch(console.error)
+              }
+              onMoveTranslation={moveTranslationToPosition}
               onTranslationDragStart={handleTranslationDragStart}
               onTranslationDragOver={handleTranslationDragOver}
               onTranslationDrop={handleTranslationDrop}
@@ -747,6 +450,7 @@ export function BibleSection() {
               renderTranslationDropMarker={renderTranslationDropMarker}
               downloadingTranslation={downloadingTranslation}
               downloadProgress={downloadProgress}
+              downloadCancelling={downloadCancelling}
             />
             <TranslationGroup
               title="Other Languages"
@@ -757,10 +461,15 @@ export function BibleSection() {
               onToggleHidden={toggleHiddenTranslation}
               onTogglePinned={handleTogglePinned}
               onSelectTranslation={(id) => void handleChange(String(id))}
-              onDownloadTranslation={(abbreviation) =>
-                void handleDownloadTranslation(abbreviation)
+              onDownloadTranslation={(translation) =>
+                void translationDownloadActions
+                  .start(translation)
+                  .catch(console.error)
               }
-              onCancelDownload={handleCancelDownload}
+              onCancelDownload={() =>
+                void translationDownloadActions.cancel().catch(console.error)
+              }
+              onMoveTranslation={moveTranslationToPosition}
               onTranslationDragStart={handleTranslationDragStart}
               onTranslationDragOver={handleTranslationDragOver}
               onTranslationDrop={handleTranslationDrop}
@@ -768,6 +477,7 @@ export function BibleSection() {
               renderTranslationDropMarker={renderTranslationDropMarker}
               downloadingTranslation={downloadingTranslation}
               downloadProgress={downloadProgress}
+              downloadCancelling={downloadCancelling}
             />
           </RadioGroup>
         )}

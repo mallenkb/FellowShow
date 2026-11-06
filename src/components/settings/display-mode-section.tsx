@@ -9,21 +9,21 @@ export function DisplayModeSection() {
   const thresholdPercent = Math.round(confidenceThreshold * 100)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="@container/display-settings flex flex-col gap-6">
       {/* Mode selector */}
       <div className="flex flex-col gap-3">
         <label className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Broadcast Mode
+          Broadcast mode
         </label>
 
         <RadioGroup
           value={autoMode ? "auto" : "manual"}
           onValueChange={(v) => setAutoMode(v === "auto")}
-          className="gap-3"
+          className="grid gap-3 @[34rem]/display-settings:grid-cols-2"
         >
           {/* Auto mode */}
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20 ${
               !autoMode ? "hover:border-muted-foreground/25" : ""
             }`}
           >
@@ -31,16 +31,15 @@ export function DisplayModeSection() {
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-foreground">Auto</span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Automatically displays the highest-confidence detected verse on
-                broadcast output. A 2.5-second cooldown prevents rapid
-                flickering. Best for hands-off operation.
+                Show the highest-confidence verse automatically, with a
+                2.5-second pause between changes.
               </p>
             </div>
           </label>
 
           {/* Manual mode */}
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20 ${
               autoMode ? "hover:border-muted-foreground/25" : ""
             }`}
           >
@@ -50,10 +49,7 @@ export function DisplayModeSection() {
                 Manual
               </span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Nothing goes to broadcast until you explicitly send it. Detected
-                verses still appear in the AI Detections panel and queue, but
-                you decide which ones to display and when. Best for important
-                services.
+                Review detected verses and choose when to show them.
               </p>
             </div>
           </label>
@@ -64,7 +60,7 @@ export function DisplayModeSection() {
       {autoMode && (
         <div className="flex flex-col gap-2">
           <Fader
-            label="Confidence Threshold"
+            label="Confidence threshold"
             value={thresholdPercent}
             min={35}
             max={100}
@@ -73,8 +69,7 @@ export function DisplayModeSection() {
             onChange={(v) => setConfidenceThreshold(v / 100)}
           />
           <p className="text-[0.625rem] text-muted-foreground">
-            Only verses with confidence above this threshold will be sent to
-            broadcast automatically. Higher values reduce false positives.
+            Only verses above this confidence level are shown automatically.
           </p>
         </div>
       )}

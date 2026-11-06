@@ -52,11 +52,7 @@ export async function showOverlayPreviewOnLive(
   const sendsGraphics =
     active.logoVisible ||
     Boolean(active.barId || active.tickerMessageId || active.lowerThird)
-  if (
-    sendsGraphics &&
-    state.isLive &&
-    programHidesGraphics(state.liveVerse, state.presenterTimer)
-  ) {
+  if (sendsGraphics && state.isLive && programHidesGraphics(state.liveVerse)) {
     state.setLive(false)
   }
   return true

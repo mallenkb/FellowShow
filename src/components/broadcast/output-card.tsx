@@ -179,7 +179,7 @@ export function OutputCard({
             className={cn(
               "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
               output.outputType === "display"
-                ? "border-primary/50 bg-primary/15 text-primary"
+                ? "border-primary-emphasis/50 bg-primary/15 text-primary-emphasis"
                 : "border-border bg-background text-muted-foreground hover:text-foreground"
             )}
           >
@@ -193,7 +193,7 @@ export function OutputCard({
             className={cn(
               "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-xs font-medium transition-all",
               output.outputType === "ndi"
-                ? "border-primary/50 bg-primary/15 text-primary"
+                ? "border-primary-emphasis/50 bg-primary/15 text-primary-emphasis"
                 : "border-border bg-background text-muted-foreground hover:text-foreground"
             )}
           >
@@ -213,12 +213,13 @@ export function OutputCard({
           refreshing={refreshing}
           onRefresh={onRefresh}
           takenMonitors={takenMonitors}
+          showRefresh={!compact}
         />
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            Sends NDI High Bandwidth. NDI HX-only receivers, including GoStream
-            Duet, cannot receive this output directly.
+            NDI High Bandwidth. HX-only receivers, including GoStream Duet,
+            cannot receive it directly.
           </p>
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground">Source Name</label>
@@ -356,7 +357,7 @@ export function OutputCard({
             <Input
               value={output.name}
               onChange={(e) => updateOutput({ name: e.target.value })}
-              className="h-8 border-transparent bg-transparent px-1 text-sm font-medium shadow-none focus-visible:border-border focus-visible:bg-card"
+              className="h-8 px-2 text-sm font-medium"
               aria-label="Display name"
             />
             <p className="px-1 text-[0.625rem] text-muted-foreground">
@@ -373,7 +374,7 @@ export function OutputCard({
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide uppercase",
                   enabled
-                    ? "border-red-500/40 bg-red-500/10 text-red-400"
+                    ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400"
                     : "border-border bg-muted/30 text-muted-foreground"
                 )}
               >
@@ -398,7 +399,9 @@ export function OutputCard({
             )}
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">{roleControls}</div>
+        <div className="grid gap-3 sm:grid-cols-2 @[55rem]/displays:grid-cols-3">
+          {roleControls}
+        </div>
         <button
           type="button"
           onClick={() => setShowAdvanced((value) => !value)}
@@ -425,7 +428,7 @@ export function OutputCard({
           <Input
             value={output.name}
             onChange={(e) => updateOutput({ name: e.target.value })}
-            className="h-8 border-transparent bg-transparent px-1 text-sm font-medium shadow-none focus-visible:border-border"
+            className="h-8 px-2 text-sm font-medium"
             aria-label="Display name"
           />
         </div>
@@ -438,7 +441,7 @@ export function OutputCard({
               className={cn(
                 "rounded-full px-2 py-0.5 text-[0.625rem] font-semibold tracking-wide uppercase",
                 enabled
-                  ? "border-red-500/40 bg-red-500/10 text-red-400"
+                  ? "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400"
                   : "border-border bg-muted/30 text-muted-foreground"
               )}
             >

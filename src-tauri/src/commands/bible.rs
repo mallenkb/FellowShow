@@ -102,18 +102,27 @@ fn local_content_pack_path() -> Option<PathBuf> {
     .find(|path| path.exists())
 }
 
+const DOWNLOAD_CANCELLED: &str = "Translation download cancelled";
+
 fn install_translation_from_pack(
     state: &State<'_, Mutex<AppState>>,
     pack_path: &std::path::Path,
     abbreviation: &str,
+    download_id: u64,
 ) -> Result<Translation, String> {
-    let app_state = state.lock().map_err(|e| e.to_string())?;
+    let mut app_state = state.lock().map_err(|e| e.to_string())?;
+    if !app_state.translation_downloads.contains_key(&download_id) {
+        return Err(DOWNLOAD_CANCELLED.to_string());
+    }
     let db = app_state
         .bible_db
         .as_ref()
         .ok_or_else(|| "Bible database not loaded".to_string())?;
-    db.install_translation_from_db(pack_path, abbreviation)
-        .map_err(|e| e.to_string())
+    let result = db
+        .install_translation_from_db(pack_path, abbreviation)
+        .map_err(|e| e.to_string());
+    app_state.translation_downloads.remove(&download_id);
+    result
 }
 
 fn download_not_configured_error(abbreviation: &str) -> String {
@@ -122,9 +131,18 @@ fn download_not_configured_error(abbreviation: &str) -> String {
     )
 }
 
+fn local_install_error(abbreviation: &str, error: String) -> String {
+    if error == DOWNLOAD_CANCELLED {
+        error
+    } else {
+        format!("Failed to install local {abbreviation} pack: {error}")
+    }
+}
+
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DownloadProgress {
+    download_id: u64,
     abbreviation: String,
     downloaded: u64,
     total: Option<u64>,
@@ -132,6 +150,7 @@ struct DownloadProgress {
 
 fn emit_download_progress(
     app: &AppHandle,
+    download_id: u64,
     abbreviation: &str,
     downloaded: u64,
     total: Option<u64>,
@@ -140,6 +159,7 @@ fn emit_download_progress(
     let _ = app.emit(
         "translation:download-progress",
         DownloadProgress {
+            download_id,
             abbreviation: abbreviation.to_string(),
             downloaded,
             total,
@@ -148,10 +168,83 @@ fn emit_download_progress(
 }
 
 #[tauri::command]
+pub fn prepare_translation_download(state: State<'_, Mutex<AppState>>) -> Result<u64, String> {
+    let mut app_state = state.lock().map_err(|e| e.to_string())?;
+    prepare_download(&mut app_state)
+}
+
+fn prepare_download(app_state: &mut AppState) -> Result<u64, String> {
+    let id = app_state.next_translation_download_id;
+    app_state.next_translation_download_id = id
+        .checked_add(1)
+        .ok_or_else(|| "No translation download IDs available".to_string())?;
+    let (sender, _) = tokio::sync::watch::channel(false);
+    app_state.translation_downloads.insert(id, sender);
+    Ok(id)
+}
+
+#[tauri::command]
+pub fn cancel_translation_download(
+    state: State<'_, Mutex<AppState>>,
+    download_id: u64,
+) -> Result<bool, String> {
+    let mut app_state = state.lock().map_err(|e| e.to_string())?;
+    Ok(cancel_download(&mut app_state, download_id))
+}
+
+fn cancel_download(app_state: &mut AppState, download_id: u64) -> bool {
+    if let Some(sender) = app_state.translation_downloads.remove(&download_id) {
+        sender.send_replace(true);
+        true
+    } else {
+        false
+    }
+}
+
+#[tauri::command]
 pub async fn download_translation(
     app: AppHandle,
     state: State<'_, Mutex<AppState>>,
     abbreviation: String,
+    download_id: u64,
+) -> Result<Translation, String> {
+    let cancelled = {
+        let app_state = state.lock().map_err(|e| e.to_string())?;
+        app_state
+            .translation_downloads
+            .get(&download_id)
+            .ok_or_else(|| DOWNLOAD_CANCELLED.to_string())?
+            .subscribe()
+    };
+    let result = run_until_cancelled(
+        cancelled,
+        download_translation_inner(&app, &state, &abbreviation, download_id),
+    )
+    .await;
+    state
+        .lock()
+        .map_err(|e| e.to_string())?
+        .translation_downloads
+        .remove(&download_id);
+    result
+}
+
+async fn run_until_cancelled<T>(
+    mut cancelled: tokio::sync::watch::Receiver<bool>,
+    operation: impl std::future::Future<Output = Result<T, String>>,
+) -> Result<T, String> {
+    tokio::select! {
+        biased;
+        _ = cancelled.changed() => Err(DOWNLOAD_CANCELLED.to_string()),
+        result = operation => result,
+    }
+}
+
+async fn download_translation_inner(
+    app: &AppHandle,
+    state: &State<'_, Mutex<AppState>>,
+    abbreviation: &str,
+    download_id: u64,
 ) -> Result<Translation, String> {
     let abbreviation = abbreviation.trim().to_uppercase();
     if abbreviation.is_empty() {
@@ -160,16 +253,22 @@ pub async fn download_translation(
 
     if cfg!(debug_assertions) {
         if let Some(pack_path) = local_content_pack_path() {
-            emit_download_progress(&app, &abbreviation, 1, Some(1));
-            return install_translation_from_pack(&state, &pack_path, &abbreviation)
-                .map_err(|e| format!("Failed to install local {abbreviation} pack: {e}"));
+            emit_download_progress(app, download_id, &abbreviation, 1, Some(1));
+            return install_translation_from_pack(state, &pack_path, &abbreviation, download_id)
+                .map_err(|e| local_install_error(&abbreviation, e));
         }
     }
 
     let Some(manifest_url) = content_manifest_url() else {
         if let Some(pack_path) = local_content_pack_path() {
-            return install_translation_from_pack(&state, &pack_path, &abbreviation)
-                .map_err(|_| download_not_configured_error(&abbreviation));
+            return install_translation_from_pack(state, &pack_path, &abbreviation, download_id)
+                .map_err(|e| {
+                    if e == DOWNLOAD_CANCELLED {
+                        e
+                    } else {
+                        download_not_configured_error(&abbreviation)
+                    }
+                });
         }
 
         return Err(download_not_configured_error(&abbreviation));
@@ -210,7 +309,7 @@ pub async fn download_translation(
     let mut downloaded: u64 = 0;
     let mut bytes: Vec<u8> = Vec::with_capacity(usize::try_from(total.unwrap_or(0)).unwrap_or(0));
     let mut last_emit = std::time::Instant::now();
-    emit_download_progress(&app, &abbreviation, 0, total);
+    emit_download_progress(app, download_id, &abbreviation, 0, total);
     while let Some(chunk) = response
         .chunk()
         .await
@@ -220,10 +319,10 @@ pub async fn download_translation(
         downloaded += chunk.len() as u64;
         if last_emit.elapsed() >= std::time::Duration::from_millis(100) {
             last_emit = std::time::Instant::now();
-            emit_download_progress(&app, &abbreviation, downloaded, total);
+            emit_download_progress(app, download_id, &abbreviation, downloaded, total);
         }
     }
-    emit_download_progress(&app, &abbreviation, downloaded, total);
+    emit_download_progress(app, download_id, &abbreviation, downloaded, total);
 
     if let Some(expected_sha) = pack.sha256.as_deref() {
         let actual_sha = {
@@ -250,7 +349,7 @@ pub async fn download_translation(
     std::fs::write(&pack_path, bytes)
         .map_err(|e| format!("Failed to save downloaded {abbreviation} pack: {e}"))?;
 
-    install_translation_from_pack(&state, &pack_path, &abbreviation)
+    install_translation_from_pack(state, &pack_path, &abbreviation, download_id)
 }
 
 #[tauri::command]
@@ -341,6 +440,7 @@ pub fn get_active_translation(state: State<'_, Mutex<AppState>>) -> Result<i64, 
 /// Set the active translation by ID
 #[tauri::command]
 pub fn set_active_translation(
+    app: tauri::AppHandle,
     state: State<'_, Mutex<AppState>>,
     translation_id: i64,
 ) -> Result<i64, String> {
@@ -365,6 +465,61 @@ pub fn set_active_translation(
         }
     }
     app_state.active_translation_id = translation_id;
+    drop(app_state);
+    super::stt::refresh_reading_translation(&app, translation_id);
     log::info!("[BIBLE] Active translation set to ID {translation_id}");
     Ok(translation_id)
+}
+
+#[cfg(test)]
+mod download_tests {
+    use super::{cancel_download, prepare_download, run_until_cancelled, DOWNLOAD_CANCELLED};
+    use crate::state::AppState;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::Arc;
+
+    #[test]
+    fn cancelling_a_prepared_download_invalidates_only_its_own_ticket() {
+        let mut state = AppState::new();
+        let first = prepare_download(&mut state).unwrap();
+        let second = prepare_download(&mut state).unwrap();
+
+        assert!(cancel_download(&mut state, first));
+        assert!(!cancel_download(&mut state, first));
+        assert!(!state.translation_downloads.contains_key(&first));
+        assert!(state.translation_downloads.contains_key(&second));
+    }
+
+    #[tokio::test]
+    async fn cancellation_drops_a_pending_transfer() {
+        struct TransferGuard(Arc<AtomicBool>);
+        impl Drop for TransferGuard {
+            fn drop(&mut self) {
+                self.0.store(true, Ordering::SeqCst);
+            }
+        }
+
+        let mut state = AppState::new();
+        let id = prepare_download(&mut state).unwrap();
+        let receiver = state.translation_downloads[&id].subscribe();
+        let dropped = Arc::new(AtomicBool::new(false));
+        let guard = TransferGuard(Arc::clone(&dropped));
+        let transfer = async move {
+            let _guard = guard;
+            std::future::pending::<Result<(), String>>().await
+        };
+        let task = tokio::spawn(run_until_cancelled(receiver, transfer));
+        tokio::task::yield_now().await;
+
+        assert!(cancel_download(&mut state, id));
+        assert_eq!(task.await.unwrap(), Err(DOWNLOAD_CANCELLED.to_string()));
+        assert!(dropped.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn a_completed_transfer_returns_its_result() {
+        let (_sender, receiver) = tokio::sync::watch::channel(false);
+        let result = run_until_cancelled(receiver, async { Ok::<_, String>(42) }).await;
+        assert_eq!(result, Ok(42));
+    }
 }

@@ -65,12 +65,10 @@ describe("pre-service loop", () => {
 
   it("stops when the operator sends something else to Live", () => {
     useAnnouncementLoopStore.getState().start(set.id)
-    useBroadcastStore
-      .getState()
-      .presentOnLive(
-        { reference: "John 3:16", segments: [{ text: "For God so loved" }] },
-        null
-      )
+    useBroadcastStore.getState().presentOnLive({
+      reference: "John 3:16",
+      segments: [{ text: "For God so loved" }],
+    })
     expect(useAnnouncementLoopStore.getState().runningSetId).toBeNull()
 
     vi.advanceTimersByTime(20000)

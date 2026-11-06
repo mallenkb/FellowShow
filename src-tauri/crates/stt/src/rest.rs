@@ -126,6 +126,7 @@ impl DeepgramRestClient {
                                 words,
                                 confidence,
                                 speech_final: true,
+                                start_offset: None,
                             });
                         }
                     }

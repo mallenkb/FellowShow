@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
+  isBackgroundPreviewStaging,
   stageSlide,
   stageVerse,
   stageVerseInBackground,
@@ -66,7 +67,7 @@ describe("preview staging", () => {
       ],
       activeTranslationId: 1,
     })
-    useBroadcastStore.setState({ previewVerse: null, previewTimer: null })
+    useBroadcastStore.setState({ previewVerse: null })
   })
 
   it("stages a verse over a staged slide", () => {
@@ -79,7 +80,7 @@ describe("preview staging", () => {
 
   it("stages the same slide again after something else replaced it", () => {
     stageSlide(slide)
-    useBroadcastStore.getState().setPreviewOutput(stagedAnnouncement, null)
+    useBroadcastStore.getState().setPreviewOutput(stagedAnnouncement)
     stageSlide(slide)
     expect(useBroadcastStore.getState().previewVerse).toMatchObject({
       reference: "Welcome",
@@ -92,6 +93,23 @@ describe("preview staging", () => {
     expect(useBroadcastStore.getState().previewVerse?.reference).toBe(
       "John 3:16 (KJV)"
     )
+  })
+
+  it("distinguishes background updates from operator staging", () => {
+    const sources: boolean[] = []
+    const unsubscribe = useBroadcastStore.subscribe((state, previous) => {
+      if (state.previewVerse !== previous.previewVerse) {
+        sources.push(isBackgroundPreviewStaging())
+      }
+    })
+    try {
+      stageVerseInBackground(john316)
+      stageVerse({ ...john316, verse: 17, text: "For God sent not his Son" })
+      expect(sources).toEqual([true, false])
+      expect(isBackgroundPreviewStaging()).toBe(false)
+    } finally {
+      unsubscribe()
+    }
   })
 
   it("lets a background verse replace one the app staged", () => {
@@ -111,33 +129,15 @@ describe("preview staging", () => {
 
   it.each([
     ["slide", () => stageSlide(slide)],
-    [
-      "song",
-      () => useBroadcastStore.getState().setPreviewOutput(stagedSong, null),
-    ],
+    ["song", () => useBroadcastStore.getState().setPreviewOutput(stagedSong)],
     [
       "announcement",
-      () =>
-        useBroadcastStore.getState().setPreviewOutput(stagedAnnouncement, null),
+      () => useBroadcastStore.getState().setPreviewOutput(stagedAnnouncement),
     ],
   ])("keeps a staged %s when a background verse arrives", (_label, stage) => {
     stage()
     const staged = useBroadcastStore.getState().previewVerse
     stageVerseInBackground(john316)
     expect(useBroadcastStore.getState().previewVerse).toBe(staged)
-  })
-
-  it("keeps a staged timer when a background verse arrives", () => {
-    const timer = {
-      remainingSeconds: 300,
-      totalSeconds: 300,
-      isRunning: true,
-      isFinished: false,
-      fontFamily: "Inter",
-    }
-    useBroadcastStore.getState().setPreviewOutput(null, timer)
-    stageVerseInBackground(john316)
-    expect(useBroadcastStore.getState().previewVerse).toBeNull()
-    expect(useBroadcastStore.getState().previewTimer).toEqual(timer)
   })
 })

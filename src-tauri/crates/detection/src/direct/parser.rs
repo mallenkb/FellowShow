@@ -99,7 +99,7 @@ pub fn parse_reference(text: &str, book_match: &BookMatch) -> Option<VerseRef> {
 
 /// A token from the text after the book name.
 #[derive(Debug, Clone)]
-enum Token {
+pub(super) enum Token {
     Word(String),
     Number(i32),
     Colon,
@@ -107,7 +107,7 @@ enum Token {
 }
 
 /// Tokenize text into words, numbers, colons, and dashes.
-fn tokenize(text: &str) -> Vec<Token> {
+pub(super) fn tokenize(text: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut chars = text.chars().peekable();
 
@@ -564,7 +564,7 @@ fn token_to_number(token: &Token) -> Option<i32> {
 /// Try to consume a number at the given token position.
 /// Returns (number, `next_token_index`) if successful.
 /// Handles both digit tokens and spoken number words (including compounds like "thirty two").
-fn consume_number(tokens: &[Token], start: usize) -> Option<(i32, usize)> {
+pub(super) fn consume_number(tokens: &[Token], start: usize) -> Option<(i32, usize)> {
     if start >= tokens.len() {
         return None;
     }

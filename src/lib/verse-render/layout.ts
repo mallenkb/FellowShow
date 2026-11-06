@@ -52,7 +52,18 @@ export function computeVerseLayoutMetrics(
   options?: RenderOptions
 ): VerseLayoutMetrics {
   const scale = options?.scale ?? 1
-  let scaledTheme = buildScaledTheme(theme, scale)
+  const scriptureTheme =
+    verse?.scriptureVerseNumberColor && verse.themeSection === "bible"
+      ? {
+          ...theme,
+          verseNumbers: {
+            ...theme.verseNumbers,
+            visible: true,
+            color: verse.scriptureVerseNumberColor,
+          },
+        }
+      : theme
+  let scaledTheme = buildScaledTheme(scriptureTheme, scale)
   const canvasW = scaledTheme.resolution.width
   const canvasH = scaledTheme.resolution.height
   const layout = scaledTheme.layout

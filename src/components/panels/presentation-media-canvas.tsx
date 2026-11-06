@@ -70,6 +70,7 @@ export function PresentationMediaCanvas({
   onTransform,
   frameRef,
   disabled = false,
+  playing = true,
   className,
 }: {
   media: PresentationMediaCanvasValue | null
@@ -80,6 +81,7 @@ export function PresentationMediaCanvas({
   onTransform: (transform: PresentationMediaTransform) => void
   frameRef?: (node: HTMLDivElement | null) => void
   disabled?: boolean
+  playing?: boolean
   className?: string
 }) {
   const localFrameRef = useRef<HTMLDivElement | null>(null)
@@ -245,7 +247,7 @@ export function PresentationMediaCanvas({
             transform: `translate(${layer.offsetX * 100}%, ${layer.offsetY * 100}%) scale(${layer.scale}, ${layer.scaleY ?? layer.scale})`,
           }}
         >
-          <PresentationMediaLayer media={layer} />
+          <PresentationMediaLayer media={layer} playing={playing} />
         </div>
       ))}
 

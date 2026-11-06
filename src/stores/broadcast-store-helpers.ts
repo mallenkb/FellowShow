@@ -26,7 +26,6 @@ import {
 import type {
   BroadcastTheme,
   BroadcastThemeSection,
-  PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types"
 import type { BroadcastState } from "./broadcast-store-types"
@@ -137,8 +136,7 @@ export function normalizeOutputUpdate(
 export function getOutputOverlayPayload(
   state: BroadcastState,
   output: BroadcastOutputConfig,
-  verse: VerseRenderData | null,
-  timer: PresenterTimerRenderData | null
+  verse: VerseRenderData | null
 ): ReturnType<typeof getOverlayPayloadForOutput> | null {
   // Normal outputs follow the global Program on-air state. Graphics outputs
   // have their own explicit Show on Live state so they can go on air without
@@ -160,7 +158,7 @@ export function getOutputOverlayPayload(
   if (
     output.content === "overlays" &&
     state.isLive &&
-    programHidesGraphics(state.liveVerse, state.presenterTimer)
+    programHidesGraphics(state.liveVerse)
   ) {
     return { logos: [], lowerThird: null, ticker: null, bar: null }
   }
@@ -176,7 +174,7 @@ export function getOutputOverlayPayload(
         state.overlayConfig,
         state.activeOverlays,
         output.id,
-        { verse, timer },
+        { verse },
         Date.now(),
         scripture
       )
@@ -192,12 +190,11 @@ export function getOutputOverlayPayload(
 export function getOutputKeyMode(
   state: Pick<BroadcastState, "outputs">,
   output: BroadcastOutputConfig,
-  verse: VerseRenderData | null,
-  timer: PresenterTimerRenderData | null
+  verse: VerseRenderData | null
 ): OverlayOutputMode | null {
   const overlayMode = getOverlayOutputMode(output)
   if (overlayMode) return overlayMode
-  if (output.content === "everything" && !verse && !timer) {
+  if (output.content === "everything" && !verse) {
     return graphicsKeyMode(graphicsOutputs(state.outputs)[0] ?? output)
   }
   return null
@@ -214,24 +211,22 @@ export function emitDraftToBroadcast(state: BroadcastState): void {
       state.selectedThemeSection
     )
     if (effectiveThemeId !== state.editingThemeId) continue
-    const { verse, timer } = getOutputProgramPayload(
+    const { verse } = getOutputProgramPayload(
       output.content,
       state.isLive,
-      state.liveVerse,
-      state.presenterTimer
+      state.liveVerse
     )
     void emitTo(windowLabelForOutput(output.id), "broadcast:verse-update", {
       theme: state.draftTheme,
       verse,
-      timer,
       lowerThird:
         output.content === "everything" && state.isLive
           ? state.lowerThird
           : null,
-      overlays: getOutputOverlayPayload(state, output, verse, timer),
+      overlays: getOutputOverlayPayload(state, output, verse),
       opacity: state.outputOpacity,
-      ...(getOutputKeyMode(state, output, verse, timer)
-        ? { overlayMode: getOutputKeyMode(state, output, verse, timer) }
+      ...(getOutputKeyMode(state, output, verse)
+        ? { overlayMode: getOutputKeyMode(state, output, verse) }
         : {}),
     }).catch(() => {})
   }
@@ -242,11 +237,8 @@ type ProgramThemeState = Pick<
   "activeThemeId" | "sectionThemeIds" | "themes"
 >
 
-export function hasProgramContent(
-  verse: VerseRenderData | null,
-  timer: PresenterTimerRenderData | null
-): boolean {
-  return Boolean(verse || timer)
+export function hasProgramContent(verse: VerseRenderData | null): boolean {
+  return Boolean(verse)
 }
 
 function verseRenderKey(verse: VerseRenderData | null): string {
@@ -254,6 +246,8 @@ function verseRenderKey(verse: VerseRenderData | null): string {
   return JSON.stringify({
     sourceId: verse.sourceId ?? null,
     scriptureKey: verse.scriptureKey ?? null,
+    scriptureVerseEnd: verse.scriptureVerseEnd ?? null,
+    scriptureVerseNumberColor: verse.scriptureVerseNumberColor ?? null,
     sermonSessionId: verse.sermonSessionId ?? null,
     reference: verse.reference,
     themeSection: verse.themeSection ?? null,
@@ -289,30 +283,11 @@ export function withPresentationPlaybackClock(
   }
 }
 
-function timerRenderKey(timer: PresenterTimerRenderData | null): string {
-  if (!timer) return "null"
-  return JSON.stringify({
-    remainingSeconds: timer.remainingSeconds,
-    totalSeconds: timer.totalSeconds,
-    isRunning: timer.isRunning,
-    isFinished: timer.isFinished,
-    fontFamily: timer.fontFamily,
-    backgroundUrl: timer.backgroundUrl ?? null,
-    backgroundMediaType: timer.backgroundMediaType ?? null,
-    backgroundPlaybackStartedAt: timer.backgroundPlaybackStartedAt ?? null,
-  })
-}
-
 export function hasSameProgramPayload(
   currentVerse: VerseRenderData | null,
-  currentTimer: PresenterTimerRenderData | null,
-  nextVerse: VerseRenderData | null,
-  nextTimer: PresenterTimerRenderData | null
+  nextVerse: VerseRenderData | null
 ): boolean {
-  return (
-    verseRenderKey(currentVerse) === verseRenderKey(nextVerse) &&
-    timerRenderKey(currentTimer) === timerRenderKey(nextTimer)
-  )
+  return verseRenderKey(currentVerse) === verseRenderKey(nextVerse)
 }
 
 export function getThemeForProgramContent(

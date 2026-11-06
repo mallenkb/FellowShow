@@ -23,7 +23,6 @@ import type {
   BroadcastTheme,
   BroadcastOverlayPayload,
   LowerThirdRenderData,
-  PresenterTimerRenderData,
   VerseRenderData,
 } from "@/types"
 import { cn } from "@/lib/utils"
@@ -32,7 +31,6 @@ import { withSlideBackground } from "@/lib/slide-background"
 interface CanvasVerseProps {
   theme: BroadcastTheme
   verse: VerseRenderData | null
-  timer?: PresenterTimerRenderData | null
   lowerThird?: LowerThirdRenderData | null
   overlays?: BroadcastOverlayPayload | null
   overlayMode?: OverlayOutputMode
@@ -44,7 +42,6 @@ interface CanvasVerseProps {
 export const CanvasVerse = memo(function CanvasVerse({
   theme: baseTheme,
   verse,
-  timer,
   lowerThird,
   overlays,
   overlayMode,
@@ -112,9 +109,6 @@ export const CanvasVerse = memo(function CanvasVerse({
       ...presentationMedia(verse?.presentationImage)
         .filter((item) => item.mediaType !== "video")
         .map((item) => item.url),
-      timer?.backgroundMediaType !== "video"
-        ? (timer?.backgroundUrl ?? null)
-        : null,
       overlays?.lowerThird?.avatarImageUrl ?? null,
       overlays?.lowerThird?.logoImageUrl ?? null,
       overlays?.bar?.backgroundImageUrl ?? null,
@@ -134,14 +128,6 @@ export const CanvasVerse = memo(function CanvasVerse({
           url: item.url,
           playbackStartedAt: item.playbackStartedAt,
         })),
-      timer?.backgroundMediaType === "video"
-        ? timer.backgroundUrl
-          ? {
-              url: timer.backgroundUrl,
-              playbackStartedAt: timer.backgroundPlaybackStartedAt,
-            }
-          : null
-        : null,
     ].filter(
       (
         item
@@ -207,9 +193,6 @@ export const CanvasVerse = memo(function CanvasVerse({
     theme.background,
     theme.background.image?.playbackStartedAt,
     verse?.presentationImage,
-    timer?.backgroundMediaType,
-    timer?.backgroundPlaybackStartedAt,
-    timer?.backgroundUrl,
     overlays?.logos,
     overlays?.lowerThird?.avatarImageUrl,
     overlays?.lowerThird?.logoImageUrl,
@@ -237,12 +220,6 @@ export const CanvasVerse = memo(function CanvasVerse({
           url: item.url,
           playbackStartedAt: item.playbackStartedAt,
         })),
-      timer?.backgroundMediaType === "video" && timer.backgroundUrl
-        ? {
-            url: timer.backgroundUrl,
-            playbackStartedAt: timer.backgroundPlaybackStartedAt,
-          }
-        : null,
     ].filter(
       (
         item
@@ -281,9 +258,6 @@ export const CanvasVerse = memo(function CanvasVerse({
     theme.background,
     theme.background.image?.playbackStartedAt,
     verse?.presentationImage,
-    timer?.backgroundMediaType,
-    timer?.backgroundPlaybackStartedAt,
-    timer?.backgroundUrl,
     hasTicker,
     hasOverlayAnimation,
   ])
@@ -335,12 +309,6 @@ export const CanvasVerse = memo(function CanvasVerse({
         ]) ?? null,
       presentationPlaybackStartedAt:
         verse?.presentationImage?.playbackStartedAt ?? null,
-      timer: timer
-        ? {
-            isVisible: true,
-            isFinished: timer.isFinished,
-          }
-        : null,
       lowerThird:
         includeLowerThird && lowerThird
           ? {
@@ -433,13 +401,12 @@ export const CanvasVerse = memo(function CanvasVerse({
       } else {
         renderVerse(sceneCtx, theme, verse, {
           scale: 1,
-          timer,
           lowerThird,
           imageCache: imageCacheRef.current,
           videoCache: videoCacheRef.current,
           now: hasTicker ? Date.now() : undefined,
         })
-        if (!verse && !timer) {
+        if (!verse) {
           drawVideoStreamPlaceholder(sceneCtx, theme.resolution)
         }
       }
@@ -540,7 +507,6 @@ export const CanvasVerse = memo(function CanvasVerse({
   }, [
     theme,
     verse,
-    timer,
     lowerThird,
     overlays,
     containerWidth,

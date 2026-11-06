@@ -38,14 +38,12 @@ describe("General as the single output", () => {
       overlayMode: "dsk-luma" as const,
     }
     const state = { outputs: [general] }
-    expect(getOutputKeyMode(state, general, null, null)).toBe("dsk-luma")
+    expect(getOutputKeyMode(state, general, null)).toBe("dsk-luma")
     expect(
-      getOutputKeyMode(
-        state,
-        general,
-        { reference: "John 3:16", segments: [{ text: "x" }] },
-        null
-      )
+      getOutputKeyMode(state, general, {
+        reference: "John 3:16",
+        segments: [{ text: "x" }],
+      })
     ).toBeNull()
     // With a separate Video Overlays output, General follows its key choice.
     const graphics = {
@@ -53,7 +51,7 @@ describe("General as the single output", () => {
       overlayMode: "chroma-key" as const,
     }
     expect(
-      getOutputKeyMode({ outputs: [general, graphics] }, general, null, null)
+      getOutputKeyMode({ outputs: [general, graphics] }, general, null)
     ).toBe("chroma-key")
   })
 

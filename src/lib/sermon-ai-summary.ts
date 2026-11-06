@@ -4,7 +4,7 @@ export const MIN_SUMMARY_TRANSCRIPT_CHARACTERS = 180
 export const SUMMARY_REFRESH_INTERVAL_MS = 45_000
 
 const MAX_TRANSCRIPT_CHARACTERS = 14_000
-const FALLBACK_TITLE = "Sermon Summary"
+const FALLBACK_TITLE = "Sermon notes"
 
 export interface SermonAiSummary {
   title: string

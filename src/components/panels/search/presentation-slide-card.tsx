@@ -11,6 +11,10 @@ import {
 import { motion } from "motion/react"
 import { Button } from "@/components/ui/button"
 import {
+  SELECTED_LIBRARY_ROW_CLASS,
+  UNSELECTED_LIBRARY_ROW_CLASS,
+} from "@/components/panels/content-row-styles"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -66,16 +70,14 @@ export function PresentationSlideCard({
       }}
       onDoubleClick={() => onPresent(slide)}
       className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-lg border p-2 transition-colors select-none active:cursor-grabbing",
-        isActive
-          ? "border-[#101084]/60 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
-          : "border-border bg-background/30 hover:bg-muted/40",
+        "group relative cursor-pointer overflow-hidden rounded-lg border px-3 py-2 transition-colors select-none active:cursor-grabbing",
+        isActive ? SELECTED_LIBRARY_ROW_CLASS : UNSELECTED_LIBRARY_ROW_CLASS,
         isDragging && "scale-[0.99] border-dashed opacity-55",
         slide.locked && "cursor-default"
       )}
     >
       {showDropBefore ? (
-        <div className="pointer-events-none absolute inset-x-2 top-0 z-20 h-0.5 -translate-y-1 rounded-full bg-[#F1E600] shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+        <div className="pointer-events-none absolute inset-x-2 top-0 z-20 h-0.5 -translate-y-1 rounded-full bg-primary-emphasis shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
       ) : null}
       <div className="flex min-w-0 items-center gap-2">
         <div className="h-14 w-24 shrink-0 overflow-hidden rounded-md bg-black">
@@ -99,7 +101,7 @@ export function PresentationSlideCard({
           size="icon-sm"
           className={cn(
             "shrink-0 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground",
-            slide.pinned && "text-[#101084] dark:text-[#F1E600]"
+            slide.pinned && "text-primary-emphasis"
           )}
           onClick={(event) => {
             event.stopPropagation()
@@ -177,7 +179,7 @@ export function PresentationSlideCard({
         </DropdownMenu>
       </div>
       {showDropAfter ? (
-        <div className="pointer-events-none absolute inset-x-2 bottom-0 z-20 h-0.5 translate-y-1 rounded-full bg-[#F1E600] shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+        <div className="pointer-events-none absolute inset-x-2 bottom-0 z-20 h-0.5 translate-y-1 rounded-full bg-primary-emphasis shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
       ) : null}
     </motion.article>
   )

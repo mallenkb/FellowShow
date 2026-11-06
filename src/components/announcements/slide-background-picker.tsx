@@ -1,5 +1,10 @@
 import type { CSSProperties } from "react"
-import { CheckIcon, ImageIcon, RotateCcwIcon } from "lucide-react"
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ImageIcon,
+  RotateCcwIcon,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { MediaBackgroundAdjust } from "@/components/announcements/media-background-adjust"
@@ -14,6 +19,20 @@ import { cn } from "@/lib/utils"
 import { useBroadcastStore } from "@/stores"
 import { isSelectableTheme } from "@/stores/broadcast-store-helpers"
 import type { BroadcastTheme, SlideBackgroundChoice } from "@/types"
+
+const labelSegmenter =
+  typeof Intl.Segmenter === "function"
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null
+
+function truncateLabel(label: string): string {
+  const characters = labelSegmenter
+    ? Array.from(labelSegmenter.segment(label), (part) => part.segment)
+    : Array.from(label)
+  return characters.length > 12
+    ? `${characters.slice(0, 11).join("").trimEnd()}…`
+    : label
+}
 
 function swatchStyle(background: BroadcastTheme["background"]): CSSProperties {
   if (background.type === "image" && background.image) {
@@ -39,35 +58,16 @@ function swatchStyle(background: BroadcastTheme["background"]): CSSProperties {
   return { background: background.color }
 }
 
-function choiceStyle(
-  choice: SlideBackgroundChoice,
-  themes: BroadcastTheme[]
-): CSSProperties {
-  if (choice.type === "solid") return { background: choice.color }
-  if (choice.type === "media") {
-    return choice.mediaType === "video"
-      ? { background: "#111" }
-      : {
-          backgroundImage: `url("${choice.url}")`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }
-  }
-  const theme = themes.find((candidate) => candidate.id === choice.themeId)
-  return theme ? swatchStyle(theme.background) : { background: "#111" }
-}
-
 function choiceLabel(
   choice: SlideBackgroundChoice | undefined,
-  themes: BroadcastTheme[]
+  selectedTheme: BroadcastTheme | undefined
 ): string {
-  if (!choice) return "Theme background"
+  if (!choice) return selectedTheme?.name ?? "Theme background"
   if (choice.type === "solid") return `Color ${choice.color.toUpperCase()}`
   if (choice.type === "media") {
     return choice.mediaType === "video" ? "Your video" : "Your image"
   }
-  const theme = themes.find((candidate) => candidate.id === choice.themeId)
-  return theme ? `${theme.name} background` : "Theme no longer exists"
+  return selectedTheme?.name ?? "Theme no longer exists"
 }
 
 export function SlideBackgroundPicker({
@@ -78,12 +78,40 @@ export function SlideBackgroundPicker({
   onChange: (choice: SlideBackgroundChoice | null) => void
 }) {
   const themes = useBroadcastStore((state) => state.themes)
+  const announcementThemeId = useBroadcastStore(
+    (state) => state.sectionThemeIds.announcements ?? state.activeThemeId
+  )
   const backgroundThemes = themes.filter(
     (theme) =>
       isSelectableTheme(theme) && theme.background.type !== "transparent"
   )
   const selectedColor = value?.type === "solid" ? value.color : null
   const selectedThemeId = value?.type === "theme" ? value.themeId : null
+  const selectedTheme = selectedThemeId
+    ? themes.find((theme) => theme.id === selectedThemeId)
+    : !value
+      ? (themes.find((theme) => theme.id === announcementThemeId) ?? themes[0])
+      : undefined
+  const label = choiceLabel(value, selectedTheme)
+  const backgroundStyle =
+    value?.type === "solid"
+      ? { background: value.color }
+      : value?.type === "media" && value.mediaType === "image"
+        ? {
+            backgroundImage: `url("${value.url}")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }
+        : selectedTheme
+          ? swatchStyle(selectedTheme.background)
+          : undefined
+  const videoUrl =
+    value?.type === "media" && value.mediaType === "video"
+      ? value.url
+      : selectedTheme?.background.type === "image" &&
+          selectedTheme.background.image?.mediaType === "video"
+        ? selectedTheme.background.image.url
+        : undefined
 
   const upload = async () => {
     try {
@@ -101,33 +129,44 @@ export function SlideBackgroundPicker({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground">Background</span>
+    <div className="max-w-full min-w-0">
       <Popover>
         <PopoverTrigger asChild>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-8 max-w-60 justify-start gap-2"
+            aria-label={`Background: ${label}`}
+            title={label}
+            className="h-8 max-w-[min(12rem,100%)] justify-start gap-1.5"
           >
             <span
               aria-hidden="true"
-              className="size-4 shrink-0 rounded-sm border border-border"
-              style={
-                value
-                  ? choiceStyle(value, themes)
-                  : { background: "var(--muted)" }
-              }
-            />
-            <span className="truncate text-xs">
-              {choiceLabel(value, themes)}
+              className="flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted"
+              style={backgroundStyle}
+            >
+              {videoUrl ? (
+                <video
+                  src={videoUrl}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="size-full object-cover"
+                />
+              ) : !backgroundStyle ? (
+                <ImageIcon className="size-2.5 text-muted-foreground" />
+              ) : null}
             </span>
+            <span className="min-w-0 truncate">{truncateLabel(label)}</span>
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="size-3.5 text-muted-foreground"
+            />
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          align="start"
-          className="max-h-[min(36rem,80vh)] w-[22rem] overflow-y-auto p-3"
+          align="end"
+          className="max-h-[min(36rem,80vh)] w-[22rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-3"
         >
           <div className="flex flex-col gap-3">
             <Button
@@ -154,7 +193,7 @@ export function SlideBackgroundPicker({
                     onClick={() => onChange({ type: "solid", color })}
                     className={cn(
                       "size-7 rounded-md border border-border outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      selectedColor === color && "ring-2 ring-primary"
+                      selectedColor === color && "ring-2 ring-primary-emphasis"
                     )}
                     style={{ background: color }}
                   />
@@ -193,7 +232,8 @@ export function SlideBackgroundPicker({
                       }
                       className={cn(
                         "flex flex-col gap-1 rounded-md p-1 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring",
-                        selectedThemeId === theme.id && "ring-2 ring-primary"
+                        selectedThemeId === theme.id &&
+                          "ring-2 ring-primary-emphasis"
                       )}
                     >
                       <span

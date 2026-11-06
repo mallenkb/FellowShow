@@ -21,14 +21,6 @@ const songVerse: VerseRenderData = {
   referenceMode: "lyric-footer",
 }
 
-const timer = {
-  remainingSeconds: 120,
-  totalSeconds: 300,
-  isRunning: true,
-  isFinished: false,
-  fontFamily: "Inter",
-}
-
 describe("windowLabelForOutput", () => {
   it("keeps the historical labels for main and alt", () => {
     expect(windowLabelForOutput("main")).toBe("broadcast")
@@ -43,40 +35,32 @@ describe("windowLabelForOutput", () => {
 describe("getOutputProgramPayload", () => {
   it("carries nothing while off air", () => {
     expect(
-      getOutputProgramPayload("everything", false, scriptureVerse, timer)
-    ).toEqual({ verse: null, timer: null })
+      getOutputProgramPayload("everything", false, scriptureVerse)
+    ).toEqual({ verse: null })
   })
 
   it("mirrors the full program on an everything output", () => {
-    expect(
-      getOutputProgramPayload("everything", true, songVerse, timer)
-    ).toEqual({ verse: songVerse, timer })
+    expect(getOutputProgramPayload("everything", true, songVerse)).toEqual({
+      verse: songVerse,
+    })
   })
 
   it("shows scripture on a scripture screen", () => {
-    expect(
-      getOutputProgramPayload("bible", true, scriptureVerse, timer)
-    ).toEqual({ verse: scriptureVerse, timer: null })
+    expect(getOutputProgramPayload("bible", true, scriptureVerse)).toEqual({
+      verse: scriptureVerse,
+    })
   })
 
   it("keeps songs off a scripture screen", () => {
-    expect(getOutputProgramPayload("bible", true, songVerse, timer)).toEqual({
+    expect(getOutputProgramPayload("bible", true, songVerse)).toEqual({
       verse: null,
-      timer: null,
     })
   })
 
   it("routes song lyrics to a songs screen", () => {
-    expect(getOutputProgramPayload("songs", true, songVerse, null)).toEqual({
+    expect(getOutputProgramPayload("songs", true, songVerse)).toEqual({
       verse: songVerse,
-      timer: null,
     })
-  })
-
-  it("shows only the timer on a timer screen", () => {
-    expect(
-      getOutputProgramPayload("timer", true, scriptureVerse, timer)
-    ).toEqual({ verse: null, timer })
   })
 })
 
@@ -180,6 +164,12 @@ describe("sanitizeOutputConfigs", () => {
           outputType: "display",
           monitorIndex: -2,
         },
+        {
+          id: "obsolete",
+          content: "retired-role",
+          outputType: "display",
+          monitorIndex: 1,
+        },
       ],
       themeIds
     )
@@ -193,6 +183,12 @@ describe("sanitizeOutputConfigs", () => {
         monitorIndex: null,
       },
     ])
+    expect(
+      sanitizeOutputConfigs(
+        [{ id: "obsolete", content: "retired-role" }],
+        themeIds
+      )
+    ).toEqual([createDefaultOutputs()[0]])
   })
 
   it("migrates the pre-routing default names to role names", () => {
@@ -229,7 +225,7 @@ describe("sanitizeOutputConfigs", () => {
         {
           id: "output-3",
           name: "Output 3",
-          content: "timer",
+          content: "songs",
           themeId: "known-theme",
           outputType: "display",
           monitorIndex: 2,
@@ -238,7 +234,7 @@ describe("sanitizeOutputConfigs", () => {
       themeIds
     )
     expect(result?.[0].id).toBe("main")
-    expect(result?.[1]).toMatchObject({ id: "output-3", content: "timer" })
+    expect(result?.[1]).toMatchObject({ id: "output-3", content: "songs" })
   })
 })
 

@@ -56,32 +56,13 @@ describe("broadcast store sync", () => {
   it("routes content only to outputs assigned to its type", async () => {
     const { useBroadcastStore } = await import("./broadcast-store")
     useBroadcastStore.setState((s) => ({
-      outputs: [
-        ...s.outputs.map((output) =>
-          output.id === "alt"
-            ? { ...output, content: "songs" as const }
-            : output
-        ),
-        {
-          id: "output-3",
-          name: "Output 3",
-          content: "timer" as const,
-          themeId: null,
-          outputType: "display" as const,
-          monitorIndex: null,
-        },
-      ],
+      outputs: s.outputs.map((output) =>
+        output.id === "alt" ? { ...output, content: "songs" as const } : output
+      ),
       isLive: true,
       liveVerse: {
         reference: "John 3:16",
         segments: [{ text: "For God so loved the world", verseNumber: 16 }],
-      },
-      presenterTimer: {
-        remainingSeconds: 60,
-        totalSeconds: 300,
-        isRunning: true,
-        isFinished: false,
-        fontFamily: "Geist Variable",
       },
     }))
 
@@ -94,23 +75,13 @@ describe("broadcast store sync", () => {
       "broadcast:verse-update",
       expect.objectContaining({
         verse: expect.objectContaining({ reference: "John 3:16" }),
-        timer: expect.objectContaining({ remainingSeconds: 60 }),
       })
     )
     // Scripture is live, so the songs-only screen stays on its background.
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast-alt",
       "broadcast:verse-update",
-      expect.objectContaining({ verse: null, timer: null })
-    )
-    // The timer screen shows only the timer.
-    expect(emitToMock).toHaveBeenCalledWith(
-      "broadcast-output-3",
-      "broadcast:verse-update",
-      expect.objectContaining({
-        verse: null,
-        timer: expect.objectContaining({ remainingSeconds: 60 }),
-      })
+      expect.objectContaining({ verse: null })
     )
   })
 
@@ -124,14 +95,11 @@ describe("broadcast store sync", () => {
     }))
 
     emitToMock.mockClear()
-    useBroadcastStore.getState().setPreviewOutput(
-      {
-        reference: "Amazing Grace",
-        segments: [{ text: "Amazing grace, how sweet the sound" }],
-        referenceMode: "lyric-footer",
-      },
-      null
-    )
+    useBroadcastStore.getState().setPreviewOutput({
+      reference: "Amazing Grace",
+      segments: [{ text: "Amazing grace, how sweet the sound" }],
+      referenceMode: "lyric-footer",
+    })
 
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast-alt",
@@ -221,18 +189,8 @@ describe("broadcast store sync", () => {
         reference: "Genesis 1:3",
         segments: [{ text: "Let there be light", verseNumber: 3 }],
       },
-      previewTimer: {
-        remainingSeconds: 9,
-        totalSeconds: 30,
-        isRunning: true,
-        isFinished: false,
-        fontFamily: "Geist Variable",
-        backgroundUrl: "/timer-background.jpg",
-        backgroundMediaType: "image",
-      },
       isLive: false,
       liveVerse: null,
-      presenterTimer: null,
     })
 
     useBroadcastStore.getState().takePreviewLive()
@@ -241,15 +199,11 @@ describe("broadcast store sync", () => {
     expect(useBroadcastStore.getState().liveVerse?.reference).toBe(
       "Genesis 1:3"
     )
-    expect(useBroadcastStore.getState().presenterTimer?.remainingSeconds).toBe(
-      9
-    )
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast",
       "broadcast:verse-update",
       expect.objectContaining({
         verse: expect.objectContaining({ reference: "Genesis 1:3" }),
-        timer: expect.objectContaining({ remainingSeconds: 9 }),
       })
     )
   })
@@ -262,10 +216,8 @@ describe("broadcast store sync", () => {
         reference: "Psalm 23:1",
         segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
       },
-      previewTimer: null,
       isLive: false,
       liveVerse: null,
-      presenterTimer: null,
     })
 
     useBroadcastStore.getState().showPreviewOnLive()
@@ -288,7 +240,7 @@ describe("broadcast store sync", () => {
       segments: [{ text: "You are the light of the world", verseNumber: 14 }],
     }
 
-    useBroadcastStore.getState().presentOnLive(verse, null)
+    useBroadcastStore.getState().presentOnLive(verse)
 
     const state = useBroadcastStore.getState()
     expect(state.isLive).toBe(true)
@@ -322,12 +274,12 @@ describe("broadcast store sync", () => {
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast",
       "broadcast:verse-update",
-      expect.objectContaining({ verse: null, timer: null })
+      expect.objectContaining({ verse: null })
     )
     expect(emitToMock).toHaveBeenCalledWith(
       "broadcast-alt",
       "broadcast:verse-update",
-      expect.objectContaining({ verse: null, timer: null })
+      expect.objectContaining({ verse: null })
     )
   })
 
@@ -340,26 +292,21 @@ describe("broadcast store sync", () => {
         reference: "Psalm 23:1",
         segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
       },
-      previewTimer: null,
       liveVerse: {
         reference: "Psalm 23:1",
         segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
       },
-      presenterTimer: null,
     })
 
-    useBroadcastStore.getState().setPreviewOutput(
-      {
-        reference: "Psalm 23:2",
-        segments: [{ text: "He maketh me to lie down", verseNumber: 2 }],
-      },
-      null
-    )
+    useBroadcastStore.getState().setPreviewOutput({
+      reference: "Psalm 23:2",
+      segments: [{ text: "He maketh me to lie down", verseNumber: 2 }],
+    })
 
     expect(useBroadcastStore.getState().isLive).toBe(true)
     expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:1")
 
-    useBroadcastStore.getState().setPreviewOutput(null, null)
+    useBroadcastStore.getState().setPreviewOutput(null)
 
     expect(useBroadcastStore.getState().isLive).toBe(true)
     expect(useBroadcastStore.getState().liveVerse?.reference).toBe("Psalm 23:1")
@@ -371,29 +318,17 @@ describe("broadcast store sync", () => {
       reference: "Psalm 23:1",
       segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
     }
-    const timer = {
-      remainingSeconds: 9,
-      totalSeconds: 30,
-      isRunning: true,
-      isFinished: false,
-      fontFamily: "Geist Variable",
-      backgroundUrl: "/timer-background.jpg",
-      backgroundMediaType: "image" as const,
-    }
     const listener = vi.fn()
     const unsubscribe = useBroadcastStore.subscribe(listener)
 
-    useBroadcastStore.getState().setPreviewOutput(verse, timer)
+    useBroadcastStore.getState().setPreviewOutput(verse)
     listener.mockClear()
     emitToMock.mockClear()
 
-    useBroadcastStore.getState().setPreviewOutput(
-      {
-        reference: "Psalm 23:1",
-        segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
-      },
-      { ...timer }
-    )
+    useBroadcastStore.getState().setPreviewOutput({
+      reference: "Psalm 23:1",
+      segments: [{ text: "The Lord is my shepherd", verseNumber: 1 }],
+    })
 
     expect(listener).not.toHaveBeenCalled()
     expect(emitToMock).not.toHaveBeenCalled()

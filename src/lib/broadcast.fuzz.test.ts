@@ -109,11 +109,10 @@ describe("broadcast fuzzing", () => {
           themeSection: section,
           segments: [{ text }],
         }
-        const payload = getOutputProgramPayload(content, live, verse, null)
+        const payload = getOutputProgramPayload(content, live, verse)
         const shouldShow =
           live && (content === "everything" || content === section)
         expect(payload.verse).toBe(shouldShow ? verse : null)
-        expect(payload.timer).toBeNull()
       },
       31
     )
@@ -285,7 +284,6 @@ describe("broadcast fuzzing", () => {
           target,
           {
             verse: { reference: "", themeSection: section, segments: [] },
-            timer: null,
           },
           now
         )

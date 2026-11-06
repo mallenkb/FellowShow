@@ -96,7 +96,7 @@ describe("operator content fuzzing", () => {
     )
   })
 
-  it("admits only direct or independently highlighted scripture evidence and deduplicates it", () => {
+  it("admits only direct scripture evidence and deduplicates it", () => {
     fuzzCases(
       (r) =>
         Array.from({ length: r.integer(0, 20) }, (): DetectionResult => {
@@ -122,10 +122,7 @@ describe("operator content fuzzing", () => {
           highlightedReferences,
         })
         const eligible = detections.filter(
-          (v) =>
-            !v.is_chapter_only &&
-            (v.source === "direct" ||
-              highlightedReferences.includes(v.verse_ref))
+          (v) => !v.is_chapter_only && v.source === "direct"
         )
         expect(new Set(references.map((v) => v.key)).size).toBe(
           references.length

@@ -163,7 +163,8 @@ export function formatBibleReference(
   bookNumber: number,
   chapter: number,
   verse: number,
-  translation: string
+  translation: string,
+  verseEnd?: number | null
 ): string {
   const displayBookName = formatBibleBookName(
     bookName,
@@ -174,5 +175,6 @@ export function formatBibleReference(
   const translationSuffix = translation
     ? ` (${formatTranslationLabel(translation)})`
     : ""
-  return `${displayBookName} ${chapter}:${verse}${translationSuffix}`
+  const range = verseEnd && verseEnd > verse ? `-${verseEnd}` : ""
+  return `${displayBookName} ${chapter}:${verse}${range}${translationSuffix}`
 }

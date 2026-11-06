@@ -1,5 +1,6 @@
 import { BookmarkPlusIcon, PencilIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LIVE_STATUS_BADGE_CLASS } from "@/components/ui/live-status-styles"
 import {
   overlaySelectionFromLook,
   overlaySelectionsMatch,
@@ -84,7 +85,7 @@ export function OverlayLooks({
 
   return (
     <section aria-labelledby="overlay-looks-heading" className="grid gap-2">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 bg-surface-header px-3 pt-2.5 pb-3">
         <h3
           id="overlay-looks-heading"
           className="text-[0.6875rem] font-medium tracking-wider text-muted-foreground uppercase"
@@ -102,11 +103,12 @@ export function OverlayLooks({
         </Button>
       </div>
       {config.looks.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs leading-relaxed text-muted-foreground">
-          No Looks yet
-        </p>
+        <div className="flex flex-col items-center gap-2 px-3 py-5 text-center text-muted-foreground">
+          <BookmarkPlusIcon className="size-5" />
+          <p className="text-xs">No saved looks yet</p>
+        </div>
       ) : (
-        <div className="grid gap-1">
+        <div className="grid gap-1 px-3 pb-3">
           {config.looks.map((look) => {
             const selection = overlaySelectionFromLook(config, look)
             const selected = overlaySelectionsMatch(selection, stagedSelection)
@@ -123,9 +125,9 @@ export function OverlayLooks({
                     useBroadcastStore.getState().stageOverlayLook(look.id)
                   }
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-lg border p-2 pr-11 text-left transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
+                    "flex w-full items-center gap-3 rounded-lg border py-2 pr-11 pl-3 text-left transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none",
                     selected
-                      ? "border-primary bg-muted/40 ring-1 ring-primary"
+                      ? "border-primary-emphasis bg-muted/40 ring-1 ring-primary-emphasis"
                       : "border-transparent"
                   )}
                 >
@@ -136,7 +138,12 @@ export function OverlayLooks({
                         {look.name}
                       </span>
                       {live ? (
-                        <span className="rounded bg-red-500/15 px-1.5 py-0.5 text-[0.625rem] font-semibold tracking-wide text-red-500 uppercase">
+                        <span
+                          className={cn(
+                            "rounded px-1.5 py-0.5 text-[0.625rem] font-semibold tracking-wide uppercase",
+                            LIVE_STATUS_BADGE_CLASS
+                          )}
+                        >
                           Live
                         </span>
                       ) : null}
@@ -150,7 +157,7 @@ export function OverlayLooks({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                   aria-label={`Edit ${look.name} Look`}
                   title="Edit Look"
                   onClick={() => onEdit(look.id)}

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { SearchPanel } from "./search-panel"
 import { useSettingsStore } from "@/stores/settings-store"
@@ -34,9 +34,6 @@ vi.mock("@/components/panels/search/presentation-search-tab", () => ({
 vi.mock("@/components/panels/search/announcements-tab", () => ({
   AnnouncementsTab: () => null,
 }))
-vi.mock("@/components/panels/search/timer-tab", () => ({
-  TimerTab: () => null,
-}))
 vi.mock("@/components/on-display/on-display-overview", () => ({
   OnDisplayOverview: () => null,
 }))
@@ -65,33 +62,49 @@ describe("SearchPanel tabs", () => {
     cleanup()
   })
 
-  it("shows Sermon, Songs, Notes, and Media by default", () => {
+  it("shows Bible, Songs, Notes, and Media by default", () => {
     render(<SearchPanel />)
-    expect(tabNames().sort()).toEqual(["Media", "Notes", "Sermon", "Songs"])
+    expect(tabNames().sort()).toEqual(["Bible", "Media", "Notes", "Songs"])
+  })
+
+  it("places navigation in the supplied header and keeps it connected", async () => {
+    const header = document.createElement("header")
+    document.body.appendChild(header)
+    try {
+      const onSearchModeChange = vi.fn()
+      const user = userEvent.setup()
+      render(
+        <SearchPanel
+          navigationTarget={header}
+          onSearchModeChange={onSearchModeChange}
+        />
+      )
+      await user.click(within(header).getByRole("button", { name: "Songs" }))
+      expect(onSearchModeChange).toHaveBeenLastCalledWith("songs")
+    } finally {
+      header.remove()
+    }
   })
 
   it("adds a tab once it is turned on in Settings", () => {
     render(<SearchPanel />)
-    act(() => useSettingsStore.getState().toggleExtraSearchTab("timer"))
-    expect(screen.getByRole("button", { name: "Timer" })).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "Video Overlays" })).toBeNull()
+    act(() => useSettingsStore.getState().toggleExtraSearchTab("on-display"))
+    expect(screen.getByRole("button", { name: "Video Overlays" })).toBeTruthy()
   })
 
-  it("falls back to Sermon when the open tab is turned off", async () => {
-    useSettingsStore.setState({ extraSearchTabs: ["timer"] })
+  it("falls back to Bible when the open tab is turned off", async () => {
+    useSettingsStore.setState({ extraSearchTabs: ["on-display"] })
     const onSearchModeChange = vi.fn()
     const user = userEvent.setup()
     render(<SearchPanel onSearchModeChange={onSearchModeChange} />)
 
-    await user.click(screen.getByRole("button", { name: "Timer" }))
-    expect(onSearchModeChange).toHaveBeenLastCalledWith("timer")
+    await user.click(screen.getByRole("button", { name: "Video Overlays" }))
+    expect(onSearchModeChange).toHaveBeenLastCalledWith("on-display")
 
-    act(() => useSettingsStore.getState().toggleExtraSearchTab("timer"))
+    act(() => useSettingsStore.getState().toggleExtraSearchTab("on-display"))
     expect(onSearchModeChange).toHaveBeenLastCalledWith("book")
     expect(
-      screen
-        .getByRole("button", { name: "Sermon" })
-        .getAttribute("aria-pressed")
+      screen.getByRole("button", { name: "Bible" }).getAttribute("aria-pressed")
     ).toBe("true")
   })
 })

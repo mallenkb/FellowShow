@@ -309,7 +309,7 @@ export function ThemeDesigner() {
               Theme Designer
             </span>
             {isDirty && (
-              <span className="flex items-center gap-1.5 text-xs text-amber-500">
+              <span className="flex items-center gap-1.5 text-xs text-amber-800 dark:text-amber-500">
                 <span className="size-1.5 rounded-full bg-amber-500" />
                 Unsaved changes
               </span>

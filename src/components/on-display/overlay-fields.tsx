@@ -1,4 +1,6 @@
 import { Button } from "@/components/ui/button"
+import { fieldSurfaceClassName } from "@/components/ui/field-styles"
+import { cn } from "@/lib/utils"
 
 /** Color swatch with its hex value, matching the other overlay editors. */
 export function OverlayColorField({
@@ -13,7 +15,12 @@ export function OverlayColorField({
   return (
     <label className="grid gap-1 text-xs font-medium">
       {label}
-      <div className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-2">
+      <div
+        className={cn(
+          fieldSurfaceClassName,
+          "flex h-9 items-center gap-2 px-2"
+        )}
+      >
         <input
           type="color"
           value={value}

@@ -45,7 +45,6 @@ describe("OutputsMultiviewPanel", () => {
         reference: "John 3:16",
         segments: [{ text: "For God so loved the world" }],
       },
-      presenterTimer: null,
     })
   })
 

@@ -1,9 +1,8 @@
-import { useEffect, useMemo } from "react"
-import { PanelHeader } from "@/components/ui/panel-header"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
 import { Switch } from "@/components/ui/switch"
+import { LIVE_STATUS_TEXT_CLASS } from "@/components/ui/live-status-styles"
 import { cn } from "@/lib/utils"
-import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
+import { useBroadcastStore } from "@/stores"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
 import { resolveOverlayOutput } from "@/lib/overlay-live"
@@ -16,15 +15,15 @@ import {
 } from "@/lib/overlays"
 
 type LiveOutputMode =
-  | "book"
-  | "context"
-  | "songs"
-  | "announcements"
-  | "presentation"
-  | "timer"
-  | "on-display"
+  "book" | "context" | "songs" | "announcements" | "presentation" | "on-display"
 
-export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
+export function LiveOutputPanel({
+  mode,
+  overlayActionPending,
+}: {
+  mode: LiveOutputMode
+  overlayActionPending?: boolean
+}) {
   const isLive = useBroadcastStore((s) => s.isLive)
   const themes = useBroadcastStore((s) => s.themes)
   const activeThemeId = useBroadcastStore((s) => s.activeThemeId)
@@ -43,15 +42,6 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
   const showsSomething = isLive || graphicsLive
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
-  const liveTimer = useBroadcastStore((s) => s.presenterTimer)
-  const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
-  const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
-  const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
-  const timerFontFamily = usePresenterTimerStore((s) => s.fontFamily)
-  const timerBackgroundUrl = usePresenterTimerStore((s) => s.backgroundUrl)
-  const timerBackgroundOptions = usePresenterTimerStore(
-    (s) => s.backgroundOptions
-  )
 
   const activeTheme = getThemeForProgramContent(
     {
@@ -69,6 +59,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
           : "bible"
   )
   const takePreviewLive = (checked: boolean) => {
+    if (overlayActionPending) return
     const store = useBroadcastStore.getState()
     if (checked) {
       store.takePreviewLive("manual")
@@ -76,79 +67,53 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
     }
     store.setLive(false)
   }
-  const currentTimer = useMemo(() => {
-    if (!timerIsRunning && timerRemaining === timerTotal) return null
-    const timerBackground = timerBackgroundOptions.find(
-      (option) => option.url === timerBackgroundUrl
-    )
-    return {
-      remainingSeconds: timerRemaining,
-      totalSeconds: timerTotal,
-      isRunning: timerIsRunning,
-      isFinished: timerRemaining === 0,
-      fontFamily: timerFontFamily,
-      backgroundUrl: timerBackgroundUrl,
-      backgroundMediaType: timerBackground?.mediaType ?? "image",
-      backgroundPlaybackStartedAt: timerBackground?.playbackStartedAt,
-    }
-  }, [
-    timerBackgroundOptions,
-    timerBackgroundUrl,
-    timerFontFamily,
-    timerIsRunning,
-    timerRemaining,
-    timerTotal,
-  ])
-
-  useEffect(() => {
-    if (!isLive || !liveTimer) return
-    useBroadcastStore.getState().setPresenterTimer(currentTimer)
-  }, [currentTimer, isLive, liveTimer])
 
   return (
     <div
       data-slot="live-output-panel"
-      className={cn(
-        "flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
-        isLive && "shadow-[inset_0_2px_0_0_rgba(239,68,68,0.3)]"
-      )}
+      className="flex shrink-0 flex-col overflow-hidden rounded-[10px] border border-border bg-card"
     >
-      <PanelHeader title="Program">
-        <label className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+      <div className="flex h-11 shrink-0 items-center justify-between gap-2 bg-surface-header px-3">
+        <span
+          className="min-w-0 truncate text-xs font-semibold text-foreground"
+          title="Live output"
+        >
+          Live output
+        </span>
+        <label className="flex shrink-0 items-center justify-end gap-2">
           <span
             className={cn(
-              "min-w-0 text-[0.625rem] font-medium tracking-wider break-words uppercase transition-colors",
-              isLive ? "text-red-400" : "text-muted-foreground"
+              "text-[0.625rem] font-medium tracking-wider whitespace-nowrap uppercase transition-colors",
+              isLive || graphicsLive
+                ? LIVE_STATUS_TEXT_CLASS
+                : "text-muted-foreground"
             )}
+            aria-live="polite"
           >
             {isLive ? "Live" : graphicsLive ? "Graphics live" : "Off air"}
           </span>
           <Switch
+            aria-label="Program on air"
             checked={isLive}
+            disabled={overlayActionPending}
             onCheckedChange={takePreviewLive}
             className="data-[state=checked]:bg-red-500"
           />
         </label>
-      </PanelHeader>
+      </div>
 
-      <div
-        className={cn(
-          "relative z-0 aspect-video w-full shrink-0 overflow-hidden transition-opacity",
-          !showsSomething && "opacity-40"
-        )}
-      >
+      <div className="relative z-0 aspect-video w-full shrink-0 overflow-hidden">
         <CanvasVerse
           theme={activeTheme}
           // With only graphics on air, show just what goes out: no leftover
           // scripture, song or media from the last time Program was live.
           verse={isLive || !graphicsLive ? liveVerse : null}
-          timer={isLive || !graphicsLive ? liveTimer : null}
           lowerThird={isLive ? lowerThird : null}
           overlays={
             graphicsLive && graphicsOutput
               ? // Live graphics are the master bus: every live graphic shows,
                 // except while Program has its own content (one at a time).
-                isLive && programHidesGraphics(liveVerse, liveTimer)
+                isLive && programHidesGraphics(liveVerse)
                 ? null
                 : getOverlayPreviewPayload(
                     overlayConfig,
@@ -167,7 +132,7 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
                     overlayConfig,
                     activeOverlays,
                     "main",
-                    { verse: liveVerse, timer: liveTimer }
+                    { verse: liveVerse }
                   )
                 : null
           }
@@ -178,13 +143,16 @@ export function LiveOutputPanel({ mode }: { mode: LiveOutputMode }) {
               ? graphicsKeyMode(graphicsOutput)
               : undefined
           }
-          className="h-full"
+          className={cn(
+            "h-full transition-opacity",
+            !showsSomething && "opacity-40"
+          )}
           fillContainer
           fit="contain"
         />
         {!showsSomething && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <span className="rounded bg-background/70 px-2 py-0.5 text-[0.6875rem] font-semibold tracking-widest text-muted-foreground uppercase">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center dark:opacity-40">
+            <span className="rounded bg-foreground px-2 py-0.5 text-[0.6875rem] font-semibold tracking-widest text-background uppercase dark:bg-background/70 dark:text-muted-foreground">
               Off air
             </span>
           </div>

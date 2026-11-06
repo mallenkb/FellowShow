@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import { fuzzCases } from "@/lib/__test__/fuzz"
-import { usePresenterTimerStore } from "./presenter-timer-store"
 import { useQueueStore } from "./queue-store"
 import type { QueueItem } from "@/types"
 
@@ -73,86 +72,6 @@ describe("operator state fuzzing", () => {
         }
       },
       50
-    )
-  })
-
-  it("matches a timer model through random start, pause, reset, duration, and tick actions", () => {
-    fuzzCases(
-      (r) =>
-        Array.from({ length: 30 }, () => ({
-          action: r.integer(0, 4),
-          seconds: r.integer(-20, 300),
-        })),
-      (actions) => {
-        let total = 30,
-          remaining = 30,
-          running = false
-        usePresenterTimerStore.setState({
-          totalSeconds: total,
-          remainingSeconds: remaining,
-          isRunning: running,
-        })
-        for (const { action, seconds } of actions) {
-          const state = usePresenterTimerStore.getState()
-          if (action === 0) {
-            state.setDuration(seconds)
-            total = Math.max(1, Math.floor(seconds))
-            if (!running) remaining = total
-          }
-          if (action === 1) {
-            state.start()
-            running = true
-            if (remaining <= 0) remaining = total
-          }
-          if (action === 2) {
-            state.pause()
-            running = false
-          }
-          if (action === 3) {
-            state.reset()
-            running = false
-            remaining = total
-          }
-          if (action === 4) {
-            state.tick()
-            if (running) {
-              remaining = Math.max(0, remaining - 1)
-              running = remaining > 0
-            }
-          }
-          const next = usePresenterTimerStore.getState()
-          expect([
-            next.totalSeconds,
-            next.remainingSeconds,
-            next.isRunning,
-          ]).toEqual([total, remaining, running])
-          const render = next.getRenderData()
-          if (render) expect(render.remainingSeconds).toBe(remaining)
-        }
-      },
-      51
-    )
-  })
-
-  it("rejects non-finite durations without poisoning the timer or its render payload", () => {
-    fuzzCases(
-      (r) => r.number(),
-      (seconds) => {
-        usePresenterTimerStore.setState({
-          totalSeconds: 30,
-          remainingSeconds: 30,
-          isRunning: false,
-        })
-        const state = usePresenterTimerStore.getState()
-        state.setDuration(seconds)
-        state.start()
-        state.tick()
-        const render = state.getRenderData()
-        expect(render).not.toBeNull()
-        expect(Number.isFinite(render?.totalSeconds)).toBe(true)
-        expect(Number.isFinite(render?.remainingSeconds)).toBe(true)
-      },
-      52
     )
   })
 })

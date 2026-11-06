@@ -49,6 +49,8 @@ const TRANSLATION_COMMANDS: &[(&str, &str)] = &[
     ("can i have that in nkjv", "NKJV"),
     ("show me nkjv", "NKJV"),
     ("n k j v", "NKJV"),
+    ("new king james version", "NKJV"),
+    ("new king james bible", "NKJV"),
     ("new king james", "NKJV"),
     ("in new king james", "NKJV"),
     // NLT
@@ -431,6 +433,7 @@ const PREVIOUS_VERSE_PHRASES: &[&str] = &[
 pub struct DirectDetector {
     matcher: BookMatcher,
     context: ReferenceContext,
+    conversation: super::conversation::Conversation,
     /// Pending incomplete reference waiting for verse completion.
     incomplete: Option<IncompleteRef>,
     /// Recently detected verses for "previous verse" navigation (most recent first).
@@ -442,6 +445,7 @@ impl DirectDetector {
         DirectDetector {
             matcher: BookMatcher::new(),
             context: ReferenceContext::new(),
+            conversation: super::conversation::Conversation::default(),
             incomplete: None,
             recent_detections: VecDeque::with_capacity(5),
         }
@@ -458,52 +462,53 @@ impl DirectDetector {
     /// Matches both full phrases ("new international version") and bare
     /// abbreviations ("NIV", "AMP") as standalone words.
     pub fn detect_translation_command(&self, text: &str) -> Option<String> {
-        let lower = text.to_lowercase();
-
-        // First check full phrases (higher confidence)
-        for (pattern, abbrev) in TRANSLATION_COMMANDS {
-            if lower.contains(pattern) {
-                log::info!("[DET-DIRECT] Translation command detected: {abbrev}");
-                return Some(abbrev.to_string());
-            }
-        }
-
-        // Then check bare abbreviations as standalone words
-        // Split into words and check each against known abbreviations
-        let words: Vec<&str> = lower
+        let normalized = text
+            .to_lowercase()
+            .chars()
+            .map(|ch| if ch.is_alphanumeric() { ch } else { ' ' })
+            .collect::<String>()
             .split_whitespace()
-            .map(|w| w.trim_matches(|c: char| !c.is_alphanumeric()))
-            .collect();
-
-        for word in &words {
-            let matched = match *word {
-                "niv" => Some("NIV"),
-                "esv" => Some("ESV"),
-                "nasb" => Some("NASB"),
-                "nkjv" => Some("NKJV"),
-                "nlt" => Some("NLT"),
-                "kjv" => Some("KJV"),
-                "amp" | "amplified" => Some("AMP"),
-                "sparv" | "spanish" => Some("SpaRV"),
-                "frejnd" | "french" => Some("FreJND"),
-                "porblivre" | "portuguese" => Some("PorBLivre"),
-                "msg" | "message" => Some("MSG"),
-                "csb" => Some("CSB"),
-                "hcsb" => Some("HCSB"),
-                "rsv" => Some("RSV"),
-                "nrsv" => Some("NRSV"),
-                "net" => Some("NET"),
-                "cev" => Some("CEV"),
-                "gnt" | "gnb" => Some("GNT"),
-                _ => None,
-            };
-            if let Some(abbrev) = matched {
-                log::info!("[DET-DIRECT] Translation abbreviation detected: {abbrev}");
-                return Some(abbrev.to_string());
+            .collect::<Vec<_>>()
+            .join(" ");
+        let bare = [
+            ("niv", "NIV"),
+            ("esv", "ESV"),
+            ("nasb", "NASB"),
+            ("nkjv", "NKJV"),
+            ("nlt", "NLT"),
+            ("kjv", "KJV"),
+            ("amp", "AMP"),
+            ("amplified", "AMP"),
+            ("sparv", "SpaRV"),
+            ("frejnd", "FreJND"),
+            ("porblivre", "PorBLivre"),
+            ("msg", "MSG"),
+            ("csb", "CSB"),
+            ("hcsb", "HCSB"),
+            ("rsv", "RSV"),
+            ("nrsv", "NRSV"),
+            ("net", "NET"),
+            ("cev", "CEV"),
+            ("gnt", "GNT"),
+            ("gnb", "GNT"),
+        ];
+        let mut best: Option<(usize, usize, &str)> = None;
+        for &(pattern, abbreviation) in TRANSLATION_COMMANDS.iter().chain(bare.iter()) {
+            for (start, _) in normalized.match_indices(pattern) {
+                let end = start + pattern.len();
+                let starts_word = start == 0 || normalized.as_bytes()[start - 1] == b' ';
+                let ends_word = end == normalized.len() || normalized.as_bytes()[end] == b' ';
+                if !starts_word || !ends_word {
+                    continue;
+                }
+                if best.is_none_or(|(best_end, best_len, _)| {
+                    (end, pattern.len()) > (best_end, best_len)
+                }) {
+                    best = Some((end, pattern.len(), abbreviation));
+                }
             }
         }
-
-        None
+        best.map(|(_, _, abbreviation)| abbreviation.to_string())
     }
 
     /// Detect Bible references in the given transcript text.
@@ -524,6 +529,25 @@ impl DirectDetector {
         if let Some(prev_detection) = self.check_previous_verse_command(text) {
             detections.push(prev_detection);
             return detections;
+        }
+
+        // A newly named book supersedes any earlier incomplete request.
+        if self.matcher.find_books(text).iter().any(|book| {
+            // A segment can finish the previous reference before mentioning
+            // its book again, as in "22. Acts three".
+            if text[..book.start]
+                .trim_start()
+                .chars()
+                .next()
+                .is_some_and(|character| character.is_ascii_digit())
+            {
+                return false;
+            }
+            let after = super::parser::tokenize(&text[book.end..]);
+            super::parser::consume_number(&after, 0).is_some()
+                || matches!(after.first(), Some(super::parser::Token::Word(word)) if word == "chapter")
+        }) {
+            self.incomplete = None;
         }
 
         // Step 0c: Check if there's a pending incomplete reference.
@@ -585,6 +609,25 @@ impl DirectDetector {
                         // Fall through to book matcher (text may also contain a new book)
                     }
                 }
+            }
+        }
+
+        // Resolve verse-first requests after completing any split reference,
+        // but before the book-first parser handles a new request. If the
+        // context is incomplete, let fuzzy book matching try as well.
+        if let Some(reference) = self
+            .conversation
+            .resolve(text, &self.matcher, &self.context)
+        {
+            if reference.book_number > 0
+                && reference.chapter > 0
+                && is_valid_reference(reference.book_number, reference.chapter)
+            {
+                self.incomplete = None;
+                self.context.update(&reference);
+                self.push_recent(&reference);
+                detections.push(self.make_direct_detection(&reference, 0.95, text, 0, text.len()));
+                return detections;
             }
         }
 
@@ -720,6 +763,7 @@ impl DirectDetector {
             if front.book_number == verse_ref.book_number
                 && front.chapter == verse_ref.chapter
                 && front.verse_start == verse_ref.verse_start
+                && front.verse_end == verse_ref.verse_end
             {
                 return;
             }

@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import {
   LOWER_THIRD_STYLE_OPTIONS,
   TICKER_SPEED_OPTIONS,
@@ -237,12 +238,12 @@ export function OverlaySamplePreviewFields({
         </Field>
 
         <Field label="Scrolling text">
-          <textarea
+          <Textarea
             value={tickerText}
             maxLength={500}
             rows={3}
             onChange={(event) => onTickerTextChange(event.target.value)}
-            className="min-h-20 resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="min-h-20 resize-y"
           />
         </Field>
 

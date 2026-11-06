@@ -1,29 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
+import { fieldSurfaceClassName } from "@/components/ui/field-styles"
 import { CheckIcon, FunnelIcon, Trash2Icon } from "lucide-react"
 import type { CopSongSource } from "@/lib/cop-songs"
 
 type SongSourceFilter = "all" | Exclude<CopSongSource, "built-in">
-const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
-  { value: "all", label: "All songs" },
-  { value: "theme-2026", label: "2026 Theme" },
-  { value: "theme-2025", label: "2025 Theme" },
-  { value: "pentecostal-book", label: "Pentecostal Book" },
-  { value: "easyworship", label: "EasyWorship" },
-  { value: "custom", label: "My songs" },
-]
-
 export function SongFilterDropdown({
   sourceValue,
   onSourceChange,
   onRemoveEasyWorship,
+  sources = [],
 }: {
   sourceValue: SongSourceFilter
   onSourceChange: (value: SongSourceFilter) => void
+  sources?: { value: SongSourceFilter; label: string }[]
   /** Shown only when an EasyWorship library has been imported. */
   onRemoveEasyWorship?: () => void
 }) {
+  const songSourceOptions: { value: SongSourceFilter; label: string }[] = [
+    { value: "all", label: "All songs" },
+    ...sources,
+  ]
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -103,14 +101,17 @@ export function SongFilterDropdown({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggleOpen}
-        className="flex size-10 items-center justify-center rounded-md border border-input bg-transparent text-foreground shadow-xs transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:bg-input/30 dark:hover:bg-input/50"
+        className={cn(
+          fieldSurfaceClassName,
+          "flex size-10 items-center justify-center text-foreground transition-colors hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        )}
         title={`Filter songs: ${label}`}
         aria-label={`Filter songs: ${label}`}
       >
         <FunnelIcon
           className={cn(
             "size-4 shrink-0 transition-colors",
-            open ? "text-primary" : "text-muted-foreground"
+            open ? "text-primary-emphasis" : "text-muted-foreground"
           )}
         />
       </button>
@@ -156,7 +157,7 @@ export function SongFilterDropdown({
                     >
                       <span>{option.label}</span>
                       {isSelected && (
-                        <CheckIcon className="size-4 text-[#101084] dark:text-[#F1E600]" />
+                        <CheckIcon className="size-4 text-primary-emphasis" />
                       )}
                     </button>
                     {canRemove && (

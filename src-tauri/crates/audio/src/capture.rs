@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -6,6 +8,42 @@ use crossbeam_channel::Sender;
 
 use crate::error::AudioError;
 use crate::types::{AudioConfig, AudioFrame};
+
+/// Mono input samples before the transcription resampler.
+pub struct RecordingFrame {
+    pub samples: Vec<i16>,
+    pub sample_rate: u32,
+    pub ended_at_ms: u64,
+}
+
+#[derive(Clone)]
+pub struct RecordingSink {
+    sender: Sender<RecordingFrame>,
+    failed: Arc<AtomicBool>,
+}
+
+impl RecordingSink {
+    pub fn new(sender: Sender<RecordingFrame>, failed: Arc<AtomicBool>) -> Self {
+        Self { sender, failed }
+    }
+
+    fn send(&self, samples: &[i16], sample_rate: u32, ended_at_ms: u64) {
+        if self.failed.load(Ordering::Relaxed) {
+            return;
+        }
+        if self
+            .sender
+            .try_send(RecordingFrame {
+                samples: samples.to_vec(),
+                sample_rate,
+                ended_at_ms,
+            })
+            .is_err()
+        {
+            self.failed.store(true, Ordering::Release);
+        }
+    }
+}
 
 /// Holds a live audio capture stream.
 /// Dropping this struct (or calling `stop`) will end the capture.
@@ -39,7 +77,11 @@ impl AudioCapture {
     clippy::needless_pass_by_value,
     reason = "config fields are read and sender is cloned into closures"
 )]
-pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCapture, AudioError> {
+pub fn start(
+    config: AudioConfig,
+    sender: Sender<AudioFrame>,
+    recording: Option<RecordingSink>,
+) -> Result<AudioCapture, AudioError> {
     let host = cpal::default_host();
 
     // Select the device
@@ -105,6 +147,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
     let stream = match sample_format {
         SampleFormat::I16 => {
             let sender = sender.clone();
+            let recording = recording.clone();
             device.build_input_stream(
                 &stream_config,
                 move |data: &[i16], _: &cpal::InputCallbackInfo| {
@@ -115,6 +158,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
                         target_sample_rate,
                         gain,
                         &sender,
+                        recording.as_ref(),
                     );
                 },
                 err_fn,
@@ -123,6 +167,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
         }
         SampleFormat::F32 => {
             let sender = sender.clone();
+            let recording = recording.clone();
             device.build_input_stream(
                 &stream_config,
                 move |data: &[f32], _: &cpal::InputCallbackInfo| {
@@ -145,6 +190,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
                         target_sample_rate,
                         gain,
                         &sender,
+                        recording.as_ref(),
                     );
                 },
                 err_fn,
@@ -153,6 +199,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
         }
         SampleFormat::U16 => {
             let sender = sender.clone();
+            let recording = recording.clone();
             device.build_input_stream(
                 &stream_config,
                 move |data: &[u16], _: &cpal::InputCallbackInfo| {
@@ -172,6 +219,7 @@ pub fn start(config: AudioConfig, sender: Sender<AudioFrame>) -> Result<AudioCap
                         target_sample_rate,
                         gain,
                         &sender,
+                        recording.as_ref(),
                     );
                 },
                 err_fn,
@@ -205,6 +253,7 @@ fn process_and_send(
     target_rate: u32,
     gain: f32,
     sender: &Sender<AudioFrame>,
+    recording: Option<&RecordingSink>,
 ) {
     if samples.is_empty() {
         return;
@@ -224,17 +273,21 @@ fn process_and_send(
         })
         .collect();
 
+    let timestamp_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64;
+
+    if let Some(recording) = recording {
+        recording.send(&gained, source_rate, timestamp_ms);
+    }
+
     // Step 3: Resample to target rate (simple linear interpolation)
     let resampled = if source_rate == target_rate {
         gained
     } else {
         resample(&gained, source_rate, target_rate)
     };
-
-    let timestamp_ms = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64;
 
     let frame = AudioFrame {
         samples: resampled,
@@ -290,7 +343,7 @@ fn downmix_strongest_channel(samples: &[i16], source_channels: usize) -> Vec<i16
     reason = "sample indices and rates fit comfortably in f64"
 )]
 #[expect(clippy::cast_sign_loss, reason = "output_len is always non-negative")]
-fn resample(input: &[i16], from_rate: u32, to_rate: u32) -> Vec<i16> {
+pub fn resample(input: &[i16], from_rate: u32, to_rate: u32) -> Vec<i16> {
     if input.is_empty() {
         return Vec::new();
     }
@@ -346,7 +399,7 @@ mod tests {
     fn generated_stereo_pcm_is_downmixed_resampled_and_gain_limited_for_transcription() {
         let samples: Vec<i16> = (0..48_000).flat_map(|_| [0, 20_000]).collect();
         let (sender, receiver) = crossbeam_channel::bounded(1);
-        process_and_send(&samples, 2, 48_000, 16_000, 2.0, &sender);
+        process_and_send(&samples, 2, 48_000, 16_000, 2.0, &sender, None);
         let frame = receiver.recv().expect("processed PCM frame");
         assert_eq!(frame.samples.len(), 16_000);
         assert!(frame.samples.iter().all(|sample| *sample == i16::MAX));

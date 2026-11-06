@@ -70,7 +70,7 @@ pub fn run() {
     // Load .env file — try src-tauri/.env first, then project root ../.env
     dotenvy::dotenv().ok();
     dotenvy::from_filename("../.env").ok();
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(tauri_plugin_log::log::LevelFilter::Info)
@@ -85,38 +85,18 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .on_window_event(|window, event| {
             use tauri::Manager;
-            // Closing the operator window shuts down every projector window
-            // and NDI session, so nothing keeps broadcasting (or keeps the
-            // process alive) after the app is closed.
-            if window.label() != "main"
-                || !matches!(event, tauri::WindowEvent::CloseRequested { .. })
-            {
+            if window.label() != "main" {
                 return;
             }
-            let app = window.app_handle();
-            if let Some(clocks) =
-                app.try_state::<commands::ndi_frame_clock::NdiFrameClocks>()
-            {
-                if let Err(error) = clocks.stop_all() {
-                    log::warn!("Failed to stop NDI frame clocks during app close: {error}");
-                }
-            }
-            if let Some(runtime) =
-                app.try_state::<Mutex<fellowshow_broadcast::ndi::NdiRuntime>>()
-            {
-                runtime
-                    .lock()
-                    .unwrap_or_else(std::sync::PoisonError::into_inner)
-                    .stop_all();
-            }
-            for (label, webview) in app.webview_windows() {
-                if label.starts_with("broadcast") {
-                    if let Err(error) = webview.close() {
-                        log::warn!("Failed to close {label} during app close: {error}");
-                    }
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if commands::lifecycle::request_close(window.app_handle()) {
+                    api.prevent_close();
+                } else {
+                    commands::lifecycle::shutdown_outputs(window.app_handle());
                 }
             }
         })
+        .manage(commands::lifecycle::AppCloseState::default())
         .manage(Mutex::new(state::AppState::new()))
         .manage(Mutex::new(fellowshow_detection::DetectionPipeline::new()))
         .manage(Mutex::new(fellowshow_broadcast::ndi::NdiRuntime::default()))
@@ -127,7 +107,11 @@ pub fn run() {
         .manage(Mutex::new(commands::remote::OscRuntime::new()))
         .manage(Mutex::new(commands::remote::HttpRuntime::new()))
         .invoke_handler(tauri::generate_handler![
+            commands::lifecycle::set_app_close_guard,
+            commands::lifecycle::close_app,
             commands::bible::list_translations,
+            commands::bible::prepare_translation_download,
+            commands::bible::cancel_translation_download,
             commands::bible::download_translation,
             commands::bible::list_books,
             commands::bible::get_chapter,
@@ -152,6 +136,10 @@ pub fn run() {
             commands::stt::test_groq_connection,
             commands::stt::start_transcription,
             commands::stt::stop_transcription,
+            commands::sermon_audio::list_sermon_audio,
+            commands::sermon_audio::delete_sermon_audio,
+            commands::sermon_audio::sermon_audio_formats,
+            commands::sermon_audio::export_sermon_audio,
             commands::secrets::load_secure_settings,
             commands::secrets::save_secure_settings,
             commands::summary::summarize_preaching,
@@ -266,8 +254,20 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!());
+    match app {
+        Ok(app) => app.run(|app, event| {
+            if let tauri::RunEvent::ExitRequested { api, code, .. } = event {
+                if code != Some(tauri::RESTART_EXIT_CODE) && commands::lifecycle::request_close(app)
+                {
+                    api.prevent_exit();
+                } else {
+                    commands::lifecycle::shutdown_outputs(app);
+                }
+            }
+        }),
+        Err(error) => log::error!("Could not build the Tauri application: {error}"),
+    }
 }
 
 #[cfg(test)]

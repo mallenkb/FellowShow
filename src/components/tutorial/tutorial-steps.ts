@@ -10,7 +10,7 @@ export const TUTORIAL_STEPS: Step[] = [
     target: '[data-slot="transcript-panel"]',
     title: "Live Transcript",
     content:
-      "Start transcribing to convert speech to text in real time. Detected Bible verses are highlighted automatically.",
+      "Start a sermon to transcribe speech in real time. Detected Bible verses are highlighted automatically.",
     placement: "right",
   },
   {

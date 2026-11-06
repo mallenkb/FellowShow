@@ -22,7 +22,7 @@ export function AiProviderSelector({
         }}
         className="grid gap-3 md:grid-cols-2"
       >
-        <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20">
           <RadioGroupItem value="openrouter" className="mt-0.5" />
           <span className="min-w-0">
             <span className="block text-xs font-medium">OpenRouter</span>
@@ -31,7 +31,7 @@ export function AiProviderSelector({
             </span>
           </span>
         </label>
-        <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20">
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20">
           <RadioGroupItem value="openai" className="mt-0.5" />
           <span className="min-w-0">
             <span className="block text-xs font-medium">OpenAI (direct)</span>

@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Fellow Show",
   "mainBinaryName": "fellowshow",
-  "version": "0.1.51",
+  "version": "0.1.52",
   "identifier": "com.openbezal.fellowshow",
   "build": {
     "frontendDist": "../build",
@@ -30,7 +30,7 @@
       "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: http://asset.localhost https://asset.localhost data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost https://api.openai.com https://openrouter.ai; media-src 'self' asset: http://asset.localhost https://asset.localhost blob:; worker-src 'self' blob:; frame-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'",
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPDATA/media/*"]
+        "scope": ["$APPDATA/media/*", "$APPDATA/sermon-recordings/*/*.wav"]
       }
     }
   },

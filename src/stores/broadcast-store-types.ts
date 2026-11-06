@@ -16,7 +16,6 @@ import type {
   LowerThirdPreset,
   OverlayConfiguration,
   OverlayLook,
-  PresenterTimerRenderData,
   TickerMessage,
   TickerOverlayConfig,
   VerseRenderData,
@@ -33,10 +32,8 @@ export interface BroadcastState {
   sectionThemeIds: Record<BroadcastThemeSection, string>
   selectedThemeSection: BroadcastThemeSection
   previewVerse: VerseRenderData | null
-  previewTimer: PresenterTimerRenderData | null
   isLive: boolean
   liveVerse: VerseRenderData | null
-  presenterTimer: PresenterTimerRenderData | null
   lowerThird: LowerThirdRenderData | null
   overlayConfig: OverlayConfiguration
   activeOverlays: ActiveOverlayState
@@ -79,21 +76,16 @@ export interface BroadcastState {
     id: string,
     updates: Partial<Omit<BroadcastOutputConfig, "id">>
   ) => void
-  setPreviewOutput: (
-    verse: VerseRenderData | null,
-    timer: PresenterTimerRenderData | null
-  ) => void
+  setPreviewOutput: (verse: VerseRenderData | null) => void
   setLive: (live: boolean) => void
   presentOnLive: (
     verse: VerseRenderData | null,
-    timer: PresenterTimerRenderData | null,
     source?: "manual" | "preview"
   ) => void
   showPreviewOnLive: (source?: "manual" | "preview") => void
   takePreviewLive: (source?: "manual" | "preview") => void
   setOverlayOutputLive: (outputId: string, live: boolean) => void
   setLiveVerse: (verse: VerseRenderData | null) => void
-  setPresenterTimer: (timer: PresenterTimerRenderData | null) => void
   setLowerThird: (lowerThird: LowerThirdRenderData | null) => void
   setOutputOpacity: (opacity: number) => void
   clearLowerThird: () => void
@@ -198,7 +190,6 @@ type OutputActionKeys =
   | "takePreviewLive"
   | "setOverlayOutputLive"
   | "setLiveVerse"
-  | "setPresenterTimer"
   | "setLowerThird"
   | "setOutputOpacity"
   | "clearLowerThird"

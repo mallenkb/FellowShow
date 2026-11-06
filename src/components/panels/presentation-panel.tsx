@@ -69,7 +69,11 @@ function VideoSlideThumbnail({
   )
 }
 
-export function PresentationPanel() {
+export function PresentationPanel({
+  isActive: isWorkspaceActive = true,
+}: {
+  isActive?: boolean
+}) {
   const slides = usePresentationStore((s) => s.slides)
   const documents = usePresentationStore((s) => s.documents)
   const selectedSlideId = usePresentationStore((s) => s.selectedSlideId)
@@ -98,15 +102,20 @@ export function PresentationPanel() {
   }
 
   if (selectedSlide) {
-    return <PresentationMediaViewer slide={selectedSlide} />
+    return (
+      <PresentationMediaViewer
+        slide={selectedSlide}
+        isActive={isWorkspaceActive}
+      />
+    )
   }
 
   return (
     <div
       data-slot="presentation-panel"
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card",
-        isFileDropTarget && "ring-2 ring-primary ring-inset"
+        "flex min-h-0 flex-col overflow-hidden bg-card",
+        isFileDropTarget && "ring-2 ring-primary-emphasis ring-inset"
       )}
       onDragOver={(event) => {
         // Reordering pinned slides is handled by each card.
@@ -231,7 +240,7 @@ export function PresentationPanel() {
                   onDoubleClick={() => {
                     usePresentationStore.getState().selectSlide(slide.id)
                     const store = useBroadcastStore.getState()
-                    store.presentOnLive(slideRenderData(slide), null)
+                    store.presentOnLive(slideRenderData(slide))
                   }}
                   onMouseEnter={() => setPreviewingSlideId(slide.id)}
                   onMouseLeave={() =>
@@ -244,9 +253,9 @@ export function PresentationPanel() {
                   className={cn(
                     "group cursor-grab overflow-hidden rounded-lg border bg-background/30 transition active:cursor-grabbing",
                     isActive
-                      ? "border-[#101084]/60 ring-2 ring-[#101084]/20 dark:border-[#F1E600] dark:ring-[#F1E600]/20"
+                      ? "border-primary-emphasis/60 ring-2 ring-primary-emphasis/20 dark:border-primary-emphasis dark:ring-primary-emphasis/20"
                       : "border-border hover:bg-muted/30",
-                    isDropTarget && "border-[#F1E600] bg-[#F1E600]/10",
+                    isDropTarget && "border-primary-emphasis bg-primary/10",
                     isDragging && "opacity-45",
                     slide.locked && "cursor-default"
                   )}
@@ -257,7 +266,10 @@ export function PresentationPanel() {
                     ) : slide.mediaType === "video" ? (
                       <VideoSlideThumbnail
                         src={slide.url}
-                        shouldPlay={isActive || previewingSlideId === slide.id}
+                        shouldPlay={
+                          isWorkspaceActive &&
+                          (isActive || previewingSlideId === slide.id)
+                        }
                       />
                     ) : (
                       <img
@@ -268,7 +280,7 @@ export function PresentationPanel() {
                       />
                     )}
                   </div>
-                  <div className="flex items-center gap-2 px-2.5 py-2">
+                  <div className="flex items-center gap-2 px-3 py-2">
                     <span className="rounded p-1 text-muted-foreground/50">
                       <GripVerticalIcon className="size-3 shrink-0" />
                     </span>
@@ -302,8 +314,7 @@ export function PresentationPanel() {
                       size="icon-xs"
                       className={cn(
                         "shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
-                        slide.locked &&
-                          "text-[#101084] opacity-100 dark:text-[#F1E600]"
+                        slide.locked && "text-primary-emphasis opacity-100"
                       )}
                       onClick={(event) => {
                         event.stopPropagation()

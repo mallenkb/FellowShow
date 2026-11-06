@@ -11,6 +11,11 @@ import type { Verse, VerseRenderData } from "@/types"
 // The Preview payload the app last staged on its own. Background updates may
 // replace only that, never something the operator staged.
 let backgroundStaged: VerseRenderData | null = null
+let backgroundStagingDepth = 0
+
+export function isBackgroundPreviewStaging(): boolean {
+  return backgroundStagingDepth > 0
+}
 
 export function activeTranslationAbbreviation(): string {
   const bible = useBibleStore.getState()
@@ -25,10 +30,7 @@ export function activeTranslationAbbreviation(): string {
 export function stageVerse(verse: Verse): void {
   useBroadcastStore
     .getState()
-    .setPreviewOutput(
-      toVerseRenderData(verse, activeTranslationAbbreviation()),
-      null
-    )
+    .setPreviewOutput(toVerseRenderData(verse, activeTranslationAbbreviation()))
 }
 
 /**
@@ -37,14 +39,18 @@ export function stageVerse(verse: Verse): void {
  * itself, so it never replaces anything the operator put there.
  */
 export function stageVerseInBackground(verse: Verse): void {
-  const { previewVerse, previewTimer } = useBroadcastStore.getState()
-  if (previewTimer) return
+  const { previewVerse } = useBroadcastStore.getState()
   if (previewVerse && previewVerse !== backgroundStaged) return
-  stageVerse(verse)
-  backgroundStaged = useBroadcastStore.getState().previewVerse
+  backgroundStagingDepth += 1
+  try {
+    stageVerse(verse)
+    backgroundStaged = useBroadcastStore.getState().previewVerse
+  } finally {
+    backgroundStagingDepth -= 1
+  }
 }
 
 /** Stages a presentation slide in Preview, replacing whatever is staged. */
 export function stageSlide(slide: PresentationSlide): void {
-  useBroadcastStore.getState().setPreviewOutput(slideRenderData(slide), null)
+  useBroadcastStore.getState().setPreviewOutput(slideRenderData(slide))
 }

@@ -1,5 +1,8 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useState } from "react"
 import { TransportBar } from "@/components/controls/transport-bar"
+import { SermonSessionNotice } from "@/components/controls/sermon-session-notice"
+import { DashboardResizeHandle } from "@/components/layout/dashboard-resize-handle"
+import { useDashboardLayout } from "@/components/layout/use-dashboard-layout"
 import { TranscriptPanel } from "@/components/panels/transcript-panel"
 import { MotionPanel } from "@/components/panels/motion-panel"
 import { PreviewPanel } from "@/components/panels/preview-panel"
@@ -8,6 +11,8 @@ import { LiveOutputPanel } from "@/components/panels/live-output-panel"
 import { OutputsMultiviewPanel } from "@/components/panels/outputs-multiview-panel"
 import { QueuePanel } from "@/components/panels/queue-panel"
 import { SearchPanel } from "@/components/panels/search-panel"
+import { SongsQueuePanel } from "@/components/panels/songs-queue-panel"
+import { isBackgroundPreviewStaging } from "@/lib/preview-staging"
 import { useBroadcastStore } from "@/stores"
 
 const PresentationPanel = lazy(() =>
@@ -26,343 +31,83 @@ const OnDisplayPanel = lazy(() =>
   }))
 )
 
-const COLUMN_MIN_WIDTHS = [300, 340, 280]
-const HANDLE_WIDTH = 12
-const ROW_MIN_HEIGHTS = [160, 220]
-const HANDLE_HEIGHT = 12
 type SearchMode =
-  | "book"
-  | "context"
-  | "songs"
-  | "announcements"
-  | "presentation"
-  | "timer"
-  | "on-display"
+  "book" | "context" | "songs" | "announcements" | "presentation" | "on-display"
 
-const DASHBOARD_LAYOUT_STORAGE_KEY = "fellowshow:dashboard-layout:v1"
-const DEFAULT_COLUMN_RATIOS = [1.15, 1.45, 1]
-const DEFAULT_MIDDLE_ROW_RATIOS = [0.7, 1.3]
-const SEARCH_MODES: SearchMode[] = [
-  "book",
-  "context",
-  "songs",
-  "presentation",
-  "on-display",
-  "timer",
-  "announcements",
-]
-
-interface DashboardLayoutSnapshot {
-  columnRatios?: number[]
-  middleRowRatios?: number[]
-  layoutsByMode?: Partial<Record<SearchMode, LegacyDashboardModeLayout>>
-  middleRowRatiosByMode?: Partial<Record<SearchMode, number[]>>
-}
-
-interface LegacyDashboardModeLayout {
-  columnRatios: number[]
-  middleRowRatios: number[]
-}
-
-type MiddleRowRatiosByMode = Record<SearchMode, number[]>
-
-function getDefaultMiddleRowRatiosByMode(): MiddleRowRatiosByMode {
-  return {
-    book: [...DEFAULT_MIDDLE_ROW_RATIOS],
-    context: [...DEFAULT_MIDDLE_ROW_RATIOS],
-    songs: [...DEFAULT_MIDDLE_ROW_RATIOS],
-    announcements: [...DEFAULT_MIDDLE_ROW_RATIOS],
-    presentation: [...DEFAULT_MIDDLE_ROW_RATIOS],
-    timer: [...DEFAULT_MIDDLE_ROW_RATIOS],
-    "on-display": [...DEFAULT_MIDDLE_ROW_RATIOS],
-  }
-}
-
-function readDashboardLayout(): DashboardLayoutSnapshot {
-  if (typeof window === "undefined") return {}
-  if (typeof window.localStorage === "undefined") return {}
-
-  try {
-    const raw = window.localStorage.getItem(DASHBOARD_LAYOUT_STORAGE_KEY)
-    if (!raw) return {}
-    const parsed = JSON.parse(raw) as DashboardLayoutSnapshot
-    const layoutsByMode = sanitizeLayoutsByMode(parsed.layoutsByMode)
-
-    if (layoutsByMode) {
-      return {
-        columnRatios: sanitizeRatios(parsed.columnRatios, 3),
-        layoutsByMode,
-      }
-    }
-
-    return {
-      columnRatios: sanitizeRatios(parsed.columnRatios, 3),
-      middleRowRatios: sanitizeRatios(parsed.middleRowRatios, 2),
-      middleRowRatiosByMode: sanitizeMiddleRowRatiosByMode(
-        parsed.middleRowRatiosByMode
-      ),
-    }
-  } catch {
-    return {}
-  }
-}
-
-function sanitizeRatios(
-  value: unknown,
-  expectedLength: number
-): number[] | undefined {
-  if (!Array.isArray(value) || value.length !== expectedLength) return undefined
-  const ratios = value.map(Number)
-  if (ratios.some((ratio) => !Number.isFinite(ratio) || ratio <= 0))
-    return undefined
-  return ratios
-}
-
-function sanitizeModeLayout(
-  value: unknown
-): LegacyDashboardModeLayout | undefined {
-  if (!value || typeof value !== "object") return undefined
-
-  const snapshot = value as DashboardLayoutSnapshot
-  const columnRatios = sanitizeRatios(snapshot.columnRatios, 3)
-  const middleRowRatios = sanitizeRatios(snapshot.middleRowRatios, 2)
-
-  if (!columnRatios || !middleRowRatios) return undefined
-
-  return { columnRatios, middleRowRatios }
-}
-
-function sanitizeLayoutsByMode(
-  value: unknown
-): DashboardLayoutSnapshot["layoutsByMode"] | undefined {
-  if (!value || typeof value !== "object") return undefined
-
-  const entries = Object.entries(value as Partial<Record<SearchMode, unknown>>)
-  const layoutsByMode: Partial<Record<SearchMode, LegacyDashboardModeLayout>> =
-    {}
-
-  for (const [mode, layout] of entries) {
-    if (!SEARCH_MODES.includes(mode as SearchMode)) continue
-    const sanitized = sanitizeModeLayout(layout)
-    if (sanitized) layoutsByMode[mode as SearchMode] = sanitized
-  }
-
-  return Object.keys(layoutsByMode).length > 0 ? layoutsByMode : undefined
-}
-
-function sanitizeMiddleRowRatiosByMode(
-  value: unknown
-): DashboardLayoutSnapshot["middleRowRatiosByMode"] | undefined {
-  if (!value || typeof value !== "object") return undefined
-
-  const entries = Object.entries(value as Partial<Record<SearchMode, unknown>>)
-  const ratiosByMode: Partial<Record<SearchMode, number[]>> = {}
-
-  for (const [mode, ratios] of entries) {
-    if (!SEARCH_MODES.includes(mode as SearchMode)) continue
-    const sanitized = sanitizeRatios(ratios, 2)
-    if (sanitized) ratiosByMode[mode as SearchMode] = sanitized
-  }
-
-  return Object.keys(ratiosByMode).length > 0 ? ratiosByMode : undefined
-}
-
-function readColumnRatios(): number[] {
-  const snapshot = readDashboardLayout()
-  return (
-    snapshot.columnRatios ??
-    snapshot.layoutsByMode?.book?.columnRatios ??
-    DEFAULT_COLUMN_RATIOS
-  )
-}
-
-function readMiddleRowRatiosByMode(): MiddleRowRatiosByMode {
-  const snapshot = readDashboardLayout()
-  const defaults = getDefaultMiddleRowRatiosByMode()
-
-  if (snapshot.middleRowRatiosByMode) {
-    return SEARCH_MODES.reduce((ratios, mode) => {
-      ratios[mode] = snapshot.middleRowRatiosByMode?.[mode] ?? defaults[mode]
-      return ratios
-    }, {} as MiddleRowRatiosByMode)
-  }
-
-  if (snapshot.layoutsByMode) {
-    return SEARCH_MODES.reduce((ratios, mode) => {
-      ratios[mode] =
-        snapshot.layoutsByMode?.[mode]?.middleRowRatios ?? defaults[mode]
-      return ratios
-    }, {} as MiddleRowRatiosByMode)
-  }
-
-  if (snapshot.middleRowRatios) {
-    return {
-      ...defaults,
-      book: snapshot.middleRowRatios,
-    }
-  }
-
-  return defaults
-}
-
-function ResizeHandle({
-  label,
-  onPointerDown,
-}: {
-  label: string
-  onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onPointerDown={onPointerDown}
-      className="group flex min-h-0 cursor-col-resize items-stretch justify-center outline-none"
-    >
-      <span className="my-1 w-1 rounded-full bg-transparent transition group-hover:bg-muted-foreground/35 group-focus-visible:bg-muted-foreground/45" />
-    </button>
-  )
-}
-
-function RowResizeHandle({
-  label,
-  onPointerDown,
-}: {
-  label: string
-  onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onPointerDown={onPointerDown}
-      className="group flex min-w-0 cursor-row-resize items-center justify-stretch outline-none"
-    >
-      <span className="mx-1 h-1 flex-1 rounded-full bg-transparent transition group-hover:bg-muted-foreground/35 group-focus-visible:bg-muted-foreground/45" />
-    </button>
-  )
-}
+const SHOW_MOTION_PANEL = false
 
 export function Dashboard() {
-  const gridRef = useRef<HTMLDivElement>(null)
-  const middleColumnRef = useRef<HTMLDivElement>(null)
-  const [columnRatios, setColumnRatios] = useState(readColumnRatios)
-  const [middleRowRatiosByMode, setMiddleRowRatiosByMode] = useState(
-    readMiddleRowRatiosByMode
-  )
+  const {
+    gridRef,
+    middleRef,
+    queueRef,
+    columnTemplate,
+    mediaColumnTemplate,
+    overlayColumnTemplate,
+    rowTemplate,
+    queueRowTemplate,
+    startColumnResize,
+    startRowResize,
+    nudgeColumn,
+    nudgeRow,
+  } = useDashboardLayout()
+  const [navigationTarget, setNavigationTarget] =
+    useState<HTMLDivElement | null>(null)
   const [searchMode, setSearchMode] = useState<SearchMode>("book")
-  const middleRowRatios = middleRowRatiosByMode[searchMode]
-  const hideTranscript = searchMode === "songs"
+  const [previewMode, setPreviewMode] = useState<"content" | "overlays">(
+    "content"
+  )
+  const [overlayActionPending, setOverlayActionPending] = useState(false)
+  const [visited, setVisited] = useState({
+    songs: false,
+    announcements: false,
+    presentation: false,
+  })
+  const hasAuxiliaryWorkspace =
+    searchMode === "songs" ||
+    searchMode === "announcements" ||
+    searchMode === "presentation"
+  const focusedWorkspace =
+    searchMode === "presentation"
+      ? "media"
+      : searchMode === "on-display"
+        ? "overlays"
+        : null
+  const showSermonWorkspace =
+    searchMode !== "songs" &&
+    searchMode !== "announcements" &&
+    focusedWorkspace === null
 
-  useEffect(() => {
-    if (typeof window.localStorage === "undefined") return
-
-    const timeout = window.setTimeout(() => {
-      window.localStorage.setItem(
-        DASHBOARD_LAYOUT_STORAGE_KEY,
-        JSON.stringify({ columnRatios, middleRowRatiosByMode })
-      )
-    }, 150)
-
-    return () => window.clearTimeout(timeout)
-  }, [columnRatios, middleRowRatiosByMode])
-
-  const startColumnResize = useCallback(
-    (handleIndex: 0 | 1, event: React.PointerEvent<HTMLButtonElement>) => {
-      event.preventDefault()
-      event.currentTarget.setPointerCapture(event.pointerId)
-
-      const grid = gridRef.current
-      if (!grid) return
-
-      const startX = event.clientX
-      const availableWidth = grid.clientWidth - HANDLE_WIDTH * 2
-      const ratioTotal = columnRatios.reduce((sum, ratio) => sum + ratio, 0)
-      const startWidths = columnRatios.map(
-        (ratio) => (ratio / ratioTotal) * availableWidth
-      )
-
-      const handlePointerMove = (moveEvent: PointerEvent) => {
-        const delta = moveEvent.clientX - startX
-        const nextWidths = [...startWidths]
-        const leftIndex = handleIndex
-        const rightIndex = handleIndex + 1
-        const pairWidth = startWidths[leftIndex] + startWidths[rightIndex]
-
-        const nextLeft = Math.min(
-          Math.max(
-            startWidths[leftIndex] + delta,
-            COLUMN_MIN_WIDTHS[leftIndex]
-          ),
-          pairWidth - COLUMN_MIN_WIDTHS[rightIndex]
-        )
-
-        nextWidths[leftIndex] = nextLeft
-        nextWidths[rightIndex] = pairWidth - nextLeft
-        setColumnRatios(nextWidths)
-      }
-
-      const stopResize = () => {
-        window.removeEventListener("pointermove", handlePointerMove)
-        window.removeEventListener("pointerup", stopResize)
-        window.removeEventListener("pointercancel", stopResize)
-      }
-
-      window.addEventListener("pointermove", handlePointerMove)
-      window.addEventListener("pointerup", stopResize)
-      window.addEventListener("pointercancel", stopResize)
-    },
-    [columnRatios]
+  // Staging from any existing content or graphics workflow selects the matching
+  // main Preview. The overlay panel does not need its own thumbnail.
+  useEffect(
+    () =>
+      useBroadcastStore.subscribe((state, previous) => {
+        if (
+          state.previewVerse !== previous.previewVerse &&
+          !isBackgroundPreviewStaging()
+        ) {
+          setPreviewMode("content")
+        } else if (state.stagedOverlays !== previous.stagedOverlays) {
+          setPreviewMode("overlays")
+        }
+      }),
+    []
   )
 
-  const startMiddleRowResize = useCallback(
-    (event: React.PointerEvent<HTMLButtonElement>) => {
-      event.preventDefault()
-      event.currentTarget.setPointerCapture(event.pointerId)
-
-      const column = middleColumnRef.current
-      if (!column) return
-
-      const startY = event.clientY
-      const availableHeight = column.clientHeight - HANDLE_HEIGHT
-      const ratioTotal = middleRowRatios.reduce((sum, ratio) => sum + ratio, 0)
-      const startHeights = middleRowRatios.map(
-        (ratio) => (ratio / ratioTotal) * availableHeight
-      )
-      const pairHeight = startHeights[0] + startHeights[1]
-
-      const handlePointerMove = (moveEvent: PointerEvent) => {
-        const delta = moveEvent.clientY - startY
-        const maxTop = Math.max(
-          ROW_MIN_HEIGHTS[0],
-          pairHeight - ROW_MIN_HEIGHTS[1]
-        )
-        const nextTop = Math.min(
-          Math.max(startHeights[0] + delta, ROW_MIN_HEIGHTS[0]),
-          maxTop
-        )
-
-        setMiddleRowRatiosByMode((current) => ({
-          ...current,
-          [searchMode]: [nextTop, pairHeight - nextTop],
-        }))
-      }
-
-      const stopResize = () => {
-        window.removeEventListener("pointermove", handlePointerMove)
-        window.removeEventListener("pointerup", stopResize)
-        window.removeEventListener("pointercancel", stopResize)
-      }
-
-      window.addEventListener("pointermove", handlePointerMove)
-      window.addEventListener("pointerup", stopResize)
-      window.addEventListener("pointercancel", stopResize)
-    },
-    [middleRowRatios, searchMode]
-  )
-
+  const showOverlayPreview = useCallback(() => setPreviewMode("overlays"), [])
   const handleSearchModeChange = useCallback((mode: SearchMode) => {
     setSearchMode(mode)
+    setPreviewMode(mode === "on-display" ? "overlays" : "content")
+    if (
+      mode === "songs" ||
+      mode === "announcements" ||
+      mode === "presentation"
+    ) {
+      setVisited((current) =>
+        current[mode] ? current : { ...current, [mode]: true }
+      )
+    }
     const section =
       mode === "songs"
         ? "songs"
@@ -371,8 +116,7 @@ export function Dashboard() {
           : mode === "presentation"
             ? "presentation"
             : "bible"
-    const broadcastStore = useBroadcastStore.getState()
-    broadcastStore.setSelectedThemeSection(section)
+    useBroadcastStore.getState().setSelectedThemeSection(section)
   }, [])
 
   return (
@@ -381,104 +125,234 @@ export function Dashboard() {
         position: "fixed",
         inset: "0px",
         display: "grid",
-        gridTemplateRows: "56px minmax(0, 1fr)",
+        gridTemplateRows: "auto minmax(0, 1fr)",
+        rowGap: "4px",
         overflow: "hidden",
       }}
       className="bg-background"
     >
       <div>
-        <TransportBar />
+        <TransportBar navigationRef={setNavigationTarget} />
+        <SermonSessionNotice />
       </div>
 
       <div
         ref={gridRef}
-        className="grid min-h-0 p-3 *:min-h-0"
+        className="grid min-h-0 bg-background *:min-h-0"
         style={{
-          gridTemplateColumns: `minmax(${COLUMN_MIN_WIDTHS[0]}px, ${columnRatios[0]}fr) ${HANDLE_WIDTH}px minmax(${COLUMN_MIN_WIDTHS[1]}px, ${columnRatios[1]}fr) ${HANDLE_WIDTH}px minmax(${COLUMN_MIN_WIDTHS[2]}px, ${columnRatios[2]}fr)`,
+          gridTemplateColumns:
+            focusedWorkspace === "media"
+              ? mediaColumnTemplate
+              : focusedWorkspace === "overlays"
+                ? overlayColumnTemplate
+                : columnTemplate,
         }}
       >
-        <SearchPanel onSearchModeChange={handleSearchModeChange} />
-        <ResizeHandle
-          label="Resize search and transcript columns"
-          onPointerDown={(event) => startColumnResize(0, event)}
+        <div
+          className="grid min-h-0 *:min-h-0"
+          onClickCapture={() =>
+            setPreviewMode(searchMode === "on-display" ? "overlays" : "content")
+          }
+          onKeyDownCapture={(event) => {
+            if (["Enter", " ", "ArrowUp", "ArrowDown"].includes(event.key)) {
+              setPreviewMode(
+                searchMode === "on-display" ? "overlays" : "content"
+              )
+            }
+          }}
+        >
+          <SearchPanel
+            navigationTarget={navigationTarget}
+            onSearchModeChange={handleSearchModeChange}
+          />
+        </div>
+        <DashboardResizeHandle
+          label={
+            focusedWorkspace === "media"
+              ? "Resize media library and editor columns"
+              : focusedWorkspace === "overlays"
+                ? "Resize saved looks and overlay controls columns"
+                : "Resize Bible and transcript columns"
+          }
+          onPointerDown={(event) =>
+            startColumnResize(0, event, focusedWorkspace)
+          }
+          onNudge={(amount) => nudgeColumn(0, amount, focusedWorkspace)}
         />
 
-        <div className="grid min-h-0 *:min-h-0">
+        <div
+          ref={middleRef}
+          className={
+            focusedWorkspace === "media"
+              ? "invisible grid min-h-0 min-w-0 overflow-hidden *:min-h-0"
+              : "grid min-h-0 min-w-0 *:min-h-0"
+          }
+          aria-hidden={focusedWorkspace === "media" || undefined}
+          style={{
+            gridTemplateRows:
+              focusedWorkspace === "overlays"
+                ? "0px 0px minmax(0, 1fr)"
+                : rowTemplate,
+          }}
+        >
+          <div
+            className={
+              focusedWorkspace === "overlays"
+                ? "invisible grid min-h-0 min-w-0 overflow-hidden *:min-h-0"
+                : "grid min-h-0 min-w-0 *:min-h-0"
+            }
+            aria-hidden={focusedWorkspace === "overlays" || undefined}
+          >
+            <TranscriptPanel isVisible={focusedWorkspace === null} />
+          </div>
+          <DashboardResizeHandle
+            direction="row"
+            label="Resize transcript and overlay pads"
+            isHidden={focusedWorkspace !== null}
+            onPointerDown={(event) => startRowResize("middle", event)}
+            onNudge={(amount) => nudgeRow("middle", amount)}
+          />
           <Suspense
             fallback={
               <div role="status" className="p-4 text-sm text-muted-foreground">
-                Loading workspace…
+                Loading overlay pads…
               </div>
             }
           >
-            {searchMode === "presentation" ? (
-              <div className="grid min-h-0 *:min-h-0">
-                <PresentationPanel />
-              </div>
-            ) : searchMode === "announcements" ? (
-              <div className="grid min-h-0 *:min-h-0">
-                <AnnouncementWorkspace />
-              </div>
-            ) : searchMode === "on-display" ? (
-              <div className="grid min-h-0 *:min-h-0">
-                <OnDisplayPanel />
-              </div>
-            ) : null}
+            <OnDisplayPanel onPreviewRequest={showOverlayPreview} />
           </Suspense>
-          <div
-            ref={middleColumnRef}
-            className={
-              searchMode === "presentation" ||
-              searchMode === "announcements" ||
-              searchMode === "on-display"
-                ? "hidden"
-                : "grid min-h-0 *:min-h-0"
+        </div>
+
+        <DashboardResizeHandle
+          label="Resize overlay and scripture queue columns"
+          isHidden={focusedWorkspace !== null}
+          onPointerDown={(event) => startColumnResize(1, event)}
+          onNudge={(amount) => nudgeColumn(1, amount)}
+        />
+        <div
+          className={
+            focusedWorkspace === "overlays"
+              ? "invisible grid min-h-0 min-w-0 overflow-hidden *:min-h-0"
+              : "grid min-h-0 min-w-0 *:min-h-0"
+          }
+          aria-hidden={focusedWorkspace === "overlays" || undefined}
+          onClickCapture={() => setPreviewMode("content")}
+          onKeyDownCapture={(event) => {
+            if (["Enter", " ", "ArrowUp", "ArrowDown"].includes(event.key)) {
+              setPreviewMode("content")
             }
-            style={{
-              gridTemplateRows: hideTranscript
-                ? "minmax(0, 1fr)"
-                : `minmax(${ROW_MIN_HEIGHTS[0]}px, ${middleRowRatios[0]}fr) ${HANDLE_HEIGHT}px minmax(${ROW_MIN_HEIGHTS[1]}px, ${middleRowRatios[1]}fr)`,
-            }}
+          }}
+          style={{
+            gridTemplateRows:
+              hasAuxiliaryWorkspace && showSermonWorkspace
+                ? "minmax(0, 0.42fr) minmax(0, 0.58fr)"
+                : "minmax(0, 1fr)",
+          }}
+        >
+          <div
+            className={
+              showSermonWorkspace ? "grid min-h-0 *:min-h-0" : "hidden"
+            }
           >
-            {/* The transcript stays mounted on Songs: it also listens for
-                detected verses and the audio level. */}
-            <div
-              className={hideTranscript ? "hidden" : "grid min-h-0 *:min-h-0"}
-            >
-              <TranscriptPanel />
-            </div>
-            {hideTranscript ? null : (
-              <RowResizeHandle
-                label="Resize transcript and queue rows"
-                onPointerDown={startMiddleRowResize}
-              />
-            )}
             <QueuePanel
-              mode={
-                searchMode === "songs" ||
-                searchMode === "context" ||
-                searchMode === "timer"
-                  ? searchMode
-                  : "book"
-              }
+              mode={searchMode === "context" ? "context" : "book"}
+              isActive={showSermonWorkspace}
+              splitRef={queueRef}
+              rowTemplate={queueRowTemplate}
+              onResizeStart={(event) => startRowResize("queue", event)}
+              onResizeNudge={(amount) => nudgeRow("queue", amount)}
             />
           </div>
+          <div
+            className={
+              hasAuxiliaryWorkspace ? "grid min-h-0 *:min-h-0" : "hidden"
+            }
+          >
+            {visited.songs ? (
+              <div
+                className={
+                  searchMode === "songs" ? "grid min-h-0 *:min-h-0" : "hidden"
+                }
+              >
+                <SongsQueuePanel isActive={searchMode === "songs"} />
+              </div>
+            ) : null}
+            <Suspense
+              fallback={
+                <div
+                  role="status"
+                  className="p-4 text-sm text-muted-foreground"
+                >
+                  Loading workspace…
+                </div>
+              }
+            >
+              {visited.presentation ? (
+                <div
+                  className={
+                    searchMode === "presentation"
+                      ? "grid min-h-0 *:min-h-0"
+                      : "hidden"
+                  }
+                >
+                  <PresentationPanel isActive={searchMode === "presentation"} />
+                </div>
+              ) : null}
+              {visited.announcements ? (
+                <div
+                  className={
+                    searchMode === "announcements"
+                      ? "grid min-h-0 *:min-h-0"
+                      : "hidden"
+                  }
+                >
+                  <AnnouncementWorkspace
+                    isActive={searchMode === "announcements"}
+                  />
+                </div>
+              ) : null}
+            </Suspense>
+          </div>
         </div>
-        <ResizeHandle
-          label="Resize transcript and display columns"
-          onPointerDown={(event) => startColumnResize(1, event)}
+        <DashboardResizeHandle
+          label={
+            focusedWorkspace
+              ? "Resize workspace and display columns"
+              : "Resize scripture queue and display columns"
+          }
+          onPointerDown={(event) =>
+            startColumnResize(focusedWorkspace ? 1 : 2, event, focusedWorkspace)
+          }
+          onNudge={(amount) =>
+            nudgeColumn(focusedWorkspace ? 1 : 2, amount, focusedWorkspace)
+          }
         />
 
-        <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch gap-3 overflow-y-auto overscroll-contain pr-1 *:min-h-0">
-          <LiveOutputPanel mode={searchMode} />
-          <PreviewPanel mode={searchMode} />
+        <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch overflow-y-auto overscroll-contain bg-background *:min-h-0 [&>*+*]:border-t-4 [&>*+*]:border-background">
+          <div
+            role="group"
+            aria-label="Live and preview"
+            className="flex shrink-0 flex-col gap-3 overflow-hidden bg-card p-3"
+          >
+            <LiveOutputPanel
+              mode={searchMode}
+              overlayActionPending={overlayActionPending}
+            />
+            <PreviewPanel
+              mode={searchMode}
+              previewMode={previewMode}
+              onPreviewModeChange={setPreviewMode}
+              overlayActionPending={overlayActionPending}
+              onOverlayActionPendingChange={setOverlayActionPending}
+            />
+          </div>
           <OutputsMultiviewPanel mode={searchMode} />
-          {searchMode !== "timer" &&
-            searchMode !== "presentation" &&
-            searchMode !== "on-display" && <ThemesPanel mode={searchMode} />}
-          {searchMode !== "timer" && searchMode !== "on-display" && (
+          {searchMode !== "presentation" && searchMode !== "on-display" ? (
+            <ThemesPanel mode={searchMode} />
+          ) : null}
+          {SHOW_MOTION_PANEL && searchMode !== "on-display" ? (
             <MotionPanel mode={searchMode} />
-          )}
+          ) : null}
         </div>
       </div>
     </div>

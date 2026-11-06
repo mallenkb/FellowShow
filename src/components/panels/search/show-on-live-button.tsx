@@ -16,9 +16,9 @@ export function ShowOnLiveButton({
       type="button"
       variant="ghost"
       size="icon"
-      className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
+      className="size-7 shrink-0 text-muted-foreground hover:text-primary-emphasis"
       aria-label={`Show ${label} on Live`}
-      title={disabled ? "Add text to show this on Live" : "Show on Live now"}
+      title={disabled ? "Add text to show this on Live" : "Show on Live"}
       disabled={disabled}
       onClick={(event) => {
         event.stopPropagation()
@@ -53,7 +53,7 @@ export function LiveStopTag({ label }: { label: string }) {
 
 export function NextTag() {
   return (
-    <span className="shrink-0 rounded border border-blue-500/60 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-blue-400">
+    <span className="shrink-0 rounded border border-blue-500/60 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-blue-700 dark:text-blue-400">
       NEXT
     </span>
   )

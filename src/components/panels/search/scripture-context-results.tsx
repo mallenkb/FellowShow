@@ -24,7 +24,7 @@ export function ScriptureContextResults({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="flex flex-col gap-0 p-2">
+      <div className="flex flex-col gap-0 px-3 py-2">
         {controller.contextQuery.trim().length < 2 ? (
           <p className="p-4 text-center text-xs text-muted-foreground">
             Search by meaning. Type a phrase, paraphrase, or topic.
@@ -62,32 +62,35 @@ export function ScriptureContextResults({
               verse={verse}
               translation={translation}
             >
-              <div
-                onClick={() => {
-                  bibleActions.selectVerse(verse)
-                  stageVerse(verse)
-                }}
-                onDoubleClick={() =>
-                  useBroadcastStore
-                    .getState()
-                    .presentOnLive(toVerseRenderData(verse, translation), null)
-                }
-                className="group relative flex cursor-pointer flex-col gap-1 rounded-lg p-3 transition-colors hover:bg-muted/50"
-              >
-                <div className="flex shrink-0 flex-row items-start gap-2">
-                  <span className="text-xs font-semibold">
-                    {reference} · {translation}
+              <div className="group relative rounded-lg transition-colors hover:bg-muted/50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    bibleActions.selectVerse(verse)
+                    stageVerse(verse)
+                  }}
+                  onDoubleClick={() =>
+                    useBroadcastStore
+                      .getState()
+                      .presentOnLive(toVerseRenderData(verse, translation))
+                  }
+                  className="flex w-full cursor-pointer flex-col gap-1 rounded-lg p-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+                >
+                  <span className="flex shrink-0 flex-row items-start gap-2">
+                    <span className="text-xs font-semibold">
+                      {reference} · {translation}
+                    </span>
+                    <span className="mt-0.5 text-[0.625rem] font-semibold text-green-700 dark:text-green-400">
+                      {Math.round(result.similarity * 100)}%
+                    </span>
                   </span>
-                  <span className="mt-0.5 text-[0.625rem] font-semibold text-green-600 dark:text-green-400">
-                    {Math.round(result.similarity * 100)}%
+                  <span className="text-xs leading-relaxed text-muted-foreground">
+                    <HighlightedText
+                      text={result.verse_text}
+                      query={controller.contextQuery}
+                    />
                   </span>
-                </div>
-                <p className="flex-1 text-xs leading-relaxed text-muted-foreground">
-                  <HighlightedText
-                    text={result.verse_text}
-                    query={controller.contextQuery}
-                  />
-                </p>
+                </button>
                 <SendToOverlayButton
                   label={reference}
                   getContent={() => verseContent(verse, translation)}

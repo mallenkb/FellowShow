@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import type { RefObject } from "react"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -16,11 +16,12 @@ import type {
 export function ScriptureToolbar({
   controller,
   mode,
+  searchInputRef,
 }: {
   controller: ScriptureSearchController
   mode: ScriptureSearchMode
+  searchInputRef?: RefObject<HTMLInputElement | null>
 }) {
-  const quickInputRef = useRef<HTMLInputElement>(null)
   if (!controller.hasAvailableScripture) return null
 
   const translationSelect = (
@@ -40,7 +41,7 @@ export function ScriptureToolbar({
   )
 
   return (
-    <div className="flex shrink-0 flex-col gap-2 border-b border-border px-3 pt-2.5 pb-3">
+    <div className="flex shrink-0 flex-col gap-2 bg-surface-header px-3 pt-2.5 pb-3">
       <div className="flex min-w-0 items-center gap-2">
         {mode === "book" ? (
           <div className="relative min-w-0 flex-1">
@@ -60,15 +61,17 @@ export function ScriptureToolbar({
               </div>
             ) : null}
             <Input
-              ref={quickInputRef}
+              ref={searchInputRef}
               data-tour="quick-nav"
+              aria-label="Search Bible"
+              aria-keyshortcuts="/"
               value={controller.quickInput}
               onChange={(event) => controller.setQuickInput(event.target.value)}
               onKeyDown={controller.handleQuickKeyDown}
               placeholder="Type: J → John 3:16"
               title="Type a reference, scripture phrase, or description."
               className={cn(
-                "relative h-10 bg-background text-sm",
+                "relative h-10 text-sm",
                 controller.quickSuggestion &&
                   controller.quickSuggestion !== controller.quickInput &&
                   "text-transparent"
@@ -91,7 +94,7 @@ export function ScriptureToolbar({
                       onClick={() => controller.handleQuickVerseClick(verse)}
                       className="flex w-full items-start gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
                     >
-                      <span className="w-6 shrink-0 text-right font-semibold text-[#101084] dark:text-[#F1E600]">
+                      <span className="w-6 shrink-0 text-right font-semibold text-primary-emphasis">
                         {verse.verse}
                       </span>
                       <span className="line-clamp-1 flex-1 text-muted-foreground">
@@ -105,6 +108,9 @@ export function ScriptureToolbar({
           </div>
         ) : (
           <Input
+            ref={searchInputRef}
+            aria-label="Search Bible by phrase or topic"
+            aria-keyshortcuts="/"
             placeholder="Phrase, meaning, or topic..."
             value={controller.contextQuery}
             onChange={(event) =>
@@ -129,7 +135,7 @@ export function ScriptureToolbar({
                 className={cn(
                   "h-6 shrink-0 rounded-md border px-2 text-[0.6875rem] font-medium transition-colors",
                   isActive
-                    ? "border-[#101084]/50 bg-[#101084]/15 text-[#101084] dark:border-[#F1E600]/50 dark:bg-[#F1E600]/15 dark:text-[#F1E600]"
+                    ? "border-primary-emphasis/50 bg-primary/15 text-primary-emphasis"
                     : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:bg-background/40"
                 )}
               >

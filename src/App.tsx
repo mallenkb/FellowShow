@@ -3,28 +3,18 @@ import { Dashboard } from "@/components/layout/dashboard"
 import { useRemoteControl } from "@/hooks/use-remote-control"
 import { useTauriEvent } from "@/hooks/use-tauri-event"
 import { Toaster } from "sonner"
-import { useBroadcastStore, usePresenterTimerStore } from "@/stores"
+import { useBroadcastStore } from "@/stores"
 import AppUpdater from "@/components/app-updater"
+import { SermonSessionDialog } from "@/components/controls/sermon-session-dialog"
+import { SermonDeleteDialog } from "@/components/controls/sermon-delete-dialog"
+import { StartScreen } from "@/components/home/start-screen"
+import { useAppNavigationStore } from "@/stores/app-navigation-store"
 
 const TutorialOverlay = lazy(() =>
   import("@/components/tutorial/tutorial-overlay").then((module) => ({
     default: module.TutorialOverlay,
   }))
 )
-
-function PresenterTimerTicker() {
-  const isRunning = usePresenterTimerStore((s) => s.isRunning)
-  const tick = usePresenterTimerStore((s) => s.tick)
-
-  useEffect(() => {
-    if (!isRunning) return
-
-    const interval = window.setInterval(() => tick(), 1000)
-    return () => window.clearInterval(interval)
-  }, [isRunning, tick])
-
-  return null
-}
 
 function BroadcastOutputSync() {
   // Broadcast windows announce themselves once their webview finishes loading,
@@ -44,6 +34,7 @@ function BroadcastOutputSync() {
 function App() {
   useRemoteControl()
   const [tutorialReady, setTutorialReady] = useState(false)
+  const home = useAppNavigationStore((state) => state.screen === "home")
 
   useEffect(() => {
     const timer = window.setTimeout(() => setTutorialReady(true), 250)
@@ -52,11 +43,16 @@ function App() {
 
   return (
     <>
-      <PresenterTimerTicker />
       <BroadcastOutputSync />
       <AppUpdater />
-      <Dashboard />
-      {tutorialReady ? (
+      <SermonSessionDialog />
+      <SermonDeleteDialog />
+      {/* Keep transcription subscriptions and unfinished workspace edits mounted. */}
+      <div hidden={home} inert={home}>
+        <Dashboard />
+      </div>
+      {home ? <StartScreen /> : null}
+      {tutorialReady && !home ? (
         <Suspense fallback={null}>
           <TutorialOverlay />
         </Suspense>

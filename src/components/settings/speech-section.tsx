@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
-import { CheckIcon, CloudIcon, MonitorIcon } from "lucide-react"
+import { CheckIcon } from "lucide-react"
 import { UnlockSavedKeys } from "./unlock-saved-keys"
 
 export function SpeechSection() {
@@ -83,7 +83,7 @@ export function SpeechSection() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="@container/speech flex flex-col gap-6">
       {/* Provider selector */}
       <div className="flex flex-col gap-3">
         <label className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -91,15 +91,16 @@ export function SpeechSection() {
         </label>
 
         <RadioGroup
+          aria-label="Speech recognition provider"
           value={sttProvider}
           onValueChange={(v) =>
             setSttProvider(v as "deepgram" | "openai" | "groq" | "whisper")
           }
-          className="gap-3"
+          className="grid gap-3 @[34rem]/speech:grid-cols-2"
         >
           {/* Deepgram (cloud) */}
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20 ${
               sttProvider !== "deepgram"
                 ? "hover:border-muted-foreground/25"
                 : ""
@@ -111,16 +112,14 @@ export function SpeechSection() {
                 Cloud (Deepgram)
               </span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Uses Deepgram Nova-3 for real-time streaming transcription.
-                Requires an API key and internet connection. Best accuracy with
-                keyword boosting for Bible terms.
+                Nova-3 streams transcription with Bible term support. Requires
+                an API key and internet connection.
               </p>
             </div>
-            <CloudIcon className="mt-0.5 ml-auto size-4 shrink-0 text-muted-foreground" />
           </label>
 
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20 ${
               sttProvider !== "openai" ? "hover:border-muted-foreground/25" : ""
             }`}
           >
@@ -130,16 +129,13 @@ export function SpeechSection() {
                 Cloud (OpenAI)
               </span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Uses OpenAI gpt-4o-mini-transcribe on short audio chunks. Good
-                for accurate cloud transcription when low-latency partials are
-                not required.
+                Uses gpt-4o-mini-transcribe on short audio chunks.
               </p>
             </div>
-            <CloudIcon className="mt-0.5 ml-auto size-4 shrink-0 text-muted-foreground" />
           </label>
 
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20 ${
               sttProvider !== "groq" ? "hover:border-muted-foreground/25" : ""
             }`}
           >
@@ -149,16 +145,14 @@ export function SpeechSection() {
                 Cloud (Groq)
               </span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Uses Groq whisper-large-v3-turbo on short audio chunks. Fast
-                cloud transcription through Groq's OpenAI-compatible API.
+                Uses whisper-large-v3-turbo on short audio chunks.
               </p>
             </div>
-            <CloudIcon className="mt-0.5 ml-auto size-4 shrink-0 text-muted-foreground" />
           </label>
 
           {/* Whisper (local) */}
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary/20 ${
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20 ${
               sttProvider !== "whisper"
                 ? "hover:border-muted-foreground/25"
                 : ""
@@ -170,11 +164,10 @@ export function SpeechSection() {
                 Local (Whisper)
               </span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Runs Whisper large-v3-turbo locally on your device. Fully
-                offline, no API key needed. Audio never leaves your machine.
+                Runs Whisper large-v3-turbo offline. Audio stays on your device
+                and no API key is needed.
               </p>
             </div>
-            <MonitorIcon className="mt-0.5 ml-auto size-4 shrink-0 text-muted-foreground" />
           </label>
         </RadioGroup>
       </div>
@@ -197,14 +190,14 @@ export function SpeechSection() {
               </Badge>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Input
               type="password"
               disabled={!secretsUnlocked}
               placeholder={`Enter your ${sttProvider === "deepgram" ? "Deepgram" : sttProvider === "openai" ? "OpenAI" : "Groq"} API key...`}
               value={keyValue}
               onChange={(e) => setKeyValue(e.target.value)}
-              className="flex-1 text-xs"
+              className="min-w-0 flex-[1_1_12rem] text-xs"
             />
             <Button
               size="sm"
@@ -229,13 +222,12 @@ export function SpeechSection() {
               )}
             </Button>
           </div>
-          <p className="text-[0.625rem] text-muted-foreground">
-            Required for this cloud transcription provider.
-          </p>
           {connectionResult && (
             <p
               className={`text-[0.625rem] ${
-                connectionResult.ok ? "text-emerald-600" : "text-red-500"
+                connectionResult.ok
+                  ? "text-emerald-700 dark:text-emerald-600"
+                  : "text-red-700 dark:text-red-500"
               }`}
             >
               {connectionResult.message}

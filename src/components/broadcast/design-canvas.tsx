@@ -433,7 +433,7 @@ export function DesignCanvas() {
               aria-pressed={showGrid}
               className={cn(
                 "gap-1.5 text-muted-foreground",
-                showGrid && "bg-primary/15 text-primary"
+                showGrid && "bg-primary/15 text-primary-emphasis"
               )}
             >
               <Grid3X3Icon className="size-3" />
@@ -538,7 +538,9 @@ export function DesignCanvas() {
           {selectedElement ? (
             <>
               Editing:{" "}
-              <span className="font-medium text-primary">{elementLabel}</span>
+              <span className="font-medium text-primary-emphasis">
+                {elementLabel}
+              </span>
             </>
           ) : (
             "Click frame to select"

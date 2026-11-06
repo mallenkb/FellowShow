@@ -9,16 +9,16 @@ function formatRenderError(error: unknown): string {
 
 function StartupErrorPanel({ error }: { error: unknown }) {
   return (
-    <main className="min-h-screen bg-neutral-950 p-8 font-sans text-neutral-100">
+    <main className="min-h-screen bg-background p-8 font-sans text-foreground">
       <div className="mx-auto max-w-3xl">
         <h1 className="text-2xl font-semibold tracking-tight">
           FellowShow could not render
         </h1>
-        <p className="mt-3 text-sm text-neutral-400">
+        <p className="mt-3 text-sm text-muted-foreground">
           The local app started, but React hit an error before the dashboard
           could appear.
         </p>
-        <pre className="mt-6 max-h-[72vh] overflow-auto rounded-lg border border-neutral-700 bg-black p-4 text-xs leading-relaxed text-neutral-200">
+        <pre className="mt-6 max-h-[72vh] overflow-auto rounded-lg border border-border bg-card p-4 text-xs leading-relaxed text-card-foreground">
           {formatRenderError(error)}
         </pre>
       </div>

@@ -28,7 +28,8 @@ function readFilters(): typeof defaults {
       source:
         "source" in value &&
         typeof value.source === "string" &&
-        sources.includes(value.source)
+        (sources.includes(value.source) ||
+          value.source.startsWith("collection:"))
           ? (value.source as SongSourceFilter)
           : "all",
     }

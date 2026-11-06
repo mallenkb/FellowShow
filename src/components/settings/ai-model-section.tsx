@@ -5,7 +5,6 @@ import {
   EyeOffIcon,
   KeyRoundIcon,
   LoaderCircleIcon,
-  SparklesIcon,
   XIcon,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -218,18 +217,10 @@ export function AiModelSection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/15 p-3">
-        <SparklesIcon className="mt-0.5 size-4 shrink-0 text-primary" />
-        <div className="min-w-0">
-          <p className="text-xs font-medium">Sermon intelligence provider</p>
-          <p className="mt-1 text-[0.6875rem] leading-relaxed text-muted-foreground">
-            Live Notes and Preaching Summary use the selected provider. Related
-            Scriptures use the Deepgram transcript and local Bible matching;
-            direct transcript references and manual workflows remain available
-            without an AI key.
-          </p>
-        </div>
-      </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        This provider creates live and sermon notes. Scripture detection and
+        manual controls work without an AI key.
+      </p>
 
       <AiProviderSelector provider={provider} onChange={setProvider} />
       <UnlockSavedKeys />
@@ -306,9 +297,7 @@ export function AiModelSection() {
           className="font-mono text-xs"
         />
         <span className="text-[0.625rem] leading-relaxed text-muted-foreground">
-          Selecting a model above fills this field. You can also paste a
-          compatible model ID when a model is custom or temporarily missing from
-          the provider list.
+          Choose a model above or enter a compatible model ID.
         </span>
       </label>
 
@@ -350,7 +339,7 @@ export function AiModelSection() {
             <span
               className={`text-[0.625rem] ${
                 connectionState === "success"
-                  ? "text-emerald-500"
+                  ? "text-emerald-700 dark:text-emerald-500"
                   : "text-destructive"
               }`}
             >

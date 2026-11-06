@@ -24,6 +24,8 @@ export interface Verse {
   book_abbreviation: string
   chapter: number
   verse: number
+  verse_end?: number | null
+  verse_parts?: { verse: number; text: string }[]
   text: string
 }
 

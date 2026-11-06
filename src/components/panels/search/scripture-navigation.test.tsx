@@ -10,6 +10,7 @@ import { useBroadcastStore } from "@/stores/broadcast-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
 import { useSermonStore } from "@/stores/sermon-store"
 import { useQueueStore } from "@/stores/queue-store"
+import { useSettingsStore } from "@/stores/settings-store"
 import { bibleActions } from "@/hooks/use-bible"
 import { stageVerse } from "@/lib/preview-staging"
 import type { DetectionResult, Verse } from "@/types"
@@ -142,7 +143,6 @@ beforeEach(() => {
   })
   useBroadcastStore.setState({
     previewVerse: null,
-    previewTimer: null,
     liveVerse: null,
     isLive: false,
   })
@@ -153,6 +153,7 @@ beforeEach(() => {
     currentPartial: "",
   })
   useSermonStore.setState({ activeSessionId: null })
+  useSettingsStore.setState({ hiddenTranslationIds: [] })
   useQueueStore.getState().clearQueue()
   native.invoke.mockImplementation((command: string) => {
     if (command === "list_translations") return Promise.resolve([translation])
@@ -169,6 +170,37 @@ afterEach(() => {
 })
 
 describe("automatic scripture navigation", () => {
+  it("asks for a default when a downloaded translation is hidden or not selected", async () => {
+    useBibleStore.setState({ activeTranslationId: 0 })
+    useSettingsStore.setState({ hiddenTranslationIds: [translation.id] })
+    render(<Workspace />)
+
+    expect(await screen.findByText("Choose a Bible version")).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Choose Bible version" })
+    ).toBeTruthy()
+    expect(screen.queryByText("No Scripture downloaded")).toBeNull()
+  })
+
+  it("still offers a download when no translation is installed", async () => {
+    const unavailable = { ...translation, is_downloaded: false }
+    useBibleStore.setState({
+      activeTranslationId: 0,
+      translations: [unavailable],
+    })
+    native.invoke.mockImplementation((command: string) =>
+      command === "list_translations"
+        ? Promise.resolve([unavailable])
+        : Promise.resolve(undefined)
+    )
+    render(<Workspace />)
+
+    expect(await screen.findByText("No Scripture downloaded")).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Download Scripture" })
+    ).toBeTruthy()
+  })
+
   it("selects and scrolls John 3:16 when its verse lookup finishes before chapter loading, and preserves it on Stop", async () => {
     const chapter = deferred<Verse[]>()
     native.invoke.mockImplementation((command: string) => {
@@ -202,8 +234,8 @@ describe("automatic scripture navigation", () => {
 
     await userEvent
       .setup()
-      .click(screen.getByRole("button", { name: "Stop transcribing" }))
-    await screen.findByRole("button", { name: "Start transcribing" })
+      .click(screen.getByRole("button", { name: "Stop sermon" }))
+    await screen.findByRole("button", { name: "Start sermon" })
     expect(screen.getByText(target.text)).toBeTruthy()
     expect(useBibleStore.getState().selectedVerse).toEqual(target)
     expect(useBroadcastStore.getState().previewVerse?.reference).toBe(

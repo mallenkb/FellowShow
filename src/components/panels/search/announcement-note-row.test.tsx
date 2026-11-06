@@ -73,13 +73,11 @@ describe("Announcement note live controls", () => {
     useBroadcastStore.setState({
       isLive: false,
       liveVerse: null,
-      presenterTimer: null,
       previewVerse: null,
-      previewTimer: null,
     })
     vi.spyOn(useBroadcastStore.getState(), "presentOnLive").mockImplementation(
-      (liveVerse, presenterTimer) => {
-        useBroadcastStore.setState({ isLive: true, liveVerse, presenterTimer })
+      (liveVerse) => {
+        useBroadcastStore.setState({ isLive: true, liveVerse })
       }
     )
   })
@@ -142,7 +140,6 @@ describe("Announcement note live controls", () => {
         item.id,
         useBroadcastStore.getState().themes
       ),
-      presenterTimer: null,
     })
     renderRow()
     await user.dblClick(
@@ -282,7 +279,6 @@ describe("Announcement note live controls", () => {
         item.id,
         useBroadcastStore.getState().themes
       ),
-      null,
       "manual"
     )
   })
@@ -318,7 +314,6 @@ describe("Announcement note live controls", () => {
         item.id,
         useBroadcastStore.getState().themes
       ),
-      null,
       "manual"
     )
   })

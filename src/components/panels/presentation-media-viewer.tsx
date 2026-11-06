@@ -9,6 +9,7 @@ import {
   ZoomOutIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LiveActionButton } from "@/components/ui/live-action-button"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -41,8 +42,10 @@ const FIT_OPTIONS = [
 
 export function PresentationMediaViewer({
   slide,
+  isActive = true,
 }: {
   slide: PresentationSlide
+  isActive?: boolean
 }) {
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null)
   const [isDropTarget, setIsDropTarget] = useState(false)
@@ -113,7 +116,7 @@ export function PresentationMediaViewer({
       .slides.find((item) => item.id === slide.id)
     if (!current) return
     usePresentationStore.getState().selectSlide(current.id)
-    useBroadcastStore.getState().presentOnLive(slideRenderData(current), null)
+    useBroadcastStore.getState().presentOnLive(slideRenderData(current))
   }
 
   return (
@@ -121,7 +124,7 @@ export function PresentationMediaViewer({
       ref={sectionRef}
       tabIndex={-1}
       onKeyDown={handleKeyDown}
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card outline-none"
+      className="flex min-h-0 flex-1 flex-col overflow-hidden bg-card outline-none"
     >
       <input
         ref={inputRef}
@@ -135,7 +138,7 @@ export function PresentationMediaViewer({
         }}
       />
       <div
-        className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border p-2"
+        className="flex shrink-0 flex-wrap items-center gap-1 px-3 py-2"
         role="group"
         aria-label="Media controls"
       >
@@ -282,13 +285,11 @@ export function PresentationMediaViewer({
           >
             <PlusIcon /> Add media
           </Button>
-          <Button type="button" size="sm" onClick={takeLive}>
-            Show on Live
-          </Button>
+          <LiveActionButton action="show" onClick={takeLive} />
         </div>
       </div>
       <div
-        className={`relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted/25 p-4 ${isDropTarget ? "ring-2 ring-primary ring-inset" : ""}`}
+        className={`relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted/25 p-4 ${isDropTarget ? "ring-2 ring-primary-emphasis ring-inset" : ""}`}
         onPointerDownCapture={() =>
           sectionRef.current?.focus({ preventScroll: true })
         }
@@ -350,6 +351,7 @@ export function PresentationMediaViewer({
           <ContextMenuTrigger asChild disabled={slide.locked}>
             <div className="contents">
               <PresentationMediaCanvas
+                playing={isActive}
                 key={`${slide.id}:${selected.id}`}
                 media={selected}
                 layers={layers}

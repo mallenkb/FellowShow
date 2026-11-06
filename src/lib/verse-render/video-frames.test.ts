@@ -2,15 +2,11 @@
 
 import { describe, expect, it, vi } from "vitest"
 import { BUILTIN_THEMES } from "@/lib/builtin-themes"
-import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
-import {
-  drawBackground,
-  drawPresentationImage,
-  drawPresenterTimerBackground,
-} from "./draw"
+import type { VerseRenderData } from "@/types"
+import { drawBackground, drawPresentationImage } from "./draw"
 
 describe("video canvas frames", () => {
-  it.each(["presentation", "theme", "timer"] as const)(
+  it.each(["presentation", "theme"] as const)(
     "skips %s video during a seek and draws the next decoded frame",
     (kind) => {
       const video = document.createElement("video")
@@ -45,7 +41,7 @@ describe("video canvas frames", () => {
             },
           }
           drawPresentationImage(ctx, theme, verse, undefined, cache)
-        } else if (kind === "theme") {
+        } else {
           theme.background = {
             type: "image",
             color: "#000000",
@@ -60,17 +56,6 @@ describe("video canvas frames", () => {
             },
           }
           drawBackground(ctx, theme, undefined, cache)
-        } else {
-          const timer: PresenterTimerRenderData = {
-            remainingSeconds: 30,
-            totalSeconds: 60,
-            isRunning: true,
-            isFinished: false,
-            fontFamily: "Inter",
-            backgroundUrl: url,
-            backgroundMediaType: "video",
-          }
-          drawPresenterTimerBackground(ctx, theme, timer, undefined, cache)
         }
       }
       draw()

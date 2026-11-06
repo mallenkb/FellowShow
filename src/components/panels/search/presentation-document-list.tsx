@@ -29,7 +29,7 @@ export function PresentationDocumentList({
             className={cn(
               "flex items-center gap-3 rounded-lg border p-3 transition-colors",
               isActive
-                ? "border-[#101084]/60 bg-[#101084]/10 dark:border-[#F1E600] dark:bg-[#F1E600]/4"
+                ? "border-transparent bg-primary/20 dark:border-primary-emphasis dark:bg-primary/4"
                 : "border-border bg-background/30 hover:bg-muted/40"
             )}
           >

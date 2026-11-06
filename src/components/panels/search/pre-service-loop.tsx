@@ -23,7 +23,7 @@ export function PreServiceLoop({ set }: { set: AnnouncementSet }) {
   const running = runningSetId === set.id
   const pageCount = paginateAnnouncementSet(set).length
   return (
-    <div className="mt-auto flex shrink-0 flex-col gap-2 rounded-lg border border-border bg-background/60 p-2.5">
+    <div className="mt-auto flex shrink-0 flex-col gap-2 rounded-lg border border-border bg-background/60 px-3 py-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-medium">Before the service</span>
         <Button

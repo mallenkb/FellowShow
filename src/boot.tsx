@@ -39,8 +39,8 @@ createRoot(root).render(
 // left running from the previous webview session still has
 // `stt_active = true`. That makes the next `start_transcription` call
 // fail silently with "Transcription is already running". Reset the
-// backend and transcript UI to a clean state on boot, then hydrate
-// persisted settings and bible store without blocking the first paint.
+// backend to an idle state on boot. Unfinished sermons retain their own
+// transcript checkpoints and are restored only when the operator continues.
 if (isTauri()) {
   const ready = invoke("stop_transcription")
     .catch(() => {})

@@ -1,11 +1,10 @@
 import { useState } from "react"
-import { LayersIcon, PaletteIcon, VideoIcon } from "lucide-react"
 import { OverlaySamplePreviewDialog } from "@/components/on-display/overlay-sample-preview-dialog"
-import { Button } from "@/components/ui/button"
-import { PanelHeader } from "@/components/ui/panel-header"
 import { AddGraphicDialog } from "@/components/on-display/add-graphic-dialog"
 import { OverlayEditorDialog } from "@/components/on-display/overlay-editor-dialog"
 import { OverlayAppearanceDialog } from "@/components/on-display/overlay-appearance-dialog"
+import { DskOutputControls } from "@/components/on-display/dsk-output-controls"
+import { OverlayLiveControls } from "@/components/on-display/overlay-live-controls"
 import {
   OverlayPads,
   type OverlayPadKind,
@@ -19,7 +18,11 @@ interface EditorState {
   key: number
 }
 
-export function OnDisplayPanel() {
+export function OnDisplayPanel({
+  onPreviewRequest,
+}: {
+  onPreviewRequest?: () => void
+}) {
   const [samplePreviewOpen, setSamplePreviewOpen] = useState(false)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const [appearanceKey, setAppearanceKey] = useState(0)
@@ -32,39 +35,17 @@ export function OnDisplayPanel() {
   }
 
   return (
-    <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card">
-      <PanelHeader
-        title="Overlay pads"
-        icon={<LayersIcon className="size-3.5" />}
-      >
-        <span className="hidden items-center gap-1 text-[0.6875rem] text-muted-foreground lg:flex">
-          <kbd className="rounded border border-border px-1 font-mono">1</kbd>
-          to
-          <kbd className="rounded border border-border px-1 font-mono">9</kbd>
-          toggle pads
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => {
+    <div className="flex min-h-0 flex-col overflow-hidden bg-card">
+      <div className="@container/overlay shrink-0 bg-surface-header">
+        <DskOutputControls
+          onPreviewRequest={onPreviewRequest}
+          onAppearanceRequest={() => {
             setAppearanceKey((key) => key + 1)
             setAppearanceOpen(true)
           }}
-        >
-          <PaletteIcon /> Appearance
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Test over sample video"
-          title="Test over sample video"
-          onClick={() => setSamplePreviewOpen(true)}
-        >
-          <VideoIcon />
-        </Button>
-      </PanelHeader>
+          onSamplePreviewRequest={() => setSamplePreviewOpen(true)}
+        />
+      </div>
       <OverlaySamplePreviewDialog
         open={samplePreviewOpen}
         onOpenChange={setSamplePreviewOpen}
@@ -78,8 +59,11 @@ export function OnDisplayPanel() {
         <OverlayPads
           onAddRequest={() => setAddOpen(true)}
           onEdit={openEditor}
+          onPreviewRequest={onPreviewRequest}
+          compact
         />
       </div>
+      <OverlayLiveControls />
       <AddGraphicDialog
         open={addOpen}
         onOpenChange={setAddOpen}

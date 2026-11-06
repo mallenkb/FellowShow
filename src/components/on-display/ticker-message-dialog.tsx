@@ -8,15 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { useBroadcastStore } from "@/stores"
 import type { TickerMessage, TickerOverlayConfig } from "@/types"
 import { DeleteGraphicButton } from "./delete-graphic-button"
 import { OutputTargetSelector } from "./output-target-selector"
 import { OverlayDesignPreview } from "./overlay-design-preview"
 import { TickerDesignFields } from "./ticker-design-fields"
-
-const TEXTAREA_CLASS =
-  "min-h-28 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
 
 /** A message's look: its own values where set, else the shared look. */
 function lookFor(
@@ -120,12 +118,12 @@ export function TickerMessageDialog({
           <div className="grid content-start gap-3">
             <label className="grid gap-1 text-xs font-medium">
               Message
-              <textarea
+              <Textarea
                 value={text}
                 rows={5}
                 autoFocus
                 placeholder="Type what should scroll"
-                className={TEXTAREA_CLASS}
+                className="min-h-28 resize-y"
                 onChange={(event) => setText(event.target.value)}
               />
             </label>

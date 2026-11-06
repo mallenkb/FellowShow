@@ -19,7 +19,7 @@ export function ScriptureBookGrid({
   onSelect: (book: Book) => void
 }) {
   return (
-    <div className="flex flex-col gap-4 p-3">
+    <div className="flex flex-col gap-4 px-[12px] py-[4px]">
       {TESTAMENTS.map((testament) => {
         const testamentBooks = books.filter(
           (book) => book.testament === testament.id
@@ -27,10 +27,10 @@ export function ScriptureBookGrid({
         if (testamentBooks.length === 0) return null
         return (
           <section key={testament.id} className="flex flex-col gap-2">
-            <h3 className="px-1 text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase">
+            <h3 className="text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase">
               {testament.label}
             </h3>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-[6px]">
               {testamentBooks.map((book) => {
                 const name = formatBibleBookName(
                   book.name,
@@ -46,9 +46,9 @@ export function ScriptureBookGrid({
                     title={name}
                     onClick={() => onSelect(book)}
                     className={cn(
-                      "flex min-w-0 flex-col items-start rounded-lg border px-2.5 py-2 text-left transition-colors",
+                      "flex min-w-0 flex-col items-start rounded-[6px] border px-3 py-2 text-left transition-colors",
                       isCurrent
-                        ? "border-[#101084]/50 bg-[#101084]/10 dark:border-[#F1E600]/60 dark:bg-[#F1E600]/5"
+                        ? "border-transparent bg-primary/20 dark:border-primary-emphasis/60 dark:bg-primary/5"
                         : "border-border bg-background hover:bg-muted/50"
                     )}
                   >

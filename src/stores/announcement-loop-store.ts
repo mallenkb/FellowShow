@@ -51,7 +51,6 @@ function showNextPage(setId: string): boolean {
       .getState()
       .presentOnLive(
         announcementPageToVerse(set, page, useBroadcastStore.getState().themes),
-        null,
         "manual"
       )
   } finally {

@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button"
 
 export function ScriptureDownloadPrompt({
   className = "",
+  hasDownloadedTranslations,
 }: {
   className?: string
+  hasDownloadedTranslations: boolean
 }) {
   return (
     <div
@@ -16,15 +18,25 @@ export function ScriptureDownloadPrompt({
       </div>
       <div className="space-y-1">
         <p className="text-sm font-semibold text-foreground">
-          No Scripture downloaded
+          {hasDownloadedTranslations
+            ? "Choose a Bible version"
+            : "No Scripture downloaded"}
         </p>
         <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-          Choose a Bible version in Settings to download Scripture for this app.
+          {hasDownloadedTranslations
+            ? "Select a downloaded Bible version in Settings to start reading."
+            : "Choose a Bible version in Settings to download Scripture for this app."}
         </p>
       </div>
       <Button type="button" size="sm" onClick={() => openSettings("bible")}>
-        <DownloadIcon className="size-3.5" />
-        Download Scripture
+        {hasDownloadedTranslations ? (
+          <BookOpenIcon className="size-3.5" />
+        ) : (
+          <DownloadIcon className="size-3.5" />
+        )}
+        {hasDownloadedTranslations
+          ? "Choose Bible version"
+          : "Download Scripture"}
       </Button>
     </div>
   )

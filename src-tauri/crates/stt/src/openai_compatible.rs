@@ -105,6 +105,7 @@ impl OpenAiCompatibleSttProvider {
     async fn emit_chunk(
         &self,
         samples: &[i16],
+        start_offset: Duration,
         event_tx: &mpsc::Sender<TranscriptEvent>,
     ) -> Result<(), SttError> {
         match self.transcribe_chunk(samples).await {
@@ -115,6 +116,7 @@ impl OpenAiCompatibleSttProvider {
                         words: Vec::new(),
                         confidence: 0.9,
                         speech_final: true,
+                        start_offset: Some(start_offset),
                     })
                     .await;
                 Ok(())
@@ -144,6 +146,8 @@ impl SttProvider for OpenAiCompatibleSttProvider {
 
         let target_samples = self.config.sample_rate as usize * CHUNK_SECONDS;
         let mut buffer = Vec::<i16>::new();
+        let mut consumed = 0u64;
+        let sample_rate = u64::from(self.config.sample_rate);
 
         let result = async {
             while !self.stop.load(Ordering::SeqCst) && !event_tx.is_closed() {
@@ -157,12 +161,15 @@ impl SttProvider for OpenAiCompatibleSttProvider {
 
                 if buffer.len() >= target_samples {
                     let chunk = std::mem::take(&mut buffer);
-                    self.emit_chunk(&chunk, &event_tx).await?;
+                    let offset = Duration::from_millis(consumed * 1_000 / sample_rate);
+                    self.emit_chunk(&chunk, offset, &event_tx).await?;
+                    consumed += chunk.len() as u64;
                 }
             }
 
             if !buffer.is_empty() && !self.stop.load(Ordering::SeqCst) && !event_tx.is_closed() {
-                self.emit_chunk(&buffer, &event_tx).await?;
+                let offset = Duration::from_millis(consumed * 1_000 / sample_rate);
+                self.emit_chunk(&buffer, offset, &event_tx).await?;
             }
             Ok(())
         }

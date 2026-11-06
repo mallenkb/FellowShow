@@ -1,36 +1,23 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react"
-import { LevelMeter } from "@/components/ui/level-meter"
-import { LiveIndicator } from "@/components/ui/live-indicator"
-import {
-  MicIcon,
-  MicOffIcon,
-  PaletteIcon,
-  CastIcon,
-  SettingsIcon,
-  SunIcon,
-  MoonIcon,
-  BookOpenIcon,
-} from "lucide-react"
+import { lazy, Suspense, useEffect, useState } from "react"
+import { HomeIcon, PaletteIcon, MonitorIcon, SettingsIcon } from "lucide-react"
+import { useAppNavigationStore } from "@/stores/app-navigation-store"
 import { Button } from "@/components/ui/button"
-import { ApiKeyPrompt } from "@/components/ui/api-key-prompt"
+import { SermonControl } from "@/components/controls/sermon-control"
+import { ServiceTitleEditor } from "@/components/controls/service-title-editor"
 import {
-  useAudioStore,
-  useTranscriptStore,
-  useBroadcastStore,
-  useSermonStore,
-} from "@/stores"
+  APP_HEADER_CLASS,
+  APP_HEADER_LOGO_CLASS,
+  APP_HEADER_TILE_CLASS,
+  APP_HEADER_TILE_SURFACE_CLASS,
+} from "@/components/controls/header-styles"
+import { useTranscriptStore, useBroadcastStore, useSermonStore } from "@/stores"
 import { useSettingsDialogStore } from "@/lib/settings-dialog"
 import {
   openBroadcastSettings,
   useBroadcastSettingsDialogStore,
 } from "@/lib/broadcast-settings-dialog"
-import { useTheme } from "@/components/theme-provider"
-import { transcriptionActions } from "@/hooks/use-transcription"
-import {
-  endSermon,
-  generateLiveSermonNotes,
-  startSermon,
-} from "@/lib/sermon-actions"
+import { generateLiveSermonNotes } from "@/lib/sermon-actions"
+import { sermonListeningMs } from "@/lib/sermon-session"
 
 const SettingsDialog = lazy(() =>
   import("@/components/settings-dialog").then((module) => ({
@@ -48,26 +35,25 @@ const BroadcastSettings = lazy(() =>
   }))
 )
 
-export function TransportBar() {
-  const { theme, setTheme } = useTheme()
-  const audioLevel = useAudioStore((s) => s.level)
-  const isTranscribing = useTranscriptStore((s) => s.isTranscribing)
+export function TransportBar({
+  navigationRef,
+}: {
+  navigationRef?: (element: HTMLDivElement | null) => void
+}) {
   const segmentCount = useTranscriptStore((s) => s.segments.length)
   const activeSession = useSermonStore((state) =>
     state.sessions.find((session) => session.id === state.activeSessionId)
   )
+  const service = useSermonStore((state) =>
+    state.sessions.find(
+      (session) =>
+        session.id === (state.activeSessionId ?? state.selectedSessionId)
+    )
+  )
   const isDesignerOpen = useBroadcastStore((s) => s.isDesignerOpen)
   const isSettingsOpen = useSettingsDialogStore((s) => s.isOpen)
   const broadcastOpen = useBroadcastSettingsDialogStore((s) => s.isOpen)
-  const [showKeyPrompt, setShowKeyPrompt] = useState(false)
-  const [isChangingSermon, setIsChangingSermon] = useState(false)
   const [now, setNow] = useState(() => Date.now())
-
-  const startTranscription = useCallback(() => {
-    void transcriptionActions
-      .start(() => setShowKeyPrompt(true))
-      .catch(console.error)
-  }, [])
 
   useEffect(() => {
     if (!activeSession) return
@@ -84,153 +70,116 @@ export function TransportBar() {
     return () => window.clearTimeout(timer)
   }, [activeSession, segmentCount])
 
-  const handleStartSermon = () => {
-    setIsChangingSermon(true)
-    void startSermon(() => setShowKeyPrompt(true))
-      .catch(console.error)
-      .finally(() => setIsChangingSermon(false))
-  }
-
-  const handleEndSermon = () => {
-    setIsChangingSermon(true)
-    void endSermon()
-      .catch(console.error)
-      .finally(() => setIsChangingSermon(false))
-  }
-
   const sermonElapsed = activeSession
-    ? Math.max(0, Math.floor((now - activeSession.startedAt) / 1_000))
+    ? Math.max(0, Math.floor(sermonListeningMs(activeSession, now) / 1_000))
     : 0
   const sermonTime = `${Math.floor(sermonElapsed / 60)}:${String(
     sermonElapsed % 60
   ).padStart(2, "0")}`
 
   return (
-    <div
-      data-slot="transport-bar"
-      className="col-span-4 flex h-14 items-center justify-between border-b border-border bg-card px-3"
-    >
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold tracking-tight text-foreground">
-          FellowShow
-        </span>
-        {isTranscribing ? (
+    <div data-slot="transport-bar" className={APP_HEADER_CLASS}>
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <img
+          src="/fellowshow.svg"
+          alt="FellowShow"
+          className={APP_HEADER_LOGO_CLASS}
+          draggable={false}
+        />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <Button
-            variant="destructive"
-            size="sm"
-            disabled={isChangingSermon}
-            onClick={
-              activeSession
-                ? handleEndSermon
-                : () => void transcriptionActions.stop().catch(console.error)
-            }
+            variant="ghost"
+            size="icon"
+            aria-label="Home"
+            className={APP_HEADER_TILE_SURFACE_CLASS}
+            onClick={() => useAppNavigationStore.getState().navigate("home")}
           >
-            <MicIcon className="size-3" />
-            {activeSession ? "Stop sermon" : "Stop transcribing"}
+            <HomeIcon />
           </Button>
-        ) : (
-          <Button variant="secondary" size="sm" onClick={startTranscription}>
-            <MicOffIcon className="size-3" />
-            Start transcribing
-          </Button>
-        )}
-        {activeSession ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
-            disabled={isChangingSermon}
-            onClick={handleEndSermon}
-          >
-            <BookOpenIcon className="size-3" />
-            Sermon · {sermonTime}
-            <span className="text-[0.625rem] uppercase">End</span>
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isChangingSermon}
-            onClick={handleStartSermon}
-          >
-            <BookOpenIcon className="size-3" />
-            Start Sermon
-          </Button>
-        )}
-      </div>
-
-      {/* Right: Audio + Status + Settings */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <MicIcon className="size-3.5 text-muted-foreground" />
-          <LevelMeter level={audioLevel.rms} bars={4} />
+          <div className="min-w-0 flex-1 [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            {navigationRef ? (
+              <div
+                ref={navigationRef}
+                className="w-max rounded-[var(--workspace-nav-radius)] border border-border bg-background p-[3px] [--workspace-nav-radius:10px]"
+              />
+            ) : null}
+          </div>
         </div>
-        <LiveIndicator active={isTranscribing} />
+      </div>
+      {service?.title ? (
+        <ServiceTitleEditor
+          key={service.id}
+          sessionId={service.id}
+          title={service.title}
+        />
+      ) : null}
+      <div
+        className={
+          service?.title
+            ? "flex min-w-max flex-1 items-center justify-end gap-1 pl-5"
+            : "flex shrink-0 items-center gap-1"
+        }
+      >
+        <SermonControl
+          layout="header"
+          elapsed={activeSession ? sermonTime : undefined}
+        />
+        <span aria-hidden="true" className="mx-1 h-6 w-px bg-border" />
         <Button
           variant="ghost"
-          size="icon-sm"
-          title="Toggle theme"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          {theme === "dark" ? (
-            <SunIcon className="size-3.5" />
-          ) : (
-            <MoonIcon className="size-3.5" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
+          size="sm"
+          className={APP_HEADER_TILE_CLASS}
           title="Displays"
           data-tour="broadcast"
           onClick={() => openBroadcastSettings()}
         >
-          <CastIcon className="size-3.5" />
+          <MonitorIcon className="size-4" />
+          Displays
         </Button>
-        {broadcastOpen ? (
-          <Suspense fallback={null}>
-            <BroadcastSettings
-              open={broadcastOpen}
-              onOpenChange={(open) =>
-                useBroadcastSettingsDialogStore.getState().setOpen(open)
-              }
-            />
-          </Suspense>
-        ) : null}
         <Button
           variant="ghost"
-          size="icon-sm"
-          title="Theme Designer"
+          size="sm"
+          className={APP_HEADER_TILE_CLASS}
+          title="Themes"
           data-tour="theme"
           onClick={() => useBroadcastStore.getState().setDesignerOpen(true)}
         >
-          <PaletteIcon className="size-3.5" />
+          <PaletteIcon className="size-4" />
+          Themes
         </Button>
-        {isDesignerOpen ? (
-          <Suspense fallback={null}>
-            <ThemeDesigner />
-          </Suspense>
-        ) : null}
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="sm"
+          className={APP_HEADER_TILE_CLASS}
           title="Settings"
+          data-tour="settings"
           onClick={() => useSettingsDialogStore.getState().openSettings()}
         >
-          <SettingsIcon className="size-3.5" />
+          <SettingsIcon className="size-4" />
+          Settings
         </Button>
-        {isSettingsOpen ? (
-          <Suspense fallback={null}>
-            <SettingsDialog />
-          </Suspense>
-        ) : null}
-        <ApiKeyPrompt
-          open={showKeyPrompt}
-          onOpenChange={setShowKeyPrompt}
-          service="Deepgram"
-          description="Live transcription needs an API key. Add it in settings so the app can start listening."
-        />
       </div>
+
+      {broadcastOpen ? (
+        <Suspense fallback={null}>
+          <BroadcastSettings
+            open={broadcastOpen}
+            onOpenChange={(open) =>
+              useBroadcastSettingsDialogStore.getState().setOpen(open)
+            }
+          />
+        </Suspense>
+      ) : null}
+      {isDesignerOpen ? (
+        <Suspense fallback={null}>
+          <ThemeDesigner />
+        </Suspense>
+      ) : null}
+      {isSettingsOpen ? (
+        <Suspense fallback={null}>
+          <SettingsDialog />
+        </Suspense>
+      ) : null}
     </div>
   )
 }

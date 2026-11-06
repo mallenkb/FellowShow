@@ -27,7 +27,7 @@ import {
 } from "./preview-panel-shared"
 
 export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
   const [isReordering, setIsReordering] = useState(false)
   const [isUploadingTheme, setIsUploadingTheme] = useState(false)
   const [draggedThemeId, setDraggedThemeId] = useState<string | null>(null)
@@ -46,7 +46,11 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
             theme.id === DEFAULT_SONG_THEME_ID || theme.section === "songs"
         )
       : selectedSection === "announcements"
-        ? themes.filter((theme) => theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID)
+        ? themes.filter(
+            (theme) =>
+              theme.id === DEFAULT_ANNOUNCEMENT_THEME_ID ||
+              (!theme.builtin && theme.section === "announcements")
+          )
         : themes
   const visibleThemes = sortThemesForSection(themesForSection, selectedSection)
   const thumbnailVerse = THEME_THUMBNAIL_BY_SECTION[selectedSection]
@@ -138,26 +142,26 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
   return (
     <div
       data-slot="themes-panel"
-      className="flex min-h-0 shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      className="flex min-h-0 shrink-0 flex-col overflow-hidden bg-card"
     >
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex h-11 shrink-0 flex-wrap items-center justify-between gap-2 px-3 py-2 text-left transition hover:bg-muted/35"
+        className="flex h-11 shrink-0 items-center justify-between gap-2 bg-surface-header px-3 text-left transition hover:bg-muted/35"
         aria-expanded={isOpen}
       >
-        <span className="min-w-0 text-xs font-medium tracking-wider break-words text-muted-foreground uppercase">
+        <span className="min-w-0 truncate text-xs font-medium tracking-wider text-muted-foreground uppercase">
           Themes
         </span>
         <ChevronDownIcon
           className={cn(
-            "size-4 text-muted-foreground transition-transform",
+            "size-4 shrink-0 text-muted-foreground transition-transform",
             !isOpen && "-rotate-90"
           )}
         />
       </button>
       {isOpen && (
-        <div className="px-3 pt-1 pb-4">
+        <div className="px-3 py-2">
           <input
             ref={themeImageInputRef}
             type="file"
@@ -169,7 +173,7 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
             }}
           />
           {selectedSection !== "announcements" && (
-            <div className="mb-3 flex gap-2">
+            <div className="mb-2 flex gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -197,7 +201,7 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
             </div>
           )}
           {visibleThemes.length > 0 ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-3 px-1 pt-1 pb-2">
+            <div className="grid grid-cols-2 gap-2">
               {visibleThemes.map((theme) => {
                 const isActive = theme.id === activeThemeId
                 return (
@@ -221,12 +225,13 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
                     }}
                     onDragEnd={() => setDraggedThemeId(null)}
                     className={cn(
-                      "group relative min-w-0 rounded-lg p-1.5 text-left transition hover:bg-muted/60",
+                      "group relative min-w-0 overflow-hidden rounded-md border text-left transition-colors",
                       isReordering &&
                         "cursor-grab ring-1 ring-border active:cursor-grabbing",
                       draggedThemeId === theme.id && "opacity-50",
-                      isActive &&
-                        "bg-[#101084]/10 ring-2 ring-[#101084]/40 dark:bg-[#F1E600]/10 dark:ring-[#F1E600]/70"
+                      isActive
+                        ? "border-transparent bg-primary/10"
+                        : "border-border bg-background hover:bg-muted/40"
                     )}
                     title={
                       isReordering
@@ -237,14 +242,15 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
                     <button
                       type="button"
                       disabled={isReordering}
+                      aria-pressed={isActive}
                       onClick={() =>
                         useBroadcastStore
                           .getState()
                           .setActiveTheme(theme.id, selectedSection)
                       }
-                      className="block w-full text-left disabled:pointer-events-none"
+                      className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:pointer-events-none"
                     >
-                      <div className="relative aspect-video overflow-hidden rounded-sm">
+                      <div className="relative aspect-video overflow-hidden bg-black">
                         <CanvasVerse theme={theme} verse={thumbnailVerse} />
                         {isReordering && (
                           <span className="absolute top-1 right-1 flex size-6 items-center justify-center rounded bg-background/85 text-foreground shadow-sm">
@@ -252,12 +258,12 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
                           </span>
                         )}
                       </div>
-                      <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+                      <div className="flex min-w-0 items-center gap-1.5 px-2 py-1.5">
                         <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-foreground">
                           {theme.name}
                         </span>
                         {isActive && (
-                          <span className="size-2 shrink-0 rounded-full bg-[#101084] dark:bg-[#F1E600]" />
+                          <span className="size-2 shrink-0 rounded-full bg-primary" />
                         )}
                       </div>
                     </button>
@@ -267,7 +273,7 @@ export function ThemesPanel({ mode }: { mode: ThemeAwareMode }) {
                           type="button"
                           variant="secondary"
                           size="icon-xs"
-                          className="absolute top-2.5 right-2.5 bg-background/85 text-muted-foreground shadow-sm backdrop-blur-sm hover:text-destructive"
+                          className="absolute top-1.5 right-1.5 bg-background/85 text-muted-foreground opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100 hover:text-destructive focus-visible:opacity-100"
                           aria-label={`Remove ${theme.name}`}
                           title={`Remove ${theme.name}`}
                           onClick={() => setThemePendingRemoval(theme)}

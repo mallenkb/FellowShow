@@ -35,13 +35,3 @@ export const BROADCAST_FONT_FAMILIES: BroadcastFontOption[] = [
   { value: "Geist Mono", label: "Geist Mono", category: "mono" },
   { value: "Courier New", label: "Courier New", category: "mono" },
 ]
-
-export function getFontFallback(fontFamily: string): string {
-  const category = BROADCAST_FONT_FAMILIES.find(
-    (font) => font.value === fontFamily
-  )?.category
-  if (category === "serif") return "serif"
-  if (category === "mono") return "monospace"
-  if (category === "handwritten") return "cursive"
-  return "sans-serif"
-}

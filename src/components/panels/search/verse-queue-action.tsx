@@ -30,9 +30,11 @@ export function VerseQueueAction({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span
+            <button
+              type="button"
+              aria-label={`Show ${reference} in queue`}
               className={cn(
-                "flex size-6 shrink-0 cursor-pointer items-center justify-center",
+                "flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                 overlay && "absolute top-1/2 right-2 -translate-y-1/2"
               )}
               onClick={(event) => {
@@ -52,8 +54,8 @@ export function VerseQueueAction({
                   ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
               }}
             >
-              <CheckIcon className="size-4 text-ai-direct" />
-            </span>
+              <CheckIcon className="size-4 text-green-700 dark:text-ai-direct" />
+            </button>
           </TooltipTrigger>
           <TooltipContent side="left">Already in queue</TooltipContent>
         </Tooltip>
@@ -68,13 +70,14 @@ export function VerseQueueAction({
           <Button
             variant="ghost"
             size="icon-xs"
+            aria-label={`Add ${reference} to queue`}
             className={cn(
-              "shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
+              "shrink-0 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100",
               overlay
-                ? "absolute top-1/2 right-2 -translate-y-1/2 !bg-[#101084] text-white hover:!bg-[#101084]/80 dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
+                ? "absolute top-1/2 right-2 -translate-y-1/2 !bg-primary text-primary-foreground hover:!bg-primary/80"
                 : isSelected
-                  ? "text-[#101084] hover:bg-[#101084]/20 hover:text-[#101084] dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
-                  : "!bg-[#101084]/40 text-white hover:!bg-[#101084] dark:!bg-[#F1E600] dark:!text-background dark:hover:!bg-[#F1E600]/80"
+                  ? "text-primary-emphasis hover:bg-primary/20 hover:text-primary-emphasis dark:!bg-primary dark:!text-primary-foreground dark:hover:!bg-primary/80"
+                  : "!bg-primary/70 text-primary-foreground hover:!bg-primary dark:!bg-primary dark:hover:!bg-primary/80"
             )}
             onClick={(event) => {
               event.stopPropagation()
@@ -94,7 +97,7 @@ export function VerseQueueAction({
         <TooltipContent
           side="left"
           className={cn(
-            "bg-[#101084] text-white [--tooltip-bg:#101084] dark:bg-[#F1E600] dark:text-background dark:[--tooltip-bg:#F1E600]",
+            "bg-primary text-primary-foreground [--tooltip-bg:var(--primary)]",
             !overlay && "group-hover:opacity-100"
           )}
         >

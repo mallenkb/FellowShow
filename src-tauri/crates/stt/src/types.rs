@@ -20,6 +20,8 @@ pub enum TranscriptEvent {
         words: Vec<Word>,
         confidence: f64,
         speech_final: bool,
+        /// Start of the segment relative to the audio supplied to this provider.
+        start_offset: Option<std::time::Duration>,
     },
     UtteranceEnd,
     SpeechStarted,

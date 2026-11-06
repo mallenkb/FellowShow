@@ -198,36 +198,28 @@ describe("settings store", () => {
     expect(useSettingsStore.getState().autoUpdateEnabled).toBe(false)
   })
 
-  it("shows Video Overlays by default and hides Timer until turned on", async () => {
+  it("shows Video Overlays by default and lets the operator hide it", async () => {
     mockGet.mockResolvedValue(null)
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
     await hydrateSettings()
 
     expect(useSettingsStore.getState().extraSearchTabs).toEqual(["on-display"])
-    useSettingsStore.getState().toggleExtraSearchTab("timer")
-    expect(useSettingsStore.getState().extraSearchTabs).toEqual([
-      "on-display",
-      "timer",
-    ])
     useSettingsStore.getState().toggleExtraSearchTab("on-display")
-    expect(useSettingsStore.getState().extraSearchTabs).toEqual(["timer"])
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual([])
   })
 
   it("turns on Video Overlays once for existing setups", async () => {
     mockGet.mockImplementation(async (key: string) => {
       if (key === "schemaVersion") return 1
-      if (key === "extraSearchTabs") return ["timer"]
+      if (key === "extraSearchTabs") return ["retired"]
       return null
     })
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
     await hydrateSettings()
 
-    expect(useSettingsStore.getState().extraSearchTabs).toEqual([
-      "timer",
-      "on-display",
-    ])
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual(["on-display"])
     expect(mockSet).toHaveBeenCalledWith("videoOverlaysTabApplied", true)
   })
 
@@ -248,7 +240,7 @@ describe("settings store", () => {
   it("keeps only known extra tabs from disk", async () => {
     mockGet.mockImplementation(async (key: string) => {
       if (key === "extraSearchTabs") {
-        return ["timer", "songs", "timer", 3, "on-display"]
+        return ["retired", "songs", "retired", 3, "on-display"]
       }
       return null
     })
@@ -256,10 +248,7 @@ describe("settings store", () => {
       await import("./settings-store")
     await hydrateSettings()
 
-    expect(useSettingsStore.getState().extraSearchTabs).toEqual([
-      "timer",
-      "on-display",
-    ])
+    expect(useSettingsStore.getState().extraSearchTabs).toEqual(["on-display"])
   })
 
   it("uses NKJV and NIV as default pinned translations", async () => {

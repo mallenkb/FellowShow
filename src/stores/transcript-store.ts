@@ -10,6 +10,7 @@ interface TranscriptState {
   currentPartial: string
   isTranscribing: boolean
   connectionStatus: ConnectionStatus
+  transition: "starting" | "stopping" | null
 
   addSegment: (segment: TranscriptSegment) => void
   addHighlightedScriptures: (references: string[]) => void
@@ -92,6 +93,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
   currentPartial: "",
   isTranscribing: false,
   connectionStatus: "disconnected",
+  transition: null,
 
   addSegment: (segment) =>
     set((state) => ({

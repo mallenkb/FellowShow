@@ -34,6 +34,7 @@ vi.mock("@/lib/songs-data", () => ({
   resetSongEdits: vi.fn(),
   deleteCustomSong: vi.fn(),
   loadAllSongs: vi.fn(() => Promise.resolve([saved])),
+  loadSongCollections: vi.fn(() => Promise.resolve([])),
 }))
 vi.mock("@/lib/song-presentation", () => ({
   prepareSong: (song: CopSong) => prepareSong(song),

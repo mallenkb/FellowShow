@@ -18,7 +18,7 @@ export function HelpSection() {
         <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <GraduationCapIcon className="size-4 text-primary" />
+              <GraduationCapIcon className="size-4 text-primary-emphasis" />
             </div>
             <div>
               <p className="text-sm font-medium">Interactive Tutorial</p>

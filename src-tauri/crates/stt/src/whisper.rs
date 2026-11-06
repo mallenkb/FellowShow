@@ -154,7 +154,7 @@ impl SttProvider for WhisperProvider {
         let n_threads = self.n_threads;
         let cancelled = self.cancelled.clone();
 
-        let (inference_tx, mut inference_rx) = mpsc::channel::<Vec<i16>>(4);
+        let (inference_tx, mut inference_rx) = mpsc::channel::<(u64, Vec<i16>)>(4);
 
         // ── Task 1: VAD + audio accumulation ─────────────────────────────
         let vad_cancelled = cancelled.clone();
@@ -166,11 +166,14 @@ impl SttProvider for WhisperProvider {
             // to Whisper (which causes hallucinations).
             let mut vad = Vad::new(whisper_vad_config());
             let mut audio_buffer: Vec<i16> = Vec::new();
+            let mut buffer_start_ms = 0;
+            let mut received = 0u64;
 
             loop {
                 if vad_cancelled.load(Ordering::SeqCst) {
                     if audio_buffer.len() >= MIN_BUFFER_SAMPLES {
-                        let _ = inference_tx.blocking_send(std::mem::take(&mut audio_buffer));
+                        let _ = inference_tx
+                            .blocking_send((buffer_start_ms, std::mem::take(&mut audio_buffer)));
                     }
                     break;
                 }
@@ -178,9 +181,10 @@ impl SttProvider for WhisperProvider {
                 match audio_rx.recv_timeout(Duration::from_millis(50)) {
                     Ok(samples) => {
                         let frame = AudioFrame {
+                            timestamp_ms: received * 1_000 / 16_000,
                             samples,
-                            timestamp_ms: 0,
                         };
+                        received += frame.samples.len() as u64;
                         let result = vad.process(&frame);
 
                         if let Some(transition) = result.transition {
@@ -191,8 +195,10 @@ impl SttProvider for WhisperProvider {
                                 }
                                 VadTransition::SpeechEnded => {
                                     if audio_buffer.len() >= MIN_BUFFER_SAMPLES {
-                                        let _ = inference_tx
-                                            .blocking_send(std::mem::take(&mut audio_buffer));
+                                        let _ = inference_tx.blocking_send((
+                                            buffer_start_ms,
+                                            std::mem::take(&mut audio_buffer),
+                                        ));
                                     } else {
                                         audio_buffer.clear();
                                     }
@@ -201,17 +207,26 @@ impl SttProvider for WhisperProvider {
                         }
 
                         for frame in result.frames {
+                            if audio_buffer.is_empty() {
+                                buffer_start_ms = frame.timestamp_ms;
+                            }
                             audio_buffer.extend_from_slice(&frame.samples);
                         }
 
                         if audio_buffer.len() >= MAX_BUFFER_SAMPLES {
-                            let _ = inference_tx.blocking_send(std::mem::take(&mut audio_buffer));
+                            let _ = inference_tx.blocking_send((
+                                buffer_start_ms,
+                                std::mem::take(&mut audio_buffer),
+                            ));
                         }
                     }
                     Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
                     Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
                         if audio_buffer.len() >= MIN_BUFFER_SAMPLES {
-                            let _ = inference_tx.blocking_send(std::mem::take(&mut audio_buffer));
+                            let _ = inference_tx.blocking_send((
+                                buffer_start_ms,
+                                std::mem::take(&mut audio_buffer),
+                            ));
                         }
                         break;
                     }
@@ -250,7 +265,7 @@ impl SttProvider for WhisperProvider {
                 log::info!("[Whisper] Model loaded, ready for inference");
                 let _ = inf_event_tx.blocking_send(TranscriptEvent::Connected);
 
-                while let Some(audio_i16) = inference_rx.blocking_recv() {
+                while let Some((buffer_start_ms, audio_i16)) = inference_rx.blocking_recv() {
                     if inf_cancelled.load(Ordering::SeqCst) {
                         break;
                     }
@@ -300,11 +315,18 @@ impl SttProvider for WhisperProvider {
                 );
 
                     if !text.is_empty() {
+                        let word_offset = words
+                            .first()
+                            .and_then(|word| Duration::try_from_secs_f64(word.start).ok())
+                            .unwrap_or_default();
+                        let start_offset =
+                            Duration::from_millis(buffer_start_ms).saturating_add(word_offset);
                         let _ = inf_event_tx.blocking_send(TranscriptEvent::Final {
                             transcript: text,
                             words,
                             confidence,
                             speech_final: true,
+                            start_offset: Some(start_offset),
                         });
                     }
 

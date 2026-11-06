@@ -1,8 +1,9 @@
+use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use fellowshow_bible::BibleDb;
-use tokio::sync::Notify;
+use tokio::sync::{watch, Notify};
 
 pub struct SttSession {
     pub id: u64,
@@ -17,6 +18,8 @@ pub struct AppState {
     pub stt_active: Arc<AtomicBool>,
     pub stt_session: Option<SttSession>,
     pub next_stt_session_id: u64,
+    pub translation_downloads: HashMap<u64, watch::Sender<bool>>,
+    pub next_translation_download_id: u64,
 }
 
 impl AppState {
@@ -28,6 +31,8 @@ impl AppState {
             stt_active: Arc::new(AtomicBool::new(false)),
             stt_session: None,
             next_stt_session_id: 1,
+            translation_downloads: HashMap::new(),
+            next_translation_download_id: 1,
         }
     }
 }

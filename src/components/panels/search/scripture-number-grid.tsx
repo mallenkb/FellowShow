@@ -26,7 +26,7 @@ export function ScriptureNumberGrid({
           className={cn(
             "flex aspect-square items-center justify-center rounded-lg border text-sm font-medium tabular-nums transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
             number === currentNumber
-              ? "border-[#101084]/50 bg-[#101084]/10 text-[#101084] dark:border-[#F1E600]/60 dark:bg-[#F1E600]/5 dark:text-[#F1E600]"
+              ? "border-transparent bg-primary/20 text-primary-emphasis dark:border-primary-emphasis/60 dark:bg-primary/5"
               : "border-border bg-background text-foreground hover:bg-muted/50"
           )}
         >

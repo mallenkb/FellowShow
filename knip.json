@@ -11,5 +11,11 @@
     "data/**/*.ts",
     "scripts/**/*.ts"
   ],
-  "ignoreBinaries": ["optimum-cli", "powershell"]
+  "ignoreBinaries": ["optimum-cli", "powershell"],
+  "ignoreFiles": [
+    "src/components/ui/sheet.tsx",
+    "src/components/ui/sidebar.tsx",
+    "src/hooks/use-mobile.ts"
+  ],
+  "tags": ["-public"]
 }

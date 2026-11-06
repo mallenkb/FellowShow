@@ -92,6 +92,7 @@ function ThemeCard({
   activeSection,
   isActive,
   isEditing,
+  showSection,
   onSelect,
   onDragStart,
   onDragOver,
@@ -102,6 +103,7 @@ function ThemeCard({
   activeSection: BroadcastThemeSection
   isActive: boolean
   isEditing: boolean
+  showSection: boolean
   onSelect: () => void
   onDragStart: () => void
   onDragOver: (event: DragEvent<HTMLDivElement>) => void
@@ -112,6 +114,10 @@ function ThemeCard({
   const [renameOpen, setRenameOpen] = useState(false)
   const [renameValue, setRenameValue] = useState(theme.name)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const displayName =
+    showSection && theme.section
+      ? `${theme.name} · ${sectionLabels[theme.section]}`
+      : theme.name
 
   const commitRename = () => {
     const next = renameValue.trim()
@@ -143,7 +149,7 @@ function ThemeCard({
       }}
       className={cn(
         "group relative flex w-full flex-col gap-1.5 rounded-lg p-1.5 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        isEditing && "ring-2 ring-primary ring-inset"
+        isEditing && "ring-2 ring-primary-emphasis ring-inset"
       )}
     >
       {/* Thumbnail */}
@@ -165,7 +171,7 @@ function ThemeCard({
         {/* Pin icon */}
         {theme.pinned && (
           <div className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-background/80">
-            <PinIcon className="size-3 text-primary" strokeWidth={2} />
+            <PinIcon className="size-3 text-primary-emphasis" strokeWidth={2} />
           </div>
         )}
       </div>
@@ -173,8 +179,11 @@ function ThemeCard({
       {/* Info */}
       <div className="flex min-w-0 items-center gap-1.5 px-0.5">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-foreground">
-            {theme.name}
+          <p
+            className="truncate text-xs font-medium text-foreground"
+            title={displayName}
+          >
+            {displayName}
           </p>
         </div>
 
@@ -195,7 +204,7 @@ function ThemeCard({
               size="icon-xs"
               className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
               onClick={(e) => e.stopPropagation()}
-              aria-label={`More actions for ${theme.name}`}
+              aria-label={`More actions for ${displayName}`}
             >
               <MoreHorizontalIcon className="size-3" />
             </Button>
@@ -337,6 +346,16 @@ export function ThemeLibrary() {
     }
     return sortThemesForSection(result, selectedThemeSection)
   }, [themes, search, selectedThemeSection])
+  const duplicateNames = useMemo(() => {
+    const seen = new Set<string>()
+    const duplicates = new Set<string>()
+    for (const theme of filteredThemes) {
+      const name = theme.name.trim().toLocaleLowerCase()
+      if (seen.has(name)) duplicates.add(name)
+      else seen.add(name)
+    }
+    return duplicates
+  }, [filteredThemes])
 
   const builtinThemes = filteredThemes.filter((t) => t.builtin)
   const customThemes = filteredThemes.filter((t) => !t.builtin)
@@ -464,6 +483,9 @@ export function ThemeLibrary() {
                   activeSection={selectedThemeSection}
                   isActive={theme.id === activeThemeId}
                   isEditing={theme.id === editingThemeId}
+                  showSection={duplicateNames.has(
+                    theme.name.trim().toLocaleLowerCase()
+                  )}
                   onDragStart={() => setDraggedThemeId(theme.id)}
                   onDragOver={(event) => {
                     event.preventDefault()
@@ -495,6 +517,9 @@ export function ThemeLibrary() {
                   activeSection={selectedThemeSection}
                   isActive={theme.id === activeThemeId}
                   isEditing={theme.id === editingThemeId}
+                  showSection={duplicateNames.has(
+                    theme.name.trim().toLocaleLowerCase()
+                  )}
                   onDragStart={() => setDraggedThemeId(theme.id)}
                   onDragOver={(event) => {
                     event.preventDefault()

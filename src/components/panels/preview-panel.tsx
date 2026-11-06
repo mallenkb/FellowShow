@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { RadioIcon, SquareIcon } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { LiveActionButton } from "@/components/ui/live-action-button"
 import { CanvasVerse } from "@/components/ui/canvas-verse"
-import { PanelHeader } from "@/components/ui/panel-header"
+import { PreviewFooter } from "@/components/panels/preview-footer"
 import { bibleActions } from "@/hooks/use-bible"
 import { useOverlayOutputLive } from "@/hooks/use-overlay-output-live"
 import { stageVerse } from "@/lib/preview-staging"
@@ -20,19 +21,33 @@ import {
   showOverlayPreviewOnLive,
   stopOverlayOutputLive,
 } from "@/lib/overlay-live"
-import {
-  useBibleStore,
-  useBroadcastStore,
-  usePresenterTimerStore,
-} from "@/stores"
+import { useBibleStore, useBroadcastStore } from "@/stores"
 import { getThemeForProgramContent } from "@/stores/broadcast-store"
 import { hasSameProgramPayload } from "@/stores/broadcast-store-helpers"
-import type { PresenterTimerRenderData, VerseRenderData } from "@/types"
 import { sectionFromMode, type ThemeAwareMode } from "./preview-panel-shared"
 
-export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
-  const isOverlayPreview = mode === "on-display"
-  const [isShowingOverlayLive, setIsShowingOverlayLive] = useState(false)
+export function PreviewPanel({
+  mode,
+  previewMode,
+  onPreviewModeChange,
+  overlayActionPending,
+  onOverlayActionPendingChange,
+}: {
+  mode: ThemeAwareMode
+  previewMode?: "content" | "overlays"
+  onPreviewModeChange?: (mode: "content" | "overlays") => void
+  overlayActionPending?: boolean
+  onOverlayActionPendingChange?: (pending: boolean) => void
+}) {
+  const isOverlayPreview = previewMode
+    ? previewMode === "overlays"
+    : mode === "on-display"
+  const [localOverlayActionPending, setLocalOverlayActionPending] =
+    useState(false)
+  const isOverlayActionPending =
+    overlayActionPending ?? localOverlayActionPending
+  const setOverlayActionPending =
+    onOverlayActionPendingChange ?? setLocalOverlayActionPending
   const activeTranslationId = useBibleStore((s) => s.activeTranslationId)
 
   // When the translation changes, reload the selected verse in the new
@@ -70,45 +85,11 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   )
   const sectionThemeIds = useBroadcastStore((s) => s.sectionThemeIds)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
-  const previewTimer = useBroadcastStore((s) => s.previewTimer)
   const isProgramLive = useBroadcastStore((s) => s.isLive)
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
-  const presenterTimer = useBroadcastStore((s) => s.presenterTimer)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
   const stagedOverlays = useBroadcastStore((s) => s.stagedOverlays)
-  const timerTotal = usePresenterTimerStore((s) => s.totalSeconds)
-  const timerRemaining = usePresenterTimerStore((s) => s.remainingSeconds)
-  const timerIsRunning = usePresenterTimerStore((s) => s.isRunning)
-  const timerFontFamily = usePresenterTimerStore((s) => s.fontFamily)
-  const timerBackgroundUrl = usePresenterTimerStore((s) => s.backgroundUrl)
-  const timerBackgroundOptions = usePresenterTimerStore(
-    (s) => s.backgroundOptions
-  )
-
-  const timer = useMemo(() => {
-    if (!timerIsRunning && timerRemaining === timerTotal) return null
-    const timerBackground = timerBackgroundOptions.find(
-      (option) => option.url === timerBackgroundUrl
-    )
-    return {
-      remainingSeconds: timerRemaining,
-      totalSeconds: timerTotal,
-      isRunning: timerIsRunning,
-      isFinished: timerRemaining === 0,
-      fontFamily: timerFontFamily,
-      backgroundUrl: timerBackgroundUrl,
-      backgroundMediaType: timerBackground?.mediaType ?? "image",
-      backgroundPlaybackStartedAt: timerBackground?.playbackStartedAt,
-    }
-  }, [
-    timerBackgroundOptions,
-    timerBackgroundUrl,
-    timerFontFamily,
-    timerIsRunning,
-    timerRemaining,
-    timerTotal,
-  ])
   const activeTheme = getThemeForProgramContent(
     {
       activeThemeId: sectionThemeIds.bible,
@@ -142,6 +123,11 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
   const overlayOutputIsLive = useOverlayOutputLive(overlayOutput?.id ?? null)
   // Video Overlays Preview shows what is staged, not what is on air.
   const resolvedStaged = resolveOverlaySelection(overlayConfig, stagedOverlays)
+  const overlayPreviewEmpty =
+    !resolvedStaged.logoVisible &&
+    !resolvedStaged.tickerMessageId &&
+    !resolvedStaged.lowerThird &&
+    !resolvedStaged.barId
   // Every tab's Preview shows the graphics in Preview, so a bar or scrolling
   // text sent from Sermon, Notes or Songs is visible here too.
   const graphicsOutput =
@@ -174,183 +160,151 @@ export function PreviewPanel({ mode }: { mode: ThemeAwareMode }) {
     useBroadcastStore.getState().setSelectedOverlayOutputId(overlayOutput.id)
   }, [isOverlayPreview, overlayOutput, selectedOverlayOutputId])
 
-  const setPreview = useCallback(
-    (verse: VerseRenderData | null, timer: PresenterTimerRenderData | null) => {
-      useBroadcastStore.getState().setPreviewOutput(verse, timer)
-    },
-    []
-  )
-
-  useEffect(() => {
-    if (isOverlayPreview) return
-    if (!previewTimer) return
-    setPreview(previewVerse, timer)
-  }, [previewTimer, timer, previewVerse, setPreview, isOverlayPreview])
-
   // When Preview already matches Program, the only useful action is to stop.
   const previewIsOnAir =
     isProgramLive &&
-    Boolean(previewVerse || previewTimer) &&
-    hasSameProgramPayload(previewVerse, previewTimer, liveVerse, presenterTimer)
+    Boolean(previewVerse) &&
+    hasSameProgramPayload(previewVerse, liveVerse)
 
   const sendPreviewLive = () => {
-    if (isOverlayPreview) return
+    if (isOverlayPreview || isOverlayActionPending) return
     const store = useBroadcastStore.getState()
-    store.presentOnLive(
-      previewVerse,
-      previewTimer ? timer : previewTimer,
-      "preview"
-    )
+    store.presentOnLive(previewVerse, "preview")
   }
 
-  const runOverlayLive = async (action: "show" | "stop") => {
-    if (!overlayOutput || isShowingOverlayLive) return
-    setIsShowingOverlayLive(true)
-    try {
-      if (action === "stop") await stopOverlayOutputLive(overlayOutput.id)
-      else await showOverlayPreviewOnLive(overlayOutput.id)
-    } catch {
-      // The output runtime already reports an actionable toast.
-    } finally {
-      setIsShowingOverlayLive(false)
-    }
+  const runOverlayLive = (action: "show" | "stop") => {
+    if (!overlayOutput || isOverlayActionPending) return
+    setOverlayActionPending(true)
+    const operation =
+      action === "stop"
+        ? stopOverlayOutputLive(overlayOutput.id)
+        : showOverlayPreviewOnLive(overlayOutput.id)
+    void operation
+      .catch((error: unknown) => {
+        console.error(`[preview] Failed to ${action} graphics`, error)
+        toast.error(
+          action === "stop"
+            ? "Could not stop graphics"
+            : "Could not show graphics on Live"
+        )
+      })
+      .finally(() => setOverlayActionPending(false))
   }
 
   return (
     <div
       data-slot="preview-panel"
-      className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-border bg-card"
+      data-preview-mode={isOverlayPreview ? "overlays" : "content"}
+      className="flex min-w-0 shrink-0 flex-col gap-3"
     >
-      <PanelHeader
-        title={isOverlayPreview ? "Video Overlays Preview" : "Preview"}
-      >
-        {!isOverlayPreview && previewVerse?.reference && (
-          <span className="max-w-[60%] truncate text-[0.6875rem] text-muted-foreground">
-            Staged: {previewVerse.reference}
+      <div className="overflow-hidden rounded-[10px] border border-border bg-card">
+        <div className="flex h-11 shrink-0 items-center justify-between gap-2 bg-surface-header px-3">
+          <span className="min-w-0 truncate text-xs font-semibold text-foreground">
+            Preview
           </span>
-        )}
-      </PanelHeader>
-      <div
-        className="relative z-0 aspect-video w-full shrink-0 overflow-hidden"
-        onDoubleClick={isOverlayPreview ? undefined : sendPreviewLive}
-      >
-        {isOverlayPreview && !overlayOutput ? (
-          <div className="flex h-full items-center justify-center bg-black px-4 text-center">
-            <span className="text-[0.6875rem] text-white/70">
-              No Video Overlays output selected.
-            </span>
-          </div>
-        ) : (
-          <CanvasVerse
-            theme={isOverlayPreview ? overlayPreviewTheme : activeTheme}
-            verse={isOverlayPreview ? null : previewVerse}
-            timer={isOverlayPreview ? null : previewTimer}
-            overlays={
-              isOverlayPreview
-                ? overlayPreviewPayload
-                : // Graphics show only over live video, on air and here.
-                  programHidesGraphics(previewVerse, previewTimer)
-                  ? null
-                  : overlayPreviewPayload
-                    ? overlayPreviewPayload
-                    : isProgramLive
-                      ? getOverlayPayloadForOutput(
-                          overlayConfig,
-                          activeOverlays,
-                          "main",
-                          { verse: previewVerse, timer: previewTimer }
-                        )
-                      : null
-            }
-            overlayMode={
-              isOverlayPreview ? (overlayMode ?? undefined) : undefined
-            }
-            className="h-full"
-            fillContainer
-            fit="contain"
-          />
-        )}
-      </div>
-      {isOverlayPreview ? (
-        <div className="relative z-10 border-t border-border bg-card px-3 py-2">
-          <div className="flex gap-2">
-            {!overlayOutputIsLive || overlayChangesPending ? (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="h-auto min-h-8 flex-1 justify-center gap-2 py-2 text-center whitespace-normal"
-                onClick={() => {
-                  void runOverlayLive("show")
-                }}
-                disabled={!overlayOutput || isShowingOverlayLive}
-              >
-                <RadioIcon className="size-3.5 shrink-0" />
-                {overlayChangesPending ? "Update Live" : "Show on Live"}
-              </Button>
-            ) : null}
-            {overlayOutputIsLive ? (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className={
-                  overlayChangesPending
-                    ? "h-auto min-h-8 shrink-0 gap-2 py-2"
-                    : "h-auto min-h-8 flex-1 justify-center gap-2 py-2"
-                }
-                onClick={() => {
-                  void runOverlayLive("stop")
-                }}
-                disabled={isShowingOverlayLive}
-              >
-                <SquareIcon className="size-3.5 shrink-0" />
-                {overlayChangesPending ? "Stop" : "Stop Live"}
-              </Button>
-            ) : null}
-          </div>
-          {/* The buttons say what happens; only a missing output needs words. */}
-          {!overlayOutput ? (
-            <p className="mt-1.5 text-center text-[0.625rem] leading-relaxed text-muted-foreground">
-              Add a Video Overlays output in Displays to enable Show on Live.
-            </p>
+          {isOverlayPreview && onPreviewModeChange ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              onClick={() => onPreviewModeChange("content")}
+            >
+              Content Preview
+            </Button>
           ) : null}
         </div>
-      ) : (
-        <div className="relative z-10 border-t border-border bg-card px-3 py-2">
-          <div className="flex gap-2">
-            {previewIsOnAir ? null : (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="h-auto min-h-8 flex-1 justify-center gap-2 py-2 text-center whitespace-normal"
-                onClick={sendPreviewLive}
-                disabled={!previewVerse && !previewTimer}
-              >
-                <RadioIcon className="size-3.5 shrink-0" />
-                Show on Live
-              </Button>
-            )}
-            {isProgramLive ? (
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className={
-                  previewIsOnAir
-                    ? "h-auto min-h-8 flex-1 justify-center gap-2 py-2"
-                    : "h-auto min-h-8 shrink-0 gap-2 py-2"
-                }
-                onClick={() => useBroadcastStore.getState().setLive(false)}
-              >
-                <SquareIcon className="size-3.5 shrink-0" />
-                {previewIsOnAir ? "Stop Live" : "Stop"}
-              </Button>
-            ) : null}
-          </div>
+        <div
+          className="relative z-0 aspect-video w-full shrink-0 overflow-hidden"
+          onDoubleClick={isOverlayPreview ? undefined : sendPreviewLive}
+        >
+          {isOverlayPreview && !overlayOutput ? (
+            <div className="flex h-full items-center justify-center bg-black px-4 text-center">
+              <span className="text-[0.6875rem] text-white/70">
+                No Video Overlays output selected.
+              </span>
+            </div>
+          ) : (
+            <CanvasVerse
+              theme={isOverlayPreview ? overlayPreviewTheme : activeTheme}
+              verse={isOverlayPreview ? null : previewVerse}
+              overlays={
+                isOverlayPreview
+                  ? overlayPreviewPayload
+                  : // Graphics show only over live video, on air and here.
+                    programHidesGraphics(previewVerse)
+                    ? null
+                    : overlayPreviewPayload
+                      ? overlayPreviewPayload
+                      : isProgramLive
+                        ? getOverlayPayloadForOutput(
+                            overlayConfig,
+                            activeOverlays,
+                            "main",
+                            { verse: previewVerse }
+                          )
+                        : null
+              }
+              overlayMode={
+                isOverlayPreview ? (overlayMode ?? undefined) : undefined
+              }
+              className="h-full"
+              fillContainer
+              fit="contain"
+            />
+          )}
         </div>
-      )}
+      </div>
+      <PreviewFooter
+        message={
+          isOverlayPreview && !overlayOutput
+            ? "Add a Video Overlays output in Displays to enable Show on Live."
+            : undefined
+        }
+      >
+        {isOverlayPreview ? (
+          <>
+            {!overlayOutputIsLive || overlayChangesPending ? (
+              <LiveActionButton
+                action={overlayChangesPending ? "update" : "show"}
+                className="flex-1"
+                onClick={() => runOverlayLive("show")}
+                disabled={
+                  !overlayOutput ||
+                  isOverlayActionPending ||
+                  (overlayPreviewEmpty && !overlayOutputIsLive)
+                }
+              />
+            ) : null}
+            {overlayOutputIsLive ? (
+              <LiveActionButton
+                action={overlayChangesPending ? "stop" : "stop-live"}
+                className="flex-1"
+                onClick={() => runOverlayLive("stop")}
+                disabled={isOverlayActionPending}
+              />
+            ) : null}
+          </>
+        ) : (
+          <>
+            {!previewIsOnAir ? (
+              <LiveActionButton
+                action="show"
+                className="flex-1"
+                onClick={sendPreviewLive}
+                disabled={isOverlayActionPending || !previewVerse}
+              />
+            ) : null}
+            {isProgramLive ? (
+              <LiveActionButton
+                action={previewIsOnAir ? "stop-live" : "stop"}
+                className="flex-1"
+                onClick={() => useBroadcastStore.getState().setLive(false)}
+                disabled={isOverlayActionPending}
+              />
+            ) : null}
+          </>
+        )}
+      </PreviewFooter>
     </div>
   )
 }

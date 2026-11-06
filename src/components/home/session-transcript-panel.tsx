@@ -1,0 +1,311 @@
+import { Fragment, useEffect, useId, useRef, useState } from "react"
+import { AudioLinesIcon, PauseIcon, PlayIcon, SearchIcon } from "lucide-react"
+import { SermonSessionTiming } from "@/components/controls/sermon-session-timing"
+import { Button } from "@/components/ui/button"
+import { SermonAudioDownload } from "./sermon-audio-download"
+import { useSermonAudio } from "./use-sermon-audio"
+import { Input } from "@/components/ui/input"
+import { formatSermonDuration, sermonGaps } from "@/lib/sermon-session"
+import { cn } from "@/lib/utils"
+import type { SermonSession, TranscriptSegment } from "@/types"
+
+function elapsedTimestamp(milliseconds: number) {
+  const seconds = Math.floor(Math.max(0, milliseconds) / 1_000)
+  const minutes = Math.floor(seconds / 60)
+  const clock = `${String(minutes % 60).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`
+  return minutes >= 60 ? `${Math.floor(minutes / 60)}:${clock}` : clock
+}
+
+function transcriptTimeline(session: SermonSession, lastTimestamp: number) {
+  const spans = session.prepared
+    ? []
+    : session.recordingSpans?.length
+      ? session.recordingSpans
+      : [{ startedAt: session.startedAt, endedAt: session.endedAt }]
+  let duration = 0
+  const ranges = spans.map(({ startedAt, endedAt }) => {
+    const end = Math.max(
+      startedAt,
+      endedAt ?? session.pausedAt ?? lastTimestamp
+    )
+    const offset = duration
+    duration += end - startedAt
+    return { startedAt, end, offset }
+  })
+
+  return {
+    duration,
+    positionAt(timestamp: number) {
+      return ranges.reduce(
+        (position, range) =>
+          position +
+          Math.max(0, Math.min(timestamp, range.end) - range.startedAt),
+        0
+      )
+    },
+    timestampAt(position: number) {
+      const range = ranges.find(
+        ({ startedAt, end, offset }) => position < offset + end - startedAt
+      )
+      return range
+        ? range.startedAt + position - range.offset
+        : (ranges.at(-1)?.end ?? session.startedAt)
+    },
+  }
+}
+
+function lineAtTime<T extends { timestamp: number }>(
+  lines: T[],
+  timestamp: number
+) {
+  for (let index = lines.length - 1; index >= 0; index--) {
+    if (lines[index].timestamp <= timestamp) return lines[index]
+  }
+  return lines[0]
+}
+
+export function SessionTranscriptPanel({
+  session,
+  segments,
+  isLive,
+  visible: panelVisible,
+}: {
+  session: SermonSession
+  segments: TranscriptSegment[]
+  isLive: boolean
+  visible: boolean
+}) {
+  const [search, setSearch] = useState("")
+  const [cursor, setCursor] = useState<number | null>(null)
+  const timelineId = useId()
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const lineElements = useRef(new Map<string | number, HTMLLIElement>())
+  const query = search.trim().toLocaleLowerCase()
+  const timeline = transcriptTimeline(
+    session,
+    Math.max(
+      session.lastCheckpointAt ?? session.startedAt,
+      segments.at(-1)?.timestamp ?? 0
+    )
+  )
+  const timestamp = cursor ?? timeline.timestampAt(0)
+  const position = cursor === null ? 0 : timeline.positionAt(cursor)
+  const lines = segments.length
+    ? segments.map(({ id, text, timestamp }) => ({ id, text, timestamp }))
+    : session.transcript.map((text, index) => ({
+        id: index,
+        text,
+        timestamp: undefined,
+      }))
+  const gaps = sermonGaps(session)
+  const visible = query
+    ? lines.filter(({ text }) => text.toLocaleLowerCase().includes(query))
+    : lines
+  const timed = lines.filter(
+    (line): line is typeof line & { timestamp: number } =>
+      line.timestamp !== undefined
+  )
+  const playback = useSermonAudio(
+    session.id,
+    isLive,
+    panelVisible,
+    audioRef,
+    setCursor
+  )
+  const current = lineAtTime(timed, timestamp)
+  const currentId = current?.id
+
+  useEffect(() => {
+    if (playback.playing && currentId !== undefined) {
+      lineElements.current.get(currentId)?.scrollIntoView({ block: "nearest" })
+    }
+  }, [playback.playing, currentId])
+  function jumpToTimestamp(next: number) {
+    setCursor(next)
+    if (playback.hasAudio) playback.seek(next)
+    const target = lineAtTime(
+      timed.filter(
+        (line) => !query || line.text.toLocaleLowerCase().includes(query)
+      ),
+      next
+    )
+    if (target) {
+      lineElements.current.get(target.id)?.scrollIntoView({ block: "nearest" })
+    }
+  }
+
+  return (
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-12">
+      <aside className="min-w-0 space-y-4 lg:sticky lg:top-4">
+        <div className="flex aspect-square max-w-[340px] flex-col justify-between overflow-hidden rounded-2xl bg-neutral-950 [background-image:radial-gradient(ellipse_at_100%_0%,#656023_0%,transparent_60%),radial-gradient(ellipse_at_0%_100%,#193b3d_0%,transparent_65%)] p-6 text-white">
+          <div className="flex items-center gap-2 text-xs font-medium tracking-widest text-white/75 uppercase">
+            <AudioLinesIcon
+              aria-hidden="true"
+              className="size-4 text-primary"
+            />
+            FellowShow
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium tracking-widest text-primary uppercase">
+              {session.series || "Saved sermon"}
+            </p>
+            <p className="line-clamp-4 text-3xl leading-tight font-semibold break-words">
+              {session.title}
+            </p>
+            {session.speaker ? (
+              <p className="mt-2 truncate text-sm text-white/75">
+                {session.speaker}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium" htmlFor={timelineId}>
+            Transcript timeline
+          </label>
+          <input
+            id={timelineId}
+            type="range"
+            min={0}
+            max={Math.max(1, timeline.duration)}
+            step="any"
+            value={position}
+            disabled={
+              (!timed.length && !playback.hasAudio) || timeline.duration === 0
+            }
+            aria-valuetext={elapsedTimestamp(position)}
+            className="w-full accent-primary-emphasis dark:accent-primary"
+            onChange={(event) =>
+              jumpToTimestamp(
+                timeline.timestampAt(event.currentTarget.valueAsNumber)
+              )
+            }
+          />
+          <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+            <span>{elapsedTimestamp(position)}</span>
+            <span>{elapsedTimestamp(timeline.duration)}</span>
+          </div>
+          {playback.hasAudio ? (
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <audio ref={audioRef} {...playback.audioEvents} />
+              <Button size="sm" onClick={() => playback.toggle(timestamp)}>
+                {playback.playing ? (
+                  <PauseIcon aria-hidden="true" />
+                ) : (
+                  <PlayIcon aria-hidden="true" />
+                )}
+                {playback.playing ? "Pause" : "Play audio"}
+              </Button>
+              <SermonAudioDownload id={session.id} title={session.title} />
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {isLive
+                ? "Audio is available after you pause or finish the sermon."
+                : playback.loading
+                  ? "Checking for saved audio…"
+                  : playback.error
+                    ? "Could not load this sermon's audio."
+                    : "No audio recording was saved."}
+            </p>
+          )}
+        </div>
+        <div className="border-t border-border pt-4">
+          <SermonSessionTiming session={session} />
+        </div>
+      </aside>
+      <section aria-label="Transcript lines" className="min-w-0 space-y-3">
+        <label className="relative block">
+          <span className="sr-only">Search transcript</span>
+          <SearchIcon
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search transcript"
+            className="pl-9"
+          />
+        </label>
+        <p className="text-xs text-muted-foreground" aria-live="polite">
+          {query ? `${visible.length} of ` : ""}
+          {lines.length} {lines.length === 1 ? "segment" : "segments"}
+        </p>
+        {visible.length ? (
+          <ol>
+            {visible.map((line, index) => {
+              const timestamp = line.timestamp
+              const previous = visible[index - 1]?.timestamp
+              const breaks =
+                query || timestamp === undefined
+                  ? []
+                  : gaps.filter(
+                      (gap) =>
+                        gap.endedAt <= timestamp &&
+                        (previous === undefined || previous < gap.endedAt)
+                    )
+
+              return (
+                <Fragment key={line.id}>
+                  {breaks.map((gap) => (
+                    <li
+                      key={gap.startedAt}
+                      className="py-3 text-xs text-muted-foreground"
+                    >
+                      Listening resumed after{" "}
+                      {formatSermonDuration(gap.endedAt - gap.startedAt)} away.
+                      Nothing was transcribed during this break.
+                    </li>
+                  ))}
+                  <li
+                    ref={(element) => {
+                      if (element) lineElements.current.set(line.id, element)
+                      else lineElements.current.delete(line.id)
+                    }}
+                    aria-current={current?.id === line.id ? "true" : undefined}
+                    className="flex items-baseline gap-4 py-3"
+                  >
+                    {timestamp === undefined ? null : (
+                      <button
+                        type="button"
+                        aria-label={`Jump to ${elapsedTimestamp(timeline.positionAt(timestamp))}`}
+                        className={cn(
+                          "w-12 shrink-0 rounded text-left text-xs tabular-nums hover:underline focus-visible:outline-2 focus-visible:outline-ring",
+                          playback.playing && currentId !== line.id
+                            ? "text-muted-foreground"
+                            : "text-primary-emphasis"
+                        )}
+                        onClick={() => jumpToTimestamp(timestamp)}
+                      >
+                        {elapsedTimestamp(timeline.positionAt(timestamp))}
+                      </button>
+                    )}
+                    <span
+                      className={cn(
+                        "min-w-0 text-sm leading-relaxed break-words motion-safe:transition-colors",
+                        playback.playing &&
+                          (currentId === line.id
+                            ? "font-semibold"
+                            : "text-muted-foreground")
+                      )}
+                    >
+                      {line.text}
+                    </span>
+                  </li>
+                </Fragment>
+              )
+            })}
+          </ol>
+        ) : (
+          <p className="py-4 text-sm text-muted-foreground">
+            {query
+              ? "No transcript segments match your search."
+              : "No transcript yet."}
+          </p>
+        )}
+      </section>
+    </div>
+  )
+}

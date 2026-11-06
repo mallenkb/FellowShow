@@ -1,6 +1,5 @@
 import type {
   BroadcastThemeSection,
-  PresenterTimerRenderData,
   VerseRenderData,
   NdiStartRequest,
 } from "@/types"
@@ -13,7 +12,7 @@ import { selectFreeMonitorIndex } from "@/lib/broadcast-output-control"
 
 /**
  * What a broadcast output shows. "everything" mirrors the full program
- * (verses, songs, presentations, and the timer); the rest are dedicated
+ * (verses, songs, and presentations); the rest are dedicated
  * screens that stay on their theme background while other content is live.
  */
 export type OutputContent =
@@ -22,7 +21,6 @@ export type OutputContent =
   | "songs"
   | "announcements"
   | "presentation"
-  | "timer"
   | "overlays"
 
 /** Background/keyer mode for a graphics-only output. */
@@ -107,7 +105,7 @@ export const OUTPUT_CONTENT_OPTIONS: Array<{
     value: "everything",
     label: "General",
     description:
-      "Full program — scripture, songs, announcements, presentations, timer",
+      "Full program — scripture, songs, announcements and presentations",
   },
   { value: "bible", label: "Scripture", description: "Bible verses only" },
   { value: "songs", label: "Songs", description: "Song lyrics only" },
@@ -121,12 +119,11 @@ export const OUTPUT_CONTENT_OPTIONS: Array<{
     label: "Presentation",
     description: "Presentation slides only",
   },
-  { value: "timer", label: "Timer", description: "Presenter timer only" },
   {
     value: "overlays",
     label: "Video Overlays",
     description:
-      "Master overlays only — no scripture, songs, slides, timers, or program content",
+      "Master overlays only — no scripture, songs, slides, or program content",
   },
 ]
 
@@ -187,7 +184,7 @@ export function getSectionThemeId(
 /**
  * Theme an output should render with right now. Outputs with a fixed theme
  * always use it; auto outputs follow the section theme of their content
- * (or of the live program, for "everything" and "timer" screens).
+ * (or of the live program, for General screens).
  */
 export function resolveOutputThemeId(
   output: Pick<BroadcastOutputConfig, "content" | "themeId">,
@@ -199,7 +196,7 @@ export function resolveOutputThemeId(
   const section =
     output.content === "overlays"
       ? fallbackSection
-      : output.content === "everything" || output.content === "timer"
+      : output.content === "everything"
         ? liveVerse
           ? inferThemeSection(liveVerse)
           : fallbackSection
@@ -214,19 +211,15 @@ export function resolveOutputThemeId(
 export function getOutputProgramPayload(
   content: OutputContent,
   isLive: boolean,
-  verse: VerseRenderData | null,
-  timer: PresenterTimerRenderData | null
+  verse: VerseRenderData | null
 ): {
   verse: VerseRenderData | null
-  timer: PresenterTimerRenderData | null
 } {
-  if (!isLive) return { verse: null, timer: null }
-  if (content === "everything") return { verse, timer }
-  if (content === "overlays") return { verse: null, timer: null }
-  if (content === "timer") return { verse: null, timer }
+  if (!isLive) return { verse: null }
+  if (content === "everything") return { verse }
+  if (content === "overlays") return { verse: null }
   return {
     verse: verse && inferThemeSection(verse) === content ? verse : null,
-    timer: null,
   }
 }
 
@@ -291,6 +284,7 @@ export function sanitizeOutputConfigs(
   if (!Array.isArray(raw) || raw.length === 0) return null
   const outputs: BroadcastOutputConfig[] = []
   const seenIds = new Set<string>()
+  let ignoredUnsupportedContent = false
   for (const entry of raw) {
     if (outputs.length >= MAX_BROADCAST_OUTPUTS) break
     if (typeof entry !== "object" || entry === null) continue
@@ -301,6 +295,15 @@ export function sanitizeOutputConfigs(
         ? candidate.id
         : null
     if (!id || seenIds.has(id)) continue
+    // Discard obsolete output roles rather than rerouting them to General.
+    if (
+      id !== "main" &&
+      typeof candidate.content === "string" &&
+      !OUTPUT_CONTENT_VALUES.has(candidate.content)
+    ) {
+      ignoredUnsupportedContent = true
+      continue
+    }
     seenIds.add(id)
     const content =
       id === "main"
@@ -352,7 +355,9 @@ export function sanitizeOutputConfigs(
     } satisfies BroadcastOutputConfig
     outputs.push(output)
   }
-  if (outputs.length === 0) return null
+  if (outputs.length === 0) {
+    return ignoredUnsupportedContent ? [createDefaultOutputs()[0]] : null
+  }
   if (!outputs.some((output) => output.id === "main")) {
     if (outputs.length === MAX_BROADCAST_OUTPUTS) outputs.pop()
     outputs.unshift(createDefaultOutputs()[0])

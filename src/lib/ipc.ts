@@ -63,8 +63,15 @@ type WithArgs<TArgs, TResult> = { args: TArgs; result: TResult }
 
 /** Type contract for every command registered in the Tauri invoke handler. */
 export interface Commands {
+  set_app_close_guard: WithArgs<{ enabled: boolean }, void>
+  close_app: NoArgs<void>
   list_translations: NoArgs<Translation[]>
-  download_translation: WithArgs<{ abbreviation: string }, Translation>
+  prepare_translation_download: NoArgs<number>
+  cancel_translation_download: WithArgs<{ downloadId: number }, boolean>
+  download_translation: WithArgs<
+    { abbreviation: string; downloadId: number },
+    Translation
+  >
   list_books: WithArgs<{ translationId: number }, Book[]>
   get_chapter: WithArgs<
     { translationId: number; bookNumber: number; chapter: number },
@@ -131,10 +138,21 @@ export interface Commands {
       deviceId: string | null
       gain: number | null
       provider: string | null
+      sermonId?: string
     },
-    void
+    number
   >
   stop_transcription: NoArgs<void>
+  list_sermon_audio: WithArgs<
+    { sermonId: string },
+    Array<{ path: string; startedAt: number; durationMs: number }>
+  >
+  delete_sermon_audio: WithArgs<{ sermonId: string }, void>
+  sermon_audio_formats: NoArgs<string[]>
+  export_sermon_audio: WithArgs<
+    { sermonId: string; destination: string; format: string },
+    void
+  >
   load_secure_settings: NoArgs<SecureSettings>
   save_secure_settings: WithArgs<{ secrets: SecureSettings }, void>
   list_monitors: NoArgs<MonitorInfo[]>

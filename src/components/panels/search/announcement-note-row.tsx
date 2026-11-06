@@ -7,6 +7,10 @@ import {
 } from "lucide-react"
 import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
 import { Button } from "@/components/ui/button"
+import {
+  SELECTED_LIBRARY_ROW_CLASS,
+  UNSELECTED_LIBRARY_ROW_CLASS,
+} from "@/components/panels/content-row-styles"
 import { Input } from "@/components/ui/input"
 import {
   announcementItemToVerse,
@@ -86,15 +90,10 @@ export function AnnouncementNoteRow({
       broadcast.isLive &&
       broadcast.liveVerse?.announcementItemIds?.length === 1 &&
       broadcast.liveVerse.announcementItemIds[0] === item.id &&
-      hasSameProgramPayload(
-        verse,
-        null,
-        broadcast.liveVerse,
-        broadcast.presenterTimer
-      )
+      hasSameProgramPayload(verse, broadcast.liveVerse)
     )
       return
-    broadcast.presentOnLive(verse, null, "manual")
+    broadcast.presentOnLive(verse, "manual")
   }
 
   const saveTitle = () => {
@@ -115,8 +114,7 @@ export function AnnouncementNoteRow({
       .getState()
       .sets.find((candidate) => candidate.id === setId)
     broadcast.setPreviewOutput(
-      set ? announcementItemToVerse(set, item.id, broadcast.themes) : null,
-      null
+      set ? announcementItemToVerse(set, item.id, broadcast.themes) : null
     )
   }
 
@@ -151,13 +149,13 @@ export function AnnouncementNoteRow({
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "flex min-w-0 items-center gap-1 rounded-lg border py-1 pr-1 pl-0.5 transition-colors",
+        "flex min-w-0 flex-wrap items-center gap-1 rounded-lg border px-3 py-1 transition-colors",
         live
           ? "border-destructive/70 bg-destructive/10 hover:bg-destructive/15"
           : highlightSelection
-            ? "border-[#101084]/50 bg-[#101084]/10 hover:bg-[#101084]/15 dark:border-[#F1E600]/60 dark:bg-[#F1E600]/5 dark:hover:bg-[#F1E600]/10"
-            : "border-transparent hover:bg-muted/50",
-        isDropTarget && "border-dashed border-primary",
+            ? SELECTED_LIBRARY_ROW_CLASS
+            : UNSELECTED_LIBRARY_ROW_CLASS,
+        isDropTarget && "border-dashed border-primary-emphasis",
         expired && !selected && !live && "opacity-60"
       )}
     >
@@ -171,7 +169,7 @@ export function AnnouncementNoteRow({
           autoFocus
           value={titleDraft}
           aria-label="Note title"
-          className="h-8 min-w-0 flex-1 border-0 bg-transparent px-1.5 text-sm font-medium shadow-none focus-visible:ring-0 dark:bg-transparent"
+          className="h-8 min-w-12 flex-1 px-1.5 text-sm font-medium"
           onChange={(event) => setTitleDraft(event.target.value)}
           onBlur={saveTitle}
           onKeyDown={(event) => {
@@ -185,11 +183,11 @@ export function AnnouncementNoteRow({
       ) : (
         <button
           type="button"
-          className="min-w-0 flex-1 rounded-sm px-1.5 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-w-12 flex-1 rounded-sm px-1.5 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={`Select ${label}`}
           aria-current={selected ? "true" : undefined}
           aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
-          title="Click to preview. Double-click to show live. Drag, or press Alt+Up / Alt+Down, to reorder"
+          title="Click to preview. Double-click to show on Live. Drag, or press Alt+Up / Alt+Down, to reorder"
           onClick={selectNote}
           onDoubleClick={showOnLive}
           onKeyDown={(event) => {

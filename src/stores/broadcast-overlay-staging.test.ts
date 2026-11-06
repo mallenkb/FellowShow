@@ -133,7 +133,7 @@ describe("Video Overlays staging", () => {
     store.commitStagedOverlays()
     useBroadcastStore.setState({ liveOverlayOutputIds: ["graphics"] })
     const payload = () =>
-      getOutputOverlayPayload(useBroadcastStore.getState(), output, null, null)
+      getOutputOverlayPayload(useBroadcastStore.getState(), output, null)
 
     expect(payload()?.ticker?.id).toBe(tickerId)
     for (const themeSection of [
@@ -167,7 +167,7 @@ describe("Video Overlays staging", () => {
     store.toggleStagedTicker(tickerId)
     store.commitStagedOverlays()
     const payload = () =>
-      getOutputOverlayPayload(useBroadcastStore.getState(), general, null, null)
+      getOutputOverlayPayload(useBroadcastStore.getState(), general, null)
 
     // Graphics not on air: General shows nothing extra.
     useBroadcastStore.setState({ isLive: false, liveOverlayOutputIds: [] })
@@ -190,8 +190,7 @@ describe("Video Overlays staging", () => {
       getOutputOverlayPayload(
         useBroadcastStore.getState(),
         general,
-        useBroadcastStore.getState().liveVerse,
-        null
+        useBroadcastStore.getState().liveVerse
       )?.ticker ?? null
     ).toBeNull()
   })

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { SongsQueuePanel } from "./songs-queue-panel"
 import { useBroadcastStore } from "@/stores/broadcast-store"
@@ -106,6 +106,97 @@ describe("SongsQueuePanel", () => {
     await user.click(screen.getByText("Forbid it, Lord, that I should boast"))
 
     expect(previewText()).toBe("Forbid it, Lord, that I should boast")
+    expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(
+      "When I survey the wondrous cross"
+    )
+  })
+
+  it("moves the live song from the preview controls with the arrow keys", async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <SongsQueuePanel />
+        <div data-slot="preview-panel" data-preview-mode="content">
+          <button type="button">Preview control</button>
+        </div>
+      </>
+    )
+    await user.keyboard("{Enter}")
+    await user.click(screen.getByRole("button", { name: "Preview control" }))
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowUp}")
+
+    expect(previewText()).toBe("Love so amazing, so divine")
+    expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(
+      "Love so amazing, so divine"
+    )
+  })
+
+  it("uses the latest section for consecutive live arrow presses", async () => {
+    const user = userEvent.setup()
+    render(<SongsQueuePanel />)
+    await user.keyboard("{Enter}")
+
+    act(() => {
+      fireEvent.keyDown(document.body, { key: "ArrowDown" })
+      fireEvent.keyDown(document.body, { key: "ArrowDown" })
+    })
+
+    expect(previewText()).toBe("Forbid it, Lord, that I should boast")
+    expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(
+      "Forbid it, Lord, that I should boast"
+    )
+  })
+
+  it("does not advance live lyrics while an input has focus", async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <SongsQueuePanel />
+        <input aria-label="Search" />
+      </>
+    )
+    await user.keyboard("{Enter}")
+    await user.click(screen.getByRole("textbox", { name: "Search" }))
+    await user.keyboard("{ArrowDown}")
+
+    expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(
+      "When I survey the wondrous cross"
+    )
+  })
+
+  it("does not change Live when Preview contains a different section", async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <SongsQueuePanel />
+        <div data-slot="preview-panel" data-preview-mode="content">
+          <button type="button">Preview control</button>
+        </div>
+      </>
+    )
+    await user.keyboard("{Enter}")
+    await user.click(screen.getByRole("switch", { name: /Follow live/ }))
+    await user.click(screen.getByText("Love so amazing, so divine"))
+    await user.click(screen.getByRole("switch", { name: /Follow live/ }))
+    await user.click(screen.getByRole("button", { name: "Preview control" }))
+    await user.keyboard("{ArrowDown}")
+
+    expect(previewText()).toBe("Love so amazing, so divine")
+    expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(
+      "When I survey the wondrous cross"
+    )
+  })
+
+  it("keeps arrow navigation in Preview when Follow live is off", async () => {
+    const user = userEvent.setup()
+    render(<SongsQueuePanel />)
+    await user.keyboard("{Enter}")
+    await user.click(screen.getByRole("switch", { name: /Follow live/ }))
+    const panel = screen.getByText("When I Survey").closest('[tabindex="0"]')
+    if (!panel) throw new Error("Song panel was not rendered")
+    fireEvent.keyDown(panel, { key: "ArrowDown" })
+
+    expect(previewText()).toBe("Love so amazing, so divine")
     expect(useBroadcastStore.getState().liveVerse?.segments[0]?.text).toBe(
       "When I survey the wondrous cross"
     )
