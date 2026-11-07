@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { MicIcon } from "lucide-react"
+import { MicIcon, MicOffIcon } from "lucide-react"
 import { toast } from "sonner"
 import { ApiKeyPrompt } from "@/components/ui/api-key-prompt"
 import { Button } from "@/components/ui/button"
@@ -127,7 +127,11 @@ export function SermonControl({
         disabled={isStopping || isDeleting}
         onClick={toggle}
       >
-        <MicIcon aria-hidden="true" className="size-4" />
+        {isTranscribing ? (
+          <MicIcon aria-hidden="true" className="size-4" />
+        ) : (
+          <MicOffIcon aria-hidden="true" className="size-4" />
+        )}
         <span className="leading-none">
           {label}
           {showStop && elapsed ? (
