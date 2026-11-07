@@ -1,0 +1,204 @@
+{
+  "receiver": "Osee GoStream Duet, original model",
+  "method": "Documented receiver constraint simulation, not hardware, firmware, network discovery or decoder emulation",
+  "profile": {
+    "acceptedNdiFormat": "NDI HX",
+    "maxWidth": 1920,
+    "maxHeight": 1080,
+    "maxFpsEnvelope": 60,
+    "scan": "progressive"
+  },
+  "profileLimits": "The 60 fps envelope is the requested upper test bound, not a claim that every rate or HX variant is accepted by every Duet firmware version.",
+  "actualNativeOffer": {
+    "format": "NDI High Bandwidth",
+    "width": 1920,
+    "height": 1080,
+    "fps": 24.0,
+    "scan": "progressive",
+    "checks": {
+      "format": false,
+      "resolution": true,
+      "frameRateEnvelope": true,
+      "scan": true
+    },
+    "acceptedByProfile": false
+  },
+  "observedNativeFps": 24.161054746841142,
+  "formatEvidence": "Current sender feeds uncompressed BGRA to the standard SDK NDIlib_send_send_video_v2 function. The standard SDK sends NDI High Bandwidth. No compressed HX encoder is implemented.",
+  "matrix": [
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 1280,
+        "height": 720,
+        "fps": 24,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": true,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 1280,
+        "height": 720,
+        "fps": 30,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": true,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 1280,
+        "height": 720,
+        "fps": 60,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": true,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 1920,
+        "height": 1080,
+        "fps": 24,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": true,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": true,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 1920,
+        "height": 1080,
+        "fps": 60,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": true,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 3840,
+        "height": 2160,
+        "fps": 24,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": false,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 3840,
+        "height": 2160,
+        "fps": 30,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": false,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    },
+    {
+      "offer": {
+        "format": "NDI High Bandwidth",
+        "width": 3840,
+        "height": 2160,
+        "fps": 60,
+        "scan": "progressive"
+      },
+      "checks": {
+        "format": false,
+        "resolution": false,
+        "frameRateEnvelope": true,
+        "scan": true
+      },
+      "acceptedByProfile": false
+    }
+  ],
+  "checks": {
+    "testMethodsPassed": 3,
+    "offerMatrixCases": 9,
+    "sourceAssertionsPassed": 4,
+    "nativeReceivedFrames": 120
+  },
+  "nativeEvidence": "output/e2e/screenshots/release-ndi-video-decoded-cache.json",
+  "actualHardwareTested": false,
+  "hypotheticalHxPositive": "Tests only the constraint predicate. No HX stream was generated or decoded.",
+  "separateTransportResult": "The installed general NDI SDK receiver decoded real native application frames on loopback. Its broader format support does not establish Duet compatibility.",
+  "assetCodecDoesNotDetermineNdiFormat": "An H.264 input video is decoded to canvas pixels before the standard SDK sends NDI High Bandwidth. It does not pass through as NDI HX.",
+  "conclusion": "The current 1920x1080 progressive 24 fps offer fits the resolution and frame rate envelope but fails the Duet NDI HX format requirement. Expected direct video compatibility is false.",
+  "sources": [
+    {
+      "url": "https://cdn.accentuate.io/15931059339651/1777627482930/NDI_Licesne_Activation_and_use.pdf?v=1777627482930",
+      "supports": "Duet NDI input supports only NDI HX; a source can be listed without showing video if its format is incompatible."
+    },
+    {
+      "url": "https://osee-tech.com/pages/video-audio",
+      "supports": "Original GoStream Deck and Duet have a 1080p maximum."
+    },
+    {
+      "url": "https://ndi.video/for-developers/ndi-sdk/",
+      "supports": "Standard SDK sends High Bandwidth and receives HX2/HX3."
+    },
+    {
+      "url": "https://docs.ndi.video/brand/ndi-formats/understanding-ndi-formats",
+      "supports": "HX2/HX3 encoding requires licensed NDI Advanced integration."
+    }
+  ]
+}

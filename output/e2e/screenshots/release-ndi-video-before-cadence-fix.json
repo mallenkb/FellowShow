@@ -1,0 +1,42 @@
+{
+  "framesCaptured": 10,
+  "width": 1920,
+  "height": 1080,
+  "rateNumerator": 24,
+  "rateDenominator": 1,
+  "fps": 24.0,
+  "fourcc": "BGRA",
+  "sha256": "b461d9803497d2f580049cc23f6a10dc7f825226f8c7af68a40185ff6885ae17",
+  "loopbackReceiverAddress": "127.0.0.1:5961",
+  "distinctBytes": 250,
+  "byteSampleStride": 128,
+  "distinctNonuniformFrames": 7,
+  "output": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/screenshots/release-ndi-video-before-cadence-fix.png",
+  "captureSpanSeconds": 8.782722125,
+  "observedCaptureFps": 1.0247392405119502,
+  "pngEncodedAfterCapture": true,
+  "captureIntervalsSeconds": [
+    1.008557417,
+    0.803331708,
+    1.0744614169999998,
+    0.9496515410000002,
+    1.005171292,
+    0.95308875,
+    1.0438425000000002,
+    1.0230742499999996,
+    0.92154325
+  ],
+  "medianCaptureIntervalSeconds": 1.005171292,
+  "sourceTimecodes100ns": [
+    17922357750322646,
+    17922357761572655,
+    17922357769905995,
+    17922357780322670,
+    17922357789906011,
+    17922357799906019,
+    17922357809489360,
+    17922357819906035,
+    17922357830322710,
+    17922357839489384
+  ]
+}

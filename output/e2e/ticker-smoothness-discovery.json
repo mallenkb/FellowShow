@@ -1,0 +1,16 @@
+{
+  "expectedSenderName": "FellowShow Overlay Smoothness",
+  "matched": true,
+  "sources": [
+    {
+      "name": "MARLONS-M5-MACBOOK (FellowShow Overlay Smoothness)",
+      "address": "127.0.0.1:5962"
+    },
+    {
+      "name": "MARLONS-M5-MACBOOK (FellowShow Overlay Smoothness)",
+      "address": "127.0.0.1:5962"
+    }
+  ],
+  "discoveryExtraIp": "127.0.0.1",
+  "group": "public"
+}

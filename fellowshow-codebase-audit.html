@@ -1,0 +1,1508 @@
+<!doctype html>
+<!--
+  TECHNICAL FINDINGS · SCAFFOLD  (DesignOS build)
+  Scaffold only. Every sentence below is an instruction to replace.
+
+  Follows HA/references/audit/technical-audit-contract.md:
+  - The register starts empty. Zero findings is a valid result.
+  - Severity is critical, high, medium or low. Confidence is confirmed,
+    supported inference or needs verification. Keep them separate.
+  - Effort sequences work inside a priority. It never lowers severity.
+  - Remediation lanes reference finding IDs.
+
+  Reading order: verdict, register, plan, criteria, then scope and limits.
+
+  Controls are DesignOS components: .dos-field and .dos-input for search,
+  .dos-btn with a .dos-choice menu for filters, .dos-btn for sorting, .dos-badge for
+  severity and confidence, .dos-choice for criteria, .dos-alert for the
+  method, .dos-breadcrumbs and .dos-btn for the header. The register table
+  is an .ha-* layout because DesignOS has no table component yet.
+-->
+<html lang="en" data-color-mode="light" data-radius="slightly-rounded" data-surface="website">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Technical audit scaffold with a findings register and remediation plan.">
+<meta name="generator" content="Work Report">
+<title>FellowShow codebase audit | September 25, 2026</title>
+<style>
+/* GENERATED from design-os/tokens.css — do not edit.
+   DesignOS semantic tokens, Light Mode, plus the added roles.
+   Regenerate: node skill-templates-v2/gen-tokens.mjs (build.mjs runs it). */
+:root {
+  --text-primary:#0a0a0a;
+  --text-secondary:#404040;
+  --text-tertiary:#525252;
+  --text-quarternary:#737373;
+  --text-disabled:#a3a3a3;
+  --text-error:#b91c1c;
+  --text-error-secondary:#f87171;
+  --text-warning:#b45309;
+  --text-warning-secondary:#fbbf24;
+  --text-success:#047857;
+  --text-brand:#171717;
+  --text-brand-secondary:#a3a3a3;
+  --border-primary:#f0f0f0;
+  --border-secondary:#e5e5e5;
+  --border-tertiary:#d4d4d4;
+  --border-disabled:#f0f0f0;
+  --border-error:#dc2626;
+  --border-error-secondary:#fecaca;
+  --border-warning:#b45309;
+  --border-warning-secondary:#fde68a;
+  --border-success:#059669;
+  --border-brand:#171717;
+  --border-brand-secondary:#e5e5e5;
+  --icon-primary:#171717;
+  --icon-secondary:#525252;
+  --icon-tertiary:#737373;
+  --icon-disabled:#a3a3a3;
+  --icon-error:#dc2626;
+  --icon-error-secondary:#f87171;
+  --icon-warning:#b45309;
+  --icon-warning-secondary:#fbbf24;
+  --icon-success:#059669;
+  --icon-brand:#171717;
+  --icon-brand-secondary:#a3a3a3;
+  --bg-primary:#ffffff;
+  --bg-primary_hover:#f7f7f7;
+  --bg-secondary:#f7f7f7;
+  --bg-tertiary:#f0f0f0;
+  --bg-quarternary:#e5e5e5;
+  --bg-disabled:#f7f7f7;
+  --bg-error:#fef2f2;
+  --bg-error-secondary:#fee2e2;
+  --bg-warning:#fffbeb;
+  --bg-warning-secondary:#fef3c7;
+  --bg-success:#ecfdf5;
+  --bg-brand-primary:#f7f7f7;
+  --bg-brand-secondary:#f0f0f0;
+  --bg-alt:#171717;
+  --opacity-light-10:#ffffff1a;
+  --opacity-light-20:#ffffff33;
+  --opacity-light-30:#ffffff4d;
+  --opacity-light-40:#ffffff66;
+  --opacity-light-50:#ffffff80;
+  --opacity-light-60:#ffffff99;
+  --opacity-light-70:#ffffffb2;
+  --opacity-light-80:#ffffffcc;
+  --opacity-light-90:#ffffffe5;
+  --opacity-dark-10:#0000001a;
+  --opacity-dark-20:#00000033;
+  --opacity-dark-30:#0000004d;
+  --opacity-dark-40:#00000066;
+  --opacity-dark-50:#00000080;
+  --opacity-dark-60:#00000099;
+  --opacity-dark-70:#000000b2;
+  --opacity-dark-80:#000000cc;
+  --opacity-dark-90:#000000e5;
+  --bg-error-solid:#b91c1c;
+  --bg-success-secondary:#d1fae5;
+  --bg-success-solid:#059669;
+  --bg-warning-solid:#f59e0b;
+  --bg-brand-primary_hover:#f0f0f0;
+  --bg-brand-solid:#0a0a0a;
+  --icon-success-secondary:#34d399;
+  --border-success-secondary:#a7f3d0;
+  --text-alt:#ffffff;
+  --text-placeholder:#a3a3a3;
+  --text-placeholder-alt:#d4d4d4;
+  --icon-dark:#0a0a0a;
+  --icon-white:#ffffff;
+  --bg-primary_press:#f0f0f0;
+  --text-success-secondary:#34d399;
+  --border-white:#ffffff;
+  --bg-dark:#171717;
+  --bg-white:#ffffff;
+  --text-white:#ffffff;
+  --text-dark:#000000;
+  --icon-alt:#ffffff;
+  --bg-info:#eff6ff;
+  --bg-info-secondary:#dbeafe;
+  --bg-info-solid:#1d4ed8;
+  --text-info:#1d4ed8;
+  --text-info-secondary:#60a5fa;
+  --border-info:#2563eb;
+  --border-info-secondary:#bfdbfe;
+  --icon-info:#2563eb;
+  --icon-info-secondary:#60a5fa;
+  --border-alt:#ffffff;
+  --alpha-brand-accent-85:#0a0a0ad9;
+  --border-alt-2:#000000;
+  --alpha-brand-accent-10:#0a0a0a1a;
+  --alpha-brand-accent-40:#0a0a0a66;
+  --alpha-brand-accent-60:#0a0a0a99;
+  --alpha-brand-accent-20:#0a0a0a33;
+  --alpha-neutral-accent-10:#0a0a0a1a;
+  --alpha-neutral-accent-20:#0a0a0a33;
+  --alpha-neutral-accent-40:#0a0a0a66;
+  --alpha-neutral-accent-60:#0a0a0a99;
+  --alpha-neutral-accent-85:#0a0a0ad9;
+  --alpha-success-accent-10:#0596691a;
+  --alpha-success-accent-20:#05966933;
+  --alpha-success-accent-40:#05966966;
+  --alpha-success-accent-60:#05966999;
+  --alpha-success-accent-85:#059669d9;
+  --alpha-warning-accent-10:#f59e0b1a;
+  --alpha-warning-accent-20:#f59e0b33;
+  --alpha-warning-accent-40:#f59e0b66;
+  --alpha-warning-accent-60:#f59e0b99;
+  --alpha-warning-accent-85:#f59e0bd9;
+  --alpha-blue-accent-10:#2563eb1a;
+  --alpha-blue-accent-20:#2563eb33;
+  --alpha-blue-accent-40:#2563eb66;
+  --alpha-blue-accent-60:#2563eb99;
+  --alpha-blue-accent-85:#2563ebd9;
+  --alpha-error-accent-10:#dc26261a;
+  --alpha-error-accent-20:#dc262633;
+  --alpha-error-accent-40:#dc262666;
+  --alpha-error-accent-60:#dc262699;
+  --alpha-error-accent-85:#dc2626d9;
+  --chart-blue:#3b82f6;
+  --chart-orange:#fb923c;
+  --chart-green:#16a34a;
+  --chart-red:#dc2626;
+  --chart-purple:#a855f7;
+  --chart-yellow:#facc15;
+  --chart-pink:#ec4899;
+  --chart-dark:#525252;
+  --chart-lime:#65a30d;
+  --chart-cyan:#06b6d4;
+  --chart-success:#10b981;
+  --chart-success-light:#6ee7b7;
+  --icon-quarternary:#a3a3a3;
+  --bg-secondary_hover:#f0f0f0;
+  --bg-secondary_press:#e5e5e5;
+  --bg-brand-hover:#262626;
+  --bg-brand-press:#404040;
+  --black:#000000;
+  --white:#ffffff;
+  --bg-brand-primary_press:#e5e5e5;
+  --icon-quinary:#d4d4d4;
+  --spacing-0:0px;
+  --spacing-2:2px;
+  --spacing-4:4px;
+  --spacing-6:6px;
+  --spacing-8:8px;
+  --spacing-12:12px;
+  --spacing-16:16px;
+  --spacing-20:20px;
+  --spacing-24:24px;
+  --spacing-32:32px;
+  --spacing-40:40px;
+  --spacing-48:48px;
+  --spacing-56:56px;
+  --spacing-64:64px;
+  --spacing-96:96px;
+  --spacing-128:128px;
+  --spacing-160:160px;
+  --spacing-192:192px;
+  --spacing-224:224px;
+  --spacing-256:256px;
+  --spacing-320:320px;
+  --spacing-384:384px;
+  --spacing-480:480px;
+  --spacing-560:560px;
+  --spacing-640:640px;
+  --spacing-720:720px;
+  --spacing-768:768px;
+  --spacing-960:960px;
+  --spacing-1280:1280px;
+  --spacing-1440:1440px;
+  --spacing-1920:1920px;
+  --screen-size:1440px;
+  --padding-padding:24px;
+  --spacing-1024:1024px;
+  --spacing-80:80px;
+  --spacing-1080:1080px;
+  --gap-gap:24px;
+  --spacing-72:72px;
+  --font-size-display:72px;
+  --font-size-header-h1:60px;
+  --font-size-header-h2:48px;
+  --font-size-header-h3:36px;
+  --font-size-header-h4:30px;
+  --font-size-header-h5:24px;
+  --font-size-header-h6:20px;
+  --font-size-paragraph-lg:18px;
+  --font-size-paragraph-md:16px;
+  --font-size-paragraph-sm:14px;
+  --font-size-caption-md:12px;
+  --font-size-caption-sm:10px;
+  --radius-none:0px;
+  --radius-xxs:2px;
+  --radius-xs:4px;
+  --radius-sm:6px;
+  --radius-md:8px;
+  --radius-lg:12px;
+  --radius-xl:16px;
+  --radius-2xl:20px;
+  --radius-3xl:24px;
+  --radius-4xl:32px;
+  --radius-full:100000px;
+  --width-xxs:320px;
+  --width-xs:384px;
+  --width-sm:480px;
+  --width-md:560px;
+  --width-lg:640px;
+  --width-xl:768px;
+  --width-2xl:1024px;
+  --width-3xl:1080px;
+  --width-4xl:1280px;
+  --width-5xl:1440px;
+  --width-6xl:1920px;
+  --width-xxxs:256px;
+  --family-display:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --weight-regular:400;
+  --family-heading:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --family-text:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --family-caption:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --weight-bold:700;
+  --weight-medium:500;
+  --weight-semibold:600;
+  --text-on-error-solid:#ffffff;
+  --text-on-warning-solid:#0a0a0a;
+  --text-on-success-solid:#0a0a0a;
+  --text-on-info-solid:#ffffff;
+  --bg-error-solid_hover:#b91c1c;
+  --bg-error-solid_press:#991b1b;
+  --bg-error_press:#fecaca;
+  --focus-ring-width:3px;
+  --focus-ring:var(--alpha-neutral-accent-20);
+  --focus-ring-error:var(--alpha-error-accent-20);
+  --border-control:#8d8d8d;
+  --border-focus-ring:#171717;
+  --shadow-xs:0 4px 6px -3px rgba(10,10,10,.06);
+  --shadow-sm:0 1px 2px -1px rgba(10,10,10,.1);
+  --shadow-md:0 4px 12px -2px rgba(10,10,10,.08);
+  --shadow-lg:0 12px 16px -4px rgba(10,10,10,.08),0 4px 6px -2px rgba(10,10,10,.03);
+  --shadow-card:0 4px 24px rgba(10,10,10,.05);
+  --shadow-evidence:0 24px 60px rgba(10,10,10,.14);
+  --ring-offset:var(--bg-primary);
+  --ring-brand:rgba(10,10,10,0.12);
+  --ring-error:rgba(255,0,0,0.12);
+  --motion-state:160ms;
+  --motion-ease:cubic-bezier(.2,0,0,1);
+  --line-height-paragraph-md:1.5;
+  --line-height-paragraph-sm:1.4286;
+  --line-height-caption-md:1.5;
+  --button:100000px;
+  --modal:32px;
+  --modal-inner-container:20px;
+  --input:8px;
+  --calendar-header:100000px;
+  --pagination:100000px;
+  --card:12px;
+  --nav-item:12px;
+  /* Template-only aliases and page-level values. Not DesignOS tokens — these
+     name things the document shell needs, in terms of DesignOS roles. */
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --family-text:var(--font-sans);--family-caption:var(--font-sans);
+  --weight-regular:400;--weight-medium:500;--weight-semibold:600;--weight-bold:700;
+  --font-size-caption-md:12px;--font-size-paragraph-sm:14px;--font-size-paragraph-md:16px;
+  --line-height-caption-md:1.5;--line-height-paragraph-sm:1.4286;--line-height-paragraph-md:1.5;
+  --canvas:var(--bg-secondary);--surface-header:var(--canvas);
+  --ink:var(--text-primary);--charcoal:var(--text-secondary);--stone:var(--text-tertiary);
+  --brand:var(--text-brand);--border:var(--border-secondary);--border-soft:var(--border-primary);--sand:var(--border-secondary);
+  --content:1180px;
+}
+html[data-radius="full"]{--button:100000px;--modal:32px;--modal-inner-container:20px;--input:8px;--calendar-header:100000px;--pagination:100000px;--card:12px;--nav-item:12px;}
+html[data-radius="normal"]{--button:8px;--modal:16px;--modal-inner-container:12px;--input:8px;--calendar-header:12px;--pagination:10px;--card:8px;--nav-item:8px;}
+html[data-radius="sharp"]{--button:0px;--modal:0px;--modal-inner-container:0px;--input:0px;--calendar-header:0px;--pagination:0px;--card:0px;--nav-item:0px;}
+html[data-radius="slightly-rounded"]{--button:12px;--modal:20px;--modal-inner-container:16px;--input:12px;--calendar-header:16px;--pagination:14px;--card:12px;--nav-item:8px;}
+html[data-color-mode="dark"]{
+/* GENERATED from design-os/tokens.css — do not edit.
+   Dark Mode overrides. Bare declarations — the caller supplies the wrapper.
+   Regenerate: node skill-templates-v2/gen-tokens.mjs (build.mjs runs it). */
+  --text-primary:#ffffff;
+  --text-secondary:#d4d4d4;
+  --text-tertiary:#a3a3a3;
+  --text-quarternary:#a3a3a3;
+  --text-disabled:#737373;
+  --text-error:#fee2e2;
+  --text-warning:#fef3c7;
+  --text-warning-secondary:#f59e0b;
+  --text-success:#d1fae5;
+  --text-brand:#fcfcfc;
+  --text-brand-secondary:#f7f7f7;
+  --border-primary:#262626;
+  --border-secondary:#262626;
+  --border-tertiary:#404040;
+  --border-disabled:#404040;
+  --border-error:#dc262666;
+  --border-error-secondary:#7f1d1d;
+  --border-warning:#f59e0b66;
+  --border-warning-secondary:#78350f;
+  --border-success:#05966966;
+  --border-brand:#e5e5e5;
+  --border-brand-secondary:#525252;
+  --icon-primary:#ffffff;
+  --icon-secondary:#d4d4d4;
+  --icon-disabled:#737373;
+  --icon-error:#fee2e2;
+  --icon-warning:#fef3c7;
+  --icon-success:#d1fae5;
+  --icon-brand:#f7f7f7;
+  --bg-primary:#0a0a0a;
+  --bg-primary_hover:#262626;
+  --bg-secondary:#171717;
+  --bg-tertiary:#262626;
+  --bg-quarternary:#404040;
+  --bg-disabled:#262626;
+  --bg-error:#dc262666;
+  --bg-error-secondary:#dc262633;
+  --bg-warning:#f59e0b66;
+  --bg-warning-secondary:#f59e0b33;
+  --bg-success:#05966966;
+  --bg-brand-primary:#171717;
+  --bg-brand-secondary:#525252;
+  --bg-alt:#ffffff;
+  --opacity-light-10:#0e0f111a;
+  --opacity-light-20:#0e0f1133;
+  --opacity-light-30:#0e0f114d;
+  --opacity-light-40:#0e0f1166;
+  --opacity-light-50:#0e0f1180;
+  --opacity-light-60:#0e0f1199;
+  --opacity-light-70:#0e0f11b2;
+  --opacity-light-80:#0e0f11cc;
+  --opacity-light-90:#0e0f11e5;
+  --opacity-dark-10:#ffffff1a;
+  --opacity-dark-20:#ffffff33;
+  --opacity-dark-30:#ffffff4d;
+  --opacity-dark-40:#ffffff66;
+  --opacity-dark-50:#ffffff80;
+  --opacity-dark-60:#ffffff99;
+  --opacity-dark-70:#ffffffb2;
+  --opacity-dark-80:#ffffffcc;
+  --opacity-dark-90:#ffffffe5;
+  --bg-error-solid:#dc2626;
+  --bg-success-secondary:#05966933;
+  --bg-warning-solid:#d97706;
+  --bg-brand-primary_hover:#262626;
+  --bg-brand-solid:#ffffff;
+  --border-success-secondary:#064e3b;
+  --text-alt:#000000;
+  --text-placeholder:#737373;
+  --text-placeholder-alt:#404040;
+  --bg-primary_press:#404040;
+  --text-success-secondary:#10b981;
+  --icon-alt:#000000;
+  --bg-info:#2563eb1a;
+  --bg-info-secondary:#2563eb;
+  --bg-info-solid:#2563eb;
+  --text-info:#dbeafe;
+  --border-info:#3b82f6;
+  --border-info-secondary:#1e3a8a;
+  --icon-info:#dbeafe;
+  --border-alt:#000000;
+  --alpha-brand-accent-85:#ffffffd9;
+  --border-alt-2:#ffffff;
+  --alpha-brand-accent-10:#0000001a;
+  --alpha-brand-accent-40:#00000066;
+  --alpha-brand-accent-60:#00000099;
+  --alpha-brand-accent-20:#00000033;
+  --alpha-neutral-accent-10:#ffffff;
+  --alpha-neutral-accent-20:#ffffff;
+  --alpha-neutral-accent-40:#ffffff;
+  --alpha-neutral-accent-60:#ffffff;
+  --alpha-neutral-accent-85:#ffffff;
+  --alpha-success-accent-10:#ffffff;
+  --alpha-success-accent-20:#ffffff;
+  --alpha-success-accent-40:#ffffff;
+  --alpha-success-accent-60:#ffffff;
+  --alpha-success-accent-85:#ffffff;
+  --alpha-warning-accent-10:#ffffff;
+  --alpha-warning-accent-20:#ffffff;
+  --alpha-warning-accent-40:#ffffff;
+  --alpha-warning-accent-60:#ffffff;
+  --alpha-warning-accent-85:#ffffff;
+  --alpha-error-accent-10:#ffffff;
+  --alpha-error-accent-20:#ffffff;
+  --alpha-error-accent-40:#ffffff;
+  --alpha-error-accent-60:#ffffff;
+  --alpha-error-accent-85:#ffffff;
+  --chart-blue:#60a5fa;
+  --chart-orange:#fdba74;
+  --chart-green:#22c55e;
+  --chart-red:#ef4444;
+  --chart-purple:#d8b4fe;
+  --chart-yellow:#fde047;
+  --chart-pink:#f472b6;
+  --chart-dark:#a3a3a3;
+  --chart-lime:#a3e635;
+  --chart-cyan:#22d3ee;
+  --chart-success:#34d399;
+  --icon-quarternary:#737373;
+  --bg-secondary_hover:#262626;
+  --bg-secondary_press:#404040;
+  --bg-brand-hover:#f7f7f7;
+  --bg-brand-press:#f0f0f0;
+  --bg-brand-primary_press:#262626;
+  --icon-quinary:#737373;
+  --focus-ring:rgba(229,229,229,0.24);
+  --focus-ring-error:rgba(239,68,68,0.32);
+  --ring-brand:rgba(229,229,229,0.16);
+  --ring-error:rgba(239,68,68,0.24);
+  --border-control:#646464;
+  --border-focus-ring:#e5e5e5;
+}
+@media(prefers-color-scheme:dark){html:not([data-color-mode="light"]){
+/* GENERATED from design-os/tokens.css — do not edit.
+   Dark Mode overrides. Bare declarations — the caller supplies the wrapper.
+   Regenerate: node skill-templates-v2/gen-tokens.mjs (build.mjs runs it). */
+  --text-primary:#ffffff;
+  --text-secondary:#d4d4d4;
+  --text-tertiary:#a3a3a3;
+  --text-quarternary:#a3a3a3;
+  --text-disabled:#737373;
+  --text-error:#fee2e2;
+  --text-warning:#fef3c7;
+  --text-warning-secondary:#f59e0b;
+  --text-success:#d1fae5;
+  --text-brand:#fcfcfc;
+  --text-brand-secondary:#f7f7f7;
+  --border-primary:#262626;
+  --border-secondary:#262626;
+  --border-tertiary:#404040;
+  --border-disabled:#404040;
+  --border-error:#dc262666;
+  --border-error-secondary:#7f1d1d;
+  --border-warning:#f59e0b66;
+  --border-warning-secondary:#78350f;
+  --border-success:#05966966;
+  --border-brand:#e5e5e5;
+  --border-brand-secondary:#525252;
+  --icon-primary:#ffffff;
+  --icon-secondary:#d4d4d4;
+  --icon-disabled:#737373;
+  --icon-error:#fee2e2;
+  --icon-warning:#fef3c7;
+  --icon-success:#d1fae5;
+  --icon-brand:#f7f7f7;
+  --bg-primary:#0a0a0a;
+  --bg-primary_hover:#262626;
+  --bg-secondary:#171717;
+  --bg-tertiary:#262626;
+  --bg-quarternary:#404040;
+  --bg-disabled:#262626;
+  --bg-error:#dc262666;
+  --bg-error-secondary:#dc262633;
+  --bg-warning:#f59e0b66;
+  --bg-warning-secondary:#f59e0b33;
+  --bg-success:#05966966;
+  --bg-brand-primary:#171717;
+  --bg-brand-secondary:#525252;
+  --bg-alt:#ffffff;
+  --opacity-light-10:#0e0f111a;
+  --opacity-light-20:#0e0f1133;
+  --opacity-light-30:#0e0f114d;
+  --opacity-light-40:#0e0f1166;
+  --opacity-light-50:#0e0f1180;
+  --opacity-light-60:#0e0f1199;
+  --opacity-light-70:#0e0f11b2;
+  --opacity-light-80:#0e0f11cc;
+  --opacity-light-90:#0e0f11e5;
+  --opacity-dark-10:#ffffff1a;
+  --opacity-dark-20:#ffffff33;
+  --opacity-dark-30:#ffffff4d;
+  --opacity-dark-40:#ffffff66;
+  --opacity-dark-50:#ffffff80;
+  --opacity-dark-60:#ffffff99;
+  --opacity-dark-70:#ffffffb2;
+  --opacity-dark-80:#ffffffcc;
+  --opacity-dark-90:#ffffffe5;
+  --bg-error-solid:#dc2626;
+  --bg-success-secondary:#05966933;
+  --bg-warning-solid:#d97706;
+  --bg-brand-primary_hover:#262626;
+  --bg-brand-solid:#ffffff;
+  --border-success-secondary:#064e3b;
+  --text-alt:#000000;
+  --text-placeholder:#737373;
+  --text-placeholder-alt:#404040;
+  --bg-primary_press:#404040;
+  --text-success-secondary:#10b981;
+  --icon-alt:#000000;
+  --bg-info:#2563eb1a;
+  --bg-info-secondary:#2563eb;
+  --bg-info-solid:#2563eb;
+  --text-info:#dbeafe;
+  --border-info:#3b82f6;
+  --border-info-secondary:#1e3a8a;
+  --icon-info:#dbeafe;
+  --border-alt:#000000;
+  --alpha-brand-accent-85:#ffffffd9;
+  --border-alt-2:#ffffff;
+  --alpha-brand-accent-10:#0000001a;
+  --alpha-brand-accent-40:#00000066;
+  --alpha-brand-accent-60:#00000099;
+  --alpha-brand-accent-20:#00000033;
+  --alpha-neutral-accent-10:#ffffff;
+  --alpha-neutral-accent-20:#ffffff;
+  --alpha-neutral-accent-40:#ffffff;
+  --alpha-neutral-accent-60:#ffffff;
+  --alpha-neutral-accent-85:#ffffff;
+  --alpha-success-accent-10:#ffffff;
+  --alpha-success-accent-20:#ffffff;
+  --alpha-success-accent-40:#ffffff;
+  --alpha-success-accent-60:#ffffff;
+  --alpha-success-accent-85:#ffffff;
+  --alpha-warning-accent-10:#ffffff;
+  --alpha-warning-accent-20:#ffffff;
+  --alpha-warning-accent-40:#ffffff;
+  --alpha-warning-accent-60:#ffffff;
+  --alpha-warning-accent-85:#ffffff;
+  --alpha-error-accent-10:#ffffff;
+  --alpha-error-accent-20:#ffffff;
+  --alpha-error-accent-40:#ffffff;
+  --alpha-error-accent-60:#ffffff;
+  --alpha-error-accent-85:#ffffff;
+  --chart-blue:#60a5fa;
+  --chart-orange:#fdba74;
+  --chart-green:#22c55e;
+  --chart-red:#ef4444;
+  --chart-purple:#d8b4fe;
+  --chart-yellow:#fde047;
+  --chart-pink:#f472b6;
+  --chart-dark:#a3a3a3;
+  --chart-lime:#a3e635;
+  --chart-cyan:#22d3ee;
+  --chart-success:#34d399;
+  --icon-quarternary:#737373;
+  --bg-secondary_hover:#262626;
+  --bg-secondary_press:#404040;
+  --bg-brand-hover:#f7f7f7;
+  --bg-brand-press:#f0f0f0;
+  --bg-brand-primary_press:#262626;
+  --icon-quinary:#737373;
+  --focus-ring:rgba(229,229,229,0.24);
+  --focus-ring-error:rgba(239,68,68,0.32);
+  --ring-brand:rgba(229,229,229,0.16);
+  --ring-error:rgba(239,68,68,0.24);
+  --border-control:#646464;
+  --border-focus-ring:#e5e5e5;
+}}
+/* ── Document shell: type scale, header contract, sheet, cover, memo, footer ── */
+*{box-sizing:border-box}
+/* `clip` rather than `hidden`: hidden turns the root into a scroll container,
+   which stops in-page anchor links from scrolling at all in Chromium. */
+html{overflow-x:clip;background:var(--canvas);scroll-behavior:smooth}
+/* Every anchor target clears the 56px fixed header instead of landing under it. */
+[id]{scroll-margin-top:76px}
+body{margin:0;min-width:0;overflow-x:clip;color:var(--ink);background:var(--canvas);
+  font-family:var(--font-sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--border-brand);outline-offset:2px}
+h1,h2,h3,h4,p{margin-top:0}
+img{max-width:100%}
+.sheet{width:min(calc(100% - 40px),var(--content));margin-inline:auto}
+
+/* Header — the shared 56px contract from the report library */
+.folio-bar{position:fixed;inset:0 0 auto;z-index:50;border-bottom:1px solid transparent;
+  background:color-mix(in srgb,var(--surface-header) 82%,transparent);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);transition:border-color 120ms ease}
+.folio-bar.is-scrolled{border-bottom-color:var(--border-primary)}
+.folio-inner{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.folio{display:flex;align-items:center;gap:8px;min-width:0;color:var(--stone);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.folio .home-link{display:inline-flex;align-items:center;gap:7px;color:var(--ink);font-size:15px;font-weight:500;letter-spacing:0;text-transform:none;text-decoration:none}
+.folio .home-link svg{width:18px;height:18px}
+.folio .separator{color:var(--icon-quarternary)}
+.folio .category-link{color:var(--stone);text-decoration:none}
+.folio .title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folio-meta{display:flex;align-items:center;gap:0;margin-left:auto}
+.folio-links{display:flex;gap:8px}
+.folio-links a{min-height:42px;display:inline-flex;align-items:center;padding-inline:10px;border-radius:var(--nav-item);
+  color:var(--olive,var(--text-tertiary));font-size:11px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
+.folio-links a:hover{background:var(--bg-primary-hover);color:var(--text-primary)}
+.theme-toggle{display:inline-grid;width:42px;min-height:42px;flex:0 0 42px;place-items:center;padding:0;border:0;
+  border-radius:var(--nav-item);background:transparent;color:var(--icon-secondary);cursor:pointer}
+.theme-toggle svg{width:18px;height:18px}
+.theme-toggle [data-theme-icon="moon"]{display:none}
+html[data-color-mode="dark"] .theme-toggle [data-theme-icon="sun"]{display:none}
+html[data-color-mode="dark"] .theme-toggle [data-theme-icon="moon"]{display:block}
+.theme-toggle:hover{background:var(--bg-primary-hover);color:var(--icon-primary)}
+.report{padding-top:52px}
+
+/* Cover */
+.cover{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:70px;padding:76px 0 58px;border-bottom:1px solid var(--border-primary)}
+.kicker{margin:0 0 14px;color:var(--brand);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+h1{max-width:820px;margin-bottom:22px;font-size:clamp(42px,6.4vw,72px);font-weight:500;letter-spacing:-.045em;line-height:1}
+.deck{max-width:720px;margin-bottom:0;color:var(--charcoal);font-size:19px;line-height:1.55}
+.cover-meta{display:flex;flex-wrap:wrap;gap:7px 24px;margin-top:32px;color:var(--stone);
+  font-size:11px;line-height:1.4;letter-spacing:.04em;text-transform:uppercase}
+.cover-meta span::before{content:"—";margin-right:7px;color:var(--brand)}
+.stamp{align-self:start;padding:24px;border:0;border-radius:var(--radius-xl);
+  background:var(--bg-warning-secondary);box-shadow:var(--shadow-card)}
+.stamp-small{color:var(--text-warning);font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase}
+.stamp-score{margin-top:12px;color:var(--text-warning);font-size:62px;font-variant-numeric:tabular-nums;line-height:.9}
+.stamp-score span{font-size:19px}
+.stamp p{margin:10px 0 0;color:var(--text-warning);font-size:12px;line-height:1.45}
+
+/* Chapters */
+.chapter{padding:62px 0}
+/* Eyebrow on its own row, heading and lead stacked beneath it — one rhythm for
+   every section head in every template. */
+.chapter-head{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin-bottom:30px}
+.chapter-head .kicker{margin-bottom:16px}
+.chapter-head h2{max-width:820px;margin:0;font-size:clamp(28px,3.8vw,42px);font-weight:500;letter-spacing:-.03em;line-height:1.08}
+.chapter-head .lead{max-width:720px;margin:12px 0 0;color:var(--stone)}
+
+/* Memo bands */
+.memo{display:grid;grid-template-columns:repeat(4,1fr);gap:28px}
+.memo-block{padding:28px 0 30px}
+.label{margin-bottom:8px;color:var(--brand);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.memo-block h2{margin-bottom:7px;font-size:19px;font-weight:500;line-height:1.25}
+.memo-block p{margin:0;color:var(--stone);font-size:13px;line-height:1.5}
+.audit-brief{border-top:1px solid var(--sand);border-bottom:1px solid var(--sand)}
+
+/* Footer */
+footer{padding:28px 0 38px}
+.footer-inner{display:flex;justify-content:space-between;gap:20px;color:var(--stone);font-size:13px}
+.footer-inner p{margin:0}
+.footer-meta{display:grid;gap:2px;font-size:11px;text-align:right}
+.footer-meta strong{color:var(--ink);font-weight:600}
+
+@media(max-width:900px){
+  .cover{grid-template-columns:minmax(0,1fr);gap:32px;padding:48px 0 40px}
+  .memo{grid-template-columns:repeat(2,1fr);gap:0 24px}
+  .footer-inner{flex-direction:column}
+  .footer-meta{text-align:left}
+}
+@media(max-width:640px){
+  .memo{grid-template-columns:minmax(0,1fr)}
+  .folio-links{display:none}
+  .chapter{padding:44px 0}
+}
+@media print{
+  .folio-bar,.theme-toggle,.no-print{display:none!important}
+  .report{padding-top:0}
+  body{background:var(--bg-white)}
+  .chapter,.decision{break-inside:avoid}
+  .observation,.overview-card,.memo-block,.score-lift,.path-row,.validation,.quick-win,.ledger-row{break-inside:avoid}
+}
+
+[hidden]{display:none!important}
+
+/* Work Report contract: every table cell is vertically centred, whatever the
+   table. Stated once, globally, so a new table cannot opt out by accident. */
+table th, table td{vertical-align:middle}
+/* ── DesignOS components (subset, verbatim contracts from design-os/*.css) ── */
+.dos-status--brand   {--st-soft:var(--bg-brand-primary);--st-soft-2:var(--bg-brand-primary);   --st-solid:var(--bg-brand-solid);  --st-border:var(--border-brand);   --st-content:var(--text-brand);  --st-on-solid:var(--text-alt)}
+.dos-status--success {--st-soft:var(--bg-success);      --st-soft-2:var(--bg-success-secondary);--st-solid:var(--bg-success-solid);--st-border:var(--border-success); --st-content:var(--text-success);--st-on-solid:var(--text-white)}
+.dos-status--warning {--st-soft:var(--bg-warning);      --st-soft-2:var(--bg-warning-secondary);--st-solid:var(--bg-warning-solid);--st-border:var(--border-warning); --st-content:var(--text-warning);--st-on-solid:var(--text-primary)}
+.dos-status--error   {--st-soft:var(--bg-error);        --st-soft-2:var(--bg-error-secondary);  --st-solid:var(--bg-error-solid);  --st-border:var(--border-error);   --st-content:var(--text-error);  --st-on-solid:var(--text-white)}
+.dos-status--info    {--st-soft:var(--bg-info);         --st-soft-2:var(--bg-info-secondary);   --st-solid:var(--bg-info-solid);   --st-border:var(--border-info);    --st-content:var(--text-info);   --st-on-solid:var(--text-white)}
+.dos-status--neutral {--st-soft:var(--bg-secondary);    --st-soft-2:var(--bg-tertiary);         --st-solid:var(--bg-dark);         --st-border:var(--border-secondary);--st-content:var(--text-primary);--st-on-solid:var(--text-white)}
+
+.dos-badge{display:inline-flex;align-items:center;gap:var(--spacing-0);height:var(--dos-badge-height,28px);
+  padding:var(--spacing-4) var(--spacing-6);border:1px solid transparent;border-radius:var(--button);
+  background:var(--st-soft-2);color:var(--st-content);font-family:var(--family-caption);
+  font-size:var(--font-size-caption-md);line-height:var(--line-height-caption-md);
+  font-weight:var(--weight-semibold);white-space:nowrap;overflow:hidden}
+.dos-badge--sm{--dos-badge-height:24px;font-size:11px}
+.dos-badge__label{display:inline-flex;align-items:center;justify-content:center;gap:var(--spacing-4);padding:0 var(--spacing-4)}
+.dos-badge__icon{display:block;flex:none;width:12px;height:12px}
+.dos-badge__dot{flex:none;width:6px;height:6px;border-radius:50%;background:var(--st-solid)}
+/* Outline is part of the DesignOS contract but unused by these templates —
+   badges here are Light (no modifier) or Solid only. */
+.dos-badge--outline{background:var(--bg-primary);border-color:var(--st-border)}
+.dos-badge--solid{background:var(--st-solid);color:var(--st-on-solid);border-color:transparent}
+
+.dos-btn{--dos-btn-bg:transparent;--dos-btn-fg:var(--text-brand);--dos-btn-border:transparent;--dos-btn-border-width:0;
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:var(--spacing-4);
+  height:var(--dos-btn-height,40px);padding:var(--dos-btn-pad-y,10px) var(--dos-btn-pad-x,12px);
+  border:var(--dos-btn-border-width) solid var(--dos-btn-border);border-radius:var(--button);
+  background-color:var(--dos-btn-bg);color:var(--dos-btn-fg);font-family:var(--family-text);
+  font-size:var(--dos-btn-font-size,14px);line-height:1.4286;font-weight:var(--weight-medium);
+  white-space:nowrap;cursor:pointer;appearance:none;-webkit-appearance:none;
+  transition:background-color var(--motion-state) var(--motion-ease),border-color var(--motion-state) var(--motion-ease),color var(--motion-state) var(--motion-ease)}
+.dos-btn__label{display:inline-flex;align-items:center;padding:0 var(--spacing-4)}
+.dos-btn__icon{display:block;flex:none;width:var(--dos-btn-icon-size,16px);height:var(--dos-btn-icon-size,16px)}
+.dos-btn:focus-visible{outline:none;box-shadow:0 0 0 var(--focus-ring-width) var(--focus-ring);z-index:10}
+.dos-btn--sm{--dos-btn-height:32px;--dos-btn-pad-y:var(--spacing-6);--dos-btn-pad-x:var(--spacing-12)}
+.dos-btn--lg{--dos-btn-height:48px;--dos-btn-pad-y:14px;--dos-btn-pad-x:var(--spacing-16);--dos-btn-icon-size:20px}
+.dos-btn--xl{--dos-btn-height:56px;--dos-btn-pad-y:var(--spacing-16);--dos-btn-pad-x:var(--spacing-24);--dos-btn-font-size:16px;--dos-btn-icon-size:20px}
+.dos-btn--icon-only{width:var(--dos-btn-height,40px);padding:0}
+.dos-btn--default{--dos-btn-bg:var(--bg-brand-solid);--dos-btn-fg:var(--text-alt)}
+.dos-btn--secondary{--dos-btn-bg:var(--bg-secondary);--dos-btn-fg:var(--text-primary)}
+.dos-btn--outline{--dos-btn-bg:var(--bg-primary);--dos-btn-fg:var(--text-brand);--dos-btn-border:var(--border-brand-secondary);--dos-btn-border-width:1px}
+.dos-btn--ghost{--dos-btn-bg:transparent;--dos-btn-fg:var(--text-brand)}
+.dos-btn--link{--dos-btn-bg:transparent;--dos-btn-fg:var(--text-brand);height:auto;padding:0;border-radius:0;text-decoration:underline;text-underline-offset:3px}
+.dos-btn--default:hover{--dos-btn-bg:var(--bg-brand-hover)}
+.dos-btn--secondary:hover{--dos-btn-bg:var(--bg-secondary-hover)}
+.dos-btn--outline:hover,.dos-btn--ghost:hover{--dos-btn-bg:var(--bg-brand-primary-hover)}
+.dos-btn--default:active{--dos-btn-bg:var(--bg-brand-press)}
+.dos-btn--secondary:active{--dos-btn-bg:var(--bg-secondary-press)}
+.dos-btn--outline:active,.dos-btn--ghost:active{--dos-btn-bg:var(--bg-brand-primary-press)}
+.dos-btn:disabled{--dos-btn-bg:var(--bg-disabled);--dos-btn-fg:var(--text-disabled);cursor:not-allowed}
+
+.dos-btn-group{display:inline-flex;align-items:center;width:fit-content;max-width:100%;align-self:flex-start;
+  gap:var(--spacing-0);padding:var(--spacing-0);border:1px solid var(--border-primary);
+  border-radius:var(--button);overflow:hidden}
+.dos-btn-group__item{display:flex;align-items:center;justify-content:center;gap:var(--spacing-0);flex:none;
+  height:44px;padding:var(--spacing-8) var(--spacing-12);border:0;background:var(--bg-primary);
+  color:var(--text-primary);font-family:var(--family-text);font-size:var(--font-size-paragraph-sm);
+  line-height:var(--line-height-paragraph-sm);font-weight:var(--weight-medium);white-space:nowrap;cursor:pointer}
+.dos-btn-group--sm .dos-btn-group__item{height:32px}
+.dos-btn-group__item+.dos-btn-group__item{border-left:1px solid var(--border-primary)}
+.dos-btn-group__item:hover{background:var(--bg-primary-hover)}
+.dos-btn-group__item[aria-pressed="true"],.dos-btn-group__item.is-active{background:var(--bg-brand-primary-press);color:var(--text-primary)}
+.dos-btn-group__item:focus-visible{outline:none;box-shadow:inset 0 0 0 var(--focus-ring-width) var(--focus-ring)}
+/* Icon Only = True: a fixed square, glyph centred, name carried by aria-label. */
+.dos-btn-group__item--icon{width:40px;padding:0}
+.dos-btn-group--sm .dos-btn-group__item--icon{width:34px}
+.dos-btn-group__item--icon svg{display:block;width:18px;height:18px}
+
+.dos-alert{position:relative;display:flex;align-items:flex-start;gap:var(--spacing-16);
+  padding:var(--spacing-20) var(--spacing-16);border:0;border-radius:var(--card);
+  background:var(--st-soft);color:var(--text-primary);font-family:var(--family-text);
+  font-size:var(--font-size-paragraph-sm);line-height:var(--line-height-paragraph-sm);
+  box-shadow:var(--shadow-xs)}
+.dos-alert--default{background:var(--bg-primary);border:1px solid var(--border-primary);
+  padding:var(--spacing-16);box-shadow:var(--shadow-md)}
+.dos-alert--solid{background:var(--st-solid);border:0;padding:var(--spacing-16);color:var(--st-on-solid);
+  box-shadow:var(--shadow-md)}
+.dos-alert--solid .dos-alert__icon,.dos-alert--solid .dos-alert__title{color:var(--st-on-solid)}
+.dos-alert__icon{display:block;flex:none;width:20px;height:20px;color:var(--st-content)}
+.dos-alert__body{display:flex;flex:1 0 0;min-width:0;flex-direction:column;gap:var(--spacing-8)}
+.dos-alert__title{margin:0;font-size:15px;font-weight:var(--weight-semibold)}
+.dos-alert__text{margin:0;color:var(--text-secondary);font-size:13px;line-height:1.5}
+.dos-alert--small{align-items:center;min-height:48px;padding:var(--spacing-12) var(--spacing-16);
+  gap:var(--spacing-12);box-shadow:none}
+.dos-alert--small .dos-alert__title{color:inherit}
+.dos-alert--small.dos-alert--default{box-shadow:var(--shadow-sm)}
+.dos-alert--small .dos-alert__icon{width:16px;height:16px}
+
+.dos-toggle{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:calc(var(--tg-h,20px)*1.8);
+  height:var(--tg-h,20px);border-radius:var(--radius-full);background:var(--bg-quarternary);cursor:pointer;
+  transition:background-color var(--motion-state) var(--motion-ease)}
+.dos-toggle--sm{--tg-h:18px}
+.dos-toggle::after{content:"";position:absolute;top:2px;left:2px;width:calc(var(--tg-h,20px) - 4px);height:calc(var(--tg-h,20px) - 4px);
+  border-radius:50%;background:var(--bg-primary);transition:transform var(--motion-state) var(--motion-ease)}
+.dos-toggle:checked{background:var(--bg-brand-solid)}
+.dos-toggle:checked::after{transform:translateX(calc(var(--tg-h,20px)*.8))}
+.dos-toggle:focus-visible{outline:none;box-shadow:0 0 0 var(--focus-ring-width) var(--focus-ring)}
+
+.dos-choice{display:flex;align-items:flex-start;gap:var(--spacing-8);cursor:pointer}
+.dos-choice__box{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;margin:1px 0 0;
+  border:1px solid var(--border-control);border-radius:var(--radius-sm);background:var(--bg-primary);cursor:pointer}
+.dos-choice__box:checked{background:var(--bg-brand-solid);border-color:var(--bg-brand-solid);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size:100% 100%}
+html[data-color-mode="dark"] .dos-choice__box:checked{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.dos-choice__box:focus-visible{outline:none;box-shadow:0 0 0 var(--focus-ring-width) var(--focus-ring)}
+.dos-choice__title{font-size:14px;font-weight:var(--weight-medium);color:var(--text-primary)}
+.dos-choice__subtext{font-size:12px;color:var(--text-quarternary)}
+
+.dos-field{display:flex;flex-direction:column;gap:var(--spacing-4);width:100%;font-family:var(--family-text)}
+.dos-field__label{display:flex;align-items:center;gap:var(--spacing-4);font-size:var(--font-size-caption-md);
+  font-weight:var(--weight-medium);color:var(--text-primary)}
+.dos-field__required{color:var(--text-error)}
+.dos-field__hint{font-size:var(--font-size-caption-md);color:var(--text-quarternary)}
+.dos-field.is-error .dos-field__hint{color:var(--text-error)}
+.dos-input{display:flex;align-items:center;gap:var(--spacing-8);height:var(--dos-input-height,40px);width:100%;
+  padding:var(--spacing-8) var(--spacing-12);border:1px solid var(--border-primary);border-radius:var(--input);
+  background:var(--bg-primary);color:var(--text-primary);overflow:hidden;
+  transition:border-color var(--motion-state) var(--motion-ease),box-shadow var(--motion-state) var(--motion-ease)}
+.dos-field--lg .dos-input{--dos-input-height:48px}
+.dos-input__field{flex:1 0 0;min-width:0;border:0;background:transparent;color:inherit;font:inherit;outline:none}
+.dos-input__field::placeholder{color:var(--text-placeholder)}
+.dos-input__icon{flex:none;width:18px;height:18px;color:var(--icon-tertiary)}
+.dos-input:focus-within{border-color:var(--border-control);box-shadow:0 0 0 var(--focus-ring-width) var(--focus-ring)}
+.dos-field.is-error .dos-input{border-color:var(--border-error)}
+
+.dos-divider{display:flex;align-items:center;width:100%;color:var(--text-quarternary);font-size:12px}
+.dos-divider::before,.dos-divider::after{content:"";flex:1 0 0;height:1px;background:var(--border-primary)}
+.dos-divider>span{padding:0 var(--spacing-12)}
+.dos-divider--line{gap:0}
+.dos-divider--line::after{display:none}
+
+.dos-tooltip{position:relative;display:inline-flex}
+.dos-tooltip__bubble{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);
+  z-index:40;width:max-content;max-width:240px;padding:var(--spacing-8) var(--spacing-12);border-radius:var(--radius-md);
+  background:var(--bg-alt);color:var(--text-alt);font-size:12px;line-height:1.45;text-align:left;
+  opacity:0;pointer-events:none;transition:opacity var(--motion-state) var(--motion-ease),transform var(--motion-state) var(--motion-ease);
+  box-shadow:var(--shadow-card)}
+.dos-tooltip:hover .dos-tooltip__bubble,.dos-tooltip:focus-within .dos-tooltip__bubble{opacity:1;transform:translateX(-50%) translateY(0)}
+.dos-tooltip__title{display:block;font-weight:var(--weight-semibold)}
+
+.dos-loader{display:inline-block;width:20px;height:20px;border:2px solid var(--border-secondary);
+  border-top-color:var(--icon-primary);border-radius:50%;animation:dos-spin 700ms linear infinite}
+@keyframes dos-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.dos-choice__box--radio{border-radius:var(--radius-full)}
+.dos-choice__box--radio:checked{background-image:none;box-shadow:inset 0 0 0 4px var(--bg-primary)}
+
+/* A badge used as a filter control. Same anatomy, same status family; the
+   pressed state is the Solid style, so nothing new is invented. */
+button.dos-badge{--dos-badge-height:32px;border:1px solid transparent;background:var(--st-soft);
+  color:var(--st-content);font-family:var(--family-text);font-weight:var(--weight-medium);cursor:pointer;
+  transition:background-color var(--motion-state) var(--motion-ease),color var(--motion-state) var(--motion-ease)}
+button.dos-badge:hover{background:var(--st-solid);color:var(--st-on-solid)}
+button.dos-badge[aria-pressed="true"]{background:var(--st-solid);color:var(--st-on-solid)}
+button.dos-badge:focus-visible{outline:none;box-shadow:0 0 0 var(--focus-ring-width) var(--focus-ring)}
+button.dos-badge .count{opacity:.62;font-variant-numeric:tabular-nums}
+button.dos-badge[aria-pressed="true"] .count{opacity:.72}
+/* ── DesignOS components missing from _dos.css ───────────────────────────────
+   Copied verbatim from design-os/patterns.css and design-os/controls.css.
+   They live here, not in _dos.css, because _dos.css feeds the hash-locked
+   audit template. Fold them into _dos.css at the next deliberate lock update
+   and delete this file. */
+
+/* Breadcrumbs — design-os/patterns.css */
+.dos-breadcrumbs{display:flex;align-items:center;flex-wrap:wrap;gap:var(--spacing-8);font-family:var(--family-text);
+  font-size:var(--font-size-paragraph-sm);line-height:var(--line-height-paragraph-sm)}
+.dos-breadcrumbs ol{display:contents;list-style:none;margin:0;padding:0}
+.dos-breadcrumbs li{display:contents}
+.dos-breadcrumbs__crumb{display:inline-flex;align-items:center;justify-content:center;gap:var(--spacing-4);padding:0;border:0;
+  background:transparent;font:inherit;font-weight:var(--weight-medium);color:var(--text-disabled);text-decoration:none;cursor:pointer}
+.dos-breadcrumbs__crumb > span{display:inline-flex;align-items:center;height:20px;padding-inline:var(--spacing-4);white-space:nowrap}
+.dos-breadcrumbs__crumb:hover{color:var(--text-secondary)}
+.dos-breadcrumbs__crumb:focus-visible{outline:none;box-shadow:0 0 0 var(--focus-ring-width) var(--focus-ring);border-radius:var(--button)}
+.dos-breadcrumbs [aria-current="page"]{color:var(--text-brand);cursor:default}
+.dos-breadcrumbs__sep{display:inline-flex;flex:none;width:14px;height:14px;color:var(--icon-secondary)}
+.dos-breadcrumbs__sep svg{width:14px;height:14px}
+.dos-breadcrumbs__icon{width:20px;height:20px;flex:none}
+
+/* Checkbox and radio wrapper — design-os/controls.css */
+.dos-choice{display:flex;align-items:flex-start;gap:var(--spacing-12);width:298px;max-width:100%;font-family:var(--family-text);
+  font-size:var(--font-size-paragraph-sm);line-height:var(--line-height-paragraph-sm);cursor:pointer}
+.dos-choice__frame{display:flex;align-items:center;padding-top:var(--spacing-2);flex:none}
+.dos-choice__body{display:flex;flex-direction:column;gap:var(--spacing-2);min-width:0;flex:1 0 0}
+/* ── Technical findings scaffold ─────────────────────────────────────────────
+   Layout only. Every control inside is a DesignOS component: .dos-field and
+   .dos-input for search, button.dos-badge for filters, .dos-btn for sorting,
+   .dos-badge for severity and confidence, .dos-choice for criteria,
+   .dos-alert for the method. DesignOS has no table component yet, so the
+   register layout is an .ha-* pattern built from semantic tokens. */
+
+/* Header — .dos-breadcrumbs and .dos-btn inside the shared 56px header bar.
+   The theme icons swap on the data hook, not a class, so any button works. */
+.folio-inner .dos-breadcrumbs{flex-wrap:nowrap;min-width:0}
+.ha-header-nav{display:flex;align-items:center;gap:var(--spacing-4)}
+/* .dos-btn is specified on <button>; on a link, drop the browser underline. */
+a.dos-btn{text-decoration:none}
+[data-theme-toggle] [data-theme-icon="moon"]{display:none}
+html[data-color-mode="dark"] [data-theme-toggle] [data-theme-icon="sun"]{display:none}
+html[data-color-mode="dark"] [data-theme-toggle] [data-theme-icon="moon"]{display:block}
+
+/* Every surface in this template shares one corner and one border, so the
+   table, board, cards, criteria and filter menu read as one system. */
+.ha-register-scroll,.ha-column,.ha-card,.ha-criteria,.ha-filter-menu{
+  border:1px solid var(--border-secondary);border-radius:var(--card)}
+/* A card nested in a column stays concentric with it: its corner is the
+   column's corner minus the padding between them. Floors at 0 for Sharp. */
+.ha-column .ha-card{border-radius:max(0px,calc(var(--card) - var(--ha-column-pad)))}
+
+/* Toolbar — count on the left, search and filters on the right. The filter
+   menu is an .ha-* surface because DesignOS dropdowns are still WIP; the
+   controls inside it are .dos-choice. */
+.ha-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.ha-count{margin:0;color:var(--text-tertiary);font-size:14px}
+.ha-toolbar-actions{display:flex;align-items:center;gap:8px}
+.ha-toolbar-actions .dos-field{width:240px}
+.ha-filter{position:relative}
+.ha-filter-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:5;display:flex;flex-direction:column;gap:10px;
+  min-width:200px;padding:14px;background:var(--bg-primary);box-shadow:var(--shadow-md)}
+.ha-filter-menu[hidden]{display:none}
+.ha-filter-title{margin:0;color:var(--text-tertiary);font-size:12px;font-weight:var(--weight-medium)}
+.ha-filter-menu .dos-choice{width:auto}
+.ha-filter-menu .dos-btn--link{align-self:flex-start;margin-top:2px}
+
+/* Register — a bordered surface with plain headers and roomy rows.
+   The wrapper clips with `overflow: clip`, which rounds the corners without
+   becoming a scroll container, so the header can still stick to the page. */
+.ha-register-scroll{background:var(--bg-primary);overflow:clip}
+.ha-register{width:100%;border-collapse:collapse}
+.ha-register th,.ha-register td{padding:16px;border-bottom:1px solid var(--border-primary);text-align:left;vertical-align:middle}
+.ha-register tbody tr:last-child td{border-bottom:0}
+.ha-register thead th{position:sticky;top:56px;z-index:2;background:var(--bg-primary);color:var(--text-primary);
+  font-size:14px;font-weight:var(--weight-medium);white-space:nowrap}
+/* A sort button already pads its label, so its cell drops the padding and
+   the label lines up with the plain headers. */
+.ha-register thead th:has(.dos-btn){padding-block:8px;padding-inline:0}
+.ha-register tbody tr:hover{background:var(--bg-primary-hover)}
+.ha-register tr[hidden]{display:none}
+.ha-sort-ind{display:inline-block;width:10px;color:var(--icon-quarternary)}
+.ha-sort-ind::after{content:"\2195"}
+th[aria-sort="ascending"] .ha-sort-ind::after{content:"\2191";color:var(--icon-primary)}
+th[aria-sort="descending"] .ha-sort-ind::after{content:"\2193";color:var(--icon-primary)}
+.ha-col-id{width:64px;color:var(--text-tertiary);font-size:13px;font-variant-numeric:tabular-nums}
+.ha-register .ha-col-finding{min-width:300px;color:var(--text-primary);font-size:15px;font-weight:var(--weight-medium);line-height:1.4}
+.ha-col-finding small{display:block;margin-top:2px;color:var(--text-tertiary);font-size:13px;font-weight:var(--weight-regular);line-height:1.45}
+.ha-col-finding code{font-size:12px}
+.ha-register td{font-size:14px;color:var(--text-tertiary);line-height:1.45}
+.ha-empty td{padding:40px 16px;color:var(--text-tertiary);text-align:center}
+
+/* Plan board — columns hug their cards on a quieter surface. DesignOS has no
+   card or board component yet, so both are .ha-* patterns. */
+.ha-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--spacing-24);align-items:start}
+.ha-column{--ha-column-pad:var(--spacing-6);display:flex;flex-direction:column;gap:var(--ha-column-pad);
+  padding:var(--ha-column-pad);background:var(--bg-tertiary)}
+.ha-column-head{display:flex;align-items:center;gap:var(--spacing-8);padding:var(--spacing-4) var(--spacing-4) 0}
+.ha-column-head h3{margin:0;font-size:16px;font-weight:var(--weight-semibold)}
+.ha-card{display:flex;flex-direction:column;gap:var(--spacing-8);padding:var(--spacing-12);background:var(--bg-primary)}
+.ha-card-title{margin:0;font-size:16px;font-weight:var(--weight-semibold);line-height:1.4}
+.ha-card-meta{display:flex;flex-wrap:wrap;gap:var(--spacing-6)}
+
+/* Completion criteria */
+.ha-progress{max-width:420px;margin-bottom:20px}
+.ha-progress-track{height:8px;border-radius:99px;background:var(--bg-quarternary);overflow:hidden}
+.ha-progress-track i{display:block;height:100%;width:0;border-radius:99px;background:var(--bg-success-solid);
+  transition:width var(--motion-state) var(--motion-ease)}
+.ha-progress-label{margin:8px 0 0;color:var(--stone);font-size:12px}
+.ha-criteria{max-width:760px;padding:4px 20px;background:var(--bg-primary)}
+.ha-criterion.dos-choice{width:auto;padding:14px 0;border-top:1px solid var(--border-primary)}
+.ha-criterion:first-child{border-top:0}
+.ha-criterion > .dos-choice__frame .dos-choice__box{margin:0}
+.ha-criterion:has(:checked) .dos-choice__title{color:var(--text-quarternary);text-decoration:line-through}
+
+/* The sticky header sticks to the page, so the scroll wrapper only exists on
+   narrow screens. Wrapping it on desktop makes the wrapper the sticky
+   container and the header drops over the first row. */
+@media(max-width:900px){
+  .ha-board{grid-template-columns:minmax(0,1fr)}
+  .ha-register-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .ha-register{min-width:880px}
+  .ha-register thead th{position:static}
+}
+@media(max-width:640px){.ha-toolbar-actions{width:100%}.ha-toolbar-actions .dos-field{flex:1 0 0;width:auto}.ha-header-nav{display:none}}
+@media print{.ha-register thead th{position:static}}
+/* Audit-specific evidence layout, using the inherited technical register. */
+.ha-citations code { overflow-wrap: anywhere; }
+.ha-register-scroll { overflow-x: auto; }
+.ha-register td { vertical-align: top; }
+.ha-col-finding small { margin-top: var(--spacing-8); }
+</style>
+</head>
+<body>
+<div class="report">
+
+  <header class="folio-bar">
+    <div class="sheet folio-inner">
+      <nav class="dos-breadcrumbs" aria-label="Breadcrumb">
+        <a class="dos-breadcrumbs__crumb" href="#scope"><svg class="dos-breadcrumbs__icon" aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M2.75 5.5h5l1.5 1.75h8v8.5a1.5 1.5 0 0 1-1.5 1.5h-11.5a1.5 1.5 0 0 1-1.5-1.5V5.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Report</span></a>
+        <span class="dos-breadcrumbs__sep" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <a class="dos-breadcrumbs__crumb" href="#register"><span>Engineering</span></a>
+        <span class="dos-breadcrumbs__sep" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m6 4 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="dos-breadcrumbs__crumb" aria-current="page"><span>FellowShow &middot; Technical audit</span></span>
+      </nav>
+      <div class="folio-meta">
+        <nav class="ha-header-nav" aria-label="Report navigation">
+          <a class="dos-btn dos-btn--ghost" href="#register"><span class="dos-btn__label">Register</span></a>
+          <a class="dos-btn dos-btn--ghost" href="#plan"><span class="dos-btn__label">Plan</span></a>
+          <a class="dos-btn dos-btn--ghost" href="#checklist"><span class="dos-btn__label">Criteria</span></a>
+          <a class="dos-btn dos-btn--ghost" href="#scope"><span class="dos-btn__label">Scope</span></a>
+        </nav>
+        <button class="dos-btn dos-btn--ghost dos-btn--icon-only" data-theme-toggle type="button" aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+          <svg class="dos-btn__icon" data-theme-icon="sun" aria-hidden="true" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3.25" stroke="currentColor" stroke-width="1.4"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <svg class="dos-btn__icon" data-theme-icon="moon" aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M15.8 12.8A6.8 6.8 0 0 1 7.2 4.2 6.8 6.8 0 1 0 15.8 12.8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+<main data-ha-kind="technical">
+
+    <section class="sheet cover" data-ha-slot="cover">
+      <div>
+        <p class="kicker">Technical audit</p>
+<h1>Overlapping sermon flows put operator work at risk.</h1>
+<p class="deck">22 findings across the current working tree. The most urgent issues concern lost drafts, replaced summaries, false saved messages, transcript recovery, and output shutdown. Smaller cleanup includes copied controls, unused Rust methods, repeated preparation scripts, and duplicate image assets.</p>
+      </div>
+<aside class="stamp" aria-label="Five high-severity findings">
+        <div class="stamp-small">High severity</div>
+        <div class="stamp-score">5<span></span></div>
+        <p>Also 11 medium and 6 low. Static evidence only. Resolve or disprove the five high findings before a production release.</p>
+      </aside>
+    </section>
+
+    <section class="chapter" id="register" data-ha-slot="findings">
+      <div class="sheet">
+        <div class="chapter-head">
+          <p class="kicker">01 &middot; Register</p>
+          <div>
+<h2>What to fix, consolidate, or remove.</h2>
+            <p class="lead">Search by feature, file, or finding ID. Each entry gives the trigger, evidence, proposed action, and verification still needed. Citations refer to the current uncommitted working tree.</p>
+          </div>
+        </div>
+
+        <div class="dos-alert dos-alert--small dos-status--info" style="margin-bottom:20px">
+          <svg class="dos-alert__icon" aria-hidden="true" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.25" stroke="currentColor" stroke-width="1.4"/><path d="M10 9v4.5M10 6.6v.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+<div class="dos-alert__body"><p class="dos-alert__text">Confirmed means the code relationship or duplication was established by inspection. Supported inference means the failure depends on timing or an error scenario. Neither label claims runtime reproduction. Severity describes the consequence, not how much code can be removed.</p></div>
+        </div>
+
+        <div class="ha-toolbar no-print">
+<p class="ha-count" data-ha-count aria-live="polite">22 findings</p>
+          <div class="ha-toolbar-actions">
+            <div class="dos-field">
+              <div class="dos-input">
+                <svg class="dos-input__icon" aria-hidden="true" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="m13.2 13.2 3.3 3.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <input class="dos-input__field" type="search" placeholder="Search findings" aria-label="Search findings" data-ha-search>
+              </div>
+            </div>
+            <div class="ha-filter">
+              <button class="dos-btn dos-btn--outline" type="button" aria-expanded="false" aria-controls="severity-filter" data-ha-filter-toggle>
+                <svg class="dos-btn__icon" aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M3.5 5.5h13M6 10h8M8.5 14.5h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span class="dos-btn__label">Filters</span>
+                <span class="dos-badge dos-badge--sm dos-status--brand" data-ha-filter-count hidden><span class="dos-badge__label">0</span></span>
+              </button>
+              <div class="ha-filter-menu" id="severity-filter" role="group" aria-label="Filter by severity" hidden>
+                <p class="ha-filter-title">Severity</p>
+                <label class="dos-choice"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" value="critical" data-ha-filter aria-label="Critical"></span><span class="dos-choice__body"><span class="dos-choice__title">Critical</span></span></label>
+                <label class="dos-choice"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" value="high" data-ha-filter aria-label="High"></span><span class="dos-choice__body"><span class="dos-choice__title">High</span></span></label>
+                <label class="dos-choice"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" value="medium" data-ha-filter aria-label="Medium"></span><span class="dos-choice__body"><span class="dos-choice__title">Medium</span></span></label>
+                <label class="dos-choice"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" value="low" data-ha-filter aria-label="Low"></span><span class="dos-choice__body"><span class="dos-choice__title">Low</span></span></label>
+                <button class="dos-btn dos-btn--link dos-btn--sm" type="button" data-ha-filter-clear><span class="dos-btn__label">Clear filters</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ha-register-scroll" tabindex="0" role="region" aria-label="Findings register">
+          <table class="ha-register" data-ha-register>
+            <thead><tr>
+              <th scope="col"><button class="dos-btn dos-btn--sm dos-btn--ghost" type="button" data-ha-sort="0"><span class="dos-btn__label">ID</span><span class="ha-sort-ind" aria-hidden="true"></span></button></th>
+              <th scope="col">Finding and evidence</th>
+              <th scope="col"><button class="dos-btn dos-btn--sm dos-btn--ghost" type="button" data-ha-sort="2"><span class="dos-btn__label">Severity</span><span class="ha-sort-ind" aria-hidden="true"></span></button></th>
+              <th scope="col"><button class="dos-btn dos-btn--sm dos-btn--ghost" type="button" data-ha-sort="3"><span class="dos-btn__label">Confidence</span><span class="ha-sort-ind" aria-hidden="true"></span></button></th>
+              <th scope="col">Verification needed</th>
+              <th scope="col">Priority rationale</th>
+<th scope="col"><button class="dos-btn dos-btn--sm dos-btn--ghost" type="button" data-ha-sort="6"><span class="dos-btn__label">Action</span><span class="ha-sort-ind" aria-hidden="true"></span></button></th>
+            </tr></thead>
+            <tbody>
+              <tr id="F01" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F01">F01</a></td>
+                <td class="ha-col-finding">Two generators write to the same live-notes list<small><strong>When it happens.</strong> During a sermon, especially when the AI provider is configured or the operator changes workspace.</small><small><strong>Evidence.</strong> The toolbar schedules the local extractive summarizer after transcript changes. LiveNotesPanel separately schedules cloud AI notes. Both append to the session as live notes. The local path labels notes as AI but omits source context, so a newly generated note can be described as an older note with unavailable source.</small><small><strong>Proposed action.</strong> Use one session-level note-generation service. Keep local extraction only as an explicit fallback, attach source ranges, and label its origin correctly.</small><small class="ha-citations"><code data-source="src/components/controls/transport-bar.tsx" data-line="79">src/components/controls/transport-bar.tsx:79</code><br><code data-source="src/lib/sermon-actions.ts" data-line="111">src/lib/sermon-actions.ts:111</code><br><code data-source="src/components/panels/live-notes-panel.tsx" data-line="453">src/components/panels/live-notes-panel.tsx:453</code><br><code data-source="src/stores/sermon-store.ts" data-line="312">src/stores/sermon-store.ts:312</code><br><code data-source="src/components/panels/live-notes-panel.tsx" data-line="249">src/components/panels/live-notes-panel.tsx:249</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>With and without an AI key, feed one excerpt and confirm one intended set of notes, source links, and correct origin labels.</td>
+                <td>Consolidate before changing note controls again.</td>
+                <td>Consolidate</td>
+              </tr>
+              <tr id="F02" data-ha-severity="high">
+                <td class="ha-col-id"><a href="#F02">F02</a></td>
+                <td class="ha-col-finding">Ending a sermon can overwrite an edited summary<small><strong>When it happens.</strong> Save a summary during the sermon, or edit it while the final background summary is running, then let endSermon finish.</small><small><strong>Evidence.</strong> endSermon always starts the local summarizer and passes its result to setFinalSummary. That action replaces summaryDocument without checking for a saved or newly edited document. The cloud AI summary and local summary are competing owners of the same content.</small><small><strong>Proposed action.</strong> Preserve operator edits. Store generated drafts separately and apply them only when the document revision still matches the request's starting revision.</small><small class="ha-citations"><code data-source="src/lib/sermon-actions.ts" data-line="158">src/lib/sermon-actions.ts:158</code><br><code data-source="src/stores/sermon-store.ts" data-line="279">src/stores/sermon-store.ts:279</code><br><code data-source="src/components/panels/preaching-summary-panel.tsx" data-line="327">src/components/panels/preaching-summary-panel.tsx:327</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--error"><span class="dos-badge__label">High</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Save a distinct manual summary, end the sermon, and confirm it survives both generation completion and restart.</td>
+                <td>Recommended release blocker because saved operator content can be replaced.</td>
+                <td>Fix</td>
+              </tr>
+              <tr id="F03" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F03">F03</a></td>
+                <td class="ha-col-finding">Live summary requests are tied to changing render dependencies<small><strong>When it happens.</strong> Transcript updates arrive before a provider response, or an ended session is selected with the summary tab hidden.</small><small><strong>Evidence.</strong> refreshSummary depends on session and sourceText. Its effect cleanup aborts the active request and restarts an 800 ms timer whenever those dependencies change. New transcript segments or session-note edits can repeatedly cancel generation. The same effect can generate for an ended session even while its tab is hidden.</small><small><strong>Proposed action.</strong> Move scheduling into a session service. Snapshot input when a request starts, cancel on session or provider change, and schedule the next refresh independently of every transcript render. Require a manual request for an unchanged ended sermon.</small><small class="ha-citations"><code data-source="src/components/panels/preaching-summary-panel.tsx" data-line="205">src/components/panels/preaching-summary-panel.tsx:205</code><br><code data-source="src/components/panels/preaching-summary-panel.tsx" data-line="273">src/components/panels/preaching-summary-panel.tsx:273</code><br><code data-source="src/components/panels/preaching-summary-panel.tsx" data-line="276">src/components/panels/preaching-summary-panel.tsx:276</code><br><code data-source="src/components/panels/queue-panel.tsx" data-line="115">src/components/panels/queue-panel.tsx:115</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Supported inference</span></span></td>
+                <td>Use a delayed provider response and frequent transcript segments. Confirm useful requests finish and ended sessions do not generate just because a hidden panel mounts.</td>
+                <td>Fix before promising reliable live AI updates. No provider timings were measured.</td>
+                <td>Fix</td>
+              </tr>
+              <tr id="F04" data-ha-severity="high">
+                <td class="ha-col-id"><a href="#F04">F04</a></td>
+                <td class="ha-col-finding">Switching to Songs discards unsaved sermon drafts<small><strong>When it happens.</strong> Edit a summary or compose a manual live note, switch the main library to Songs, then return to Sermon.</small><small><strong>Evidence.</strong> QueuePanel returns SongsQueuePanel for songs mode, unmounting its other panels. Summary documents, titles, edit markers, and AI drafts live in component state and refs. The manual live-note composer also uses local state. forceMount only preserves the tabs while their parent remains mounted.</small><small><strong>Proposed action.</strong> Keep meaningful drafts in a store keyed by session, or preserve these panels across mode changes while gating background work.</small><small class="ha-citations"><code data-source="src/components/panels/queue-panel.tsx" data-line="33">src/components/panels/queue-panel.tsx:33</code><br><code data-source="src/components/panels/preaching-summary-panel.tsx" data-line="148">src/components/panels/preaching-summary-panel.tsx:148</code><br><code data-source="src/components/panels/preaching-summary-panel.tsx" data-line="159">src/components/panels/preaching-summary-panel.tsx:159</code><br><code data-source="src/components/panels/live-notes-panel.tsx" data-line="439">src/components/panels/live-notes-panel.tsx:439</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--error"><span class="dos-badge__label">High</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Switch between Sermon, Songs, Notes, and Media with unsaved title and body edits. Confirm they return intact.</td>
+                <td>Recommended release blocker because ordinary navigation loses work.</td>
+                <td>Fix</td>
+              </tr>
+              <tr id="F05" data-ha-severity="high">
+                <td class="ha-col-id"><a href="#F05">F05</a></td>
+                <td class="ha-col-finding">Output shutdown reports success even when commands fail<small><strong>When it happens.</strong> Either native shutdown command rejects while an output is on.</small><small><strong>Evidence.</strong> stopOutput swallows both stop_ndi and close_broadcast_window failures, then sets ndiActive and isDisplayOpen to false. setOutputEnabled returns true after this path. A failed shutdown therefore looks like a successful off state until another reconciliation, if any, corrects it.</small><small><strong>Proposed action.</strong> Preserve the last confirmed transport state, surface the error, and reconcile the actual output before reporting it off. Do not treat an inspection failure as a confirmed inactive result either.</small><small class="ha-citations"><code data-source="src/lib/broadcast-output-runtime.ts" data-line="260">src/lib/broadcast-output-runtime.ts:260</code><br><code data-source="src/lib/broadcast-output-runtime.ts" data-line="285">src/lib/broadcast-output-runtime.ts:285</code><br><code data-source="src/lib/broadcast-output-runtime.ts" data-line="167">src/lib/broadcast-output-runtime.ts:167</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--error"><span class="dos-badge__label">High</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Reject each shutdown command independently and confirm the UI cannot show a successful off state while the transport remains active.</td>
+                <td>Recommended release blocker for live production. No output was started or stopped during this audit.</td>
+                <td>Fix</td>
+              </tr>
+              <tr id="F06" data-ha-severity="high">
+                <td class="ha-col-id"><a href="#F06">F06</a></td>
+                <td class="ha-col-finding">Saved messages do not establish that data reached disk<small><strong>When it happens.</strong> A store write fails, or the app exits before a debounced write completes.</small><small><strong>Evidence.</strong> The summary editor announces Summary saved immediately after in-memory updates. Sermon persistence is debounced and catches disk errors without rejecting. Even flushSermonSessions can resolve after a failed save, allowing endSermon to claim the transcript was saved. Announcement persistence follows the same console-only failure pattern.</small><small><strong>Proposed action.</strong> Give critical saves a completion result, track saving and failed states, and show success after persistence succeeds. Keep background saves debounced but expose failure and retry.</small><small class="ha-citations"><code data-source="src/components/panels/preaching-summary-panel.tsx" data-line="347">src/components/panels/preaching-summary-panel.tsx:347</code><br><code data-source="src/stores/sermon-store.ts" data-line="222">src/stores/sermon-store.ts:222</code><br><code data-source="src/stores/sermon-store.ts" data-line="511">src/stores/sermon-store.ts:511</code><br><code data-source="src/lib/sermon-actions.ts" data-line="159">src/lib/sermon-actions.ts:159</code><br><code data-source="src/stores/announcement-store.ts" data-line="191">src/stores/announcement-store.ts:191</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--error"><span class="dos-badge__label">High</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Reject store.save and confirm no success toast appears. Retry and reopen the session to confirm durable content.</td>
+                <td>Recommended release blocker because the UI can falsely assure the operator that work is safe.</td>
+                <td>Fix</td>
+              </tr>
+              <tr id="F07" data-ha-severity="high">
+                <td class="ha-col-id"><a href="#F07">F07</a></td>
+                <td class="ha-col-finding">Transcript persistence writes a file that startup immediately clears<small><strong>When it happens.</strong> Reload or restart before ending a sermon normally.</small><small><strong>Evidence.</strong> Transcript updates repeatedly save up to 2,000 segments. There is no production read of that stored segments key, and boot calls resetTranscriptSession, which writes an empty list. An active sermon starts with an empty saved transcript; its full transcript is only copied at endSermon. Recovery merely marks unfinished sessions ended.</small><small><strong>Proposed action.</strong> Choose a recovery contract. Recover the active session's transcript before clearing transient state, or explicitly retire the unused transcript-history store after another durable recovery path exists.</small><small class="ha-citations"><code data-source="src/stores/transcript-store.ts" data-line="40">src/stores/transcript-store.ts:40</code><br><code data-source="src/stores/transcript-store.ts" data-line="50">src/stores/transcript-store.ts:50</code><br><code data-source="src/boot.tsx" data-line="54">src/boot.tsx:54</code><br><code data-source="src/stores/sermon-store.ts" data-line="251">src/stores/sermon-store.ts:251</code><br><code data-source="src/stores/sermon-store.ts" data-line="494">src/stores/sermon-store.ts:494</code><br><code data-source="src/lib/sermon-actions.ts" data-line="155">src/lib/sermon-actions.ts:155</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--error"><span class="dos-badge__label">High</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Interrupt an active sermon, restart, and confirm its transcript can be recovered. Measure write frequency after the recovery design is settled.</td>
+                <td>Recommended release blocker for recording recovery. Removing the writer alone would not solve the loss.</td>
+                <td>Fix</td>
+              </tr>
+              <tr id="F08" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F08">F08</a></td>
+                <td class="ha-col-finding">Decoded image caches have no eviction<small><strong>When it happens.</strong> Preview or present many distinct large images during a long-running session.</small><small><strong>Evidence.</strong> The operator canvas and broadcast window each add HTMLImageElements to a Map by URL. Neither image cache removes old entries. Video caches already have explicit pruning, which makes the missing image policy clear.</small><small><strong>Proposed action.</strong> Bound image retention by active references and a small recent-use cache. Share the cache policy, but keep each webview's native objects local.</small><small class="ha-citations"><code data-source="src/components/ui/canvas-verse.tsx" data-line="52">src/components/ui/canvas-verse.tsx:52</code><br><code data-source="src/components/ui/canvas-verse.tsx" data-line="175">src/components/ui/canvas-verse.tsx:175</code><br><code data-source="src/broadcast-output.tsx" data-line="585">src/broadcast-output.tsx:585</code><br><code data-source="src/lib/media-cache.ts" data-line="10">src/lib/media-cache.ts:10</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Cycle many large images and inspect retained image count and memory. No memory profile was run.</td>
+                <td>Reduce accumulated memory before a long service. Growth is evident; its size is unmeasured.</td>
+                <td>Bound retention</td>
+              </tr>
+              <tr id="F09" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F09">F09</a></td>
+                <td class="ha-col-finding">Preview and output duplicate media lifecycle logic<small><strong>When it happens.</strong> A media source type, loading rule, or playback fix changes.</small><small><strong>Evidence.</strong> Both canvas implementations collect background, presentation, timer, and overlay media, create video elements, install load/error callbacks, and synchronize playback clocks. The repeated video initialization includes matching 12-line windows. Updating one path can leave preview and output behavior different.</small><small><strong>Proposed action.</strong> Extract shared pure media collection and a tested media-resource manager. Keep output-specific NDI, direct-video, and drawing behavior separate.</small><small class="ha-citations"><code data-source="src/components/ui/canvas-verse.tsx" data-line="95">src/components/ui/canvas-verse.tsx:95</code><br><code data-source="src/components/ui/canvas-verse.tsx" data-line="144">src/components/ui/canvas-verse.tsx:144</code><br><code data-source="src/broadcast-output.tsx" data-line="485">src/broadcast-output.tsx:485</code><br><code data-source="src/broadcast-output.tsx" data-line="554">src/broadcast-output.tsx:554</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Compare preview and output for mixed image/video layers, timers, overlays, media errors, and rapid content changes.</td>
+                <td>Consolidate after preserving current rendering behavior. Neither preview nor program is redundant.</td>
+                <td>Consolidate</td>
+              </tr>
+              <tr id="F10" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F10">F10</a></td>
+                <td class="ha-col-finding">Media imports create permanent copies without a general cleanup policy<small><strong>When it happens.</strong> Repeatedly import and remove images or videos across sessions.</small><small><strong>Evidence.</strong> Imports write a fresh UUID file in app-data/media, including repeat imports. Removing a slide or layer drops state references but does not delete these files. Document-page cleanup exists separately. A comment promises layer media remains valid until session end, but no general end-of-session media sweep was found.</small><small><strong>Proposed action.</strong> Track media references and deduplicate stored bytes where appropriate. Clean only files unused by saved themes, timers, documents, compositions, preview, and live outputs, with a recovery grace period.</small><small class="ha-citations"><code data-source="src/lib/presentation-media.ts" data-line="10">src/lib/presentation-media.ts:10</code><br><code data-source="src/lib/presentation-media.ts" data-line="62">src/lib/presentation-media.ts:62</code><br><code data-source="src/stores/presentation-store.ts" data-line="186">src/stores/presentation-store.ts:186</code><br><code data-source="src/stores/presentation-store.ts" data-line="289">src/stores/presentation-store.ts:289</code><br><code data-source="src/stores/presentation-store.ts" data-line="396">src/stores/presentation-store.ts:396</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Import the same file twice, remove its uses, and verify both safe retention while live and eventual cleanup when unused.</td>
+                <td>Prevent disk growth without breaking a live or saved media reference.</td>
+                <td>Manage assets</td>
+              </tr>
+              <tr id="F11" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F11">F11</a></td>
+                <td class="ha-col-finding">Multiple timers reconcile the same output state<small><strong>When it happens.</strong> Manage Displays is open while multiview remains mounted, or the app sits idle with stable state.</small><small><strong>Evidence.</strong> Multiview polls every output every two seconds. Open display cards separately poll each visible output every second. Each reconciliation enumerates windows and queries NDI, then replaces runtime objects even if values are unchanged. Remote status is also pushed every second regardless of changes.</small><small><strong>Proposed action.</strong> Use one output reconciliation service with a single in-flight pass, read the window list once per pass, and skip unchanged updates. Send remote snapshots on relevant state changes, retaining a bounded fallback poll if needed.</small><small class="ha-citations"><code data-source="src/components/panels/outputs-multiview-panel.tsx" data-line="123">src/components/panels/outputs-multiview-panel.tsx:123</code><br><code data-source="src/components/broadcast/output-card.tsx" data-line="96">src/components/broadcast/output-card.tsx:96</code><br><code data-source="src/lib/broadcast-output-runtime.ts" data-line="97">src/lib/broadcast-output-runtime.ts:97</code><br><code data-source="src/lib/broadcast-output-runtime.ts" data-line="152">src/lib/broadcast-output-runtime.ts:152</code><br><code data-source="src/hooks/use-remote-control.ts" data-line="124">src/hooks/use-remote-control.ts:124</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Count native calls and React updates at idle and with Manage open. Confirm disconnect detection remains timely.</td>
+                <td>Remove repeat work on the operator thread. Actual CPU savings need measurement.</td>
+                <td>Consolidate</td>
+              </tr>
+              <tr id="F12" data-ha-severity="low">
+                <td class="ha-col-id"><a href="#F12">F12</a></td>
+                <td class="ha-col-finding">Public Rust detection methods have no production callers<small><strong>When it happens.</strong> Maintaining or changing detection code while unused public methods appear to be active alternatives.</small><small><strong>Evidence.</strong> Workspace symbol searches found no production callers for direct_mut, merger_mut, process_direct, process_semantic, or process_hybrid_with_fts. The hybrid method has an inline test; its comment says the live STT pipeline uses it, but STT performs its own FTS path. Knip does not cover these Rust APIs.</small><small><strong>Proposed action.</strong> Retire unused internal entry points and their private-only support code, or document a real external API commitment before retaining them. Keep the active semantic_search path and model support.</small><small class="ha-citations"><code data-source="src-tauri/crates/detection/src/pipeline.rs" data-line="48">src-tauri/crates/detection/src/pipeline.rs:48</code><br><code data-source="src-tauri/crates/detection/src/pipeline.rs" data-line="72">src-tauri/crates/detection/src/pipeline.rs:72</code><br><code data-source="src-tauri/crates/detection/src/pipeline.rs" data-line="79">src-tauri/crates/detection/src/pipeline.rs:79</code><br><code data-source="src-tauri/crates/detection/src/pipeline.rs" data-line="108">src-tauri/crates/detection/src/pipeline.rs:108</code><br><code data-source="src-tauri/src/commands/stt.rs" data-line="859">src-tauri/src/commands/stt.rs:859</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Low</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Confirm no external crate consumer depends on them, then compile all supported features after removal. No Rust build was run.</td>
+                <td>Good removal candidates after checking the public API boundary. Unused does not mean all detection code is expendable.</td>
+                <td>Removal candidate</td>
+              </tr>
+              <tr id="F13" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F13">F13</a></td>
+                <td class="ha-col-finding">The sentence-buffer timeout is implemented but never connected<small><strong>When it happens.</strong> A split reference or quote lacks punctuation and the provider does not deliver an utterance-ending event.</small><small><strong>Evidence.</strong> SentenceBuffer stores timestamps and advertises a three-second fallback through check_timeout. Production code never calls it. The STT loop waits for events and flushes on punctuation, speech_final, or UtteranceEnd instead.</small><small><strong>Proposed action.</strong> Wire a periodic flush into the event loop and share sentence accumulation where both workers consume the same utterance. If timeout behavior is deliberately unnecessary, remove its unused state and correct the contract.</small><small class="ha-citations"><code data-source="src-tauri/crates/detection/src/sentence_buffer.rs" data-line="18">src-tauri/crates/detection/src/sentence_buffer.rs:18</code><br><code data-source="src-tauri/crates/detection/src/sentence_buffer.rs" data-line="58">src-tauri/crates/detection/src/sentence_buffer.rs:58</code><br><code data-source="src-tauri/src/commands/stt.rs" data-line="535">src-tauri/src/commands/stt.rs:535</code><br><code data-source="src-tauri/src/commands/stt.rs" data-line="677">src-tauri/src/commands/stt.rs:677</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Feed fragments without punctuation or an utterance-end event, then pause. Confirm the combined reference is examined after the intended timeout.</td>
+                <td>Incomplete behavior disguised as a completed fallback. Investigate before simply deleting it.</td>
+                <td>Complete or retire</td>
+              </tr>
+              <tr id="F14" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F14">F14</a></td>
+                <td class="ha-col-finding">AI summaries are padded with raw transcript fragments<small><strong>When it happens.</strong> The provider returns fewer than five valid bullets, or a malformed object without usable bullets.</small><small><strong>Evidence.</strong> parseSummary always appends sourceFallbackBullets to model bullets before taking five. A valid three-bullet summary can therefore acquire two unrelated transcript excerpts. A JSON object with no useful bullets can still become a successful result through the fallback, including arbitrary word chunks.</small><small><strong>Proposed action.</strong> Accept the valid summary as returned within the intended limit. Validate missing content as an error. If local extraction is needed, expose it as a named fallback rather than padding AI output.</small><small class="ha-citations"><code data-source="src/lib/sermon-ai-summary.ts" data-line="26">src/lib/sermon-ai-summary.ts:26</code><br><code data-source="src/lib/sermon-ai-summary.ts" data-line="45">src/lib/sermon-ai-summary.ts:45</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Check a valid three-bullet response, an empty bullets array, and an unrelated JSON object. Confirm no padding or mislabeled success.</td>
+                <td>Directly reduces low-value output in the sermon summary.</td>
+                <td>Remove padding</td>
+              </tr>
+              <tr id="F15" data-ha-severity="low">
+                <td class="ha-col-id"><a href="#F15">F15</a></td>
+                <td class="ha-col-finding">Shared controls and display data are copied across features<small><strong>When it happens.</strong> A shared visual or formatting rule changes and only one copy is updated.</small><small><strong>Evidence.</strong> Examples include identical color inputs in lower-thirds and tickers, the session picker in notes and summary, timer render-data assembly in preview and program, theme labels and sample thumbnails, MIME maps and base64 helpers, and a second title collator despite compareLyricTitles already existing.</small><small><strong>Proposed action.</strong> Consolidate the exact shared pieces into small named helpers and controls. Preserve real differences between editor actions, output behavior, and sample content.</small><small class="ha-citations"><code data-source="src/components/on-display/lower-third-overlay-section.tsx" data-line="128">src/components/on-display/lower-third-overlay-section.tsx:128</code><br><code data-source="src/components/on-display/ticker-overlay-section.tsx" data-line="45">src/components/on-display/ticker-overlay-section.tsx:45</code><br><code data-source="src/components/panels/live-notes-panel.tsx" data-line="573">src/components/panels/live-notes-panel.tsx:573</code><br><code data-source="src/components/panels/preaching-summary-session-bar.tsx" data-line="63">src/components/panels/preaching-summary-session-bar.tsx:63</code><br><code data-source="src/components/panels/live-output-panel.tsx" data-line="61">src/components/panels/live-output-panel.tsx:61</code><br><code data-source="src/components/panels/preview-panel.tsx" data-line="87">src/components/panels/preview-panel.tsx:87</code><br><code data-source="src/components/broadcast/theme-library.tsx" data-line="52">src/components/broadcast/theme-library.tsx:52</code><br><code data-source="src/components/panels/preview-panel-shared.ts" data-line="12">src/components/panels/preview-panel-shared.ts:12</code><br><code data-source="src/lib/theme-designer-files.ts" data-line="7">src/lib/theme-designer-files.ts:7</code><br><code data-source="src/lib/presentation-media.ts" data-line="24">src/lib/presentation-media.ts:24</code><br><code data-source="src/components/panels/search/use-song-search.ts" data-line="24">src/components/panels/search/use-song-search.ts:24</code><br><code data-source="src/lib/song-ordering.ts" data-line="9">src/lib/song-ordering.ts:9</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Low</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Review each pair for intentional differences and check both callers after each extraction.</td>
+                <td>Small consolidation work after the behavior fixes. Avoid a broad generic component framework.</td>
+                <td>Consolidate</td>
+              </tr>
+              <tr id="F16" data-ha-severity="low">
+                <td class="ha-col-id"><a href="#F16">F16</a></td>
+                <td class="ha-col-finding">Selection styling bypasses the theme tokens<small><strong>When it happens.</strong> Change the primary theme or tune selection contrast.</small><small><strong>Evidence.</strong> Nineteen non-test source files contain hardcoded #101084 or #F1E600 values. Queue tabs repeat the same long class string four times. Meanwhile the global light primary token is green, so these manual selection colors bypass the central theme choice.</small><small><strong>Proposed action.</strong> Define the intended selection colors once, using a semantic token if selection intentionally differs from primary. Use a shared tab or selection variant.</small><small class="ha-citations"><code data-source="src/components/panels/queue-panel.tsx" data-line="49">src/components/panels/queue-panel.tsx:49</code><br><code data-source="src/components/panels/queue-panel.tsx" data-line="55">src/components/panels/queue-panel.tsx:55</code><br><code data-source="src/components/panels/search/scripture-book-grid.tsx" data-line="48">src/components/panels/search/scripture-book-grid.tsx:48</code><br><code data-source="src/index.css" data-line="167">src/index.css:167</code><br><code data-source="src/index.css" data-line="211">src/index.css:211</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Low</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Inspect selected, hovered, disabled, and keyboard-focused controls in both themes.</td>
+                <td>Remove styling duplication without silently changing the product's colors.</td>
+                <td>Consolidate</td>
+              </tr>
+              <tr id="F17" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F17">F17</a></td>
+                <td class="ha-col-finding">Several modules mix too many responsibilities<small><strong>When it happens.</strong> A small workflow change requires editing a component that also owns unrelated state and effects.</small><small><strong>Evidence.</strong> Seventeen component files exceed the project's 400-line soft limit. The largest is lower-third-overlay-section.tsx at 1,129 lines, combining preset CRUD, appearance state, uploads, output targeting, and preview. Live notes combines generation, source navigation, deletion, queueing, and editing. stt.rs spans 1,232 lines of orchestration and detection.</small><small><strong>Proposed action.</strong> Extract cohesive services and subcomponents around actual responsibilities. Start with note generation and lower-third appearance. Do not split data tables or simple files merely to satisfy a line count.</small><small class="ha-citations"><code data-source="src/components/on-display/lower-third-overlay-section.tsx" data-line="209">src/components/on-display/lower-third-overlay-section.tsx:209</code><br><code data-source="src/components/panels/live-notes-panel.tsx" data-line="58">src/components/panels/live-notes-panel.tsx:58</code><br><code data-source="src/components/panels/live-notes-panel.tsx" data-line="427">src/components/panels/live-notes-panel.tsx:427</code><br><code data-source="src-tauri/src/commands/stt.rs" data-line="197">src-tauri/src/commands/stt.rs:197</code><br><code data-source="src-tauri/src/commands/stt.rs" data-line="731">src-tauri/src/commands/stt.rs:731</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Preserve draft state and event lifecycles across extraction; review public props and store subscriptions.</td>
+                <td>Refactor alongside the affected behavior fixes, not as a whole-project rewrite.</td>
+                <td>Refactor</td>
+              </tr>
+              <tr id="F18" data-ha-severity="low">
+                <td class="ha-col-id"><a href="#F18">F18</a></td>
+                <td class="ha-col-finding">Embedding preparation repeats the same implementations<small><strong>When it happens.</strong> Change a model input, pooling rule, output format, or target architecture.</small><small><strong>Evidence.</strong> The two Python preparation scripts repeat ONNX batching, optional position IDs, pooling, normalization, and binary output. The main setup script also repeats model export and quantization commands from download-model.ts. Both model paths currently hardcode ARM64 quantization.</small><small><strong>Proposed action.</strong> Use one ONNX implementation and one binary writer with thin CLI entry points. Let setup call the shared model preparation function. Keep distinct GPU, CPU, and Rust routes when they serve supported environments.</small><small class="ha-citations"><code data-source="data/precompute-embeddings-onnx.py" data-line="102">data/precompute-embeddings-onnx.py:102</code><br><code data-source="data/precompute-embeddings.py" data-line="129">data/precompute-embeddings.py:129</code><br><code data-source="data/precompute-embeddings-onnx.py" data-line="151">data/precompute-embeddings-onnx.py:151</code><br><code data-source="data/precompute-embeddings.py" data-line="197">data/precompute-embeddings.py:197</code><br><code data-source="data/prepare-embeddings.ts" data-line="123">data/prepare-embeddings.ts:123</code><br><code data-source="data/download-model.ts" data-line="48">data/download-model.ts:48</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Low</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Compare vector dimensions, verse ordering, and output format for each supported backend after extraction.</td>
+                <td>Reduce maintenance copies. No model was downloaded or run.</td>
+                <td>Consolidate</td>
+              </tr>
+              <tr id="F19" data-ha-severity="low">
+                <td class="ha-col-id"><a href="#F19">F19</a></td>
+                <td class="ha-col-finding">Two old public backgrounds contain identical bytes<small><strong>When it happens.</strong> Build or distribute the public directory; old persisted themes may still reference the historical paths.</small><small><strong>Evidence.</strong> public/broadcast-previews/paint-sweeps-song.jpg and public/timer-backgrounds/paint-sweeps-red-blue-scripture.jpg have matching SHA-256 hashes and are 6,226,560 bytes each. No current source reference to either filename was found. Current defaults reference paint-sweeps-hope.jpg.</small><small><strong>Proposed action.</strong> Audit persisted URL compatibility, migrate old paths to a supported asset, then remove redundant files. Removing one copy saves 6.23 MB; removing both saves 12.45 MB in raw source assets, not a measured installer size.</small><small class="ha-citations"><code data-source="src/lib/builtin-themes.ts" data-line="9">src/lib/builtin-themes.ts:9</code><br><code data-source="src/lib/presenter-timer-background.ts" data-line="1">src/lib/presenter-timer-background.ts:1</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Low</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Check migration of historical theme and timer URLs and inspect the resulting build's asset list. Platform icon duplicates are intentional and excluded.</td>
+                <td>Straightforward asset cleanup after compatibility checks.</td>
+                <td>Removal candidate</td>
+              </tr>
+              <tr id="F20" data-ha-severity="low">
+                <td class="ha-col-id"><a href="#F20">F20</a></td>
+                <td class="ha-col-finding">Three settings sections subscribe to the entire settings store<small><strong>When it happens.</strong> Another setting changes while one of these sections is mounted.</small><small><strong>Evidence.</strong> SpeechSection, AudioSection, and DisplayModeSection call useSettingsStore without selectors. Any settings change replaces the subscribed store value, even if unrelated to the visible fields.</small><small><strong>Proposed action.</strong> Select only the fields each section uses, or use a shallow selector for a small related group.</small><small class="ha-citations"><code data-source="src/components/settings/speech-section.tsx" data-line="14">src/components/settings/speech-section.tsx:14</code><br><code data-source="src/components/settings/audio-section.tsx" data-line="15">src/components/settings/audio-section.tsx:15</code><br><code data-source="src/components/settings/display-mode-section.tsx" data-line="6">src/components/settings/display-mode-section.tsx:6</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Low</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Check render counts when unrelated settings change and confirm controlled fields still update.</td>
+                <td>Low-risk cleanup. No performance impact was measured.</td>
+                <td>Narrow subscription</td>
+              </tr>
+              <tr id="F21" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F21">F21</a></td>
+                <td class="ha-col-finding">Song-library read failures are treated as empty data<small><strong>When it happens.</strong> A library read fails during an edit operation, or the first store load fails.</small><small><strong>Evidence.</strong> readLibraryValue catches every failure and returns undefined. loadCustomSongs and loadSongEdits convert that into empty collections, while create, update, reset, and delete use those collections in read-modify-write operations. A transient read error after opening the store can therefore make a later write replace existing content. The cached store promise also stays rejected after a failed first load.</small><small><strong>Proposed action.</strong> Distinguish a missing key from a storage failure. Reject mutations whose prerequisite read failed, surface recovery options, and allow a failed initialization promise to be retried.</small><small class="ha-citations"><code data-source="src/lib/songs-data.ts" data-line="25">src/lib/songs-data.ts:25</code><br><code data-source="src/lib/songs-data.ts" data-line="118">src/lib/songs-data.ts:118</code><br><code data-source="src/lib/songs-data.ts" data-line="168">src/lib/songs-data.ts:168</code><br><code data-source="src/lib/songs-data.ts" data-line="190">src/lib/songs-data.ts:190</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Supported inference</span></span></td>
+                <td>Make a read fail and the following write succeed. Confirm the mutation is blocked and the original library remains intact.</td>
+                <td>Investigate data loss conditions before refactoring library storage.</td>
+                <td>Fix</td>
+              </tr>
+              <tr id="F22" data-ha-severity="medium">
+                <td class="ha-col-id"><a href="#F22">F22</a></td>
+                <td class="ha-col-finding">Remote status cannot clear its duplicated verse value<small><strong>When it happens.</strong> Clear a previously populated liveVerse and read the HTTP status snapshot.</small><small><strong>Evidence.</strong> The frontend sends liveVerse as null when there is no verse. Rust deserializes that to None, then updates snapshot.live_verse only for Some. The previous verse remains in the backend status snapshot. Repeated one-second synchronization cannot correct it.</small><small><strong>Proposed action.</strong> Use an explicit full snapshot replacement, or distinguish an omitted field from a field explicitly cleared to null. Apply the same rule to activeTheme.</small><small class="ha-citations"><code data-source="src/hooks/use-remote-control.ts" data-line="203">src/hooks/use-remote-control.ts:203</code><br><code data-source="src-tauri/src/commands/remote.rs" data-line="237">src-tauri/src/commands/remote.rs:237</code><br><code data-source="src-tauri/src/commands/remote.rs" data-line="254">src-tauri/src/commands/remote.rs:254</code></small></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--warning"><span class="dos-badge__label">Medium</span></span></td>
+                <td><span class="dos-badge dos-badge--sm dos-status--neutral"><span class="dos-badge__label">Confirmed</span></span></td>
+                <td>Send a populated snapshot followed by null fields and confirm the remote status clears them.</td>
+                <td>Fix the state contract while consolidating status synchronization.</td>
+                <td>Fix</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="plan" data-ha-slot="plan">
+      <div class="sheet">
+        <div class="chapter-head">
+          <p class="kicker">02 &middot; Plan</p>
+          <div>
+<h2>Start with operator data and output truth.</h2>
+            <p class="lead">These are proposed changes. This audit has not changed application code or deleted files. Owners and effort have not been assigned.</p>
+          </div>
+        </div>
+        <!--
+          One card per action. List the finding IDs it closes as badges. Add an
+          effort or owner badge only when it is known. Counts update themselves.
+        -->
+        <div class="ha-board">
+          <section class="ha-column" data-ha-lane="now" aria-labelledby="lane-now">
+            <header class="ha-column-head"><h3 id="lane-now">Now</h3><span class="dos-badge dos-badge--sm dos-status--brand" data-ha-lane-count><span class="dos-badge__label">3</span></span></header>
+            <article class="ha-card"><p class="ha-card-title">Preserve saved summaries and unsaved drafts</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F02"><span class="dos-badge__label">F02</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F04"><span class="dos-badge__label">F04</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Report actual output and persistence outcomes</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F05"><span class="dos-badge__label">F05</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F06"><span class="dos-badge__label">F06</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Recover interrupted sermons before clearing transcript storage</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F07"><span class="dos-badge__label">F07</span></a></div></article>
+          </section>
+          <section class="ha-column" data-ha-lane="next" aria-labelledby="lane-next">
+            <header class="ha-column-head"><h3 id="lane-next">Next</h3><span class="dos-badge dos-badge--sm dos-status--brand" data-ha-lane-count><span class="dos-badge__label">5</span></span></header>
+            <article class="ha-card"><p class="ha-card-title">Give sermon generation one owner and a stable schedule</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F01"><span class="dos-badge__label">F01</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F03"><span class="dos-badge__label">F03</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F14"><span class="dos-badge__label">F14</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Fix library-read and remote-snapshot error contracts</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F21"><span class="dos-badge__label">F21</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F22"><span class="dos-badge__label">F22</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Bound media caches and track file ownership</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F08"><span class="dos-badge__label">F08</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F09"><span class="dos-badge__label">F09</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F10"><span class="dos-badge__label">F10</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Consolidate status polling and connect sentence timeouts</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F11"><span class="dos-badge__label">F11</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F13"><span class="dos-badge__label">F13</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Extract large workflow components as their behavior changes</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F17"><span class="dos-badge__label">F17</span></a></div></article>
+          </section>
+          <section class="ha-column" data-ha-lane="later" aria-labelledby="lane-later">
+            <header class="ha-column-head"><h3 id="lane-later">Later</h3><span class="dos-badge dos-badge--sm dos-status--brand" data-ha-lane-count><span class="dos-badge__label">3</span></span></header>
+            <article class="ha-card"><p class="ha-card-title">Retire unused Rust entry points after checking consumers</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F12"><span class="dos-badge__label">F12</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Share copied controls, data, and styling</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F15"><span class="dos-badge__label">F15</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F16"><span class="dos-badge__label">F16</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F20"><span class="dos-badge__label">F20</span></a></div></article>
+            <article class="ha-card"><p class="ha-card-title">Consolidate preparation scripts and migrate duplicate assets</p><div class="ha-card-meta"><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F18"><span class="dos-badge__label">F18</span></a><a class="dos-badge dos-badge--sm dos-status--neutral" href="#F19"><span class="dos-badge__label">F19</span></a></div></article>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter" id="checklist" data-ha-slot="checklist">
+      <div class="sheet">
+        <div class="chapter-head">
+          <p class="kicker">03 &middot; Criteria</p>
+          <div>
+<h2>Acceptance checks for the cleanup.</h2>
+            <p class="lead">These checks are proposed, not executed. Tick a criterion only after verification. The checklist is stored in this browser and does not change the app.</p>
+          </div>
+        </div>
+        <div class="ha-progress no-print">
+          <div class="ha-progress-track"><i data-ha-progress></i></div>
+<p class="ha-progress-label" data-ha-progress-label aria-live="polite">0 of 6 verified</p>
+        </div>
+        <div class="ha-criteria">
+          <label class="dos-choice ha-criterion"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" data-ha-check aria-labelledby="criterion-1"></span><span class="dos-choice__body"><span class="dos-choice__title" id="criterion-1">Operator edits survive navigation and sermon completion.</span><span class="dos-choice__subtext">F02, F04. Check saved and unsaved edits while requests are pending.</span></span></label>
+          <label class="dos-choice ha-criterion"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" data-ha-check aria-labelledby="criterion-2"></span><span class="dos-choice__body"><span class="dos-choice__title" id="criterion-2">Saved and off states reflect confirmed operations.</span><span class="dos-choice__subtext">F05, F06. Exercise storage and shutdown failures, then retry.</span></span></label>
+          <label class="dos-choice ha-criterion"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" data-ha-check aria-labelledby="criterion-3"></span><span class="dos-choice__body"><span class="dos-choice__title" id="criterion-3">An interrupted sermon can recover its transcript.</span><span class="dos-choice__subtext">F07. Restart during recording before ending the sermon.</span></span></label>
+          <label class="dos-choice ha-criterion"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" data-ha-check aria-labelledby="criterion-4"></span><span class="dos-choice__body"><span class="dos-choice__title" id="criterion-4">One coherent note workflow produces source-linked notes and usable summaries.</span><span class="dos-choice__subtext">F01, F03, F13, F14. Check delayed AI responses, sustained speech, local fallback, and missing utterance-end events.</span></span></label>
+          <label class="dos-choice ha-criterion"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" data-ha-check aria-labelledby="criterion-5"></span><span class="dos-choice__body"><span class="dos-choice__title" id="criterion-5">Cleanup reduces retained resources without breaking existing media.</span><span class="dos-choice__subtext">F08, F09, F10, F11, F19. Inspect memory, idle calls, disk usage, live references, and historical URLs.</span></span></label>
+          <label class="dos-choice ha-criterion"><span class="dos-choice__frame"><input class="dos-choice__box" type="checkbox" data-ha-check aria-labelledby="criterion-6"></span><span class="dos-choice__body"><span class="dos-choice__title" id="criterion-6">Consolidation preserves library data, remote status, and supported workflows.</span><span class="dos-choice__subtext">F12, F15, F16, F17, F18, F20, F21, F22. Review feature builds, affected interactions, and failure cases before release.</span></span></label>
+        </div>
+      </div>
+    </section>
+    <section class="chapter" id="scope" data-ha-slot="scope">
+      <div class="sheet">
+        <div class="chapter-head">
+          <p class="kicker">04 &middot; Scope</p>
+          <div>
+            <h2>What was examined, and what was not.</h2>
+            <p class="lead">The limits every finding and every clean result should be read against.</p>
+          </div>
+        </div>
+        <div class="memo audit-brief">
+          <article class="memo-block"><div class="label">Requested assessment</div><h2>Find unnecessary code and active duplication.</h2><p>Review the codebase for dead paths, copies, needless work, complexity, and implementation leftovers. This is a technical audit of the main app.</p></article>
+          <article class="memo-block"><div class="label">Revision</div><h2>Current working tree, September 25, 2026.</h2><p>Branch <code>codex/sermon-scripture-controls</code>, base commit <code>f488f13</code>, with substantial existing modified, deleted, and untracked files. Findings include those current changes. No application source was modified for this audit.</p></article>
+          <article class="memo-block"><div class="label">Coverage</div><h2>Repository-wide scans, targeted manual tracing.</h2><p>Inventoried 372 TypeScript, TSX, Rust, and Python files under src, src-tauri, data, and scripts: 243 app/script TypeScript files, 50 TypeScript test files, 75 Rust files, and 4 Python files. Scanned 322 files excluding TypeScript test files for repeated 12-line blocks. Rust inline test duplicates were inspected and excluded from production findings. Also inspected package/configuration files, CI, IPC routing, persistence, search, notes, summary, media, output, remote-control, and model-preparation paths. The manual review concentrated on caller relationships and the highest-risk workflows; it was not a line-by-line proof of every file.</p></article>
+          <article class="memo-block"><div class="label">Static results</div><h2>TypeScript, ESLint, and Knip passed.</h2><p><code>bun run typecheck</code>, <code>bun run lint</code>, and <code>bun run knip</code> exited successfully. Knip reported no unused frontend files, exports, or dependencies under the current configuration. Its scope does not establish whether public Rust methods or public asset URLs are used. A SHA-256 scan confirmed the background-image duplicate in F19. Source citation paths and line bounds and the report's static HTML are checked separately.</p></article>
+          <article class="memo-block"><div class="label">Keep</div><h2>Useful safeguards and separate responsibilities.</h2><p>Keep the song worker's synchronous fallback, cross-translation phrase and semantic search, legacy-data migrations, separate preview and program views, native output transports, and distinct GPU/CPU preparation routes when supported. Similar-looking code is not sufficient evidence for removal. The two matching iOS app icons belong to separate required size slots and are excluded from cleanup. Long Bible and synonym data tables are not findings just because they are long.</p></article>
+          <article class="memo-block"><div class="label">Verification limits</div><h2>No product runtime or tests were exercised.</h2><p>Tests were not run under your project instruction. No Rust compile, Clippy run, production build, provider request, live output operation, memory profile, dependency-security audit, or persisted-user-data inspection was performed. No measured latency or memory-saving claim is made. Browser checks not run because this pass is limited to static verification. Report validation does not verify product behavior. This register is a supported cleanup list, not a claim that every defect has been found.</p></article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer data-ha-slot="provenance">
+    <div class="sheet footer-inner">
+<p>FellowShow &middot; Technical audit.<br>Static review of f488f13 plus the current working tree. Findings and proposed remediation only.</p>
+      <div class="footer-meta">
+        <span><strong>Generated</strong> <time data-ha-time="generated" datetime="2026-09-25T01:24:36.294056Z">01:24:36 AM UTC</time></span>
+        <span><strong>Last updated</strong> <time data-ha-time="updated" datetime="2026-09-25T01:33:54Z">01:33:54 AM UTC</time></span>
+        <span><strong>Template</strong> Technical findings v1 &middot; DesignOS</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* One theme runtime per document: bootstrap + controller + scroll state. */
+(function () {
+  var root = document.documentElement;
+  var KEY = 'work-report-theme';
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (e) {}
+  if (stored === 'light' || stored === 'dark') root.setAttribute('data-color-mode', stored);
+  function sync() {
+    var dark = root.getAttribute('data-color-mode') === 'dark';
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(dark));
+      var label = dark ? 'Switch to light mode' : 'Switch to dark mode';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+    });
+  }
+  document.addEventListener('click', function (event) {
+    var btn = event.target.closest('[data-theme-toggle]');
+    if (!btn) return;
+    var next = root.getAttribute('data-color-mode') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-color-mode', next);
+    try { localStorage.setItem(KEY, next); } catch (e) {}
+    sync();
+  });
+  var bar = document.querySelector('.folio-bar');
+  if (bar) {
+    var onScroll = function () { bar.classList.toggle('is-scrolled', window.scrollY > 8); };
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+  sync();
+})();
+
+/* Register: search, severity filter menu, sort. */
+(() => {
+  const table = document.querySelector('[data-ha-register]');
+  if (!table) return;
+  const body = table.tBodies[0];
+  const empty = body.querySelector('.ha-empty');
+  const findings = () => Array.from(body.rows).filter(row => !row.classList.contains('ha-empty'));
+  const search = document.querySelector('[data-ha-search]');
+  const count = document.querySelector('[data-ha-count]');
+  const toggle = document.querySelector('[data-ha-filter-toggle]');
+  const menu = document.querySelector('.ha-filter-menu');
+  const boxes = Array.from(document.querySelectorAll('[data-ha-filter]'));
+  const badge = document.querySelector('[data-ha-filter-count]');
+
+  const apply = () => {
+    const rows = findings();
+    const query = (search.value || '').toLowerCase().trim();
+    const chosen = boxes.filter(box => box.checked).map(box => box.value);
+    let shown = 0;
+    rows.forEach(row => {
+      const bySeverity = !chosen.length || chosen.includes(row.dataset.haSeverity);
+      const byText = !query || row.textContent.toLowerCase().includes(query);
+      row.hidden = !(bySeverity && byText);
+      if (!row.hidden) shown += 1;
+    });
+    if (empty) empty.hidden = rows.length > 0;
+    badge.hidden = !chosen.length;
+    badge.querySelector('.dos-badge__label').textContent = chosen.length;
+    count.textContent = rows.length ? `${shown} of ${rows.length} findings` : 'No findings recorded yet.';
+  };
+
+  const setOpen = open => {
+    menu.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) boxes[0].focus();
+  };
+  toggle.addEventListener('click', () => setOpen(menu.hidden));
+  document.addEventListener('click', event => {
+    if (!menu.hidden && !event.target.closest('.ha-filter')) setOpen(false);
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !menu.hidden) { setOpen(false); toggle.focus(); }
+  });
+  boxes.forEach(box => box.addEventListener('change', apply));
+  document.querySelector('[data-ha-filter-clear]').addEventListener('click', () => {
+    boxes.forEach(box => { box.checked = false; });
+    apply();
+  });
+  search.addEventListener('input', apply);
+
+  const order = {
+    2: {critical: 0, high: 1, medium: 2, low: 3},
+    3: {'confirmed': 0, 'supported inference': 1, 'needs verification': 2}
+  };
+  document.querySelectorAll('[data-ha-sort]').forEach(button => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.haSort);
+      const header = button.closest('th');
+      const direction = header.getAttribute('aria-sort') === 'ascending' ? -1 : 1;
+      table.querySelectorAll('th').forEach(th => th.removeAttribute('aria-sort'));
+      header.setAttribute('aria-sort', direction === 1 ? 'ascending' : 'descending');
+      findings().sort((a, b) => {
+        const left = a.cells[index].textContent.trim().toLowerCase();
+        const right = b.cells[index].textContent.trim().toLowerCase();
+        const rank = order[index];
+        return direction * (rank ? (rank[left] ?? 9) - (rank[right] ?? 9) : left.localeCompare(right, undefined, {numeric: true}));
+      }).forEach(row => body.append(row));
+    });
+  });
+  apply();
+})();
+
+/* Plan: each column counts its own cards. */
+document.querySelectorAll('[data-ha-lane]').forEach(column => {
+  const label = column.querySelector('[data-ha-lane-count] .dos-badge__label');
+  if (label) label.textContent = column.querySelectorAll('.ha-card').length;
+});
+
+/* Criteria: progress, remembered in this browser only. */
+(() => {
+  const boxes = Array.from(document.querySelectorAll('[data-ha-check]'));
+  if (!boxes.length) return;
+  const bar = document.querySelector('[data-ha-progress]');
+  const label = document.querySelector('[data-ha-progress-label]');
+  const key = 'ha-criteria:' + document.title;
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) || 'null');
+    if (Array.isArray(saved)) boxes.forEach((box, i) => { box.checked = Boolean(saved[i]); });
+  } catch (error) {}
+  const render = () => {
+    const done = boxes.filter(box => box.checked).length;
+    bar.style.width = `${(done / boxes.length) * 100}%`;
+    label.textContent = `${done} of ${boxes.length} verified`;
+  };
+  boxes.forEach(box => box.addEventListener('change', () => {
+    try { localStorage.setItem(key, JSON.stringify(boxes.map(b => b.checked))); } catch (error) {}
+    render();
+  }));
+  render();
+})();
+</script>
+</body>
+</html>

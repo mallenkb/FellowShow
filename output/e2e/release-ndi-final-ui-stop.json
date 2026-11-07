@@ -1,0 +1,15 @@
+{
+  "pid": 21757,
+  "stopMethod": "native Program NDI UI switch",
+  "processStillRunning": true,
+  "ports": {
+    "5960": {
+      "connectRefused": true,
+      "connectExitCode": 61
+    },
+    "5961": {
+      "connectRefused": true,
+      "connectExitCode": 61
+    }
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-17",
+  "status": "completed_with_documented_limits",
+  "application": "FellowShow native verification builds from current working tree",
+  "boundaries": {
+    "nativeApp": "Observed in the rebuilt native desktop app with an isolated verification profile. See pending checks and limits.",
+    "localServices": "Real sockets, native libraries, and synthetic input exercised without substituting these results for cloud or desktop UI verification.",
+    "automated": "Regression, integration, fuzz, and static checks. These do not establish native UI behavior by themselves.",
+    "credentials": "No keys, authorization headers, vault contents, or credential-bearing logs are included."
+  },
+  "nativeAppObserved": [
+    {
+      "feature": "Deepgram speech through the actual microphone input",
+      "status": "passed",
+      "observed": "Generated speech produced the intended transcript and John 3:16. The false Song of Solomon detection was removed. Stop completed and both meters returned to zero.",
+      "evidence": "screenshots/speech-native-final-stopped.png"
+    },
+    {
+      "feature": "PDF page selection through Preview and Live",
+      "status": "passed",
+      "observed": "The original PDF's second page matched in the document canvas, Preview, and Live.",
+      "evidence": "screenshots/pdf-page2-live.png"
+    },
+    {
+      "feature": "Mixed document and media import",
+      "status": "passed",
+      "observed": "Valid PDF, Word, and PowerPoint files each imported two pages. Their actual native cached page images were visually verified for text and order, including the reimported PowerPoint's teal slide 1 and orange slide 2. Word page 2 matched in its canvas, Preview, and Live. The PNG and MP4 were accepted. Corrupted PDF, DOCX, PPTX, PNG, and MP4 files were rejected while valid files remained available. Separate native Select controls preserved the documents; explicit Remove deleted only the selected Word document's cached pages while retaining source and other documents.",
+      "evidence": "screenshots/mixed-import-rejects-corrupt-keeps-video.png",
+      "fixtures": "fixtures/manifest.json",
+      "additionalEvidence": [
+        "documents-media-results.json",
+        "screenshots/docx-page2-preview-live.png",
+        "document-cleanup-results.json"
+      ]
+    },
+    {
+      "feature": "Physical external display",
+      "status": "passed",
+      "observed": "The program output displayed PDF page 1 on the connected 3440 by 1440 display.",
+      "evidence": "screenshots/external-program-pdf.png"
+    },
+    {
+      "feature": "OpenAI connection",
+      "status": "passed",
+      "observed": "The native connection test succeeded for gpt-4.1-mini. Full summary-generation workflows were not established by this connection test.",
+      "evidence": "screenshots/cloud-openai-success.png"
+    },
+    {
+      "feature": "OpenRouter authentication and model catalog",
+      "status": "passed",
+      "observed": "Authentication and the model catalog succeeded. The retired built-in model was migrated to openrouter/free, whose native connection test succeeded.",
+      "evidence": "screenshots/cloud-openrouter-success.png"
+    },
+    {
+      "feature": "HTTP and OSC remote control",
+      "status": "passed",
+      "observed": "Six invalid HTTP controls rejected; valid HTTP and OSC controls updated the native app. Live show/hide transitions passed. Ports/status/history survive tab changes and closing Settings. Native Stop releases both listeners.",
+      "evidence": "remote-native-final.json",
+      "additionalEvidence": [
+        "screenshots/remote-history-final.png",
+        "remote-shutdown-final.json"
+      ]
+    },
+    {
+      "feature": "Separate document selection and removal",
+      "status": "passed",
+      "observed": "Select preserves documents. Explicit Remove deletes the selected document cache and keeps the source plus other documents.",
+      "evidence": "document-cleanup-results.json"
+    },
+    {
+      "feature": "Presenter timer",
+      "status": "passed",
+      "observed": "Five-second countdown completed. A fifteen-second countdown was shown Live, paused and reset.",
+      "evidence": "screenshots/timer-native-live.png"
+    },
+    {
+      "feature": "Automatic scripture browser selection",
+      "status": "passed",
+      "observed": "Generated John3:16 opened John chapter3 verse text, selected/scrolled verse16, and staged John3:16 rather than the chapter grid.",
+      "evidence": "screenshots/automatic-scripture-verse-selected.png"
+    },
+    {
+      "feature": "Native NDI imported slides",
+      "status": "passed",
+      "observed": "The real receiver captured five continuous nonuniform frames of each PowerPoint slide; received text/colors/order matched, and checksums changed between slides. This is NDI High Bandwidth, not an HX-only device emulator.",
+      "evidence": "screenshots/native-ndi-slide1.json",
+      "additionalEvidence": [
+        "screenshots/native-ndi-slide2.json"
+      ]
+    },
+    {
+      "feature": "Manual Notes line breaks",
+      "status": "passed",
+      "observed": "Three authored note lines matched in Preview and Live in the native debug verification build.",
+      "evidence": "screenshots/manual-notes-preview-live.png"
+    },
+    {
+      "feature": "Exact authored note lines in final optimized release",
+      "status": "passed",
+      "observed": "Fresh three-line note is visually identical in Notes, Preview and Program Live. Previously Program retained VIDEO STREAM while a background transition callback was suspended.",
+      "evidence": "screenshots/final-release-lines-latest.png"
+    },
+    {
+      "feature": "Moving video through native NDI before rate correction",
+      "status": "failed_baseline_resolved",
+      "observed": "Ten valid frames with seven distinct nonuniform hashes confirmed moving color bars reached the receiver. Actual cadence was only1.025fps, so performance failed and a native-clock fix was implemented for retest.",
+      "evidence": "screenshots/release-ndi-video-before-cadence-fix.json",
+      "supersededBy": "Final native NDI rate and moving video"
+    },
+    {
+      "feature": "Final native NDI rate and moving video",
+      "status": "passed",
+      "observed": "Static notes:24.32fps. Moving H.264 fixture:120 frames in4.925seconds,24.16fps,45distinct source frames. Main editor,Preview and Program visibly show the video and remain responsive.",
+      "evidence": "screenshots/release-ndi-video-decoded-cache.json",
+      "additionalEvidence": [
+        "screenshots/final-release-video-live.png",
+        "screenshots/release-ndi-native-clock-lines.json",
+        "screenshots/release-ndi-discovery.json"
+      ]
+    },
+    {
+      "feature": "Custom Notes theme availability and saved alignment",
+      "status": "passed",
+      "observed": "One active custom Notes theme and its Center alignment survive restart. The final optimized Designer visibly paints its ocean background, Genesis 1:1 sample and fitted canvas.",
+      "evidence": "screenshots/final-designer-painted.png"
+    },
+    {
+      "feature": "Final optimized speech and real AI",
+      "status": "passed",
+      "observed": "Generated public sermon fixture via Mac speakers and microphone at gain1.9; 5 final transcript segments, correct John3 chapter and selected verse16, automatic and manual source-linked notes, real OpenAI gpt-4.1-mini summary regenerated and saved, microphone returned to zero after Stop. Manually staged Preview remains protected by design.",
+      "evidence": "screenshots/final-speech-stopped-tab-return.png",
+      "additionalEvidence": [
+        "screenshots/final-speech-auto-john3verse16.png",
+        "screenshots/final-live-notes-source.png",
+        "screenshots/final-manual-ai-note-source.png",
+        "screenshots/final-openai-summary.png"
+      ]
+    },
+    {
+      "feature": "NDI saved options and actual opaque 720p30 output",
+      "status": "passed",
+      "observed": "Source name,720p,30fps,None/Opaque retained across restart. Actual SDK receiver discovered source and captured120 frames at30.068fps; source descriptor30/1,alpha255. Active transport/source/format controls disabled; UI Stop closed sender ports5960/5961 while app stayed running.",
+      "evidence": "screenshots/release-ndi-retained-720p30-opaque.json",
+      "additionalEvidence": [
+        "screenshots/final-ndi-retained-options.png",
+        "screenshots/final-ndi-active-locked.png",
+        "release-ndi-final-ui-stop.json"
+      ]
+    },
+    {
+      "feature": "Overlay rehearsal repair",
+      "status": "passed",
+      "observed": "Actual hidden native WebKit paints both lower-third and ticker over decoded video; six settled bounded pixel readbacks pass. Foreground compositor screenshot not tested.",
+      "evidence": "rehearsal-hidden-native-results.json"
+    }
+  ],
+  "pendingNativeApp": [],
+  "localServicesVerified": {
+    "documents": "The real native converter produced two-page Word and PowerPoint PDFs. All rendered pages were inspected. Corrupted modern Office fixtures were rejected after reproducing LibreOffice's plain-text fallback bug.",
+    "speechTransports": "Real loopback HTTP and WebSocket tests cover PCM/WAV bytes, final transcripts, reconnects, provider errors, cancellation, graceful Stop, and idle cleanup. These cloud-protocol tests use local servers.",
+    "offlineWhisper": "Generated speech passed through the native VAD and real tiny.en inference. Initial speech and active cancellation were verified. The normal large-v3-turbo model was not substituted or tested.",
+    "ndi": "Installed NDI runtime passed native sender/receiver format and concurrent sender checks. Native debug app slide capture passed separately; optimized app cadence and moving-video checks are pending.",
+    "remote": "Real HTTP and OSC sockets and the rebuilt native debug app verified validation, command dispatch, source labels, durable control state, and listener shutdown."
+  },
+  "automatedChecks": {
+    "latestCompletedFullFrontendRun": {
+      "testsPassed": 650,
+      "filesPassed": 104,
+      "log": "/tmp/fellowshow-overlay-full-tests.log",
+      "scopeNote": "Latest shared tree after overlay repair and concurrent lower-third editor changes. FUZZ_CASES=10000 FUZZ_SEED=1592598566."
+    },
+    "latestCompletedRustWorkspaceRun": {
+      "testsPassed": 353,
+      "testsFailed": 0,
+      "testsNormallyIgnored": 6,
+      "log": "/tmp/fellowshow-e2e-full-rust.log",
+      "ignoredChecks": "Document conversion, installed NDI, and real Whisper checks were also run separately. See subtask reports for exact commands and limits."
+    },
+    "laterTargetedChecks": {
+      "scriptureNavigation": {
+        "passed": 9,
+        "report": "scripture-navigation-results.json"
+      },
+      "documentSelectionRemoval": {
+        "passed": 5,
+        "log": "/tmp/fellowshow-document-list-tests.log"
+      },
+      "speechReferenceResolution": {
+        "passed": 4,
+        "log": "/tmp/fellowshow-detection-resolution-tests.log"
+      }
+    },
+    "typecheck": "passed",
+    "eslint": "passed",
+    "knip": "passed",
+    "strictClippy": "passed: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
+    "rustFormatting": "passed",
+    "frontendFormatting": "passed on changed files",
+    "nativeBundle": {
+      "status": "passed",
+      "log": "/tmp/fellowshow-e2e-release-final-build.log",
+      "scopeNote": "Optimized release rebuilt from the final combined source; native retests in progress."
+    }
+  },
+  "implementedFixAreas": [
+    "Transcription cancellation, provider cleanup, final audio/error delivery, Whisper startup and speech onset, and stopped meters",
+    "Short scripture aliases borrowing numbers from prose or a later book, plus invalid database references reaching the queue",
+    "Automatic scripture selection race, translation changes, and scrolling when Sermon becomes visible",
+    "Damaged Office and media rejection, cache deletion permissions, PDF worker cleanup, and background document rendering",
+    "Separate native document selection and removal controls",
+    "OpenRouter default availability and exact legacy-default migration",
+    "Remote numeric validation, null status clearing, protocol attribution, and NDI frame-rate/lifecycle corrections",
+    "Native per-output NDI render clock replaces throttled hidden DOM timers",
+    "Video readiness and in-flight seek guards avoid synchronous WebKit frame-fetch stalls",
+    "Program transition completion when animation frames are suspended",
+    "Persisted NDI options, active/startup format and transport locks",
+    "Custom announcement theme listing, activation, hydration and save history identity"
+  ],
+  "earlierFuzzVerification": {
+    "report": "../fuzz/results.json",
+    "generatedCases": 803000,
+    "frontendTestsPassedPerSeed": 434,
+    "rustTestsPassed": 314,
+    "additionalFindingsFixed": 11,
+    "scopeNote": "Historical verification from the previous fuzz pass, not a claim that every external service or hardware workflow was tested.",
+    "nativeLyricLineBreaks": "Authored lyric lines were visually compared in Notes, Preview, and Live in the previous native pass. Evidence is in the referenced fuzz report."
+  },
+  "sources": [
+    "documents-media-results.json",
+    "audio-stt-results.json",
+    "broadcast-remote-results.json",
+    "scripture-navigation-results.json",
+    "../fuzz/results.json",
+    "live-note-sources-results.json",
+    "gostream-duet-profile-simulation.json"
+  ],
+  "remainingLimits": [
+    "No claim of exhaustive coverage of every format, device, provider response, or long-running session.",
+    "Generated audio was used for microphone and offline speech checks.",
+    "OpenAI and Groq transcription error paths were tested against local HTTP services; the actual cloud transcription workflow was verified with Deepgram.",
+    "Media validation checks an image or the first decoded video frame, not every later video frame.",
+    "Nothing has been committed.",
+    "The user confirmed the GoStream Duet is disconnected and requested simulation. Physical interoperability is untested. OSEE specifies NDI HX only, while this application sends NDI High Bandwidth."
+  ],
+  "releaseVerification": {
+    "status": "stopped_by_user",
+    "identifier": "com.openbezal.fellowshow.release-verification",
+    "optimizedRelease": true,
+    "routingCorrection": "Distinct release identifier and bundle path, reset desktop binding, and process checks prevent reopening the old debug app.",
+    "process": null,
+    "path": "/Users/mallenkb/Documents/Code Projects/FellowShow/src-tauri/target/release/bundle/macos/FellowShow Release Check.app",
+    "lastProcess": 23971,
+    "endedAt": "2026-10-17T12:10:58.793825+00:00"
+  },
+  "receiverConstraintSimulation": {
+    "report": "gostream-duet-profile-simulation.json",
+    "status": "incompatible",
+    "observed": "FellowShow emits NDI High Bandwidth; OSEE documents NDI HX-only input for GoStream Duet. A local full-NDI receiver does not emulate that format requirement. Physical device disconnected."
+  },
+  "sessionEnd": "User requested ending the test. Test application was quit; fixes and evidence retained. No additional testing performed.",
+  "overlayRepairFollowup": {
+    "status": "completed",
+    "report": "overlay-repair-results.json",
+    "nativeTickerFps": 60.257,
+    "nativeRehearsalPixelReadback": "passed",
+    "frontendTestsPassed": 650
+  }
+}

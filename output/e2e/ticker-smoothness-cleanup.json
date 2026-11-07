@@ -1,0 +1,11 @@
+{
+  "verificationPid": 44018,
+  "verificationProcessRunning": false,
+  "senderPort": 5962,
+  "connectionRefused": true,
+  "connectExitCode": 61,
+  "cleanupMethod": "Parent terminated only the isolated optimized verification app with SIGTERM",
+  "userDebugPid": 33107,
+  "userDebugStillRunning": true,
+  "guiActionsByReceiverAgent": 0
+}

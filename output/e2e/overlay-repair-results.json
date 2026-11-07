@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-17T14:37:27.899253+00:00",
+  "status": "complete",
+  "scope": [
+    "Rehearsal lower thirds and ticker composition",
+    "Smooth scrolling in Preview and live outputs",
+    "Double-click graphic pad to Live",
+    "Single logo editor modal",
+    "Neutral idle cards with colored hover/active borders",
+    "Live status and compact indicators"
+  ],
+  "fixes": [
+    {
+      "area": "Rehearsal",
+      "change": "Video and graphics share one canvas. Video is copied from the decoded-frame cache, with capture registered before source loading and released on cleanup. Animation uses RAF with a30fps fallback."
+    },
+    {
+      "area": "Scrolling",
+      "change": "Both ticker paths reuse measured glyph strips; movement retains fractional positions. CanvasVerse paints existing buffers directly without React commits or canvas allocations per animation frame."
+    },
+    {
+      "area": "Pad actions",
+      "change": "Double-click ensures the current pad is staged, then runs Show on Live. Second click does not toggle it away; edit remains separate."
+    },
+    {
+      "area": "Logo editor",
+      "change": "One dialog contains selection, upload, preview, size, position and output targeting. Nested settings dialog and duplicate inner card heading removed."
+    },
+    {
+      "area": "Card colors",
+      "change": "Idle cards are neutral; hover uses the graphic color; staged/live cards keep matching colored borders and rings."
+    },
+    {
+      "area": "Live status",
+      "change": "Stopped/missing/failed transports clear stale flags. Preview/Looks/Overview use actual transport status; pads also check whether the graphic is routed to that running output. Live chip is compact, explicitly labeled Live, and keeps full ticker text in its tooltip."
+    }
+  ],
+  "automated": {
+    "frontendTestsPassed": 650,
+    "frontendFilesPassed": 104,
+    "fuzzCasesPerProperty": 10000,
+    "fuzzSeed": 1592598566,
+    "typecheck": "passed",
+    "eslint": "passed",
+    "knip": "passed",
+    "productionBuild": "passed"
+  },
+  "native": {
+    "computerBackgroundControls": "Opened rehearsal; exercised show/hide, start/stop, video pause and clear controls; staged ticker and sent it to hidden NDI; observed compact LIVE Scrolling text and off-air indicator after Stop.",
+    "ticker": {
+      "report": "ticker-performance-results.json",
+      "frames": 180,
+      "fps": 60.257,
+      "uniqueFrames": 180,
+      "leftwardPairs": 179,
+      "stationaryPairs": 0,
+      "rightwardPairs": 0,
+      "arrivalP95Ms": 18.48
+    },
+    "rehearsal": {
+      "report": "rehearsal-hidden-native-results.json",
+      "method": "Real component in actual native Tauri/WebKit, completely hidden nonfocusable window, six bounded settled pixel readbacks. All observations show decoded video painted and substantial lower-third/ticker pixels. Normal unmount and close completed."
+    }
+  },
+  "limits": [
+    "Foreground hover and native mouse double-click checks were not run under the no-interruption constraint. Automated double-click interaction tests pass.",
+    "OS window screenshots remained stale in the background; rehearsal composition was verified by native canvas readback instead.",
+    "A background-launched test window was reported over a fullscreen app; the isolated app was closed. All subsequent native checks used visible:false,focus:false,focusable:false windows."
+  ],
+  "cleanup": {
+    "visibleTestAppClosed": true,
+    "hiddenHarnessExitedNormally": true,
+    "receiverStopped": true,
+    "testSenderPortClosed": true,
+    "userDebugPidStillRunning": 33107,
+    "committed": false
+  }
+}

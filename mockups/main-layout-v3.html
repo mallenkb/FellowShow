@@ -1,0 +1,1566 @@
+<!doctype html>
+<html lang="en" data-theme="charcoal">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FellowShow — main layout v3</title>
+<style>
+  :root, [data-theme="charcoal"] {
+    --bg:#0b0b0e; --panel:#121216; --panel-2:#16161b; --panel-3:#1c1c22;
+    --line:rgba(255,255,255,.07); --line-strong:rgba(255,255,255,.12);
+    --text:#eceef1; --text-2:#a9adb5; --text-3:#70757d;
+    --accent:#f1e600; --accent-ink:#16160a; --accent-soft:rgba(241,230,0,.12);
+    --blue:#7ab8ff; --blue-soft:rgba(122,184,255,.13); --green:#4ade80;
+    --screen-bg-a:#141419; --screen-bg-b:#0e0e12; --screen-txt:#8b909a;
+  }
+  [data-theme="midnight"] {
+    --bg:#0a0d14; --panel:#10141d; --panel-2:#141925; --panel-3:#1b2130;
+    --line:rgba(160,190,255,.08); --line-strong:rgba(160,190,255,.15);
+    --text:#e8ecf4; --text-2:#a4adbf; --text-3:#6d7688;
+    --screen-bg-a:#131a28; --screen-bg-b:#0c111b; --screen-txt:#75809a;
+  }
+  [data-theme="slate"] {
+    --bg:#101113; --panel:#17181b; --panel-2:#1d1f23; --panel-3:#25272c;
+    --line:rgba(255,255,255,.09); --line-strong:rgba(255,255,255,.16);
+    --text:#f2f3f5; --text-2:#b4b8bf; --text-3:#7d828b;
+  }
+  [data-theme="paper"] {
+    --bg:#f4f4f6; --panel:#ffffff; --panel-2:#f2f2f5; --panel-3:#e7e7ec;
+    --line:rgba(20,20,40,.10); --line-strong:rgba(20,20,40,.2);
+    --text:#17181d; --text-2:#4c515b; --text-3:#8a8f99;
+    --accent-soft:rgba(190,150,0,.16); --screen-bg-a:#c9cdd6; --screen-bg-b:#aab0bd; --screen-txt:#6b7180;
+  }
+  [data-theme="paper"] .screen, [data-theme="paper"] .strip { box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body {
+    background:var(--bg); color:var(--text);
+    font:13px/1.45 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; overflow:hidden; min-width:1220px;
+  }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+  input, textarea, [contenteditable] { font:inherit; color:inherit; }
+  svg { display:block; flex:0 0 auto; }
+  .num { font-variant-numeric:tabular-nums; }
+  ::selection { background:var(--accent); color:var(--accent-ink); }
+  [hidden] { display:none !important; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    height:52px; flex:0 0 auto; display:flex; align-items:center; gap:16px; padding:0 14px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, var(--panel-2), var(--bg));
+  }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:650; font-size:13.5px; }
+  .brand .mark { width:22px; height:22px; border-radius:7px; background:var(--accent); display:grid; place-items:center; color:var(--accent-ink); font-weight:800; font-size:12px; }
+  .brand small { color:var(--text-3); font-weight:450; }
+
+  .tabs { display:flex; gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:3px; }
+  .tabs button { padding:5px 14px; border-radius:999px; color:var(--text-2); font-weight:500; font-size:12.5px; transition:all .15s; }
+  .tabs button:hover { color:var(--text); background:var(--panel-2); }
+  .tabs button.active { background:var(--accent); color:var(--accent-ink); font-weight:600; }
+
+  .air-status { margin-left:auto; display:flex; align-items:center; gap:10px; color:var(--text-3); }
+  .air-pill { display:flex; align-items:center; gap:7px; padding:4.5px 12px; border-radius:999px; border:1px solid var(--line-strong); background:var(--panel); font-size:11.5px; font-weight:600; letter-spacing:.06em; color:var(--text-3); transition:all .25s; }
+  .air-pill .dot { width:7px; height:7px; border-radius:50%; background:var(--text-3); }
+  body.live .air-pill { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+  body.live .air-pill .dot { background:var(--accent-ink); animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity:.35; } }
+  .meter { display:flex; align-items:flex-end; gap:2.5px; height:16px; }
+  .meter i { width:3.5px; border-radius:2px; background:var(--text-3); transform:scaleY(.25); transform-origin:bottom; }
+  .meter i:nth-child(1){height:7px} .meter i:nth-child(2){height:10px} .meter i:nth-child(3){height:13px}
+  .meter i:nth-child(4){height:16px} .meter i:nth-child(5){height:13px} .meter i:nth-child(6){height:9px}
+  body.live .meter i, .t-live .meter-mini i { animation:lev .9s ease-in-out infinite alternate; }
+  .meter i:nth-child(2){animation-delay:.12s} .meter i:nth-child(3){animation-delay:.05s}
+  .meter i:nth-child(4){animation-delay:.2s} .meter i:nth-child(5){animation-delay:.08s} .meter i:nth-child(6){animation-delay:.16s}
+  @keyframes lev { from { transform:scaleY(.3); } to { transform:scaleY(1); } }
+
+  .top-actions { display:flex; align-items:center; gap:6px; }
+  .icon-btn { display:flex; align-items:center; gap:6px; padding:7px 10px; border-radius:9px; color:var(--text-2); font-size:12.5px; font-weight:500; transition:all .15s; }
+  .icon-btn:hover { background:var(--panel); color:var(--text); }
+  .btn-primary { display:flex; align-items:center; gap:7px; background:var(--accent); color:var(--accent-ink); font-weight:650; font-size:12.5px; padding:8px 14px; border-radius:9px; transition:filter .15s; }
+  .btn-primary:hover { filter:brightness(1.08); }
+  body.live .btn-primary { background:var(--panel-2); color:var(--text-2); border:1px solid var(--line-strong); }
+  kbd { font:600 10px/1 inherit; padding:2.5px 5px; border-radius:5px; background:rgba(0,0,0,.14); color:inherit; opacity:.75; }
+  .icon-btn kbd { background:var(--panel-2); color:var(--text-3); }
+  body.live .btn-primary kbd { background:var(--accent); color:var(--accent-ink); }
+
+  /* ---------- workspace shell ---------- */
+  .workspace { flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 324px; gap:10px; padding:10px; }
+  .module { min-width:0; min-height:0; display:grid; gap:10px; }
+  #module-bible { grid-template-columns:292px minmax(0,1fr) minmax(0,1fr); }
+  .module.w-rail { grid-template-columns:262px minmax(0,1fr); }
+  .rail { min-height:0; display:flex; flex-direction:column; gap:10px; }
+  .col { min-width:0; min-height:0; display:flex; flex-direction:column; gap:10px; }
+
+  /* ---------- cards ---------- */
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; display:flex; flex-direction:column; min-height:0; min-width:0; overflow:hidden; }
+  .card-head { flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid var(--line); }
+  .card-title { font-size:10.5px; font-weight:650; letter-spacing:.09em; color:var(--text-3); text-transform:uppercase; }
+  .card-sub { font-size:10.5px; color:var(--text-3); }
+  .spacer { flex:1; }
+  .mini-btn { display:flex; align-items:center; gap:5px; padding:4.5px 9px; border-radius:7px; border:1px solid var(--line-strong); color:var(--text-2); font-size:11.5px; font-weight:550; background:var(--panel-2); transition:all .15s; }
+  .mini-btn:hover { color:var(--text); background:var(--panel-3); }
+  .mini-btn.accent { border-color:transparent; background:var(--accent); color:var(--accent-ink); font-weight:650; }
+  .mini-btn.accent:hover { filter:brightness(1.08); }
+  .mini-btn.ghost { background:none; border-color:var(--line); }
+  .mini-btn.tiny { padding:3.5px 9px; font-size:11px; }
+  .icon-sm { padding:5px; border-radius:6px; color:var(--text-2); transition:all .12s; }
+  .icon-sm:hover { background:var(--panel-3); color:var(--text); }
+  .count-chip { font-size:11px; color:var(--text-3); }
+  .count-chip b { color:var(--text-2); font-weight:600; }
+  .scroll { flex:1; min-height:0; overflow-y:auto; }
+  .scroll::-webkit-scrollbar { width:8px; }
+  .scroll::-webkit-scrollbar-thumb { background:var(--panel-3); border-radius:4px; border:2px solid var(--panel); }
+
+  /* ---------- bottom strip ---------- */
+  .strip { height:30px; flex:0 0 auto; display:flex; align-items:center; gap:18px; padding:0 14px; border-top:1px solid var(--line); background:var(--bg); color:var(--text-3); font-size:11px; }
+  .strip .item { display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .strip .dot { width:6px; height:6px; border-radius:50%; background:var(--text-3); }
+  .strip .dot.ok { background:var(--green); }
+  .strip .dot.warn { background:var(--accent); }
+  .strip .sep { flex:1; }
+  .strip b { color:var(--text-2); font-weight:600; }
+  body.live .strip #stripTrans { color:var(--accent); }
+
+  /* ---------- popovers + toasts ---------- */
+  .pop-layer { position:fixed; inset:0; z-index:60; }
+  .popover {
+    position:fixed; z-index:61; min-width:230px; max-width:320px;
+    background:var(--panel-2); border:1px solid var(--line-strong); border-radius:12px;
+    box-shadow:0 12px 34px rgba(0,0,0,.42); padding:6px;
+    animation:pop .14s ease-out;
+  }
+  @keyframes pop { from { opacity:0; transform:translateY(-4px) scale(.98); } }
+  .pop-title { font-size:10px; font-weight:650; letter-spacing:.09em; text-transform:uppercase; color:var(--text-3); padding:7px 9px 5px; }
+  .pop-row { display:flex; align-items:center; gap:10px; padding:8px 9px; border-radius:8px; width:100%; text-align:left; transition:background .12s; }
+  .pop-row:hover { background:var(--panel-3); }
+  .pop-row .r-name { font-size:12.5px; font-weight:550; }
+  .pop-row .r-sub { font-size:10.5px; color:var(--text-3); }
+  .pop-row.on .r-name { color:var(--accent); }
+  .pop-sep { height:1px; background:var(--line); margin:5px 4px; }
+  .pop-note { font-size:10.5px; color:var(--text-3); padding:5px 9px 3px; }
+  .swatch { width:18px; height:18px; border-radius:6px; border:1px solid var(--line-strong); flex:0 0 auto; }
+  .pop-row.on { background:var(--panel-3); }
+  .switch { width:30px; height:18px; border-radius:999px; background:var(--panel-3); border:1px solid var(--line-strong); position:relative; flex:0 0 auto; transition:all .15s; }
+  .switch::after { content:""; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:var(--text-3); transition:all .15s; }
+  .switch.on { background:var(--accent); border-color:var(--accent); }
+  .switch.on::after { left:14px; background:var(--accent-ink); }
+
+  #toasts { position:fixed; right:14px; bottom:40px; z-index:70; display:flex; flex-direction:column; gap:8px; }
+  .toast {
+    display:flex; align-items:center; gap:10px; min-width:230px; max-width:330px;
+    background:var(--panel-2); border:1px solid var(--line-strong); border-left:3px solid var(--accent);
+    border-radius:10px; padding:9px 12px; font-size:12px; color:var(--text-2);
+    box-shadow:0 10px 28px rgba(0,0,0,.4); animation:pop .16s ease-out;
+  }
+  .toast .undo { margin-left:auto; color:var(--accent); font-weight:600; }
+  .toast .undo:hover { text-decoration:underline; }
+  /* ---------- bible rail ---------- */
+  .search { margin:10px; display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--line-strong); border-radius:10px; padding:8px 11px; color:var(--text-3); transition:border-color .15s; }
+  .search:focus-within { border-color:var(--accent); }
+  .search input { flex:1; min-width:0; background:none; border:0; outline:0; color:var(--text); }
+  .search input::placeholder { color:var(--text-3); }
+  .toggle-seg { display:flex; gap:4px; }
+  .toggle-seg button { font-size:10px; font-weight:650; letter-spacing:.04em; padding:3px 7px; border-radius:6px; color:var(--text-3); }
+  .toggle-seg button.on { background:var(--panel-3); color:var(--text); }
+
+  .recent { display:flex; gap:6px; padding:0 10px 4px; flex-wrap:wrap; align-items:center; }
+  .recent-label { font-size:10px; color:var(--text-3); letter-spacing:.06em; text-transform:uppercase; font-weight:600; }
+  .ref-chip { padding:4px 9px; border-radius:999px; border:1px dashed var(--line-strong); color:var(--text-2); font-size:11.5px; font-weight:550; transition:all .15s; }
+  .ref-chip:hover { border-style:solid; border-color:var(--accent); color:var(--text); }
+
+  .seg { margin:8px 10px 0; display:grid; grid-template-columns:1fr 1fr; background:var(--panel-2); border:1px solid var(--line); border-radius:9px; padding:3px; }
+  .seg button { padding:5.5px 0; border-radius:6.5px; color:var(--text-3); font-size:11.5px; font-weight:600; transition:all .15s; }
+  .seg button.on { background:var(--panel-3); color:var(--text); box-shadow:inset 0 0 0 1px var(--line-strong); }
+
+  .bible-body { padding:10px 10px 14px; }
+  .back-row { display:flex; align-items:center; gap:8px; padding:2px 4px 10px; color:var(--text-2); font-size:12px; font-weight:600; }
+  .back-row:hover { color:var(--text); }
+  .group-label { font-size:9.5px; font-weight:650; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); padding:8px 2px 6px; }
+  .books { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+  .books.dense { grid-template-columns:repeat(5,1fr); }
+  .book { padding:6.5px 0; border-radius:7px; background:var(--panel-2); border:1px solid var(--line); text-align:center; font-size:10.5px; font-weight:600; letter-spacing:.03em; color:var(--text-2); transition:all .12s; }
+  .book:hover { color:var(--text); border-color:var(--line-strong); background:var(--panel-3); }
+  .book.on { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .chapters { display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+  .chapter { padding:7px 0; border-radius:7px; background:var(--panel-2); border:1px solid var(--line); font-size:11.5px; color:var(--text-2); text-align:center; font-variant-numeric:tabular-nums; transition:all .12s; }
+  .chapter:hover { color:var(--text); background:var(--panel-3); border-color:var(--line-strong); }
+  .verse-preview { margin-top:10px; padding:10px 12px; background:var(--panel-2); border:1px solid var(--line); border-radius:9px; font-family:"Source Serif 4", Georgia, serif; font-size:13px; color:var(--text-2); line-height:1.55; }
+  .verse-preview b { display:block; font-family:inherit; font-size:10px; letter-spacing:.08em; color:var(--accent); margin-bottom:4px; font-weight:650; }
+
+  /* ---------- transcript ---------- */
+  .transcript .t-body { padding:11px 14px; flex:1; min-height:78px; display:flex; flex-direction:column; justify-content:center; gap:9px; }
+  .transcript.t-live .t-body { justify-content:flex-start; overflow-y:auto; }
+  .idle-hint { color:var(--text-2); font-size:13px; }
+  .idle-hint b { color:var(--text); font-weight:600; }
+  .grab-demo { display:flex; align-items:center; gap:8px; color:var(--text-3); font-size:12px; flex-wrap:wrap; }
+  .grab-demo q { quotes:none; opacity:.75; font-family:"Source Serif 4", Georgia, serif; }
+  .grab-chip { display:inline-flex; align-items:center; gap:6px; border:1px dashed var(--accent); border-radius:8px; padding:3.5px 9px; color:var(--accent); font-weight:600; font-size:11.5px; background:var(--accent-soft); font-family:inherit; }
+  .t-line { display:flex; gap:9px; font-size:12.5px; color:var(--text-2); padding:3px 0; border-bottom:1px dashed var(--line); animation:pop .2s ease-out; }
+  .t-line:last-child { border-bottom:0; }
+  .t-line .t-time { color:var(--text-3); font-size:10.5px; padding-top:2px; flex:0 0 38px; }
+  .t-line .ver { color:var(--accent); }
+  .meter-mini { display:flex; align-items:flex-end; gap:2px; height:12px; }
+  .meter-mini i { width:2.5px; border-radius:2px; background:var(--text-3); transform:scaleY(.3); transform-origin:bottom; }
+  .meter-mini i:nth-child(1){height:6px} .meter-mini i:nth-child(2){height:9px} .meter-mini i:nth-child(3){height:12px}
+
+  /* ---------- overlay pads ---------- */
+  .pads .pad-body { flex:1; min-height:0; overflow-y:auto; padding:8px; display:grid; grid-template-columns:repeat(3,1fr); gap:7px; align-content:start; }
+  .pads .pad-body::-webkit-scrollbar { width:8px; }
+  .pads .pad-body::-webkit-scrollbar-thumb { background:var(--panel-3); border-radius:4px; border:2px solid var(--panel); }
+  .pad-card { position:relative; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:8px; min-height:86px; display:flex; flex-direction:column; gap:5px; cursor:pointer; transition:all .12s; }
+  .pad-card:hover { border-color:var(--line-strong); background:var(--panel-3); }
+  .pad-card.on { border-color:rgba(241,230,0,.4); box-shadow:inset 0 0 0 1px rgba(241,230,0,.18); }
+  .pad-top { display:flex; align-items:center; gap:6px; }
+  .pad-kind { font-size:9.5px; font-weight:650; letter-spacing:.07em; text-transform:uppercase; color:var(--text-3); }
+  .pad-key { margin-left:auto; font-size:9px; font-weight:700; color:var(--text-3); border:1px solid var(--line-strong); border-radius:5px; padding:1.5px 5px; }
+  .pad-card.on .pad-key { color:var(--accent-ink); background:var(--accent); border-color:var(--accent); }
+  .pad-title { font-size:12.5px; font-weight:600; color:var(--text); line-height:1.3; word-break:break-word; }
+  .pad-sub { font-size:10.5px; color:var(--text-3); margin-top:auto; }
+  .pad-card.on .pad-sub { color:var(--accent); }
+  .pad-x { position:absolute; top:4px; right:24px; opacity:0; padding:2px; border-radius:5px; color:var(--text-3); transition:opacity .12s; }
+  .pad-card:hover .pad-x { opacity:1; }
+  .pad-x:hover { color:var(--text); background:var(--panel-2); }
+  .pad-add { border-style:dashed; align-items:center; justify-content:center; color:var(--text-3); font-size:12px; gap:7px; font-weight:550; min-height:86px; }
+  .pad-add:hover { color:var(--text); border-color:var(--accent); }
+
+  /* ---------- scriptures ---------- */
+  .rows { flex:1; min-height:0; overflow-y:auto; padding:6px; display:flex; flex-direction:column; gap:3px; }
+  .rows::-webkit-scrollbar { width:8px; }
+  .rows::-webkit-scrollbar-thumb { background:var(--panel-3); border-radius:4px; border:2px solid var(--panel); }
+  .row { display:flex; align-items:center; gap:10px; padding:8px 8px 8px 6px; border-radius:9px; border:1px solid transparent; transition:background .12s; position:relative; }
+  .row:hover { background:var(--panel-2); }
+  .row .grip { color:var(--text-3); opacity:0; transition:opacity .12s; cursor:grab; }
+  .row:hover .grip { opacity:.8; }
+  .row .t-icon { flex:0 0 30px; height:30px; border-radius:8px; background:var(--panel-2); border:1px solid var(--line); display:grid; place-items:center; color:var(--text-2); }
+  .row .t-main { min-width:0; flex:1; }
+  .row .t-main .title { font-size:12.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .t-main .sub { font-size:11px; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .t-main .quote { font-family:"Source Serif 4", Georgia, serif; font-size:11.5px; color:var(--text-3); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .row.have-q .t-main .sub { display:none; }
+  .row:hover.have-q .t-main .sub { display:none; }
+  .row:hover.have-q .t-main .quote { -webkit-line-clamp:1; }
+  .badge { flex:0 0 auto; font-size:9.5px; font-weight:650; letter-spacing:.07em; text-transform:uppercase; padding:3px 8px; border-radius:999px; }
+  .badge.program { background:var(--accent-soft); color:var(--accent); }
+  .badge.preview { background:var(--blue-soft); color:var(--blue); }
+  .row.act { display:flex; gap:3px; opacity:0; transition:opacity .12s; }
+  .row:hover .act { opacity:1; }
+  .row.on-program::before { content:""; position:absolute; left:0; top:8px; bottom:8px; width:2.5px; border-radius:2px; background:var(--accent); }
+  .row.suggested { background:var(--panel-2); border:1px dashed var(--line-strong); }
+  .row.suggested .t-icon { border-style:dashed; color:var(--accent); background:var(--accent-soft); }
+  .row.suggested .act { opacity:1; }
+  .empty-note { padding:14px 16px; color:var(--text-3); font-size:12px; }
+
+  /* ---------- notes ---------- */
+  .editor { flex:1; min-height:0; display:flex; flex-direction:column; padding:10px 12px; }
+  .toolbar { display:flex; gap:2px; margin-bottom:8px; flex:0 0 auto; }
+  .toolbar button { padding:4px 7px; border-radius:6px; color:var(--text-3); font-size:12px; min-width:24px; }
+  .toolbar button:hover { background:var(--panel-2); color:var(--text); }
+  .toolbar button.on { color:var(--text); background:var(--panel-3); }
+  .note-area { flex:1; min-height:0; overflow-y:auto; outline:0; font-size:13px; color:var(--text); line-height:1.6; }
+  .note-area::-webkit-scrollbar { width:8px; }
+  .note-area::-webkit-scrollbar-thumb { background:var(--panel-3); border-radius:4px; }
+  .note-area h3 { font-size:14px; margin:10px 0 4px; }
+  .note-area ul, .note-area ol { padding-left:18px; margin:6px 0; }
+  .note-area .ph { color:var(--text-3); pointer-events:none; }
+  .ai-chip { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:600; color:var(--blue); background:var(--blue-soft); padding:3px 8px; border-radius:999px; }
+
+  /* ---------- output rail ---------- */
+  .monitors .card-body { padding:10px; display:flex; flex-direction:column; gap:8px; }
+  .monitor-label { display:flex; align-items:center; justify-content:space-between; font-size:9.5px; font-weight:650; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); }
+  .monitor-label .state { font-weight:600; }
+  body.live .monitor-label .state { color:var(--accent); }
+  .screen { aspect-ratio:16/9; border-radius:9px; border:1px solid var(--line-strong); background:repeating-linear-gradient(135deg, rgba(255,255,255,.02) 0 1px, transparent 1px 9px), linear-gradient(180deg, var(--screen-bg-a), var(--screen-bg-b)); position:relative; overflow:hidden; display:grid; place-items:center; min-height:0; }
+  .screen .empty-tag { font-size:10px; letter-spacing:.12em; color:var(--screen-txt); font-weight:600; }
+  .screen .s-content { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:10px; }
+  .screen .s-ref { color:var(--screen-txt); font-size:10px; letter-spacing:.08em; font-weight:650; }
+  .screen .s-main { font-family:"Source Serif 4", Georgia, serif; font-size:13px; line-height:1.5; color:var(--text); text-align:center; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+  .screen .s-song { font-size:12.5px; line-height:1.6; color:var(--text); text-align:center; }
+  .screen .s-logo { width:44px; height:44px; border-radius:12px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-weight:800; font-size:20px; }
+  .screen .s-media { position:absolute; inset:0; }
+  .screen .lt { position:absolute; left:0; right:0; bottom:0; padding:9px 12px; background:linear-gradient(180deg, transparent, rgba(0,0,0,.74)); display:flex; align-items:center; gap:8px; }
+  .screen .lt-text { font-size:12.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 8px rgba(0,0,0,.6); }
+  .screen .lt .lt-ref { color:var(--accent); font-size:10.5px; font-weight:650; margin-left:auto; flex:0 0 auto; }
+  .tkt { position:absolute; left:0; right:0; bottom:0; overflow:hidden; background:var(--accent); color:var(--accent-ink); font-size:10.5px; font-weight:650; padding:3.5px 0; white-space:nowrap; }
+  .tkt span { display:inline-block; padding-right:40px; animation:marquee 12s linear infinite; }
+  @keyframes marquee { from { transform:translateX(100%); } to { transform:translateX(-100%); } }
+  .live-tag { position:absolute; top:8px; left:8px; display:none; align-items:center; gap:5px; font-size:9px; font-weight:800; letter-spacing:.1em; color:var(--accent-ink); background:var(--accent); border-radius:5px; padding:2.5px 6px; }
+  body.live .screen.program .live-tag { display:inline-flex; }
+  .live-tag i { width:5px; height:5px; border-radius:50%; background:var(--accent-ink); }
+  body.live .screen.program { border-color:rgba(241,230,0,.5); }
+  .take { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:9px 0; border-radius:9px; background:var(--accent); color:var(--accent-ink); font-weight:700; font-size:12.5px; transition:filter .15s, transform .2s; }
+  .take:hover { filter:brightness(1.07); }
+  .take.flashed { transform:scale(.985); filter:brightness(.94); }
+  .take .desc { font-weight:550; opacity:.72; font-size:11.5px; }
+  .take.disabled { background:var(--panel-2); color:var(--text-3); border:1px solid var(--line); cursor:default; }
+
+  .roster .card-body { padding:6px 6px 8px; }
+  .disp-row { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:9px; }
+  .disp-row:hover { background:var(--panel-2); }
+  .disp-row .glyph { flex:0 0 26px; height:26px; border-radius:7px; background:var(--panel-2); border:1px solid var(--line); display:grid; place-items:center; color:var(--text-3); }
+  .disp-row.live .glyph { color:var(--accent); border-color:rgba(241,230,0,.25); background:var(--accent-soft); }
+  .disp-row .d-name { font-size:12.5px; font-weight:550; }
+  .disp-row .d-sub { font-size:10.5px; color:var(--text-3); }
+  .disp-state { margin-left:auto; font-size:10px; font-weight:700; letter-spacing:.08em; }
+  .disp-row.live .disp-state { color:var(--green); }
+  .disp-row:not(.live) .disp-state { color:var(--text-3); }
+
+  /* ---------- songs ---------- */
+  .song-search { margin:10px; display:flex; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--line-strong); border-radius:10px; padding:8px 11px; color:var(--text-3); }
+  .song-search input { flex:1; min-width:0; background:none; border:0; outline:0; color:var(--text); }
+  .song-search input::placeholder { color:var(--text-3); }
+  .lib-head { display:grid; grid-template-columns:1fr 150px 60px 70px; gap:10px; padding:6px 14px; font-size:9.5px; font-weight:650; letter-spacing:.09em; text-transform:uppercase; color:var(--text-3); border-bottom:1px solid var(--line); }
+  .song-row { display:grid; grid-template-columns:1fr 150px 60px 70px; gap:10px; align-items:center; padding:9px 14px; border-bottom:1px solid var(--line); cursor:pointer; transition:background .12s; }
+  .song-row:hover { background:var(--panel-2); }
+  .song-row:last-child { border-bottom:0; }
+  .song-row .s-title { font-size:12.5px; font-weight:600; color:var(--text); }
+  .song-row .s-artist { font-size:11px; color:var(--text-3); }
+  .song-row .s-key { font-size:11.5px; color:var(--text-2); }
+  .song-row .s-bpm { font-size:11.5px; color:var(--text-3); }
+  .song-row .row-act { display:flex; gap:3px; justify-content:flex-end; opacity:0; transition:opacity .12s; }
+  .song-row:hover .row-act { opacity:1; }
+  .order-row { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:9px; border:1px solid var(--line); background:var(--panel-2); cursor:pointer; transition:all .12s; }
+  .order-row:hover { background:var(--panel-3); }
+  .order-row .o-num { font-size:10px; color:var(--text-3); font-weight:700; }
+  .order-row .o-title { font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .order-row .o-art { font-size:10.5px; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .order-row .icon-sm { opacity:0; margin-left:auto; }
+  .order-row:hover .icon-sm { opacity:1; }
+
+  /* ---------- media ---------- */
+  .media-grid { padding:10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; align-content:start; }
+  .media-card { position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); cursor:pointer; transition:all .12s; background:var(--panel-2); }
+  .media-card:hover { border-color:var(--line-strong); }
+  .media-card .thumb { aspect-ratio:4/3; display:grid; place-items:center; color:var(--screen-txt); font-size:10px; letter-spacing:.1em; font-weight:650; }
+  .media-card .m-name { padding:7px 9px; font-size:11.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .media-card .m-sub { padding:0 9px 7px; font-size:10px; color:var(--text-3); }
+  .media-card .m-act { position:absolute; top:6px; right:6px; display:flex; gap:3px; opacity:0; transition:opacity .12s; }
+  .media-card:hover .m-act { opacity:1; }
+  .media-card .m-act .icon-sm { background:rgba(0,0,0,.55); color:#fff; backdrop-filter:blur(4px); }
+  .g1{background:linear-gradient(135deg,#2b3140,#45506b)} .g2{background:linear-gradient(135deg,#3e2f45,#6b4a5e)}
+  .g3{background:linear-gradient(135deg,#274038,#3f6858)} .g4{background:linear-gradient(135deg,#40372a,#7a6440)}
+  .g5{background:linear-gradient(135deg,#232936,#39415a)} .g6{background:linear-gradient(135deg,#35232e,#5e3a4d)}
+
+  /* ---------- notes module + overlays module ---------- */
+  .doc-row { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:9px; border:1px solid transparent; cursor:pointer; transition:all .12s; }
+  .doc-row:hover { background:var(--panel-2); }
+  .doc-row.on { background:var(--panel-2); border-color:var(--line-strong); }
+  .doc-row .d-name { font-size:12.5px; font-weight:600; color:var(--text); }
+  .doc-row .d-sub { font-size:10.5px; color:var(--text-3); }
+  .design-card { background:var(--panel-2); border:1px solid var(--line); border-radius:10px; overflow:hidden; cursor:pointer; transition:all .12s; }
+  .design-card:hover { border-color:var(--line-strong); }
+  .design-card .d-thumb { aspect-ratio:16/6; background:linear-gradient(180deg,var(--screen-bg-a),var(--screen-bg-b)); position:relative; }
+  .design-card .d-mini { position:absolute; bottom:14%; left:8%; right:8%; border-radius:4px; padding:5px 8px; font-size:9px; font-weight:700; letter-spacing:.05em; color:var(--accent-ink); background:var(--accent); }
+  .design-card .d-mini.b { background:rgba(0,0,0,.72); color:var(--text); border-left:3px solid var(--accent); }
+  .design-card .d-mini.c { background:rgba(0,0,0,.55); color:var(--text); border-radius:999px; left:auto; right:6%; width:30%; text-align:center; }
+  .design-card .d-name { padding:8px 10px; font-size:12px; font-weight:600; }
+  .design-card .d-sub { padding:0 10px 9px; font-size:10.5px; color:var(--text-3); }
+  .ticker-input { margin:10px; display:flex; gap:6px; }
+  .ticker-input input { flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--line-strong); border-radius:9px; padding:7px 10px; outline:0; }
+  .ticker-input input:focus { border-color:var(--accent); }
+</style>
+</head>
+<body>
+<style>
+  .f1 { flex:1 1 0; min-height:0; } .f0 { flex:0 0 auto; }
+</style>
+
+<header class="topbar">
+  <div class="brand"><span class="mark">F</span><small>Sunday AM</small></div>
+  <nav class="tabs" id="moduleTabs">
+    <button data-mod="bible" class="active">Bible</button>
+    <button data-mod="songs">Songs</button>
+    <button data-mod="notes">Notes</button>
+    <button data-mod="media">Media</button>
+    <button data-mod="overlays">Video Overlays</button>
+  </nav>
+
+  <div class="air-status">
+    <div class="air-pill"><span class="dot"></span><span id="airText">OFF AIR</span></div>
+    <span class="num" id="timer" style="font-size:12px">00:00:00</span>
+    <div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <div class="top-actions">
+    <button class="icon-btn" id="btnDisplays">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="12.5" rx="2"/><path d="M8 21h8M12 17v3.5"/></svg>
+      Displays
+    </button>
+    <button class="icon-btn" id="btnThemes">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>
+      Themes
+    </button>
+    <button class="icon-btn" id="btnSettings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9"/><circle cx="17" cy="7" r="2.5"/><path d="M20 17h-9"/><circle cx="7" cy="17" r="2.5"/></svg>
+      Settings
+    </button>
+    <button class="btn-primary" id="goLive">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+      <span id="goLiveText">Start sermon</span>
+      <kbd>G</kbd>
+    </button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- ============ MODULE: BIBLE ============ -->
+  <div class="module" id="module-bible">
+    <aside class="rail rail-bible f1">
+      <section class="card f1">
+        <div class="card-head">
+          <span class="card-title">Bible</span>
+          <span class="spacer"></span>
+          <button class="mini-btn" id="btnTrans">NKJV
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+          <input id="bSearch" placeholder="Search verse or word" />
+          <span class="toggle-seg"><button class="on" id="segRef">REF</button><button id="segText">TEXT</button></span>
+        </div>
+        <div class="recent">
+          <span class="recent-label">Recent</span>
+          <button class="ref-chip" data-add-ref="John 3:16">John 3:16</button>
+          <button class="ref-chip" data-add-ref="Psalm 32:1">Ps 32:1</button>
+          <button class="ref-chip" data-add-ref="Ezra 10:6">Ezra 10:6</button>
+        </div>
+        <div class="seg" id="bookSeg">
+          <button class="on" data-view="books">Books</button>
+          <button data-view="chapters">Chapters</button>
+        </div>
+        <div class="scroll">
+          <div class="bible-body">
+            <div id="viewBooks">
+              <div class="group-label">Old Testament</div>
+              <div class="books" id="otBooks"></div>
+              <div class="group-label">New Testament</div>
+              <div class="books nt" id="ntBooks"></div>
+            </div>
+            <div id="viewChapters" hidden>
+              <button class="back-row" id="backToBooks">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+                <span id="chapterBookName">John</span>
+                <span style="color:var(--text-3);font-weight:450" class="num" id="chapterBookCount"></span>
+              </button>
+              <div class="chapters" id="chapterGrid"></div>
+              <div class="verse-preview" id="versePreview" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <div class="col f1">
+      <section class="card transcript f0">
+        <div class="card-head">
+          <span class="card-title">Transcript</span>
+          <span class="count-chip" id="tStatus">Idle</span>
+          <span class="spacer"></span>
+          <button class="mini-btn accent" id="tToggle">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.5"/></svg>
+            <span id="tToggleText">Start transcribing</span>
+          </button>
+        </div>
+        <div class="t-body" id="tBody"></div>
+      </section>
+
+      <section class="card pads f1">
+        <div class="card-head">
+          <span class="card-title">Overlay pads</span>
+          <span class="card-sub num">DSK 1</span>
+          <span class="spacer"></span>
+          <span class="count-chip" id="padCount"></span>
+          <button class="icon-sm" id="padsEye" title="Toggle pad visibility on screens" style="padding:3px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="pad-body" id="padsGrid"></div>
+      </section>
+    </div>
+
+    <div class="col f1">
+      <section class="card scriptures f1">
+        <div class="card-head">
+          <span class="card-title">Sermon scriptures</span>
+          <span class="count-chip" id="scriptCount"></span>
+          <span class="spacer"></span>
+          <button class="mini-btn ghost" id="scriptClear">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            Clear
+          </button>
+        </div>
+        <div class="rows" id="scriptureList"></div>
+        <div class="empty-note" id="scriptEmpty">Start transcribing — a verse you say out loud lands here automatically. Or pick one from the Bible rail.</div>
+      </section>
+
+      <section class="card sermon-notes f1">
+        <div class="card-head">
+          <span class="card-title">Sermon notes</span>
+          <button class="ai-chip" id="aiChip" title="Ask AI to draft notes">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>
+            <span id="aiChipText">AI draft pending</span>
+          </button>
+          <span class="spacer"></span>
+        </div>
+        <div class="editor">
+          <div class="toolbar">
+            <button data-cmd="bold" style="font-weight:700">B</button>
+            <button data-cmd="italic" style="font-style:italic;font-family:Georgia,serif">I</button>
+            <button data-cmd="underline" style="text-decoration:underline">U</button>
+            <button data-cmd="insertUnorderedList">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9 12h11"/></svg>
+            </button>
+            <button data-cmd="insertOrderedList">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 4.5L3 5l.6-.7M4 9.2v5"/></svg>
+            </button>
+          </div>
+          <div class="note-area" id="noteArea" contenteditable="true" spellcheck="false"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ MODULE: SONGS ============ -->
+  <div class="module w-rail" id="module-songs" hidden>
+    <aside class="rail f1">
+      <section class="card f1">
+        <div class="card-head"><span class="card-title">Queue order</span><span class="count-chip" id="orderCount"></span></div>
+        <div class="scroll" style="padding:6px" id="orderList"></div>
+      </section>
+    </aside>
+    <div class="col f1">
+      <section class="card f1">
+        <div class="card-head">
+          <span class="card-title">Songs</span>
+          <span class="count-chip" id="songCount"></span>
+          <span class="spacer"></span>
+          <button class="mini-btn accent" id="songAdd"><span>+ Add song</span></button>
+        </div>
+        <div class="song-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+          <input id="songSearch" placeholder="Filter by title, artist, theme" />
+        </div>
+        <div class="lib-head"><span>Title</span><span>Artist</span><span>Key</span><span></span></div>
+        <div class="scroll" id="songList"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ MODULE: NOTES ============ -->
+  <div class="module w-rail" id="module-notes" hidden>
+    <aside class="rail f1">
+      <section class="card f1">
+        <div class="card-head"><span class="card-title">Documents</span><span class="spacer"></span>
+          <button class="mini-btn ghost" id="docNew"><span>+ New</span></button>
+        </div>
+        <div class="scroll" style="padding:6px" id="docList"></div>
+      </section>
+    </aside>
+    <div class="col f1">
+      <section class="card f1">
+        <div class="card-head">
+          <span class="card-title" id="docTitle">Untitled notes</span>
+          <span class="card-sub" id="docSaved">Saved · just now</span>
+          <span class="spacer"></span>
+          <span class="ai-chip">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>
+            AI assist on
+          </span>
+        </div>
+        <div class="editor">
+          <div class="toolbar">
+            <button data-cmd="bold" style="font-weight:700">B</button>
+            <button data-cmd="italic" style="font-style:italic;font-family:Georgia,serif">I</button>
+            <button data-cmd="underline" style="text-decoration:underline">U</button>
+            <button data-cmd="insertUnorderedList">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><path d="M9 12h11"/></svg>
+            </button>
+            <button data-cmd="insertOrderedList">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 4.5L3 5l.6-.7M4 9.2v5"/></svg>
+            </button>
+          </div>
+          <div class="note-area" id="docArea" contenteditable="true" spellcheck="false"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ MODULE: MEDIA ============ -->
+  <div class="module w-rail" id="module-media" hidden>
+    <aside class="rail f1">
+      <section class="card f1">
+        <div class="card-head"><span class="card-title">Collections</span></div>
+        <div class="scroll" style="padding:6px" id="collList"></div>
+      </section>
+    </aside>
+    <div class="col f1">
+      <section class="card f1">
+        <div class="card-head">
+          <span class="card-title">Media library</span>
+          <span class="count-chip" id="mediaCount"></span>
+          <span class="spacer"></span>
+          <button class="mini-btn accent" id="mediaAdd"><span>+ Add media</span></button>
+        </div>
+        <div class="scroll" style="padding:0"><div class="media-grid" id="mediaGrid"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ MODULE: VIDEO OVERLAYS ============ -->
+  <div class="module w-rail" id="module-overlays" hidden>
+    <aside class="rail f1">
+      <section class="card f1">
+        <div class="card-head"><span class="card-title">DSK slots</span>
+          <span class="spacer"></span>
+          <button class="mini-btn ghost" id="slotClearAll"><span>Clear all</span></button>
+        </div>
+        <div class="scroll" style="padding:6px" id="slotList"></div>
+      </section>
+    </aside>
+    <div class="col f1">
+      <section class="card f1">
+        <div class="card-head"><span class="card-title">Designer</span><span class="card-sub">Lower thirds · bars · ticker</span></div>
+        <div class="ticker-input">
+          <input id="tickerInput" placeholder="Ticker text — e.g. Fellowship lunch noon · nursery open · giving link in bulletin" />
+          <button class="mini-btn accent" id="tickerApply"><span>Set ticker</span></button>
+        </div>
+        <div class="scroll" style="padding:0"><div class="media-grid" id="designGrid"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ============ OUTPUT RAIL (persistent) ============ -->
+  <aside class="rail rail-output">
+    <section class="card monitors f1">
+      <div class="card-head">
+        <span class="card-title">Output</span>
+        <span class="spacer"></span>
+        <span style="font-size:10.5px;color:var(--text-3)" class="num">NDI · 1080p60</span>
+      </div>
+      <div class="card-body f1">
+        <div class="monitor-label">Program <span class="state num" id="progState">OFF AIR</span></div>
+        <div class="screen program f1" id="progScreen"></div>
+        <button class="take" id="takeBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+          Take to program <span class="desc">T</span>
+        </button>
+        <div class="monitor-label">Preview <span class="state" id="prevState">Empty</span></div>
+        <div class="screen preview f1" id="prevScreen"></div>
+      </div>
+    </section>
+    <section class="card roster f0">
+      <div class="card-head"><span class="card-title">Displays</span><span class="spacer"></span>
+        <span style="font-size:10.5px;color:var(--text-3)" class="num" id="dispCount"></span>
+      </div>
+      <div class="card-body" id="dispRoster"></div>
+    </section>
+  </aside>
+</div>
+
+<footer class="strip">
+  <span class="item"><span class="dot" id="stripDot"></span><span id="stripTrans">Transcription idle</span></span>
+  <span class="item"><span class="dot ok"></span>Deepgram connected</span>
+  <span class="item k" id="stripAi">AI notes: needs ~2 min of transcript</span>
+  <span class="sep"></span>
+  <span class="item k" id="stripSave">Saved automatically · just now</span>
+  <span class="item k">G start sermon · T take · 1–6 pads</span>
+</footer>
+
+<div id="popLayer"></div>
+<div id="toasts"></div>
+
+<script>
+"use strict";
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const I = {
+  send: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  take: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
+  pencil: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  sparkle: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>',
+  grip: '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+  book: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9.5h8M8 13h5"/></svg>',
+  type: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5h14M12 5v14"/></svg>',
+  scroll: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+  logo: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/><path d="M9.5 9.5h5.4v2.1h-2v3.9h-1.8v-3.9H9.5z" fill="var(--panel)"/></svg>',
+  monitor: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="12.5" rx="2"/><path d="M8 21h8M12 17v3.5"/></svg>',
+  play: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  eye: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7c2 0 3.7.7 5.2 1.7M22 12s-3.5 7-10 7c-2 0-3.7-.7-5.2-1.7"/><path d="M4 4l16 16"/></svg>',
+  image: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M20 15.5l-5-4.5-11 8"/></svg>',
+  music: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="17.5" r="3"/><circle cx="17" cy="15.5" r="3"/><path d="M10 17.5V5l10-2v12.5"/></svg>',
+  film: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M8 4.5v15M16 4.5v15M3.5 9.5h17M3.5 14.5h17"/></svg>',
+  video: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg>',
+};
+
+const VERSES = {
+  "John 3:16": "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+  "Psalm 32:1": "Blessed is he whose transgression is forgiven, whose sin is covered.",
+  "Ezra 10:6": "Then Ezra rose up from before the house of God, and went into the chamber of Jehohanan the son of Eliashib.",
+  "Deuteronomy 4:3": "Your eyes have seen what the LORD did unto Baal-peor, and every man that followed him the LORD thy God hath destroyed.",
+  "Deuteronomy 4:4": "But ye that did cleave unto the LORD your God are alive every one of you this day.",
+  "Philippians 4:13": "I can do all things through Christ which strengtheneth me.",
+ };
+const verseText = (ref) => (S.bibleText !== "KJV" ? "[NKJV] " : "") + (VERSES[ref] || '"' + ref + ' — full text will be pulled from ' + (S.bibleText || "NKJV") + " on the live screen.");
+
+const BOOK_NAMES = {
+  ot: ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Songs","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi"],
+  otAb: ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOE","AMO","OBA","JON","MIC","NAH","HAB","ZEP","HAG","ZEC","MAL"],
+  otCt: [50,40,27,36,34,24,24,48,42,25,29,36,47,25,24,13,10,42,150,31,12,8,66,52,5,48,12,14,3,9,1,4,7,3,3,3,3,3,3],
+  nt: ["Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"],
+  ntAb: ["MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"],
+  ntCt: [28,16,24,28,16,16,16,16,13,6,6,4,5,3,6,4,3,1,13,5,5,3,5,1,1,1,22],
+ };
+
+const AUDIO = { ok: true };
+
+const S = {
+  module: "bible",
+  air: false, tStart: 0, timerInt: null, elapsed: 0,
+  tLive: false, tInt: null, tScriptIdx: 0, tLines: [], aiDrafted: false,
+  bibleText: "NKJV",
+  autoGrab: true, dense: false,
+  padsVisible: true,
+  pads: [
+    { id: "p1", kind: "logo",      title: "F fellowship logo", sub: "Full-screen · stays on screen", on: true },
+    { id: "p2", kind: "text",      title: "Text bar — welcome", text: "Welcome home, Fellowship Chapel", sub: "Lower third · stays on screen", on: false },
+    { id: "p3", kind: "scripture", title: "Psalms 32:1", sub: "Stays on screen", on: false },
+    { id: "p4", kind: "scripture", title: "Ezra 10:6", sub: "Stays on screen", on: false },
+    { id: "p5", kind: "scripture", title: "Deuteronomy 4:4", sub: "Stays on screen", on: false },
+    { id: "p6", kind: "scripture", title: "Deuteronomy 4:3", sub: "Stays on screen", on: false },
+    { id: "p7", kind: "scroll",    title: "Please turn to John chapter three, verse sixteen. For God so loved the wor...", text: "Please turn to John chapter three, verse sixteen. For God so loved...", sub: "Normal scroll", on: false },
+  ],
+  padSeq: 8,
+  scriptures: [],
+  suggested: null,
+  programBase: null,
+  previewItem: null,
+  songs: [],
+  order: [],
+  docs: [],
+  docId: null,
+  serNotes: "<p>Type your sermon outline here. After about two minutes of transcript, ask AI for a draft.</p>",
+  serSaved: "just now",
+  media: [],
+  coll: "all",
+  disp: [
+    { id: "proj",  name: "Sanctuary projector", sub: "Lower thirds enabled", on: true },
+    { id: "lobby", name: "Lobby TV",            sub: "Mirrors program",      on: false },
+    { id: "hall",  name: "Fellowship hall",     sub: "Ticker only",          on: false },
+  ],
+  theme: "charcoal",
+};
+
+const PROGRAM = { el: () => $("#progScreen"), state: () => $("#progState") };
+const PREVIEW = { el: () => $("#prevScreen"), state: () => $("#prevState") };
+
+function fmtClock(s) {
+  const m = Math.floor(s / 60), r = Math.floor(s % 60);
+  return String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0");
+ }
+function nowStamp() { return "10:" + String(42 + S.tLines.length > 59 ? 59 : 42 + S.tLines.length) + " am"; }
+function savedStamp() { return "Saved automatically · " + $("#stripSave").textContent.replace(/^Saved automatically · /, ""); }
+
+/* ---------- toasts ---------- */
+function toast(msg, opt) {
+  opt = opt || {};
+  const box = $("#toasts");
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = '<span style="display:flex;align-items:center;gap:6px;min-width:0"><span style="color:var(--accent);flex:0 0 auto">' + I.sparkle + '</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(msg) + "</span></span>" +
+    (opt.undo ? '<button class="undo">Undo</button>' : "");
+  if (box.children.length > 3) box.firstChild.remove();
+  box.appendChild(t);
+  if (opt.undo) $(".undo", t).addEventListener("click", function () { opt.undo(); kill(); });
+  const kill = function () { clearTimeout(to); t.remove(); if (opt.after) opt.after(); };
+  const to = setTimeout(kill, 3400);
+}
+
+/* ---------- popovers ---------- */
+let popEl = null;
+function closePop() { $("#popLayer").hidden = true; if (popEl) { popEl.remove(); popEl = null; } }
+function openPop(anchor, html, onMount) {
+  closePop();
+  const layer = $("#popLayer");
+  layer.hidden = false;
+  layer.onclick = function (e) { if (e.target === layer) closePop(); };
+  const rect = anchor.getBoundingClientRect();
+  popEl = document.createElement("div");
+  popEl.className = "popover";
+  popEl.innerHTML = html;
+  layer.appendChild(popEl);
+  const w = popEl.offsetWidth, vw = window.innerWidth;
+  let x = Math.min(rect.left, vw - w - 12);
+  if (rect.right - w < 0 && rect.left + w < vw) x = rect.left;
+  popEl.style.left = Math.max(10, x) + "px";
+  const bel = rect.bottom + 6;
+  popEl.style.top = (bel + popEl.offsetHeight > window.innerHeight - 36 ? rect.top - popEl.offsetHeight - 6 : bel) + "px";
+  if (onMount) onMount(popEl);
+  return popEl;
+ }
+document.addEventListener("keydown", function (e) { if (e.key === "Escape") closePop(); });
+
+/* ---------- go live ---------- */
+function setAir(on) {
+  S.air = on;
+  document.body.classList.toggle("live", on);
+  $("#airText").textContent = on ? "ON AIR" : "OFF AIR";
+  $("#goLiveText").textContent = on ? "End sermon" : "Start sermon";
+  $("#progState").textContent = on ? "LIVE" : "OFF AIR";
+  $("#stripDot").className = on ? "dot warn" : "dot";
+  if (on && !S.tLive) { setTranscribing(true); }
+  if (on) {
+    S.tStart = Date.now() - S.elapsed * 1000;
+    S.timerInt = setInterval(function () {
+      S.elapsed = Math.floor((Date.now() - S.tStart) / 1000);
+      $("#timer").textContent = fmtClock(S.elapsed);
+    }, 1000);
+  } else { clearInterval(S.timerInt); }
+  renderRoster(); renderStrip();
+ }
+function toggleAir() { setAir(!S.air); }
+
+/* ---------- take ---------- */
+function take() {
+  if (!S.previewItem) { toast("Nothing in preview"); return; }
+  S.programBase = S.previewItem; S.previewItem = null;
+  renderScreens(); updateTake();
+  const b = $("#takeBtn"); b.classList.add("flashed");
+  setTimeout(function () { b.classList.remove("flashed"); }, 180);
+  toast("On program · " + labelOf(S.programBase));
+ }
+function updateTake() {
+  const b = $("#takeBtn");
+  const has = !!S.previewItem;
+  b.classList.toggle("disabled", !has);
+  $("#prevState").textContent = has ? "Staged" : "Empty";
+  b.innerHTML = I.take + (has ? " Take to program" + (S.air ? " · LIVE" : "") : " Take to program");
+  const d = document.createElement("span"); d.className = "desc"; d.textContent = "T"; b.appendChild(d);
+ }
+
+/* ---------- screens ---------- */
+function labelOf(item) { return item ? (item.title || item.name || item.ref) : ""; }
+function serScreen(item, cls) {
+  if (!item) return '<span class="empty-tag">' + (cls === "program" ? "PROGRAM" : "VIDEO STREAM") + "</span>";
+  const lt = '<div class="lt"><span class="lt-text">Fellowship Chapel</span><span class="lt-ref">' + esc(item.ref) + "</span></div>";
+  return '<div class="s-content"><span class="s-ref">' + esc((S.bibleText || "NKJV") + "  ·  " + item.ref) + '</span><div class="s-main">' + esc(item.quote) + "</div></div>" + lt;
+ }
+function songScreen(item) {
+  return '<div class="s-content"><span class="s-ref">LYRICS · VERSE 1</span><div class="s-song">' + esc(item.l1) + "<br>" + esc(item.l2) + "</div></div>";
+ }
+function mediaScreen(item) {
+  return '<div class="s-media ' + item.g + '"></div><div class="s-content">' +
+    '<span class="s-ref">' + esc(item.kind === 'video' ? 'VIDEO' : 'IMAGE') + " · " + esc(item.gclass || "") + '</span><div class="s-main" style="font-family:inherit;font-size:12px">' + esc(item.name) + "</div></div>";
+ }
+function dsScreen() {
+  return '<div class="s-content"><span class="s-ref">DSK</span><div class="s-main" style="font-family:inherit;font-size:12.5px">Video stream placeholder</div></div>';
+ }
+function baseScreen(item, kind) {
+  if (!item) return '<span class="empty-tag">' + (kind === "program" ? "PROGRAM" : "VIDEO STREAM") + "</span>";
+  if (item.t === "scripture") return serScreen(item, kind);
+  if (item.t === "song") return songScreen(item);
+  if (item.t === "media") return mediaScreen(item);
+  if (item.t === "ds") return dsScreen();
+  return "";
+ }
+function tickerNode() {
+  return '<div class="tkt"><span>' + esc(S.tickerText || "") + "&nbsp;&nbsp;</span></div>";
+ }
+function renderScreens() {
+  const padsOn = S.pads.filter(function (p) { return p.on && S.padsVisible; });
+  let phtml = baseScreen(S.programBase, "program");
+  padsOn.forEach(function (p) {
+    if (p.kind === "logo") phtml += '<div style="position:absolute;inset:0;display:grid;place-items:center"><div class="s-logo">F</div></div>';
+    if (p.kind === "text") phtml += '<div class="lt" style="opacity:.97"><span class="lt-text">' + esc(p.text) + "</span></div>";
+    if (p.kind === "scripture") phtml += '<div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.62);border:1px solid rgba(241,230,0,.35);border-radius:6px;padding:3px 8px;font-size:10.5px;color:var(--accent);font-weight:650">' + esc(p.title) + "</div>";
+    if (p.kind === "scroll") phtml += tickerNode();
+  });
+  if (S.tickerOn && S.padsVisible) phtml += tickerNode();
+  PROGRAM.el().innerHTML = '<span class="live-tag"><i></i>LIVE</span>' + phtml;
+  PREVIEW.el().innerHTML = baseScreen(S.previewItem, "preview");
+  const n = padsOn.length;
+  $("#padCount").innerHTML = "<b>" + n + "</b> on program";
+  renderScriptures && renderScriptures();
+  renderSlots && renderSlots();
+ }
+function renderRoster() {
+  const box = $("#dispRoster");
+  box.innerHTML = S.disp.map(function (d) {
+    return '<div class="disp-row' + (d.on ? " live" : "") + '">' +
+      '<span class="glyph">' + I.monitor + "</span>" +
+      '<div><div class="d-name">' + esc(d.name) + '</div><div class="d-sub">' + esc(d.sub) + "</div></div>" +
+      '<span class="disp-state">' + (d.on ? "LIVE" : "OFF") + "</span></div>";
+  }).join("");
+  const n = S.disp.filter(function (d) { return d.on; }).length;
+  $("#dispCount").textContent = n + " / " + S.disp.length + " on";
+ }
+function renderStrip() {
+  $("#stripTrans").textContent = S.tLive ? "Transcribing · " + fmtClock(S.tElapsed || 0) : "Transcription idle";
+  const seen = S.tLines.length;
+  $("#stripAi").textContent = S.aiDrafted ? "AI notes: draft ready" : (seen >= 4 ? "AI notes: enough transcript — ask for a draft" : "AI notes: needs ~2 min of transcript");
+ }
+const SONGS_DATA = [
+  { id: "so1", title: "Amazing Grace (My Chains Are Gone)", artist: "Chris Tomlin", key: "G", bpm: 72, l1: "Amazing grace, how sweet the sound", l2: "I once was lost, but now am found" },
+  { id: "so2", title: "How Great Thou Art", artist: "Hymn", key: "Eb", bpm: 60, l1: "O Lord, my God, when I in awesome wonder", l2: "Consider all the worlds Thy hands have made" },
+  { id: "so3", title: "10,000 Reasons (Bless the Lord)", artist: "Matt Redman", key: "Bb", bpm: 76, l1: "Bless the Lord, O my soul", l2: "O my soul, worship His holy name" },
+  { id: "so4", title: "Great Are You Lord", artist: "All Sons & Daughters", key: "D", bpm: 82, l1: "You give life, You are love", l2: "You bring light to darkness" },
+  { id: "so5", title: "Doxology", artist: "Traditional", key: "G", bpm: 96, l1: "Praise God from whom all blessings flow", l2: "Praise Him all creatures here below" },
+  { id: "so6", title: "Graves Into Gardens", artist: "Elevation Worship", key: "C", bpm: 74, l1: "I searched for love among the things done", l2: "Would You really take a cross for me" },
+  { id: "so7", title: "Cornerstone", artist: "Hillsong Worship", key: "A", bpm: 78, l1: "My hope is built on nothing less", l2: "Than Jesus Christ, my righteousness" },
+  { id: "so8", title: "What a Beautiful Name", artist: "Hillsong Worship", key: "D", bpm: 75, l1: "You were the Word at the beginning", l2: "One with God, the Most High" },
+  { id: "so9", title: "Build My Life", artist: "Housefires", key: "F", bpm: 66, l1: "Holy God, there is no one like You", l2: "There is none beside You" },
+  { id: "so10", title: "Agnus Dei", artist: "Michael W. Smith", key: "C", bpm: 64, l1: "Alleluia, alleluia", l2: "For the Lord God Almighty reigns" },
+];
+const MEDIA_DATA = [
+  { id: "m1", name: "Welcome loop", kind: "video", g: "g5", sub: "MP4 · 8 s" },
+  { id: "m2", name: "Sanctuary wide", kind: "image", g: "g1", sub: "PNG · still" },
+  { id: "m3", name: "Cross sunrise", kind: "image", g: "g3", sub: "JPG · 4K" },
+  { id: "m4", name: "Baptism highlights", kind: "video", g: "g2", sub: "MP4 · 2:10" },
+  { id: "m5", name: "Nursery notice", kind: "image", g: "g4", sub: "PNG" },
+  { id: "m6", name: "Series — Grace", kind: "image", g: "g6", sub: "PNG · title" },
+];/* ---------- transcript ---------- */
+var T_SCRIPT = [
+  { t: "Good morning church — let's pray before we open the Word.", grab: null },
+  { t: "Open your Bibles with me to John chapter 3, verse 16.", grab: "John 3:16" },
+  { t: "For God so loved the world, that he gave his only begotten Son.", grab: null },
+  { t: "That whosoever believeth in him should not perish — but have everlasting life.", grab: null },
+  { t: "Let's anchor that. Psalm 32:1 — blessed is he whose transgression is forgiven.", grab: "Psalm 32:1" },
+  { t: "Now flip back with me to Deuteronomy chapter 4, verse 4.", grab: "Deuteronomy 4:4" },
+  { t: "Church, the God who kept them alive keeps us alive today.", grab: null },
+  { t: "And Deuteronomy 4, verse 3 — your eyes have seen what the LORD did at Baal-peor.", grab: "Deuteronomy 4:3" },
+  { t: "Same God. Same faithfulness. Let's worship on that.", grab: null },
+];
+
+function setTranscribing(on) {
+  clearInterval(S.tInt);
+  S.tTlive = on;
+  S.tLive = on;
+  $("#tBody").classList.toggle("t-live", on);
+  const btn = $("#tToggle");
+  btn.classList.toggle("accent", !on);
+  $("#tToggleText").textContent = on ? "Stop transcribing" : "Start transcribing";
+  if (on) {
+    S.tLines = []; S.tScriptIdx = 0; S.tElapsed = 0;
+    S.tInt = setInterval(tickTranscript, 1700);
+  } else {
+    $("#tStatus").textContent = "Idle";
+    renderStrip();
+    $("#tToggleText").textContent = "Start transcribing";
+  }
+  renderStrip();
+ }
+function tickTranscript() {
+  S.tElapsed = (S.tElapsed || 0) + 1.7;
+  $("#tStatus").textContent = "Recording · " + fmtClock(S.tElapsed);
+  renderStrip();
+  if (S.tScriptIdx >= T_SCRIPT.length) return;
+  const line = T_SCRIPT[S.tScriptIdx++];
+  S.tLines.push(line);
+  const body = $("#tBody");
+  if (S.tScriptIdx === 1) body.innerHTML = "";
+  const el = document.createElement("div");
+  el.className = "t-line";
+  const time = fmtClock(Math.max(0, S.tElapsed - 1.7));
+  el.innerHTML = '<span class="t-time num">' + time + '</span><span style="min-width:0">' +
+    esc(line.t).replace(/(John chapter 3, verse 16|Psalm 32:1|Deuteronomy chapter 4, verse 4|Deuteronomy 4, verse 3|Deuteronomy 4:)/g, '<span class="ver">$1</span>') + "</span>";
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+  if (line.grab && S.autoGrab) suggestScripture(line.grab);
+  if (S.tScriptIdx >= T_SCRIPT.length) {
+    setTimeout(function () { toast("End of mock transcript — 9 lines captured"); }, 400);
+  }
+ }
+
+/* ---------- scriptures ---------- */
+function suggestScripture(ref) {
+  if (S.scriptures.some(function (x) { return x.ref === ref; })) return;
+  S.suggested = { ref: ref, quote: verseText(ref), time: fmtClock(S.tElapsed || 0) };
+  renderScriptures();
+  toast("Verse detected · " + ref, { after: null });
+ }
+function addScripture(ref) {
+  if (!ref) return;
+  if (S.scriptures.some(function (x) { return x.ref === ref; })) { toast("Already in scriptures"); return; }
+  S.scriptures.unshift({ id: "s" + Date.now(), t: "scripture", ref: ref, quote: verseText(ref) });
+  renderScriptures();
+  toast("Added · " + ref);
+ }
+function renderScriptures() {
+  const box = $("#scriptureList");
+  const rows = [];
+  if (S.suggested) {
+    rows.push('<div class="row suggested">' +
+      '<span class="t-icon">' + I.sparkle + "</span>" +
+      '<div class="t-main"><div class="title" style="color:var(--accent)">' + esc(S.suggested.ref) + '</div><div class="sub">Detected in transcript at ' + esc(S.suggested.time) + "</div></div>" +
+      '<div class="act"><button class="mini-btn tiny accent" data-x="add-sug">Add</button>' +
+      '<button class="mini-btn tiny ghost" data-x="dismiss-sug">Dismiss</button></div></div>');
+  }
+  S.scriptures.forEach(function (it) {
+    const onProg = S.programBase && S.programBase.ref === it.ref;
+    const inPrev = S.previewItem && S.previewItem.ref === it.ref;
+    let badge = "";
+    if (onProg) badge = '<span class="badge program">On program</span>';
+    else if (inPrev) badge = '<span class="badge preview">In preview</span>';
+    rows.push('<div class="row' + (onProg ? " on-program" : "") + ' have-q">' +
+      '<span class="grip">' + I.grip + "</span>" +
+      '<span class="t-icon">' + I.book + "</span>" +
+      '<div class="t-main"><div class="title">' + esc(it.ref) + '</div><div class="sub">Scripture bar · ' + esc(S.bibleText) + '</div><div class="quote">' + esc(it.quote) + "</div></div>" +
+      badge +
+      '<div class="act">' +
+      '<button class="icon-sm" data-x="stage" data-id="' + it.id + '" title="Send to preview">' + I.send + "</button>" +
+      '<button class="icon-sm" data-x="take" data-id="' + it.id + '" title="Take to program">' + I.take + "</button>" +
+      '<button class="icon-sm" data-x="rm-s" data-id="' + it.id + '" title="Remove">' + I.x + "</button>" +
+      "</div></div>");
+  });
+  box.innerHTML = rows.join("");
+  $("#scriptCount").innerHTML = "<b>" + S.scriptures.length + "</b> verses";
+  $("#scriptEmpty").hidden = S.scriptures.length > 0 || !!S.suggested;
+ }
+function stage(item) {
+  S.previewItem = item; renderScreens(); updateTake();
+  toast("In preview · " + (item.ref || item.title || item.name));
+ }
+function findId(list, id) { return list.filter(function (x) { return x.id === id; })[0]; }
+
+/* ---------- sermon notes (bible module) ---------- */
+var PH_HTML = '<p class="ph">Paste your sermon outline here. After ~2 min of transcript, AI drafts point summaries you can send to the screens.</p>';
+function initNote(el) { el.innerHTML = el.dataset.ph || PH_HTML; }
+function ensureReal(el, e) {
+  if ($(".ph", el)) {
+    el.innerHTML = e && e.isTrusted ? "" : el.innerHTML;
+    if (e && e.isTrusted) placeCaret(el);
+  }
+ }
+function placeCaret(el) {
+  const r = document.createRange(); r.selectNodeContents(el); r.collapse(false);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+ }
+
+/* ---------- bible rail ---------- */
+var ALL_NAMES = BOOK_NAMES.ot.concat(BOOK_NAMES.nt);
+var ALL_AB = BOOK_NAMES.otAb.concat(BOOK_NAMES.ntAb);
+var ALL_CT = BOOK_NAMES.otCt.concat(BOOK_NAMES.ntCt);
+
+function buildBooks() {
+  const fill = (boxEl, start, names, ab) => {
+    boxEl.innerHTML = ab.map(function (a, i) {
+      return '<button class="book" data-gi="' + (start + i) + '" title="' + esc(names[i]) + '">' + a + "</button>";
+    }).join("");
+  };
+  fill($("#otBooks"), 0, BOOK_NAMES.ot, BOOK_NAMES.otAb);
+  fill($("#ntBooks"), BOOK_NAMES.ot.length, BOOK_NAMES.nt, BOOK_NAMES.ntAb);
+  $$(".book").forEach(function (b) { b.addEventListener("click", function () { openBook(+b.dataset.gi, b); }); });
+ }
+function openBook(gi, chip) {
+  const name = ALL_NAMES[gi];
+  const count = ALL_CT[gi];
+  ALL_AB.forEach(function (a, i) { if (i === gi) chip.classList.add("on"); });
+  $$(".book").forEach(function (b) { if (+b.dataset.gi !== gi) b.classList.remove("on"); });
+  $("#chapterBookName").textContent = name;
+  $("#chapterBookCount").textContent = "· " + count + " chapters";
+  $("#chapterGrid").innerHTML = Array.from({ length: count }, function (_, i) {
+    const v = i + 1;
+    return '<button class="chapter num" data-bi="' + gi + '" data-ch="' + v + '">' + v + "</button>";
+  }).join("");
+  $$("#chapterGrid .chapter").forEach(function (c) {
+    c.addEventListener("click", function () { openVerses(c, +c.dataset.bi, +c.dataset.ch); });
+  });
+  showView("chapters");
+ }
+function openVerses(chipBtn, bi, ch) {
+  const book = ALL_NAMES[bi];
+  const max = Math.min(30, ALL_CT[bi]);
+  openPop(chipBtn, '<div class="pop-title">' + esc(book + " " + ch) + " — choose verse</div>", function (pop) {
+    pop.style.maxWidth = "420px";
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:flex;flex-wrap:wrap;gap:2px;padding:0 6px 6px";
+    let row = null;
+    Array.from({ length: max }, function (_, i) {
+      const v = i + 1;
+      const b = document.createElement("button");
+      b.className = "pop-row"; b.style.cssText = "flex:1 0 12%;justify-content:center;padding:7px 0;font-weight:600;color:var(--text-2)";
+      b.textContent = v;
+      b.onclick = function () { pickVerse(book, ch, v); closePop(); };
+      grid.appendChild(b);
+    });
+    pop.appendChild(grid);
+  });
+ }
+function pickVerse(book, ch, v) {
+  const ref = book.replace(/^(Psalms)$/, "Psalm").replace(/^(Song of Songs)$/, "Song") + " " + ch + ":" + v;
+  const item = { id: "s" + Date.now(), t: "scripture", ref: ref, quote: verseText(ref) };
+  if (!S.scriptures.some(function (x) { return x.ref === ref; })) S.scriptures.unshift(item);
+  renderScriptures();
+  $("#versePreview").hidden = false;
+  $("#versePreview").innerHTML = "<b>" + esc(ref.toUpperCase() + " · " + S.bibleText) + "</b>" + esc(item.quote);
+  showView("chapters");
+  toast("Added · " + ref);
+ }
+function showView(v) {
+  $$("#bookSeg button").forEach(function (b) { b.classList.toggle("on", b.dataset.view === v); });
+  $("#viewBooks").hidden = v !== "books";
+  $("#viewChapters").hidden = v !== "chapters";
+ }
+function parseRef(q) {
+  const m = q.trim().match(/^([a-z0-9]+(?:\s[a-z]{1,4})?)[\s.:]*(\d{1,3})(?:[.:](\d{1,3}))?$/i);
+  if (!m) return null;
+  const key = m[1].toLowerCase();
+  let bi = ALL_NAMES.findIndex(function (n) { return n.toLowerCase().replace(/^(1|2|3)\s/, "$1").replace(/\s/g, "").indexOf(key.replace(/\s/g, "")) === 0; });
+  for (var i = 0; i < ALL_NAMES.length && bi < 0; i++) {
+    if (ALL_AB[i].toLowerCase().indexOf(key) === 0) bi = i;
+  }
+  if (bi < 0) { for (i = 0; i < ALL_NAMES.length; i++) { if (ALL_NAMES[i].toLowerCase().indexOf(key) === 0) { bi = i; break; } } }
+  if (bi < 0) return null;
+  return { ref: ALL_NAMES[bi] + " " + m[2] + ":" + (m[3] || 1), render: ALL_NAMES[bi] + " " + m[2] };
+ }
+
+/* ---------- pads ---------- */
+var KIND_LABEL = { logo: "Logo", text: "Text bar", scripture: "Scripture bar", scroll: "Scrolling text" };
+var KIND_ICON = { logo: "logo", text: "type", scripture: "book", scroll: "scroll" };
+function togglePad(id) {
+  const p = findId(S.pads, id); if (!p) return;
+  p.on = !p.on;
+  renderPads(); renderScreens();
+  toast((p.on ? "On program · " : "Off program · ") + p.title);
+ }
+function removePad(id, silent) {
+  const idx = S.pads.findIndex(function (x) { return x.id === id; }); if (idx < 0) return;
+  const snap = S.pads[idx]; S.pads.splice(idx, 1);
+  renderPads(); renderScreens(); renderSlots();
+  if (!silent) toast("Removed pad · " + snap.title, { undo: function () { S.pads.splice(Math.min(idx, S.pads.length), 0, snap); renderPads(); renderScreens(); renderSlots(); } });
+ }
+function renderPads() {
+  $("#padsGrid").innerHTML = S.pads.map(function (p, i) {
+    return '<div class="pad-card' + (p.on ? " on" : "") + '" data-id="' + p.id + '" title="Click — show on program · double-click — edit">' +
+      '<div class="pad-top"><span class="pad-kind">' + KIND_LABEL[p.kind] + '</span><span class="pad-key num">' + (i + 1) + "</span></div>" +
+      '<div class="pad-title">' + esc(p.title) + "</div>" +
+      '<div class="pad-sub">' + (p.on ? "On program · stays on screen" : esc(p.sub || "")) + "</div>" +
+      '<button class="pad-x" data-x="pad-rm" data-id="' + p.id + '" title="Remove">' + I.x + "</button></div>";
+  }).join("") + '<div class="pad-card pad-add" id="padAdd" title="Add graphic">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Add graphic</div>';
+ }
+function editPadPop(anchor, id) {
+  const p = findId(S.pads, id); if (!p) return;
+  openPop(anchor,
+    '<div class="pop-title">Edit pad</div>' +
+    '<div style="padding:0 9px 10px"><div class="pop-note" style="padding-left:0">Title</div><input id="epTitle" value="' + esc(p.title) + '" style="width:100%;background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px;outline:0"/>' +
+    (p.kind !== "logo" && p.kind !== "scripture" ? '<div class="pop-note" style="padding-left:0;padding-top:8px">Content</div><textarea id="epText" rows="3" style="width:100%;background:var(--panel);border:1px solid var(--line-strong);border-radius:8px;padding:7px 9px;outline:0;resize:vertical">' + esc(p.text || "") + "</textarea>" : "") +
+    '<div style="display:flex;gap:6px;margin-top:10px"><button class="mini-btn accent" data-x="ep-save" style="flex:1;justify-content:center">Save</button><button class="mini-btn ghost" data-x="ep-cancel" style="flex:0 0 auto">Cancel</button><button class="mini-btn ghost" data-x="ep-rm">Remove</button></div></div>');
+  $("[data-x='ep-save']", popEl).onclick = function () {
+    p.title = $("#epTitle", popEl).value.trim() || p.title;
+    const t = $("#epText", popEl); if (t) p.text = t.value;
+    renderPads(); renderScreens(); closePop(); toast("Saved pad · " + p.title);
+  };
+  const c = $("[data-x='ep-cancel']", popEl); if (c) c.onclick = closePop;
+  $("[data-x='ep-rm']", popEl).onclick = function () { closePop(); removePad(id); };
+ }
+function chooserPop(anchor) {
+  openPop(anchor, '<div class="pop-title">Add graphic</div>' +
+    [["logo", "Logo", "Full-screen mark"], ["text", "Text bar", "Lower third · editable text"], ["scripture", "Scripture bar", "Verse chip · stays on screen"], ["scroll", "Scrolling text", "Ticker across the bottom"]]
+      .map(function (o) { return '<button class="pop-row" data-kind="' + o[0] + '"><span style="color:var(--text-2)">' + I[KIND_ICON[o[0]]] + '</span><span><span class="r-name">' + o[1] + '</span><br><span class="r-sub">' + o[2] + "</span></span></button>"; }).join(""));
+  $$(".pop-row[data-kind]", popEl).forEach(function (b) {
+    b.onclick = function () {
+      const kind = b.dataset.kind;
+      const defs = {
+        logo: { title: "New logo", sub: "Full-screen · stays on screen" },
+        text: { title: "New text bar", text: "Type the lower-third text", sub: "Lower third · stays on screen" },
+        scripture: { title: "New scripture", sub: "Stays on screen" },
+        scroll: { title: "New scrolling text", text: "Type the ticker content", sub: "Normal scroll" },
+      };
+      const p = Object.assign({ id: "p" + S.padSeq++, kind: kind, on: false }, defs[kind]);
+      S.pads.push(p);
+      renderPads(); renderScreens(); closePop();
+      toast("Pad added · " + p.title);
+      editPadPop($('[data-id="' + p.id + '"]'), p.id);
+    };
+  });
+ }
+
+/* ---------- songs ---------- */
+function renderSongs() {
+  const q = (S.songQ || "").toLowerCase();
+  const list = S.songs.filter(function (s) { return !q || (s.title + " " + s.artist + " " + (s.theme || "")).toLowerCase().includes(q); });
+  $("#songList").innerHTML = list.map(function (s) {
+    return '<div class="song-row" data-id="' + s.id + '">' +
+      '<div><div class="s-title">' + esc(s.title) + '</div><div class="s-artist">' + esc(s.artist) + "</div></div>" +
+      '<div class="s-key num">' + s.key + "</div>" +
+      '<div class="s-bpm num">' + s.bpm + " bpm</div>" +
+      '<div class="row-act"><button class="icon-sm" data-x="order" title="Add to queue">' +
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>' +
+      '<button class="icon-sm" data-x="stage" title="Send to preview">' + I.send + "</button>" +
+      '<button class="icon-sm" data-x="take" title="Take to program">' + I.take + "</button></div></div>";
+  }).join("") || '<div class="empty-note">No songs match "' + esc(S.songQ) + '".</div>';
+  $("#songCount").innerHTML = "<b>" + list.length + "</b> of " + S.songs.length;
+ }
+function renderOrder() {
+  $("#orderList").innerHTML = S.order.length
+    ? S.order.map(function (s, i) {
+        return '<div class="order-row" data-id="' + s.id + '" style="margin-bottom:5px">' +
+          '<span class="o-num num">' + (i + 1) + "</span>" +
+          '<div style="min-width:0"><div class="o-title">' + esc(s.title) + '</div><div class="o-art">' + esc(s.artist) + "</div></div>" +
+          '<button class="icon-sm" data-x="rm" title="Remove from queue">' + I.x + "</button></div>";
+      }).join("")
+    : '<div class="empty-note">Queue is empty — add songs from the library with + or hover actions.</div>';
+  $("#orderCount").innerHTML = "<b>" + S.order.length + "</b> songs";
+ }
+
+/* ---------- media ---------- */
+function renderMedia() {
+  const list = S.media.filter(function (m) { return S.coll === "all" || m.kind === S.coll; });
+  $("#mediaGrid").innerHTML = list.map(function (m) {
+    return '<div class="media-card" data-id="' + m.id + '">' +
+      '<div class="thumb ' + m.g + '"><span>' + esc(m.kind === "video" ? "VIDEO" : "IMAGE") + "</span></div>" +
+      '<div class="m-act"><button class="icon-sm" data-x="stage" title="Send to preview">' + I.send + '</button>' +
+      '<button class="icon-sm" data-x="take" title="Take to program">' + I.take + "</button></div>" +
+      '<div class="m-name">' + esc(m.name) + '</div><div class="m-sub">' + esc(m.sub) + "</div></div>";
+  }).join("") || '<div class="empty-note">No media in this collection.</div>';
+  $("#mediaCount").innerHTML = "<b>" + list.length + "</b> items";
+ }
+function renderColls() {
+  const counts = { all: S.media.length, video: S.media.filter(function (m) { return m.kind === "video"; }).length, image: S.media.filter(function (m) { return m.kind === "image"; }).length };
+  $("#collList").innerHTML = [["all", "All media"], ["video", "Videos"], ["image", "Images"]].map(function (c) {
+    return '<button class="doc-row' + (S.coll === c[0] ? " on" : "") + '" data-coll="' + c[0] + '">' +
+      '<span style="color:var(--text-2)">' + (c[0] === "video" ? I.video : c[0] === "image" ? I.image : I.film) + "</span>" +
+      '<span class="d-name">' + c[1] + '</span><span class="spacer"></span><span class="r-sub num">' + counts[c[0]] + "</span></button>";
+  }).join("");
+ }
+
+/* ---------- notes module ---------- */
+function renderDocs() {
+  $("#docList").innerHTML = S.docs.map(function (d) {
+    return '<div class="doc-row' + (d.id === S.docId ? " on" : "") + '" data-id="' + d.id + '">' +
+      '<span style="color:var(--text-2)">' + I.book + "</span>" +
+      '<div style="min-width:0"><div class="d-name">' + esc(d.name) + '</div><div class="d-sub">Updated ' + esc(d.updated) + "</div></div></div>";
+  }).join("");
+  const d = findId(S.docs, S.docId) || S.docs[0]; S.docId = d && d.id;
+  if (d) {
+    $("#docTitle").textContent = d.name;
+    if (S.docAreaDirty !== d.id) { $("#docArea").innerHTML = d.body; S.docAreaDirty = d.id; }
+  }
+ }
+function loadDoc(id) {
+  S.docId = id; S.docAreaDirty = id;
+  renderDocs();
+  $("#docSaved").textContent = "Saved · " + (findId(S.docs, id) || {}).updated || "just now";
+ }
+
+/* ---------- overlays module ---------- */
+function renderSlots() {
+  const box = $("#slotList"); if (!box) return;
+  box.innerHTML = S.pads.length ? S.pads.map(function (p, i) {
+    return '<button class="order-row" data-id="' + p.id + '" style="width:100%;text-align:left;margin-bottom:5px">' +
+      '<span style="color:var(--text-2)">' + I[KIND_ICON[p.kind]] + "</span>" +
+      '<div style="min-width:0"><div class="o-title">' + esc(p.title) + '</div><div class="o-art">' + KIND_LABEL[p.kind] + " · key " + (i + 1) + "</div></div>" +
+      '<span class="switch' + (p.on ? " on" : "") + '" data-x="pad-sw" style="margin-left:auto"></span></button>';
+  }).join("") : '<div class="empty-note">No pads yet — add graphics in the Bible workspace.</div>';
+ }
+var DESIGNS = [
+  { id: "ds1", name: "Accent fill bar", sub: "Solid bar · reference right", variant: "" },
+  { id: "ds2", name: "Dark glass bar", sub: "Frosted · accent edge", variant: "b" },
+  { id: "ds3", name: "Corner tag", sub: "Compact · top right", variant: "c" },
+];
+function renderDesigns() {
+  $("#designGrid").innerHTML = DESIGNS.map(function (d) {
+    return '<div class="design-card" data-id="' + d.id + '">' +
+      '<div class="d-thumb"><div class="d-mini ' + d.variant + '">' + esc(d.name.toUpperCase()) + "</div></div>" +
+      '<div class="d-name">' + esc(d.name) + '</div><div class="d-sub">' + esc(d.sub) + "</div></div>";
+  }).join("");
+ }
+function applyDesign(id) {
+  const d = findId(DESIGNS, id); if (!d) return;
+  let pad = S.pads.find(function (p) { return p.kind === "text"; });
+  if (!pad) { pad = { id: "p" + S.padSeq++, kind: "text", title: "Text bar", text: "", sub: "Lower third · stays on screen", on: false }; S.pads.push(pad); }
+  pad.text = pad.text || "Welcome home, Fellowship Chapel";
+  pad.title = d.name;
+  pad.on = true;
+  renderPads(); renderScreens(); renderSlots();
+  toast("Design applied · " + d.name);
+ }
+
+/* ---------- global input ---------- */
+function on(el, evt, sel, fn) {
+  el.addEventListener(evt, function (e) {
+    const t = e.target.closest(sel);
+    if (t && el.contains(t)) fn(e, t);
+  });
+}
+document.addEventListener("keydown", function (e) {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const tag = (e.target.tagName || "").toLowerCase();
+  const typing = tag === "input" || tag === "textarea" || e.target.isContentEditable;
+  if (typing) return;
+  const k = e.key.toLowerCase();
+  if (k === "g") { toggleAir(); e.preventDefault(); }
+  else if (k === "t") { take(); e.preventDefault(); }
+  else if (e.key === "/") {
+    e.preventDefault();
+    const m = S.module;
+    const focusEl = m === "bible" ? $("#bSearch") : m === "songs" ? $("#songSearch") : null;
+    if (focusEl) focusEl.focus(); else toast("No search target on this module");
+  }
+  else if (/^[1-7]$/.test(e.key)) { const p = S.pads[+e.key - 1]; if (p) togglePad(p.id); }
+});
+
+/* ---------- boot ---------- */
+function boot() {
+  buildBooks(); showView("books");
+  $("#noteArea").innerHTML = PH_HTML;
+
+  S.songs = SONGS_DATA;
+  S.media = MEDIA_DATA;
+  S.docs = [
+    { id: "d1", name: "Sermon — Grace before law", updated: "10:12 am", body: "<h3>Morning</h3><p>Open in prayer. Anchor text John 3:16 — grace before law.</p><ul><li>God gave first</li><li>Belief, not effort</li><li>Everlasting life as identity</li></ul><p>Cross-reference: Deuteronomy 4:4 on cleaving to the LORD.</p>" },
+    { id: "d2", name: "Announcements — Nov 2", updated: "9:40 am", body: "<h3>Today</h3><ul><li>Nursery open · B-wing</li><li>Fellowship lunch after service</li><li> Giving: fellowship.org/give</li></ul>" },
+    { id: "d3", name: "Prayer list", updated: "Yesterday", body: "<p>Choir tour safe travel; Holcombs; deacon election Sunday next.</p>" },
+  ];
+  S.docId = S.docs[0].id;
+
+  renderPads(); renderScriptures(); renderScreens(); renderRoster(); renderStrip();
+  renderSongs(); renderOrder(); renderDocs(); renderMedia(); renderColls(); renderSlots(); renderDesigns();
+  updateTake();
+
+  /* top bar */
+  on($("#moduleTabs"), "click", "button", function (e, b) {
+    S.module = b.dataset.mod;
+    $$("button", $("#moduleTabs")).forEach(function (x) { x.classList.toggle("active", x === b); });
+    $$(".module").forEach(function (m) { m.hidden = m.id !== "module-" + S.module; });
+    closePop();
+  });
+  $("#goLive").addEventListener("click", toggleAir);
+  $("#takeBtn").addEventListener("click", take);
+
+  $("#btnThemes").addEventListener("click", function () {
+    openPop(this,
+      '<div class="pop-title">Theme</div>' +
+      [["charcoal", "Charcoal", "App default", "#18181d,#101014"], ["midnight", "Midnight", "Blue-tinted dark", "#131a26,#0d1119"], ["slate", "Slate", "Neutral dark", "#1d1f23,#141519"], ["paper", "Paper", "Light preview", "#f2f2f5,#e8e8ee"]]
+        .map(function (t) {
+          return '<button class="pop-row' + (S.theme === t[0] ? " on" : "") + '" data-theme="' + t[0] + '">' +
+            '<span class="swatch" style="background:linear-gradient(135deg,' + t[3] + ')"></span>' +
+            '<span><span class="r-name">' + t[1] + '</span><br><span class="r-sub">' + t[2] + "</span></span></button>";
+        }).join(""));
+    $$(".pop-row[data-theme]", popEl).forEach(function (b) {
+      b.onclick = function () {
+        S.theme = b.dataset.theme;
+        document.documentElement.dataset.theme = S.theme;
+        closePop(); toast("Theme · " + b.querySelector(".r-name").textContent);
+      };
+    });
+  });
+
+  $("#btnDisplays").addEventListener("click", function () {
+    openPop(this, '<div class="pop-title">Displays</div>' +
+      S.disp.map(function (d) {
+        return '<button class="pop-row" data-id="' + d.id + '"><span><span class="r-name">' + esc(d.name) + '</span><br><span class="r-sub">' + esc(d.sub) + '</span></span><span class="spacer"></span><span class="switch' + (d.on ? " on" : "") + '"></span></button>';
+      }).join("") + '<div class="pop-note">F1 · F2 · F3 toggles displays on the live window.</div>');
+    $$(".pop-row[data-id]", popEl).forEach(function (b) {
+      b.onclick = function () {
+        const d = findId(S.disp, b.dataset.id);
+        d.on = !d.on; renderRoster();
+        b.querySelector(".switch").classList.toggle("on", d.on);
+        toast(d.name + (d.on ? " turned on" : " turned off"));
+      };
+    });
+  });
+
+  $("#btnSettings").addEventListener("click", function () {
+    openPop(this,
+      '<div class="pop-title">Settings</div>' +
+      '<button class="pop-row" data-x="auto"><span><span class="r-name">Auto-grab scriptures</span><br><span class="r-sub">Transcript refs suggest themselves</span></span><span class="spacer"></span><span class="switch' + (S.autoGrab ? " on" : "") + '"></span></button>' +
+      '<button class="pop-row" data-x="dense"><span><span class="r-name">Dense book grid</span><br><span class="r-sub">5-column book chips</span></span><span class="spacer"></span><span class="switch' + (S.dense ? " on" : "") + '"></span></button>' +
+      '<div class="pop-sep"></div>' +
+      '<button class="pop-row"><span style="color:var(--green)"><span class="dot ok" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span></span><span><span class="r-name">Deepgram</span><br><span class="r-sub">Connected · nova-3 streaming</span></span></button>' +
+      '<button class="pop-row"><span><span class="r-name">FellowShow 0.1.51</span><br><span class="r-sub">Up to date</span></span></button>');
+    $("[data-x='auto']", popEl).onclick = function () {
+      S.autoGrab = !S.autoGrab;
+      $(".switch", this).classList.toggle("on", S.autoGrab);
+      toast(S.autoGrab ? "Auto-grab on" : "Auto-grab off");
+    };
+    $("[data-x='dense']", popEl).onclick = function () {
+      S.dense = !S.dense;
+      $("#otBooks").classList.toggle("dense", S.dense);
+      $("#ntBooks").classList.toggle("dense", S.dense);
+      $(".switch", this).classList.toggle("on", S.dense);
+    };
+  });
+
+  /* bible rail */
+  $("#btnTrans").addEventListener("click", function () {
+    openPop(this, '<div class="pop-title">Translation</div>' +
+      ["NKJV", "KJV", "ESV", "NIV"].map(function (t) {
+        return '<button class="pop-row' + (S.bibleText === t ? " on" : "") + '" data-t="' + t + '"><span class="r-name num">' + t + "</span></button>";
+      }).join(""));
+    $$(".pop-row[data-t]", popEl).forEach(function (b) {
+      b.onclick = function () {
+        S.bibleText = b.dataset.t;
+        $("#btnTrans").innerHTML = esc(S.bibleText) + ' <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>';
+        renderScriptures(); closePop(); toast("Translation · " + S.bibleText);
+      };
+    });
+  });
+  $$("#bookSeg button").forEach(function (b) { b.addEventListener("click", function () { showView(b.dataset.view); }); });
+  $("#backToBooks").addEventListener("click", function () { showView("books"); });
+  $("#segRef").addEventListener("click", function () { $("#segRef").classList.add("on"); $("#segText").classList.remove("on"); $("#bSearch").placeholder = "Search verse or word"; });
+  $("#segText").addEventListener("click", function () { $("#segText").classList.add("on"); $("#segRef").classList.remove("on"); $("#bSearch").placeholder = "Words — e.g. every one of you"; });
+  $("#bSearch").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    const q = this.value.trim(); if (!q) return;
+    if ($("#segText").classList.contains("on")) {
+      const hit = Object.keys(VERSES).find(function (r) { return VERSES[r].toLowerCase().includes(q.toLowerCase()); });
+      if (hit) { addScripture(hit); this.value = ""; }
+      else toast("No verse text matches in this mock");
+    } else {
+      const p = parseRef(q);
+      if (p) { addScripture(p.ref); this.value = ""; showView("books"); }
+      else toast("Try “John 3:16”, “deut 4:4”, or a book name");
+    }
+  });
+  $$(".ref-chip").forEach(function (c) { c.addEventListener("click", function () { addScripture(c.dataset.addRef); }); });
+
+  /* transcript */
+  $("#tToggle").addEventListener("click", function () { setTranscribing(!S.tLive); });
+
+  /* pads + screens */
+  on($("#padsGrid"), "click", ".pad-x", function (e, t) { e.stopPropagation(); removePad(t.dataset.id); });
+  on($("#padsGrid"), "dblclick", ".pad-card", function (e, t) { if (t.id !== "padAdd" && t.dataset.id) editPadPop(t, t.dataset.id); });
+  $("#padsGrid").addEventListener("click", function (e) {
+    if (e.target.closest(".pad-x")) return;
+    const add = e.target.closest("#padAdd");
+    if (add) return chooserPop(add);
+    const c = e.target.closest(".pad-card");
+    if (c && c.dataset.id) togglePad(c.dataset.id);
+  });
+  $("#padsEye").addEventListener("click", function () {
+    S.padsVisible = !S.padsVisible;
+    this.innerHTML = S.padsVisible ? I.eye : I.eyeOff;
+    renderScreens();
+    toast(S.padsVisible ? "Pads visible on screens" : "Pads hidden from screens");
+  });
+
+  /* scriptures */
+  on($("#scriptureList"), "click", "[data-x]", function (e, t) {
+    const cmd = t.dataset.x;
+    if (cmd === "add-sug") { const r = S.suggested; S.suggested = null; S.scriptures.unshift({ id: "s" + Date.now(), t: "scripture", ref: r.ref, quote: r.quote }); renderScriptures(); toast("Added · " + r.ref); }
+    else if (cmd === "dismiss-sug") { const r = S.suggested; S.suggested = null; renderScriptures(); toast("Suggestion dismissed", { undo: function () { S.suggested = r; renderScriptures(); } }); }
+    else if (cmd === "stage") stage(findId(S.scriptures, t.dataset.id));
+    else if (cmd === "take") { const it = findId(S.scriptures, t.dataset.id); S.previewItem = it; take(); }
+    else if (cmd === "rm-s") { const idx = S.scriptures.findIndex(function (x) { return x.id === t.dataset.id; }); const snap = S.scriptures[idx]; S.scriptures.splice(idx, 1); renderScriptures(); toast("Removed · " + snap.ref, { undo: function () { S.scriptures.splice(idx, 0, snap); renderScriptures(); } }); }
+  });
+  $("#scriptClear").addEventListener("click", function () {
+    if (!S.scriptures.length && !S.suggested) return;
+    const snapA = S.scriptures.slice(), snapS = S.suggested;
+    S.scriptures = []; S.suggested = null; renderScriptures();
+    toast("Cleared scriptures", { undo: function () { S.scriptures = snapA; S.suggested = snapS; renderScriptures(); } });
+  });
+
+  /* editors */
+  document.addEventListener("mousedown", function (e) {
+    const b = e.target.closest(".toolbar button"); if (!b) return;
+    e.preventDefault();
+    const cmd = b.dataset.cmd;
+    document.execCommand(cmd, false, null);
+    $$(".toolbar button").forEach(function (x) { if (x === b) x.classList.toggle("on"); });
+  });
+  let lastEd = null;
+  $("#noteArea").addEventListener("input", function () { if ($(".ph", this)) this.innerHTML = ""; lastEd = this; $("#stripSave").textContent = "Saved automatically · just now"; });
+  $("#docArea").addEventListener("input", function () { lastEd = this; $("#docSaved").textContent = "Editing · unsaved"; clearTimeout(this._t); this._t = setTimeout(function () { $("#docSaved").textContent = "Saved · just now"; }, 900); });
+  $("#aiChip").addEventListener("click", function () {
+    const chipText = $("#aiChipText");
+    if (S.tLines.length < 4) { toast("Needs ~2 min of transcript — start transcribing"); return; }
+    if (S.aiDrafted) { toast("AI draft already added to notes"); return; }
+    chipText.textContent = "Drafting…";
+    setTimeout(function () {
+      $("#noteArea").innerHTML = "<h3>AI draft — points from transcript</h3><ul><li>God gave first — John 3:16</li><li>Belief over effort — Psalm 32:1</li><li>Cleave and live — Deuteronomy 4:4</li></ul>";
+      $("#aiChipText").textContent = "AI draft ready";
+      S.aiDrafted = true; renderStrip();
+      toast("AI draft added to sermon notes");
+    }, 900);
+  });
+
+  /* songs */
+  $("#songSearch").addEventListener("input", function () { S.songQ = this.value; renderSongs(); });
+  $("#songAdd").addEventListener("click", function () { toast("File picker isn't wired in this mock"); });
+  on($("#songList"), "click", ".song-row", function (e, r) {
+    const s = findId(S.songs, r.dataset.id); if (!s) return;
+    const act = e.target.closest("[data-x]");
+    if (act) {
+      if (act.dataset.x === "order") { S.order.push(s); renderOrder(); toast("Queued · " + s.title); }
+      else if (act.dataset.x === "stage") stage(songItem(s));
+      else if (act.dataset.x === "take") { S.previewItem = songItem(s); take(); }
+      return;
+    }
+    stage(songItem(s));
+  });
+  on($("#orderList"), "click", ".order-row", function (e, r) {
+    const s = findId(S.order, r.dataset.id); if (!s) return;
+    const rm = e.target.closest("[data-x='rm']");
+    if (rm) { S.order = S.order.filter(function (x) { return x.id !== s.id; }); renderOrder(); renderSongs(); return; }
+    stage(songItem(s));
+  });
+  function songItem(s) { return { id: s.id, t: "song", ref: s.title, title: s.title, name: s.title, l1: s.l1, l2: s.l2 }; }
+
+  /* media */
+  on($("#collList"), "click", "[data-coll]", function (e, b) { S.coll = b.dataset.coll; renderColls(); renderMedia(); });
+  $("#mediaAdd").addEventListener("click", function () { toast("File picker isn't wired in this mock"); });
+  on($("#mediaGrid"), "click", ".media-card", function (e, c) {
+    const m = findId(S.media, c.dataset.id); if (!m) return;
+    const act = e.target.closest("[data-x]");
+    const mi = { id: m.id, t: "media", ref: m.name, name: m.name, kind: m.kind, g: m.g };
+    if (act) { if (act.dataset.x === "stage") stage(mi); else if (act.dataset.x === "take") { S.previewItem = mi; take(); } return; }
+    stage(mi);
+  });
+
+  /* notes module */
+  on($("#docList"), "click", ".doc-row", function (e, r) { loadDoc(r.dataset.id); });
+  $("#docNew").addEventListener("click", function () {
+    const d = { id: "d" + Date.now(), name: "Untitled notes", updated: "now", body: "" };
+    S.docs.push(d); loadDoc(d.id); renderDocs();
+    toast("New document created");
+  });
+
+  /* overlays module */
+  on($("#slotList"), "click", "[data-x='pad-sw']", function (e, b) {
+    const id = b.closest(".order-row") ? b.closest(".order-row").dataset.id : null;
+    if (id) togglePad(id);
+  });
+  $("#slotClearAll").addEventListener("click", function () {
+    const had = S.pads.some(function (p) { return p.on; });
+    if (!had) return;
+    const snap = S.pads.map(function (p) { return { id: p.id, on: p.on }; });
+    S.pads.forEach(function (p) { p.on = false; });
+    renderPads(); renderScreens(); renderSlots();
+    toast("All pads off program", { undo: function () { snap.forEach(function (x) { const p = findId(S.pads, x.id); if (p) p.on = x.on; }); renderPads(); renderScreens(); renderSlots(); } });
+  });
+  $("#tickerApply").addEventListener("click", function () {
+    const v = $("#tickerInput").value.trim();
+    if (!v) { S.tickerOn = false; renderScreens(); toast("Ticker cleared"); return; }
+    S.tickerText = v; S.tickerOn = true; renderScreens();
+    toast("Ticker set · " + v.slice(0, 40) + (v.length > 40 ? "…" : ""));
+  });
+  on($("#designGrid"), "click", ".design-card", function (e, c) { applyDesign(c.dataset.id); });
+
+  openBook(BOOK_NAMES.ot.length + 3, $$("#ntBooks .book")[3]);
+  showView("books");
+ }
+
+var __baseScreen = baseScreen;
+baseScreen = function (item, kind) {
+  if (item && item.t === "pad") {
+    return '<div class="lt" style="position:absolute;top:auto;left:0;right:0"><span class="lt-text">' + esc(item.text) + "</span></div>";
+  }
+  return __baseScreen(item, kind);
+};
+
+boot();
+</script>
+</body>
+</html>
+</style>

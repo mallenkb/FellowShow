@@ -1,0 +1,75 @@
+{
+  "scope": "Automatic scripture detection to browser selection, Preview, queue, and transcription Stop",
+  "date": "2026-10-17",
+  "reproduced_before_fix": [
+    "When the single-verse lookup completed before chapter loading, the matching automatic selection was rejected as an operator change. John 3:16 remained in the number picker instead of the verse text list.",
+    "Background detections attempted to scroll while the Sermon browser was hidden. Returning to Sermon did not scroll the selected verse into view."
+  ],
+  "fixed": [
+    "A matching selected book, chapter, verse, and translation from the parallel lookup now completes navigation instead of cancelling it. A different operator selection still cancels the delayed automatic selection.",
+    "Navigation tracks translation and explicit activation so translation changes and operator clicks on a pending background reference are handled.",
+    "Returning to the visible Sermon browser scrolls its selected verse row into view. The selected row exposes aria-current."
+  ],
+  "integration_boundary": "Mounted real TranscriptPanel and ScriptureSearchTab, native event-listener bridge, real annotation/navigation actions, real Bible/Preview/queue stores, with controlled native verse/chapter IPC responses.",
+  "verified": [
+    "John 3:16 opens its verse text list, selects and scrolls verse 16, stages the correct Preview, and queues the correct reference when verse lookup finishes first.",
+    "The same selection works when chapter loading finishes first.",
+    "Stop preserves the selected John 3:16 chapter, verse, reader, and Preview.",
+    "A background detection does not switch the active tab; returning to Sermon scrolls its selected verse.",
+    "An operator choosing a different verse during loading keeps that selected verse and Preview.",
+    "Changing translation during loading retains John 3:16 in the new translation and ignores the late old-translation response.",
+    "Clicking the same reference while its background chapter request is pending opens Sermon."
+  ],
+  "checks": {
+    "targeted_tests": {
+      "passed": 9,
+      "new_integration_tests": 6,
+      "existing_picker_tests": 3
+    },
+    "typecheck": "passed",
+    "scoped_eslint": "passed",
+    "prettier_and_diff_whitespace": "passed"
+  },
+  "limits": [
+    "This subagent did not control the native UI. The main agent performed and reported the optimized native app observations above.",
+    "A spontaneous chapter 3 to chapter 16 change was not reproduced. The final optimized native app correctly selected John chapter 3 verse 16.",
+    "Automatic Preview staging tests begin with empty Preview. The native run retained the deliberately staged note according to the existing operator-override policy; it does not establish automatic replacement of manually staged content."
+  ],
+  "files": [
+    "src/components/panels/search/use-scripture-search.ts",
+    "src/components/panels/search/scripture-book-results.tsx",
+    "src/components/panels/search/scripture-navigation.test.tsx"
+  ],
+  "native_optimized_release_verification": {
+    "evidence_source": "Actual native UI observations reported by the main agent; this subagent did not control the UI or read credentials.",
+    "app_identifier": "com.openbezal.fellowshow.release-verification",
+    "optimized_release": true,
+    "pid": 21757,
+    "session_started": "2026-10-17 12:03:55 UTC",
+    "status": "passed",
+    "provider": "Deepgram cloud",
+    "observation": "Actual spoken John 3:16 opened John > Chapter 3, displayed the verse text list, and scrolled the selected verse 16 into view.",
+    "screenshot": "screenshots/final-speech-auto-john3verse16.png",
+    "preview_policy": {
+      "observation": "Preview retained a manually staged Final release lines note. Program retained that note off air after its intentional Stop Live.",
+      "classification": "Intentional operator override, not an incorrect John 16:16 preview.",
+      "source_behavior": "Automatic detections use stageVerseInBackground, which fills empty Preview or replaces only its own previous automatic selection. It preserves operator-staged notes, songs, slides, verses, and timers. Explicit verse/reference clicks stage directly.",
+      "existing_regressions": "src/lib/preview-staging.test.ts explicitly requires preserving a staged announcement, song, slide, verse, or timer."
+    },
+    "stop": {
+      "status": "passed",
+      "observation": "After Stop sermon, the native UI showed Start transcribing and Start Sermon, both microphone meters were exactly zero, and Program was OFF AIR."
+    },
+    "generated_fixture_final_segments": 5,
+    "full_retained_transcript_segments": 7,
+    "additional_transcript_segments": "Two ambient segments arrived after fixture playback while notes were being checked.",
+    "post_stop_tab_return": {
+      "status": "passed",
+      "observation": "A Songs to Sermon tab round trip retained John > Chapter 3 with verse 16 selected and scrolled into view. Six notes remained, with View Source enabled.",
+      "screenshot": "screenshots/final-speech-stopped-tab-return.png"
+    },
+    "screenshots": [
+      "screenshots/final-speech-stopped-tab-return.png"
+    ]
+  }
+}

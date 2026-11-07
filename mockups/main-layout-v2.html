@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FellowShow — main layout v2</title>
+<style>
+  :root {
+    --bg: #0b0b0e;
+    --panel: #121216;
+    --panel-2: #16161b;
+    --panel-3: #1c1c22;
+    --line: rgba(255, 255, 255, 0.07);
+    --line-strong: rgba(255, 255, 255, 0.11);
+    --text: #eceef1;
+    --text-2: #a9adb5;
+    --text-3: #70757d;
+    --accent: #f1e600;
+    --accent-ink: #16160a;
+    --accent-soft: rgba(241, 230, 0, 0.12);
+    --blue: #7ab8ff;
+    --blue-soft: rgba(122, 184, 255, 0.12);
+    --green: #4ade80;
+    --r-card: 14px;
+    --r-inner: 9px;
+    --top-h: 52px;
+    --strip-h: 30px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.45 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  svg { display: block; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    height: var(--top-h);
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #101014, #0c0c10);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 650; letter-spacing: -0.01em; font-size: 13.5px;
+    padding-right: 6px;
+  }
+  .brand .mark {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: var(--accent);
+    display: grid; place-items: center;
+    color: var(--accent-ink);
+    font-weight: 800; font-size: 12px;
+  }
+  .brand small { color: var(--text-3); font-weight: 450; }
+
+  .tabs { display: flex; gap: 2px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .tabs button {
+    padding: 5px 14px; border-radius: 999px; color: var(--text-2); font-weight: 500; font-size: 12.5px;
+    transition: color .15s, background .15s;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+  .air-status {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-2);
+  }
+  .air-pill {
+    display: flex; align-items: center; gap: 7px;
+    padding: 4.5px 12px; border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel-2);
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em;
+    color: var(--text-3);
+    transition: all .25s;
+  }
+  .air-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+  body.live .air-pill { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  body.live .air-pill .dot { background: var(--accent-ink); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+
+  .meter { display: flex; align-items: flex-end; gap: 2.5px; height: 16px; }
+  .meter i {
+    width: 3.5px; border-radius: 2px; background: var(--text-3); transform: scaleY(.25); transform-origin: bottom;
+  }
+  .meter i:nth-child(1) { height: 7px; } .meter i:nth-child(2) { height: 10px; }
+  .meter i:nth-child(3) { height: 13px; } .meter i:nth-child(4) { height: 16px; }
+  .meter i:nth-child(5) { height: 13px; } .meter i:nth-child(6) { height: 9px; }
+  body.live .meter i { animation: lev .9s ease-in-out infinite alternate; }
+  .meter i:nth-child(2) { animation-delay: .12s; } .meter i:nth-child(3) { animation-delay: .05s; }
+  .meter i:nth-child(4) { animation-delay: .2s; }  .meter i:nth-child(5) { animation-delay: .08s; }
+  .meter i:nth-child(6) { animation-delay: .16s; }
+  @keyframes lev { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+
+  .top-actions { display: flex; align-items: center; gap: 6px; }
+  .icon-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 10px; border-radius: var(--r-inner);
+    color: var(--text-2); font-size: 12.5px; font-weight: 500;
+    transition: background .15s, color .15s;
+  }
+  .icon-btn:hover { background: var(--panel-2); color: var(--text); }
+  .btn-primary {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--accent); color: var(--accent-ink);
+    font-weight: 650; font-size: 12.5px;
+    padding: 8px 16px; border-radius: var(--r-inner);
+    transition: filter .15s;
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  body.live .btn-primary { background: var(--panel-3); color: var(--text); }
+  kbd {
+    font: 600 10px/1 inherit; font-family: inherit;
+    padding: 2.5px 5px; border-radius: 5px;
+    background: rgba(0,0,0,.14); color: inherit; opacity: .75;
+  }
+  .icon-btn kbd { background: var(--panel-3); color: var(--text-3); }
+  body.live .btn-primary kbd { background: var(--accent); color: var(--accent-ink); opacity: .8; }
+
+  /* ---------- workspace ---------- */
+  .workspace {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-template-columns: 292px minmax(0, 1fr) 324px;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    display: flex; flex-direction: column;
+    min-height: 0; overflow: hidden;
+  }
+  .card-head {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card-title {
+    font-size: 10.5px; font-weight: 650; letter-spacing: 0.09em;
+    color: var(--text-3); text-transform: uppercase;
+  }
+  .mini-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4.5px 9px; border-radius: 7px;
+    border: 1px solid var(--line-strong);
+    color: var(--text-2); font-size: 11.5px; font-weight: 550;
+    background: var(--panel-2);
+    transition: all .15s;
+  }
+  .mini-btn:hover { color: var(--text); border-color: var(--line-strong); background: var(--panel-3); }
+  .mini-btn.accent { border-color: transparent; background: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  .mini-btn.accent:hover { filter: brightness(1.08); }
+  .mini-btn.ghost { background: none; border-color: var(--line); }
+  .spacer { flex: 1; }
+
+  /* ---------- left rail : bible ---------- */
+  .rail { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .rail-bible .card { flex: 1; }
+
+  .search {
+    margin: 10px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 8px 11px;
+    color: var(--text-3);
+    transition: border-color .15s;
+  }
+  .search:focus-within { border-color: var(--accent); }
+  .search input {
+    flex: 1; background: none; border: 0; outline: 0;
+    color: var(--text); font: inherit;
+  }
+  .search input::placeholder { color: var(--text-3); }
+  .toggle-seg { display: flex; gap: 4px; }
+  .toggle-seg button {
+    font-size: 10px; font-weight: 650; letter-spacing: .04em;
+    padding: 3px 7px; border-radius: 6px; color: var(--text-3);
+  }
+  .toggle-seg button.on { background: var(--panel-3); color: var(--text); }
+
+  .recent { display: flex; gap: 6px; padding: 0 10px 4px; flex-wrap: wrap; }
+  .ref-chip {
+    padding: 4px 9px; border-radius: 999px;
+    border: 1px dashed var(--line-strong);
+    color: var(--text-2); font-size: 11.5px; font-weight: 550;
+    transition: all .15s;
+  }
+  .ref-chip:hover { border-style: solid; border-color: var(--accent); color: var(--text); }
+  .recent-label { font-size: 10px; color: var(--text-3); padding: 0 2px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; align-self: center; }
+
+  .seg {
+    margin: 8px 10px 0;
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px; padding: 3px;
+  }
+  .seg button {
+    padding: 5.5px 0; border-radius: 6.5px;
+    color: var(--text-3); font-size: 11.5px; font-weight: 600;
+    transition: all .15s;
+  }
+  .seg button.on { background: var(--panel-3); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+  .bible-body { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 10px 14px; }
+  .bible-body::-webkit-scrollbar { width: 8px; }
+  .bible-body::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 4px; border: 2px solid var(--panel); }
+
+  .back-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 2px 4px 10px; color: var(--text-2);
+    font-size: 12px; font-weight: 600;
+  }
+  .back-row:hover { color: var(--text); }
+
+  .group-label {
+    font-size: 9.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text-3); padding: 8px 2px 6px;
+  }
+  .books {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+  }
+  .books.nt { padding-bottom: 6px; }
+  .book {
+    padding: 6.5px 0; border-radius: 7px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    text-align: center;
+    font-size: 10.5px; font-weight: 600; letter-spacing: .03em;
+    color: var(--text-2);
+    transition: all .12s;
+  }
+  .book:hover { color: var(--text); border-color: var(--line-strong); background: var(--panel-3); }
+  .book.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .chapters { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .chapter {
+    padding: 7px 0; border-radius: 7px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    font-size: 11.5px; color: var(--text-2); text-align: center;
+    font-variant-numeric: tabular-nums;
+    transition: all .12s;
+  }
+  .chapter:hover { color: var(--text); background: var(--panel-3); border-color: var(--line-strong); }
+  .chapter.lowered { opacity: .45; }
+  .verse-preview {
+    margin-top: 10px; padding: 10px 12px;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-inner);
+    font-family: "Source Serif 4", Georgia, serif;
+    font-size: 13px; color: var(--text-2); line-height: 1.55;
+  }
+  .verse-preview b { display: block; font-family: inherit; font-size: 10px; letter-spacing: .08em; color: var(--accent); margin-bottom: 4px; font-weight: 650; }
+
+  /* ---------- center ---------- */
+  .center { display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
+
+  .transcript .card-body { padding: 12px 14px; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .idle-hint { color: var(--text-2); font-size: 13px; }
+  .idle-hint b { color: var(--text); font-weight: 600; }
+  .grab-demo {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text-3); font-size: 12px;
+  }
+  .grab-demo q { quotes: none; opacity: .75; font-family: "Source Serif 4", Georgia, serif; }
+  .grab-demo .arrow { color: var(--text-3); }
+  .grab-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px dashed var(--accent); border-radius: 8px;
+    padding: 4px 9px; color: var(--accent); font-weight: 600; font-size: 11.5px;
+    background: var(--accent-soft);
+    font-family: inherit;
+  }
+
+  .rundown { flex: 1; }
+  .count-chip { font-size: 11px; color: var(--text-3); }
+  .count-chip b { color: var(--text-2); font-weight: 600; }
+
+  .rows { flex: 1; min-height: 0; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .rows::-webkit-scrollbar { width: 8px; }
+  .rows::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 4px; border: 2px solid var(--panel); }
+  .row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 8px 8px 6px;
+    border-radius: var(--r-inner);
+    border: 1px solid transparent;
+    transition: background .12s;
+    position: relative;
+  }
+  .row:hover { background: var(--panel-2); }
+  .row .grip { color: var(--text-3); opacity: 0; transition: opacity .12s; cursor: grab; }
+  .row:hover .grip { opacity: .8; }
+  .row .t-icon {
+    flex: 0 0 30px; height: 30px; border-radius: 8px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    display: grid; place-items: center; color: var(--text-2);
+  }
+  .row .t-main { min-width: 0; flex: 1; }
+  .row .t-main .title { font-size: 12.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .t-main .sub { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge {
+    flex: 0 0 auto;
+    font-size: 9.5px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px;
+  }
+  .badge.program { background: var(--accent-soft); color: var(--accent); }
+  .badge.preview { background: var(--blue-soft); color: var(--blue); }
+  .row.act { display: flex; gap: 3px; opacity: 0; transition: opacity .12s; }
+  .row:hover .act { opacity: 1; }
+  .row .icon-sm { padding: 5px; border-radius: 6px; color: var(--text-2); }
+  .row .icon-sm:hover { background: var(--panel-3); color: var(--text); }
+  .row.on-program::before {
+    content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2.5px;
+    border-radius: 2px; background: var(--accent);
+  }
+
+  .row.suggested {
+    background: var(--panel-2);
+    border: 1px dashed var(--line-strong);
+  }
+  .row.suggested .t-icon { border-style: dashed; color: var(--accent); background: var(--accent-soft); }
+  .row.suggested .act { opacity: 1; }
+  .mini-btn.tiny { padding: 3.5px 9px; font-size: 11px; }
+
+  .rundown-foot {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px; border-top: 1px solid var(--line);
+  }
+  .add-ghost {
+    display: flex; align-items: center; gap: 7px;
+    color: var(--text-3); font-size: 12px; font-weight: 550;
+    padding: 4px 8px; border-radius: 7px; border: 1px dashed var(--line-strong);
+    transition: all .15s;
+  }
+  .add-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+  /* notes */
+  .notes .card-body { display: none; }
+  .notes .card-head { border-bottom: 1px dashed var(--line); }
+  .notes.collapsed .card-body { display: none; }
+  .notes .card-body { padding: 10px 12px; flex: 0 0 auto; }
+  .toolbar { display: flex; gap: 2px; margin-bottom: 8px; }
+  .toolbar button { padding: 4px 7px; border-radius: 6px; color: var(--text-3); font-size: 12px; min-width: 24px; }
+  .toolbar button:hover { background: var(--panel-2); color: var(--text); }
+  .toolbar button.on { color: var(--text); background: var(--panel-3); }
+  .notes-hint { color: var(--text-3); font-size: 12px; padding: 6px 2px 8px; }
+  .ai-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 600;
+    color: var(--blue); background: var(--blue-soft);
+    padding: 3px 8px; border-radius: 999px;
+  }
+
+  /* ---------- right rail : output ---------- */
+  .monitors .card-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .monitor-label {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 9.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3);
+    padding: 0 2px;
+  }
+  .monitor-label .state { color: var(--text-3); font-weight: 600; }
+  body.live .monitor-label .state { color: var(--accent); }
+  .screen {
+    aspect-ratio: 16 / 9; border-radius: var(--r-inner);
+    border: 1px solid var(--line-strong);
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.022) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, #141419, #0e0e12);
+    position: relative; overflow: hidden;
+    display: grid; place-items: center;
+  }
+  .screen .empty-tag {
+    font-size: 10px; letter-spacing: .12em; color: var(--text-3); font-weight: 600;
+  }
+  .screen .lt {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,.72));
+    display: none; align-items: flex-end; gap: 10px;
+  }
+  body.live .screen.program .lt { display: flex; }
+  .screen.program { border-color: rgba(241,230,0,.28); }
+  body.live .screen.program { border-color: rgba(241,230,0,.5); }
+  .screen .lt .lt-text {
+    font-size: 14px; font-weight: 700; letter-spacing: .01em;
+    color: var(--text);
+    text-shadow: 0 1px 8px rgba(0,0,0,.6);
+  }
+  .screen .lt .lt-ref { color: var(--accent); font-size: 11px; font-weight: 650; margin-left: auto; }
+  .live-tag {
+    position: absolute; top: 8px; left: 8px;
+    display: none; align-items: center; gap: 5px;
+    font-size: 9px; font-weight: 800; letter-spacing: .1em; color: var(--accent-ink);
+    background: var(--accent); border-radius: 5px; padding: 2.5px 6px;
+  }
+  body.live .screen.program .live-tag { display: inline-flex; }
+  .live-tag i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent-ink); }
+
+  .take {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 9px 0; border-radius: var(--r-inner);
+    background: var(--accent); color: var(--accent-ink);
+    font-weight: 700; font-size: 12.5px; letter-spacing: .02em;
+    transition: filter .15s, transform .2s;
+  }
+  .take:hover { filter: brightness(1.07); }
+  .take.flashed { transform: scale(.985); filter: brightness(.94); }
+  .take .desc { font-weight: 550; opacity: .72; font-size: 11.5px; }
+
+  /* displays roster */
+  .displays { margin-top: 0; }
+  .displays .card-body { padding: 6px 6px 8px; }
+  .disp-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 8px; border-radius: var(--r-inner);
+    transition: background .12s;
+  }
+  .disp-row:hover { background: var(--panel-2); }
+  .disp-row .glyph {
+    flex: 0 0 26px; height: 26px; border-radius: 7px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    display: grid; place-items: center; color: var(--text-3);
+  }
+  .disp-row.live .glyph { color: var(--accent); border-color: rgba(241,230,0,.25); background: var(--accent-soft); }
+  .disp-row .d-name { font-size: 12.5px; font-weight: 550; }
+  .disp-row .d-sub { font-size: 10.5px; color: var(--text-3); }
+  .disp-state {
+    margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  }
+  .disp-row.live .disp-state { color: var(--green); }
+  .disp-row:not(.live) .disp-state { color: var(--text-3); }
+
+  /* ---------- bottom strip ---------- */
+  .strip {
+    height: var(--strip-h); flex: 0 0 auto;
+    display: flex; align-items: center; gap: 18px;
+    padding: 0 14px;
+    border-top: 1px solid var(--line);
+    background: #0c0c0f;
+    color: var(--text-3); font-size: 11px;
+  }
+  .strip .item { display: flex; align-items: center; gap: 7px; }
+  .strip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); }
+  .strip .dot.ok { background: var(--green); }
+  .strip .dot.warn { background: var(--accent); }
+  body.live .strip .rec-item .dot { background: var(--accent); }
+  .strip .k { color: var(--text-3); }
+  .strip .sep { flex: 1; }
+  .strip b { color: var(--text-2); font-weight: 600; }
+</style>
+</head>
+<body>
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">F</span>
+      <small>Sunday AM</small>
+    </div>
+
+    <nav class="tabs" id="tabs">
+      <button class="active">Bible</button>
+      <button>Songs</button>
+      <button>Notes</button>
+      <button>Media</button>
+      <button>Overlays</button>
+    </nav>
+
+    <div class="air-status">
+      <div class="air-pill"><span class="dot"></span><span id="airText" class="num">OFF AIR</span></div>
+      <span class="num" id="timer" style="font-size:12px;color:var(--text-3)">00:00:00</span>
+      <div class="meter"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="top-actions">
+      <button class="icon-btn" title="Themes">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>
+        Themes
+      </button>
+      <button class="icon-btn" title="Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9"/><circle cx="17" cy="7" r="2.5"/><path d="M20 17h-9"/><circle cx="7" cy="17" r="2.5"/></svg>
+        Settings
+      </button>
+      <button class="btn-primary" id="goLive">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+        <span id="goLiveText">Start sermon</span>
+        <kbd>G</kbd>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ WORKSPACE ============ -->
+  <div class="workspace">
+
+    <!-- ---- left: bible ---- -->
+    <aside class="rail rail-bible">
+      <section class="card">
+        <div class="card-head">
+          <span class="card-title">Bible</span>
+          <span class="spacer"></span>
+          <button class="mini-btn">NKJV
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+          <input placeholder="Search verse or word" />
+          <span class="toggle-seg"><button class="on">REF</button><button>TEXT</button></span>
+        </div>
+
+        <div class="recent">
+          <span class="recent-label">Recent</span>
+          <button class="ref-chip">John 3:16</button>
+          <button class="ref-chip">Ps 32:1</button>
+          <button class="ref-chip">Ezra 10:6</button>
+        </div>
+
+        <div class="seg" id="bookSeg">
+          <button class="on" data-view="books">Books</button>
+          <button data-view="chapters">Chapters</button>
+        </div>
+
+        <div class="bible-body" id="bibleBody">
+          <!-- books view -->
+          <div id="viewBooks">
+            <div class="group-label">Old Testament</div>
+            <div class="books" id="otBooks"></div>
+            <div class="group-label">New Testament</div>
+            <div class="books nt" id="ntBooks"></div>
+          </div>
+          <!-- chapters view -->
+          <div id="viewChapters" style="display:none">
+            <button class="back-row" id="backToBooks">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+              <span id="chapterBookName">John</span>
+              <span style="color:var(--text-3);font-weight:450" class="num">· 50 chapters</span>
+            </button>
+            <div class="chapters" id="chapterGrid"></div>
+            <div class="verse-preview"><b>JOHN 3 : 16</b>“For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.”</div>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ---- center: what's happening now ---- -->
+    <section class="center">
+
+      <!-- transcript (compact capture card) -->
+      <section class="card transcript">
+        <div class="card-head">
+          <span class="card-title">Transcript</span>
+          <span class="count-chip">Idle</span>
+          <span class="spacer"></span>
+          <button class="mini-btn accent">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 18v3.5"/></svg>
+            Start transcribing
+          </button>
+        </div>
+        <div class="card-body">
+          <p class="idle-hint"><b>Start transcribing</b> and every verse you say out loud appears below — no clicking mid-sermon.</p>
+          <div class="grab-demo">
+            <q>…we read in John chapter three, verse sixteen —</q>
+            <span class="arrow">→</span>
+            <span class="grab-chip">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>
+              John 3:16 added to rundown
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- rundown (merged pads + scripture grabs) -->
+      <section class="card rundown">
+        <div class="card-head">
+          <span class="card-title">Rundown</span>
+          <span class="count-chip"><b>6</b> items · <b style="color:var(--accent)">1</b> suggested</span>
+          <span class="spacer"></span>
+          <button class="mini-btn ghost">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            Clear screen
+          </button>
+          <button class="mini-btn accent">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            Add
+          </button>
+        </div>
+
+        <div class="rows">
+          <div class="row on-program">
+            <span class="grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+            <span class="t-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/><path d="M9.5 9h5.5v2h-2v4h-1.8v-4H9.5z" fill="var(--panel)"/></svg></span>
+            <div class="t-main"><div class="title">Fellowship logo</div><div class="sub">Full-screen · stays on screen</div></div>
+            <span class="badge program">On program</span>
+            <div class="act">
+              <button class="icon-sm" title="Send to preview"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              <button class="icon-sm" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+              <button class="icon-sm" title="More"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+          </div>
+
+          <div class="row">
+            <span class="grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+            <span class="t-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5h14M12 5v14"/></svg></span>
+            <div class="t-main"><div class="title">Text bar — “Welcome home”</div><div class="sub">Lower third · stays on screen</div></div>
+            <span class="badge preview">In preview</span>
+            <div class="act">
+              <button class="icon-sm" title="Send to preview"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              <button class="icon-sm" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+              <button class="icon-sm" title="More"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+          </div>
+
+          <div class="row">
+            <span class="grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+            <span class="t-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9.5h8M8 13h5"/></svg></span>
+            <div class="t-main"><div class="title">Ezra 10:6</div><div class="sub">Scripture bar · NKJV</div></div>
+            <div class="act">
+              <button class="icon-sm" title="Send to preview"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              <button class="icon-sm" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+              <button class="icon-sm" title="More"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+          </div>
+
+          <div class="row">
+            <span class="grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+            <span class="t-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9.5h8M8 13h5"/></svg></span>
+            <div class="t-main"><div class="title">Deuteronomy 4:4</div><div class="sub">Scripture bar · NKJV</div></div>
+            <div class="act">
+              <button class="icon-sm" title="Send to preview"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              <button class="icon-sm" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+              <button class="icon-sm" title="More"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+          </div>
+
+          <div class="row">
+            <span class="grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+            <span class="t-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
+            <div class="t-main"><div class="title">Please turn to John chapter three, verse sixteen. For God so loved…</div><div class="sub">Scrolling text · normal speed</div></div>
+            <div class="act">
+              <button class="icon-sm" title="Send to preview"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              <button class="icon-sm" title="Edit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+              <button class="icon-sm" title="More"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+            </div>
+          </div>
+
+          <!-- auto-grab from transcript -->
+          <div class="row suggested">
+            <span class="grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg></span>
+            <span class="t-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg></span>
+            <div class="t-main"><div class="title" style="color:var(--accent)">John 3:16</div><div class="sub">Detected in transcript at 12:31</div></div>
+            <div class="act">
+              <button class="mini-btn tiny accent">Add</button>
+              <button class="mini-btn tiny ghost">Dismiss</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rundown-foot">
+          <button class="add-ghost">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add graphic
+          </button>
+          <span class="spacer"></span>
+          <span style="font-size:10.5px;color:var(--text-3)">Logo is on both screens · <button class="icon-sm" style="padding:2px" title="Preview graphics off"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span>
+        </div>
+      </section>
+
+      <!-- notes (collapsed drawer) -->
+      <section class="card notes" id="notesCard">
+        <div class="card-head">
+          <span class="card-title">Sermon notes</span>
+          <span class="ai-chip">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>
+            AI draft pending
+          </span>
+          <span class="spacer"></span>
+          <button class="mini-btn ghost">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>
+            Ask AI
+          </button>
+          <button class="icon-sm" id="notesToggle" title="Expand" style="color:var(--text-2)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" id="notesChev"><path d="m6 15 6-6 6 6"/></svg>
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="toolbar">
+            <button class="on" style="font-weight:700">B</button>
+            <button style="font-style:italic;font-family:Georgia,serif">I</button>
+            <button style="text-decoration:underline">U</button>
+            <button><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor"/><path d="M9 12h11"/></svg></button>
+            <button><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 17l-4-5 4-5M14 7l4 5-4 5" /></svg></button>
+          </div>
+          <p class="notes-hint">Paste your sermon outline here. After ~5 minutes of transcript, AI drafts point summaries you can send straight to the screens.</p>
+        </div>
+      </section>
+    </section>
+
+    <!-- ---- right: output rig ---- -->
+    <aside class="rail rail-output">
+      <section class="card monitors">
+        <div class="card-head">
+          <span class="card-title">Output</span>
+          <span class="spacer"></span>
+          <span style="font-size:10.5px;color:var(--text-3)" class="num">NDI · 1080p60</span>
+        </div>
+        <div class="card-body">
+          <div class="monitor-label">Program <span class="state num" id="progState">OFF AIR</span></div>
+          <div class="screen program">
+            <span class="live-tag"><i></i>LIVE</span>
+            <span class="empty-tag">PROGRAM</span>
+            <div class="lt"><span class="lt-text">Fellowship Chapel</span><span class="lt-ref">Ps 32:1</span></div>
+          </div>
+
+          <button class="take" id="takeBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+            Take to program <span class="desc">T</span>
+          </button>
+
+          <div class="monitor-label">Preview <span class="state">Staged</span></div>
+          <div class="screen">
+            <span class="empty-tag">VIDEO STREAM</span>
+            <div class="lt"><span class="lt-text">Text bar — “Welcome home”</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card displays">
+        <div class="card-head">
+          <span class="card-title">Displays</span>
+          <span class="spacer"></span>
+          <span style="font-size:10.5px;color:var(--text-3)" class="num" id="dispCount">1 / 3 on</span>
+        </div>
+        <div class="card-body">
+          <div class="disp-row live">
+            <span class="glyph"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="12.5" rx="2"/><path d="M8 21h8M12 17v3.5"/></svg></span>
+            <div><div class="d-name">Sanctuary projector</div><div class="d-sub">Lower thirds enabled</div></div>
+            <span class="disp-state">LIVE</span>
+          </div>
+          <div class="disp-row">
+            <span class="glyph"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="12.5" rx="2"/><path d="M8 21h8M12 17v3.5"/></svg></span>
+            <div><div class="d-name">Lobby TV</div><div class="d-sub">Mirrors program</div></div>
+            <span class="disp-state">OFF</span>
+          </div>
+          <div class="disp-row">
+            <span class="glyph"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="4.5" width="19" height="12.5" rx="2"/><path d="M8 21h8M12 17v3.5"/></svg></span>
+            <div><div class="d-name">Fellowship hall</div><div class="d-sub">Ticker only</div></div>
+            <span class="disp-state">OFF</span>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- ============ BOTTOM STRIP ============ -->
+  <footer class="strip">
+    <span class="item rec-item"><span class="dot" id="stripDot"></span><span id="stripTrans">Transcription idle</span></span>
+    <span class="item"><span class="dot ok"></span>Deepgram connected</span>
+    <span class="item k">AI notes: <span id="stripAi">needs ~5 min of transcript</span></span>
+    <span class="sep"></span>
+    <span class="item k">Saved automatically · <b>2 min ago</b></span>
+    <span class="item k">F1 F2 F3 = displays</span>
+  </footer>
+
+<script>
+  // top tabs
+  document.querySelectorAll('#tabs button').forEach(b =>
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#tabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+    })
+  );
+
+  // go live
+  const liveLabels = { on: 'End sermon', off: 'Start sermon' };
+  document.getElementById('goLive').addEventListener('click', () => {
+    const on = document.body.classList.toggle('live');
+    document.getElementById('airText').textContent = on ? 'ON AIR' : 'OFF AIR';
+    document.getElementById('goLiveText').textContent = liveLabels[on ? 'on' : 'off'];
+    document.getElementById('progState').textContent = on ? 'LIVE' : 'OFF AIR';
+    document.getElementById('timer').textContent = on ? '00:12:31' : '00:00:00';
+    document.getElementById('stripTrans').textContent = on ? 'Transcribing · 00:12:31' : 'Transcription idle';
+  });
+
+  // take flash
+  const take = document.getElementById('takeBtn');
+  take.addEventListener('click', () => {
+    take.classList.add('flashed');
+    setTimeout(() => take.classList.remove('flashed'), 180);
+  });
+
+  // bible: books <-> chapters
+  const books = [
+    ['GEN','EXO','LEV','NUM','DEU','JOS','JDG','RUT','1SA','2SA','1KI','2KI','1CH','2CH','EZR','NEH','EST','JOB','PSA','PRO','ECC','SNG','ISA','JER','LAM','EZK','DAN','HOS','JOE','AMO','OBA','JON','MIC','NAH','HAB','ZEP','HAG','ZEC','MAL'],
+    ['MAT','MRK','LUK','JHN','ACT','ROM','1CO','2CO','GAL','EPH','PHP','COL','1TH','2TH','1TI','2TI','TIT','PHM','HEB','JAS','1PE','2PE','1JN','2JN','3JN','JUD','REV']
+  ];
+  const ntOffset = books[0].length;
+  document.getElementById('otBooks').innerHTML = books[0].map(ab => `<button class="book">${ab}</button>`).join('');
+  document.getElementById('ntBooks').innerHTML = books[1].map(ab => `<button class="book">${ab}</button>`).join('');
+
+  const allBookBtns = document.querySelectorAll('.book');
+  const seg = document.getElementById('bookSeg');
+  const viewBooks = document.getElementById('viewBooks');
+  const viewChapters = document.getElementById('viewChapters');
+
+  function showView(v) {
+    seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+    viewBooks.style.display = v === 'books' ? '' : 'none';
+    viewChapters.style.display = v === 'chapters' ? '' : 'none';
+  }
+  seg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  document.getElementById('backToBooks').addEventListener('click', () => showView('books'));
+
+  function openChapters(idx, chip) {
+    const count = idx >= ntOffset ? [28,16,24,28,16,16,16,16,13,6,6,4,5,3,6,4,3,1,13,5,5,3,5,1,1,1,22] : [50,40,27,36,34,24,24,48,42,25,29,36,47,25,24,13,10,42,150,31,12,8,66,52,5,48,12,14,3,9,1,4,7,3,3,3,3,3,3,4,6,13];
+    const name = idx >= ntOffset
+      ? ['Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation'][idx - ntOffset]
+      : ['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Songs','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi'][idx];
+    document.getElementById('chapterBookName').textContent = name;
+    document.getElementById('chapterGrid').innerHTML =
+      Array.from({length: count[idx]}, (_, i) => `<button class="chapter num">${i + 1}</button>`).join('');
+    allBookBtns.forEach(b => b.classList.remove('on'));
+    chip.classList.add('on');
+    showView('chapters');
+  }
+  allBookBtns.forEach((chip, i) => chip.addEventListener('click', () => openChapters(i, chip)));
+
+  // pre-select JOHN to show active state
+  const johnChip = allBookBtns[ntOffset + 3];
+  openChapters(ntOffset + 3, johnChip);
+  showView('books');
+
+  // chapter click -> toggle lowered (handed to rundown)
+  document.getElementById('chapterGrid').addEventListener('click', e => {
+    if (e.target.classList.contains('chapter')) {
+      document.querySelectorAll('#chapterGrid .chapter').forEach(c => c.classList.remove('lowered'));
+      e.target.classList.add('lowered');
+    }
+  });
+
+  // notes expand/collapse
+  const notesCard = document.getElementById('notesCard');
+  document.getElementById('notesToggle').addEventListener('click', () => {
+    const open = notesCard.classList.toggle('open');
+    document.getElementById('notesChev').innerHTML = open ? '<path d="m6 9 6 6 6-6"/>' : '<path d="m6 15 6-6 6 6"/>';
+    notesCard.querySelector('.card-body').style.display = open ? '' : 'none';
+    notesCard.querySelector('.card-head').style.borderBottomStyle = open ? 'solid' : 'dashed';
+  });
+  notesCard.querySelector('.card-body').style.display = 'none';
+</script>
+</body>
+</html>

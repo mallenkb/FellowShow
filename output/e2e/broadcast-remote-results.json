@@ -1,0 +1,719 @@
+{
+  "date": "2026-10-17",
+  "scope": [
+    "native HTTP and OSC remote control",
+    "native status snapshots",
+    "NDI sender lifecycle and local receiver",
+    "native Theme Designer repaint recovery"
+  ],
+  "fixes": [
+    {
+      "issue": "HTTP opacity and confidence accepted values outside 0..1 and f32 overflows",
+      "reproduction": "Actual socket POST opacity=-0.1 returned HTTP200 and dispatched invalid value",
+      "fix": "Dispatcher validates finite normalized numeric controls before every sink; HTTP returns400 for invalid ranges",
+      "files": [
+        "src-tauri/crates/api/src/dispatch.rs",
+        "src-tauri/crates/api/src/http.rs"
+      ]
+    },
+    {
+      "issue": "Native status retained old live verse and theme after frontend sent null",
+      "fix": "Full snapshot null values clear previous text",
+      "files": [
+        "src-tauri/src/commands/remote.rs"
+      ]
+    },
+    {
+      "issue": "Remote command log showed HTTP requests as OSC",
+      "reproduction": "Actual native UI command log confirmed HTTP opacity command labeledOSC before rebuilding",
+      "fix": "Native receipt event records actual protocol and settings displays it",
+      "files": [
+        "src-tauri/src/commands/remote.rs",
+        "src/components/settings/remote-control-section.tsx"
+      ]
+    },
+    {
+      "issue": "NDI advertised fractional NTSC frame rates for integer24/30/60 choices",
+      "reproduction": "Installed NDI receiver observed30000/1001 for30fps setting",
+      "fix": "Video descriptor now uses configured integer fps numerator and denominator1",
+      "files": [
+        "src-tauri/crates/broadcast/src/ndi.rs"
+      ]
+    },
+    {
+      "issue": "A source name containing NUL returned after NDI initialization without matching destroy",
+      "fix": "Validate CString before loading/initializing runtime",
+      "evidence": "Static error-path inspection; all installed runtime transport checks pass",
+      "files": [
+        "src-tauri/crates/broadcast/src/ndi.rs"
+      ]
+    },
+    {
+      "issue": "Hidden native NDI output connected but sent zero video frames",
+      "reproduction": "Real app NDI source established loopback receiver connections on5960/5961 but delivered zero video frames in15seconds",
+      "fix": "Native frame-clock events now pace the hidden output without requestAnimationFrame or clamped DOM timers. Asset CORS and one-in-flight binary delivery are covered separately below.",
+      "files": [
+        "src/lib/broadcast-frame-loop.ts",
+        "src/broadcast-output.tsx",
+        "src-tauri/src/commands/broadcast.rs"
+      ],
+      "nativeRetest": "Passed in actual bundled app. Local SDK receiver decoded five nonuniform 1920x1080 frames for each PPT page; page 1 and page 2 checksums differ and screenshots show the correct text and colors."
+    },
+    {
+      "issue": "Remote Control lost custom ports, listening indicators and command history on tab navigation and Settings close",
+      "reproduction": "Actual native listeners18701/18702 stayed active while remounted UI briefly showedStopped8000/8080 and lost commands",
+      "fix": "Session-level Zustand state, global receipt listener, immediate native hydration withChecking initialstate and guarded toggle controls",
+      "files": [
+        "src/stores/remote-control-store.ts",
+        "src/hooks/use-remote-control.ts",
+        "src/components/settings/remote-control-section.tsx"
+      ],
+      "nativeRetest": "Passed in actual bundled app. Root confirmed custom ports and Listening status across tab changes and Settings close/reopen, plus accurate HTTP/OSC history for commands received while Settings was closed."
+    },
+    {
+      "issue": "NDI canvas became unreadable after local document or video assets loaded",
+      "reproduction": "Native bounded diagnostics show hidden tick/capture/send/sent and readiness succeed, then SecurityError after PPT asset load",
+      "fix": "Images and videos request anonymous CORS before source assignment; Tauri asset protocol already allows the webview origin",
+      "files": [
+        "src/broadcast-output.tsx"
+      ],
+      "nativeRetest": "Passed in actual bundled app. Local SDK receiver decoded five nonuniform 1920x1080 frames for each PPT page; page 1 and page 2 checksums differ and screenshots show the correct text and colors."
+    },
+    {
+      "issue": "Sender format and transport controls could disagree with a running output",
+      "reproduction": "NDI format choices remained editable after startup, and changing Display/NDI only updated saved configuration and content events. The full update/reconcile path did not stop or restart the active transport.",
+      "fix": "Lock source and format choices during native startup and active NDI. Lock Display/NDI selection during startup or any active output.",
+      "files": [
+        "src/components/broadcast/output-card.tsx"
+      ],
+      "verification": "Three component regressions cover active NDI, an open physical display, and deferred native startup with failure recovery. Typecheck, scoped ESLint and Prettier pass."
+    },
+    {
+      "issue": "Hidden WebKit DOM timer throttling limited optimized NDI output to about 1 fps despite its 24 fps setting",
+      "reproduction": "Thirty optimized-release image frames took 28.923 seconds, or 1.003 fps. Ten motion-video frames contained seven unique hashes but arrived at only 1.025 fps. Native source timecodes also advanced about one second per frame.",
+      "fix": "Cancellable native intervals emit output render ticks at configured cadence; the frontend receives these without a DOM timer and keeps its one-in-flight binary frame guard.",
+      "files": [
+        "src-tauri/src/commands/ndi_frame_clock.rs",
+        "src-tauri/src/commands/broadcast.rs",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/lib.rs",
+        "src/lib/broadcast-frame-loop.ts",
+        "src/broadcast-output.tsx",
+        "src/lib/ipc.ts"
+      ],
+      "nativeRetest": "Passed in the optimized app. Native clock restored static output to 24.32 fps. After the main decoded-video-frame workaround, moving output reached 24.16 fps with all 45 fixture frames represented.",
+      "tests": "Four Rust clock lifecycle and pacing tests and four frontend scheduler tests pass. Typecheck, scoped lint, formatting and strict main-crate Clippy across all targets pass.",
+      "eventIsolation": "Native ticks target only their corresponding webview window."
+    },
+    {
+      "issue": "Theme Designer stayed black when WebKit suspended requestAnimationFrame",
+      "reproduction": "Actual optimized native Designer controls and saving worked, but its canvas stayed black. Initial fit and theme synchronization waited for application RAF, followed by another Fabric RAF.",
+      "fix": "Coalesce dirty edits on RAF with a bounded 100 ms fallback and paint Fabric directly. Initial fit uses the same scheduler, selection-only updates avoid rebuilding the bitmap, and unmount cancels pending work before disposing Fabric.",
+      "files": [
+        "src/components/broadcast/design-canvas.tsx",
+        "src/lib/canvas-paint-scheduler.ts"
+      ],
+      "verification": "Five deterministic regressions, full typecheck, scoped ESLint and Prettier pass. Final optimized native UI now visibly paints Genesis 1:1 over the ocean background at 25% fit, and the saved custom Notes theme retains Center alignment after restart."
+    }
+  ],
+  "checks": {
+    "apiTests": {
+      "passed": 86,
+      "command": "cargo test --locked -p fellowshow-api"
+    },
+    "nativeStatusRegression": {
+      "passed": 1,
+      "command": "cargo test --locked -p fellowshow --lib cleared_frontend_content_clears_remote_status"
+    },
+    "settingsComponentTests": {
+      "passed": 3,
+      "command": "bun run test --run src/components/settings/remote-control-section.test.tsx"
+    },
+    "strictClippy": "Passed for main crate across all targets after native clock changes; earlier API and broadcast checks also passed.",
+    "typecheck": "passed",
+    "scopedESLint": "passed",
+    "installedNDI": {
+      "passed": 2,
+      "modes": [
+        "opaque",
+        "straight alpha",
+        "premultiplied alpha"
+      ],
+      "frameRates": [
+        24,
+        30,
+        60
+      ],
+      "resolution": [
+        1280,
+        720
+      ],
+      "additionalCoverage": [
+        "invalid buffer rejection",
+        "dimension mismatch rejection",
+        "two concurrent senders and one stopped without affecting other"
+      ],
+      "configurationDirectory": "/Users/mallenkb/Documents/Code Projects/FellowShow/.tmp/verification/ndi-loopback",
+      "command": "NDI_CONFIG_DIR=<isolated loopback config> cargo test --locked -p fellowshow-broadcast installed_runtime -- --ignored --nocapture --test-threads=1",
+      "frameRateValidation": "Received frame descriptor values match configured 24/30/60 fps. These tests do not establish sustained native renderer throughput."
+    },
+    "hiddenNDISchedulerTests": {
+      "passed": 4,
+      "coverage": [
+        "hidden view with noRAFcallbacks still producesframes",
+        "cleanup stops timers",
+        "physical visual animation retainsRAF scheduling"
+      ],
+      "additionalRegression": "A renderer exception is reported and the next frame remains scheduled"
+    },
+    "outputCardSenderBoundary": {
+      "passed": 3,
+      "command": "bun run test --run src/components/broadcast/output-card.test.tsx"
+    },
+    "nativeFrameClock": {
+      "passed": 4,
+      "command": "cargo test --locked -p fellowshow --lib ndi_frame_clock -- --nocapture",
+      "coverage": [
+        "Configured native pacing without hidden DOM timers",
+        "Replacement and Stop cancel the previous clock",
+        "Sink failure stops tick delivery",
+        "Stopping one output preserves the other output clock"
+      ]
+    },
+    "designerPaintScheduler": {
+      "tests": 5,
+      "status": "passed",
+      "typecheck": "passed",
+      "scopedESLint": "passed",
+      "prettier": "passed",
+      "nativeVisualRetest": {
+        "status": "passed",
+        "pid": 21757,
+        "screenshot": "output/e2e/screenshots/final-designer-painted.png",
+        "observed": "Genesis 1:1 over ocean background at 25% fit; retained Center Notes alignment"
+      }
+    },
+    "finalFrontendSuite": {
+      "testsPassed": 521,
+      "files": 95,
+      "fuzzCasesPerProperty": 10000,
+      "seed": 1592598566,
+      "status": "passed",
+      "evidence": "Parent combined-suite result after Designer and rehearsal fallbacks"
+    }
+  },
+  "actualNativeApp": {
+    "profile": "com.openbezal.fellowshow.lyric-verification",
+    "initialBuild": {
+      "phase": "native app before current fixes are rebuilt",
+      "health": {
+        "status": 200,
+        "body": {
+          "status": "ok",
+          "service": "fellowshow",
+          "version": "0.1.0"
+        }
+      },
+      "before": {
+        "status": 200,
+        "body": {
+          "on_air": false,
+          "active_theme": "Bible Verse Preview",
+          "live_verse": null,
+          "queue_length": 0,
+          "confidence_threshold": 0.8
+        }
+      },
+      "httpOpacity": {
+        "status": 200,
+        "body": {
+          "success": true
+        }
+      },
+      "after": {
+        "status": 200,
+        "body": {
+          "on_air": false,
+          "active_theme": "Bible Verse Preview",
+          "live_verse": null,
+          "queue_length": 0,
+          "confidence_threshold": 0.8
+        }
+      },
+      "oscConfidencePacketSent": true,
+      "oscVerification": "Threshold changed from 0.8 to 0.79 via real UDP, then returned to 0.8 via HTTP. Native UI command log confirmed both transports, with the pre-fix source label bug.",
+      "oscConfidenceChangedTo079": {
+        "status": 200,
+        "body": {
+          "on_air": false,
+          "active_theme": "Bible Verse Preview",
+          "live_verse": null,
+          "queue_length": 0,
+          "confidence_threshold": 0.79
+        }
+      },
+      "httpConfidenceRestore": {
+        "status": 200,
+        "body": {
+          "success": true
+        }
+      },
+      "httpConfidenceRestoredTo08": {
+        "status": 200,
+        "body": {
+          "on_air": false,
+          "active_theme": "Bible Verse Preview",
+          "live_verse": null,
+          "queue_length": 0,
+          "confidence_threshold": 0.8
+        }
+      },
+      "httpOpacityRestore": {
+        "status": 200,
+        "body": {
+          "success": true
+        }
+      }
+    },
+    "finalRebuiltVerification": {
+      "build": "Bundled debug app from the current working tree, including canvas CORS fix",
+      "profile": "com.openbezal.fellowshow.lyric-verification",
+      "ndiReceiver": "Installed NDI SDK receiver restricted to 127.0.0.1",
+      "slide1": {
+        "framesCaptured": 5,
+        "width": 1920,
+        "height": 1080,
+        "rateNumerator": 24,
+        "rateDenominator": 1,
+        "fps": 24.0,
+        "fourcc": "BGRA",
+        "sha256": "4eba320612f0cb48c64bed329d745d2792deaa7a6b819115ea6a79f2f3df6af3",
+        "loopbackReceiverAddress": "127.0.0.1:5961",
+        "distinctBytes": 256,
+        "distinctNonuniformFrames": 1,
+        "output": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/screenshots/native-ndi-slide1.png",
+        "captureSpanSeconds": 3.511674708
+      },
+      "slide2": {
+        "framesCaptured": 5,
+        "width": 1920,
+        "height": 1080,
+        "rateNumerator": 24,
+        "rateDenominator": 1,
+        "fps": 24.0,
+        "fourcc": "BGRA",
+        "sha256": "9d44c1999bdbedb8cb886ea3add1681a06490f002d20d26c777aa540cd269ae7",
+        "loopbackReceiverAddress": "127.0.0.1:5961",
+        "distinctBytes": 250,
+        "distinctNonuniformFrames": 1,
+        "output": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/screenshots/native-ndi-slide2.png",
+        "captureSpanSeconds": 3.0281255
+      },
+      "throughput": {
+        "framesCaptured": 12,
+        "width": 1920,
+        "height": 1080,
+        "rateNumerator": 24,
+        "rateDenominator": 1,
+        "fps": 24.0,
+        "fourcc": "BGRA",
+        "sha256": "9d44c1999bdbedb8cb886ea3add1681a06490f002d20d26c777aa540cd269ae7",
+        "loopbackReceiverAddress": "127.0.0.1:5961",
+        "distinctBytes": 217,
+        "byteSampleStride": 128,
+        "distinctNonuniformFrames": 1,
+        "output": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/screenshots/native-ndi-slide2-throughput.png",
+        "captureSpanSeconds": 10.395736709000001,
+        "observedCaptureFps": 1.058126067244168,
+        "pngEncodedAfterCapture": true
+      },
+      "slideComparison": "Different checksums and visual inspection confirm correct first and second slide content.",
+      "video": "Passed in the optimized decoded-cache release at 24.16 fps, 120 frames, and 45 distinct video frames.",
+      "performanceLimit": "Resolved for tested 1920x1080 at 24 fps: static output measured 24.32 fps and moving video measured 24.16 fps. Other resolutions and rates have backend transport/descriptor coverage, not sustained native UI throughput coverage.",
+      "remoteProbe": "output/e2e/remote-native-final.json",
+      "remoteShutdown": "output/e2e/remote-shutdown-final.json",
+      "optimizedRelease": {
+        "build": "Optimized release, com.openbezal.fellowshow.release-verification, PID7251",
+        "stableImage": {
+          "framesCaptured": 30,
+          "width": 1920,
+          "height": 1080,
+          "rateNumerator": 24,
+          "rateDenominator": 1,
+          "fps": 24.0,
+          "fourcc": "BGRA",
+          "sha256": "48b4d2254e843eca21e0d977e6a4e6ad849bcbe9ebe6894157364b8fe350135b",
+          "loopbackReceiverAddress": "127.0.0.1:5961",
+          "distinctBytes": 232,
+          "byteSampleStride": 128,
+          "distinctNonuniformFrames": 1,
+          "output": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/screenshots/release-ndi-quadrants.png",
+          "captureSpanSeconds": 28.923137042,
+          "observedCaptureFps": 1.002657490364492,
+          "pngEncodedAfterCapture": true,
+          "captureIntervalsSeconds": [
+            0.9596617500000001,
+            1.002669375,
+            1.0034590419999998,
+            0.9122532919999999,
+            1.0127495410000003,
+            1.0752722920000002,
+            1.0030869999999998,
+            0.9944158329999997,
+            0.9147335840000004,
+            1.0891477910000003,
+            0.9980252089999997,
+            0.9113250409999996,
+            1.0520477919999998,
+            1.0370223330000012,
+            0.9827247499999991,
+            1.018040000000001,
+            0.9701000419999986,
+            1.0337922920000011,
+            0.9738310830000003,
+            1.0211517499999978,
+            0.9697598750000012,
+            1.0270311250000006,
+            0.9674605420000013,
+            1.037404207999998,
+            0.9636879170000014,
+            1.0334303749999982,
+            0.9706740410000023,
+            1.0325934169999975,
+            0.9555857500000009
+          ],
+          "medianCaptureIntervalSeconds": 1.002669375,
+          "sourceTimecodes100ns": [
+            17922356210321414,
+            17922356220321422,
+            17922356230321430,
+            17922356240321438,
+            17922356249488112,
+            17922356259488120,
+            17922356270321462,
+            17922356280321470,
+            17922356290321478,
+            17922356299488152,
+            17922356310321494,
+            17922356320321502,
+            17922356329488176,
+            17922356339904851,
+            17922356350321526,
+            17922356360321534,
+            17922356370321542,
+            17922356379904883,
+            17922356390321558,
+            17922356399904899,
+            17922356410321574,
+            17922356419904915,
+            17922356430321590,
+            17922356439904931,
+            17922356450321606,
+            17922356459904947,
+            17922356470321622,
+            17922356479904963,
+            17922356490321638,
+            17922356499904979
+          ],
+          "content": "Four labeled colored quadrants image, as confirmed in native Live UI and receiver capture",
+          "build": "Optimized release, com.openbezal.fellowshow.release-verification, PID7251",
+          "sourceName": "FellowShow Release Verify",
+          "probeMedianProcessingMilliseconds": 3.697312
+        },
+        "movingVideo": {
+          "framesCaptured": 10,
+          "width": 1920,
+          "height": 1080,
+          "rateNumerator": 24,
+          "rateDenominator": 1,
+          "fps": 24.0,
+          "fourcc": "BGRA",
+          "sha256": "b461d9803497d2f580049cc23f6a10dc7f825226f8c7af68a40185ff6885ae17",
+          "loopbackReceiverAddress": "127.0.0.1:5961",
+          "distinctBytes": 250,
+          "byteSampleStride": 128,
+          "distinctNonuniformFrames": 7,
+          "output": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/screenshots/release-ndi-video-before-cadence-fix.png",
+          "captureSpanSeconds": 8.782722125,
+          "observedCaptureFps": 1.0247392405119502,
+          "pngEncodedAfterCapture": true,
+          "captureIntervalsSeconds": [
+            1.008557417,
+            0.803331708,
+            1.0744614169999998,
+            0.9496515410000002,
+            1.005171292,
+            0.95308875,
+            1.0438425000000002,
+            1.0230742499999996,
+            0.92154325
+          ],
+          "medianCaptureIntervalSeconds": 1.005171292,
+          "sourceTimecodes100ns": [
+            17922357750322646,
+            17922357761572655,
+            17922357769905995,
+            17922357780322670,
+            17922357789906011,
+            17922357799906019,
+            17922357809489360,
+            17922357819906035,
+            17922357830322710,
+            17922357839489384
+          ]
+        },
+        "movingVideoVisualCheck": "Decoded color bars with a visible test time and frame counter. Ten frames included seven distinct nonuniform hashes.",
+        "performanceFinding": "The optimized sender delivered approximately 1 fps, confirmed by arrival intervals and native source timecodes. Receiver frame processing measured 3.7 ms.",
+        "nativeCadenceFixRetest": "Pending rebuilt optimized release with native frame clock.",
+        "shutdown": "output/e2e/release-ndi-stop-before-fix.json"
+      },
+      "nativeClockVerification": {
+        "build": "Optimized release, com.openbezal.fellowshow.release-verification, PID16562",
+        "staticNote": {
+          "evidence": "output/e2e/screenshots/release-ndi-native-clock-lines.json",
+          "framesCaptured": 60,
+          "width": 1920,
+          "height": 1080,
+          "fps": 24.0,
+          "observedCaptureFps": 24.318991378950123,
+          "captureSpanSeconds": 2.4260874589999997,
+          "distinctNonuniformFrames": 1,
+          "medianCaptureIntervalSeconds": 0.04171199999999997,
+          "medianFrameProcessingMilliseconds": 3.530520999999842,
+          "minimumExpectedFps": 20.0,
+          "sha256": "e34bdd25cce8e74550c5dc4ea91de99cfca3fca4560ef47b89169e544911c902"
+        },
+        "movingVideoFirst": {
+          "evidence": "output/e2e/screenshots/release-ndi-native-clock-video.json",
+          "framesCaptured": 60,
+          "width": 1920,
+          "height": 1080,
+          "fps": 24.0,
+          "observedCaptureFps": 18.171358921217003,
+          "observedSourceTimecodeFps": 18.153831630780846,
+          "captureSpanSeconds": 3.246867791,
+          "distinctNonuniformFrames": 37,
+          "medianCaptureIntervalSeconds": 0.04213387499999999,
+          "medianFrameProcessingMilliseconds": 3.6210414999999774,
+          "minimumExpectedFps": 20.0,
+          "sha256": "85db63a6586fdde4af8897b17dc679b40f5ae7909a33f53c47e210ff67b09a6a"
+        },
+        "movingVideoSteady": {
+          "evidence": "output/e2e/screenshots/release-ndi-native-clock-video-steady.json",
+          "framesCaptured": 120,
+          "width": 1920,
+          "height": 1080,
+          "fps": 24.0,
+          "observedCaptureFps": 17.46102671105873,
+          "observedSourceTimecodeFps": 17.204805513264024,
+          "captureSpanSeconds": 6.815177708,
+          "distinctNonuniformFrames": 44,
+          "medianCaptureIntervalSeconds": 0.04155045800000012,
+          "medianFrameProcessingMilliseconds": 3.648896000000068,
+          "minimumExpectedFps": 20.0,
+          "sha256": "4b9a6a532c8da1411651448270aa7d35de17080e89d5ff467aea978183d5916e"
+        },
+        "staticResult": "Passed the explicit 20 fps minimum at 24.32 observed fps. The decoded frame retains all three authored lines in order.",
+        "videoResult": "Failed the 20 fps minimum at 17.46 observed fps over the longer run, although 44 distinct nonuniform video frames were decoded. Main window remained unresponsive with a separately diagnosed video-frame GPU wait.",
+        "shutdown": "output/e2e/release-ndi-stop-after-native-clock.json",
+        "nextStep": "Retest moving video after the main media-frame workaround; no further NDI source changes yet."
+      },
+      "finalOptimizedVideoVerification": {
+        "build": "Optimized release, com.openbezal.fellowshow.release-verification, PID19358",
+        "video": {
+          "framesCaptured": 120,
+          "width": 1920,
+          "height": 1080,
+          "fps": 24.0,
+          "observedCaptureFps": 24.161054746841142,
+          "observedSourceTimecodeFps": 23.999980800015358,
+          "captureSpanSeconds": 4.925281667,
+          "distinctNonuniformFrames": 45,
+          "medianCaptureIntervalSeconds": 0.041605875000000125,
+          "medianFrameProcessingMilliseconds": 3.657645499999862,
+          "minimumExpectedFps": 20.0,
+          "sha256": "7ecd1c47f5222169937e918643d6aa0e780eba74576cdb321fd66e72ec54b190"
+        },
+        "evidence": "output/e2e/screenshots/release-ndi-video-decoded-cache.json",
+        "decodedImage": "output/e2e/screenshots/release-ndi-video-decoded-cache.png",
+        "result": "Passed the explicit 20 fps minimum. All 45 distinct motion-fixture frames appeared among 120 captures. Source timecodes report 24 fps.",
+        "discovery": "output/e2e/release-ndi-discovery.json",
+        "mainVideoWorkaround": "Main preview snapshots decoded video frames via requestVideoFrameCallback. Native NDI raw video drawing was unchanged after the native clock fix."
+      },
+      "retainedNDIConfiguration": {
+        "status": "passed",
+        "pid": 21757,
+        "restartUI": {
+          "sourceName": "FellowShow Release Verify",
+          "resolution": "720p",
+          "frameRate": 30,
+          "alphaMode": "none",
+          "outputActiveOnStartup": false
+        },
+        "discovery": "output/e2e/release-ndi-retained-discovery.json",
+        "capture": "output/e2e/screenshots/release-ndi-retained-720p30-opaque.json",
+        "screenshot": "output/e2e/screenshots/release-ndi-retained-720p30-opaque.png",
+        "frames": 120,
+        "width": 1280,
+        "height": 720,
+        "frameRateNumerator": 30,
+        "frameRateDenominator": 1,
+        "observedCaptureFps": 30.06825937057405,
+        "observedSourceTimecodeFps": 30.000030000029998,
+        "alphaMinimum": 255,
+        "alphaMaximum": 255,
+        "visualContent": "Final release lines with First authored line, Second authored line, Third authored line on three distinct exact lines",
+        "activeControlsLocked": "Native UI verified transport buttons, source name, resolution, rate and alpha disabled while running",
+        "shutdown": {
+          "status": "passed",
+          "evidence": "output/e2e/release-ndi-final-ui-stop.json",
+          "senderPorts": [
+            5960,
+            5961
+          ],
+          "processStillRunning": true,
+          "observed": "Both sender TCP ports refuse connections after native UI Stop while the app remains open"
+        }
+      }
+    },
+    "firstRebuiltVerification": {
+      "phase": "native final rebuilt app before hidden-NDI-frame fix",
+      "health": {
+        "status": 200,
+        "body": {
+          "status": "ok",
+          "service": "fellowshow",
+          "version": "0.1.0"
+        }
+      },
+      "before": {
+        "status": 200,
+        "body": {
+          "on_air": true,
+          "active_theme": "Bible Verse Preview",
+          "live_verse": "e2e-two-pages \u2013 Page 1",
+          "queue_length": 1,
+          "confidence_threshold": 0.8
+        }
+      },
+      "invalid": [
+        {
+          "command": "opacity",
+          "value": -0.1,
+          "response": {
+            "status": 400,
+            "body": {
+              "success": false,
+              "error": "Value out of range: -0.1 not in [0, 1]"
+            }
+          }
+        },
+        {
+          "command": "opacity",
+          "value": 1.1,
+          "response": {
+            "status": 400,
+            "body": {
+              "success": false,
+              "error": "Value out of range: 1.1 not in [0, 1]"
+            }
+          }
+        },
+        {
+          "command": "opacity",
+          "value": 1e+100,
+          "response": {
+            "status": 400,
+            "body": {
+              "success": false,
+              "error": "Value out of range: inf not in [0, 1]"
+            }
+          }
+        },
+        {
+          "command": "confidence",
+          "value": -0.1,
+          "response": {
+            "status": 400,
+            "body": {
+              "success": false,
+              "error": "Value out of range: -0.1 not in [0, 1]"
+            }
+          }
+        },
+        {
+          "command": "confidence",
+          "value": 1.1,
+          "response": {
+            "status": 400,
+            "body": {
+              "success": false,
+              "error": "Value out of range: 1.1 not in [0, 1]"
+            }
+          }
+        },
+        {
+          "command": "confidence",
+          "value": 1e+100,
+          "response": {
+            "status": 400,
+            "body": {
+              "success": false,
+              "error": "Value out of range: inf not in [0, 1]"
+            }
+          }
+        }
+      ],
+      "oscConfidenceChangedTo079": {
+        "status": 200,
+        "body": {
+          "on_air": true,
+          "active_theme": "Bible Verse Preview",
+          "live_verse": "e2e-two-pages \u2013 Page 1",
+          "queue_length": 1,
+          "confidence_threshold": 0.79
+        }
+      },
+      "httpConfidenceRestore": {
+        "status": 200,
+        "body": {
+          "success": true
+        }
+      },
+      "httpConfidenceRestoredTo08": {
+        "status": 200,
+        "body": {
+          "on_air": true,
+          "active_theme": "Bible Verse Preview",
+          "live_verse": "e2e-two-pages \u2013 Page 1",
+          "queue_length": 1,
+          "confidence_threshold": 0.8
+        }
+      },
+      "httpOpacityRestore": {
+        "status": 200,
+        "body": {
+          "success": true
+        }
+      }
+    },
+    "persistentRemoteUI": "Root verified18701/18702 Listening after tab changes and Settings close/reopen; commands received while closed retained correctHTTP/OSC history",
+    "listenerShutdown": "Root verified native UI Stop, HTTP connection refusal and reusable TCP/UDP ports"
+  },
+  "constraints": [
+    "The disconnected GoStream Duet hardware was not tested. Its documented format and resolution constraints were simulated separately.",
+    "Installed NDI SDK receiver supports more formats than GoStream Duet; successful loopback decoding does not establish Duet compatibility.",
+    "Actual optimized native throughput passed at 1920x1080/24 fps for motion video and 1280x720/30 fps for static Notes. Backend 24/30/60 tests validate descriptors and transport; sustained native performance was not measured for every resolution and rate combination.",
+    "Parent tested the physical display separately. This subtask used only loopback receivers.",
+    "No user keyring reads, HX license purchases, or cloud API calls in this subtask."
+  ],
+  "receiverCompatibility": {
+    "report": "output/e2e/gostream-duet-profile-simulation.json",
+    "actualOffer": "1920x1080 progressive 24 fps NDI High Bandwidth",
+    "gostreamDuet": "Expected incompatible direct input because the documented receiver accepts NDI HX only.",
+    "simulation": "Constraint checks only. No hardware, firmware, discovery protocol or decoder emulated.",
+    "checksPassed": "3 deterministic test methods with 9 current setting combinations plus invalid boundaries",
+    "operatorNotice": "Added small NDI High Bandwidth / HX-only compatibility notice in OutputCard; typecheck, ESLint and Prettier passed."
+  },
+  "remainingObservations": []
+}

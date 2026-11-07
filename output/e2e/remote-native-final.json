@@ -1,0 +1,169 @@
+{
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ok",
+      "service": "fellowshow",
+      "version": "0.1.0"
+    }
+  },
+  "before": {
+    "status": 200,
+    "body": {
+      "on_air": true,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  },
+  "invalidControls": [
+    {
+      "control": "opacity",
+      "value": -0.1,
+      "response": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "error": "Value out of range: -0.1 not in [0, 1]"
+        }
+      }
+    },
+    {
+      "control": "opacity",
+      "value": 1.1,
+      "response": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "error": "Value out of range: 1.1 not in [0, 1]"
+        }
+      }
+    },
+    {
+      "control": "opacity",
+      "value": 1e+100,
+      "response": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "error": "Value out of range: inf not in [0, 1]"
+        }
+      }
+    },
+    {
+      "control": "confidence",
+      "value": -0.1,
+      "response": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "error": "Value out of range: -0.1 not in [0, 1]"
+        }
+      }
+    },
+    {
+      "control": "confidence",
+      "value": 1.1,
+      "response": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "error": "Value out of range: 1.1 not in [0, 1]"
+        }
+      }
+    },
+    {
+      "control": "confidence",
+      "value": 1e+100,
+      "response": {
+        "status": 400,
+        "body": {
+          "success": false,
+          "error": "Value out of range: inf not in [0, 1]"
+        }
+      }
+    }
+  ],
+  "oscConfidenceApplied": {
+    "status": 200,
+    "body": {
+      "on_air": true,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.79
+    }
+  },
+  "httpConfidenceRestored": {
+    "status": 200,
+    "body": {
+      "on_air": true,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  },
+  "opacityRestored": 1,
+  "httpHide": {
+    "status": 200,
+    "body": {
+      "on_air": false,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  },
+  "oscShow": {
+    "status": 200,
+    "body": {
+      "on_air": true,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  },
+  "httpOnAirFalse": {
+    "status": 200,
+    "body": {
+      "on_air": false,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  },
+  "oscOnAirTrue": {
+    "status": 200,
+    "body": {
+      "on_air": true,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  },
+  "liveStateRestored": {
+    "status": 200,
+    "body": {
+      "on_air": true,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  },
+  "after": {
+    "status": 200,
+    "body": {
+      "on_air": true,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": "e2e-two-slides \u2013 Page 1",
+      "queue_length": 1,
+      "confidence_threshold": 0.8
+    }
+  }
+}

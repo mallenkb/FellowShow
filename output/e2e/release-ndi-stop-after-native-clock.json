@@ -1,0 +1,8 @@
+{
+  "oldProcess": 16562,
+  "oldProcessStillExists": false,
+  "tcpPorts": {
+    "5960": "closed",
+    "5961": "closed"
+  }
+}

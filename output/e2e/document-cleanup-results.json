@@ -1,0 +1,17 @@
+{
+  "documentId": "eb4d0bf2-54a2-4a59-a5b3-6bea2369a1d6",
+  "sourcePath": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/fixtures/mixed-import/e2e-two-pages.docx",
+  "removedPagePaths": [
+    "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/4d1bdf4b-8601-42f2-b7d6-66ffb5d50add.png",
+    "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/7979e73b-d08a-49df-8393-9ee763c9c593.png"
+  ],
+  "retainedPagePaths": [
+    "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/12640f5f-f168-4d08-a2d4-390f32f78cbf.png",
+    "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/8d822734-6fff-44c9-80d7-a1d4403c2cc1.png",
+    "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/51ff37eb-d868-443d-bea1-9781949578f8.png",
+    "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/eb6dc257-af4b-4867-a642-d13a7188d2e5.png"
+  ],
+  "removedPagesDeleted": true,
+  "otherPagesRetained": true,
+  "sourceRetained": true
+}
