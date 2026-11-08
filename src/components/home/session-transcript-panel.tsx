@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useId, useRef, useState } from "react"
-import { AudioLinesIcon, PauseIcon, PlayIcon, SearchIcon } from "lucide-react"
+import { PauseIcon, PlayIcon, SearchIcon } from "lucide-react"
 import { SermonSessionTiming } from "@/components/controls/sermon-session-timing"
 import { Button } from "@/components/ui/button"
 import { SermonAudioDownload } from "./sermon-audio-download"
@@ -139,9 +139,15 @@ export function SessionTranscriptPanel({
       <aside className="min-w-0 space-y-4 lg:sticky lg:top-4">
         <div className="flex aspect-square max-w-[340px] flex-col justify-between overflow-hidden rounded-2xl bg-neutral-950 [background-image:radial-gradient(ellipse_at_100%_0%,#656023_0%,transparent_60%),radial-gradient(ellipse_at_0%_100%,#193b3d_0%,transparent_65%)] p-6 text-white">
           <div className="flex items-center gap-2 text-xs font-medium tracking-widest text-white/75 uppercase">
-            <AudioLinesIcon
-              aria-hidden="true"
-              className="size-4 text-primary"
+            <img
+              src="/fellowshow-light.png"
+              alt=""
+              className="size-7 shrink-0 dark:hidden"
+            />
+            <img
+              src="/fellowshow-dark.png"
+              alt=""
+              className="hidden size-7 shrink-0 dark:block"
             />
             FellowShow
           </div>

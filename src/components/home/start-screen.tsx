@@ -164,7 +164,7 @@ export function StartScreen() {
     <div className="fixed inset-0 flex flex-col overflow-y-auto bg-white text-foreground dark:bg-background">
       <header className={`${APP_HEADER_CLASS} sticky top-0 z-30 shrink-0`}>
         <img
-          src="/fellowshow.svg"
+          src="/fellowshow-dark.png"
           alt="FellowShow"
           className={APP_HEADER_LOGO_CLASS}
           draggable={false}

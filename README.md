@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/fellowshow.svg" alt="FellowShow logo" width="160" height="160" />
+  <img src="public/fellowshow-dark.png" alt="FellowShow logo" width="160" height="160" />
 </p>
 
 <h1 align="center">FellowShow</h1>

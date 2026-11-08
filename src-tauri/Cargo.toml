@@ -29,7 +29,7 @@ missing_panics_doc = "allow"
 
 [package]
 name = "fellowshow"
-version = "0.1.53"
+version = "0.1.54"
 description = "Fellow Show - Real-Time AI Bible Verse Detection"
 authors = ["Faithful"]
 license = "MIT"
@@ -54,7 +54,7 @@ serde.workspace = true
 log.workspace = true
 tokio.workspace = true
 thiserror.workspace = true
-tauri = { version = "2.12.4", features = ["protocol-asset"] }
+tauri = { version = "2.12.4", features = ["image-png", "protocol-asset"] }
 tauri-plugin-log = "2"
 tauri-plugin-store = "2"
 fellowshow-audio = { path = "crates/audio" }

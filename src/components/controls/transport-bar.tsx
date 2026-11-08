@@ -81,7 +81,7 @@ export function TransportBar({
     <div data-slot="transport-bar" className={APP_HEADER_CLASS}>
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <img
-          src="/fellowshow.svg"
+          src="/fellowshow-dark.png"
           alt="FellowShow"
           className={APP_HEADER_LOGO_CLASS}
           draggable={false}
