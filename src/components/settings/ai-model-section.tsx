@@ -13,10 +13,11 @@ import {
   type AiModelCatalogState,
 } from "@/components/settings/ai-model-catalog-picker"
 import { AiProviderSelector } from "@/components/settings/ai-provider-selector"
+import { RelatedScriptureSettings } from "@/components/settings/related-scripture-settings"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { UnlockSavedKeys } from "./unlock-saved-keys"
+import { SavedKeysStatus } from "./saved-keys-status"
 import {
   fetchAiProviderModels,
   getAiProviderName,
@@ -63,13 +64,13 @@ export function AiModelSection() {
   )
 
   const [provider, setProvider] = useState<AiProvider>(configuredProvider)
-  const [openRouterKey, setOpenRouterKey] = useState(
-    configuredOpenRouterKey ?? ""
+  const [openRouterKeyDraft, setOpenRouterKeyDraft] = useState<string | null>(
+    null
   )
   const [openRouterModel, setOpenRouterModel] = useState(
     configuredOpenRouterModel
   )
-  const [openAiKey, setOpenAiKey] = useState(configuredOpenAiKey ?? "")
+  const [openAiKeyDraft, setOpenAiKeyDraft] = useState<string | null>(null)
   const [openAiModel, setOpenAiModel] = useState(configuredOpenAiModel)
   const [showApiKey, setShowApiKey] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -82,16 +83,8 @@ export function AiModelSection() {
 
   useEffect(() => setProvider(configuredProvider), [configuredProvider])
   useEffect(
-    () => setOpenRouterKey(configuredOpenRouterKey ?? ""),
-    [configuredOpenRouterKey]
-  )
-  useEffect(
     () => setOpenRouterModel(configuredOpenRouterModel),
     [configuredOpenRouterModel]
-  )
-  useEffect(
-    () => setOpenAiKey(configuredOpenAiKey ?? ""),
-    [configuredOpenAiKey]
   )
   useEffect(
     () => setOpenAiModel(configuredOpenAiModel),
@@ -107,17 +100,18 @@ export function AiModelSection() {
     setAvailableModels([])
   }, [provider])
 
-  const apiKey = provider === "openai" ? openAiKey : openRouterKey
+  const configuredKey =
+    provider === "openai" ? configuredOpenAiKey : configuredOpenRouterKey
+  const keyDraft = provider === "openai" ? openAiKeyDraft : openRouterKeyDraft
+  const apiKey = keyDraft ?? configuredKey ?? ""
   const model = provider === "openai" ? openAiModel : openRouterModel
   const defaultModel =
     provider === "openai" ? DEFAULT_OPENAI_MODEL : DEFAULT_OPENROUTER_MODEL
   const providerName = getAiProviderName(provider)
-  const configuredKey =
-    provider === "openai" ? configuredOpenAiKey : configuredOpenRouterKey
 
   const updateApiKey = (value: string) => {
-    if (provider === "openai") setOpenAiKey(value)
-    else setOpenRouterKey(value)
+    if (provider === "openai") setOpenAiKeyDraft(value)
+    else setOpenRouterKeyDraft(value)
     setAvailableModels([])
     setModelListState("idle")
     setModelListMessage("")
@@ -130,12 +124,13 @@ export function AiModelSection() {
 
   const save = async () => {
     setConfiguredProvider(provider)
-    if (secretsUnlocked)
-      setConfiguredOpenRouterKey(openRouterKey.trim() || null)
+    if (secretsUnlocked && openRouterKeyDraft !== null)
+      setConfiguredOpenRouterKey(openRouterKeyDraft.trim() || null)
     setConfiguredOpenRouterModel(
       openRouterModel.trim() || DEFAULT_OPENROUTER_MODEL
     )
-    if (secretsUnlocked) setConfiguredOpenAiKey(openAiKey.trim() || null)
+    if (secretsUnlocked && openAiKeyDraft !== null)
+      setConfiguredOpenAiKey(openAiKeyDraft.trim() || null)
     setConfiguredOpenAiModel(openAiModel.trim() || DEFAULT_OPENAI_MODEL)
     await saveSettingsNow()
     setSaved(true)
@@ -219,11 +214,12 @@ export function AiModelSection() {
     <div className="flex flex-col gap-6">
       <p className="text-xs leading-relaxed text-muted-foreground">
         This provider creates live and sermon notes. Scripture detection and
-        manual controls work without an AI key.
+        manual controls work without an AI key. Related scripture matching can
+        optionally use OpenAI.
       </p>
 
       <AiProviderSelector provider={provider} onChange={setProvider} />
-      <UnlockSavedKeys />
+      <SavedKeysStatus />
 
       <label className="grid gap-2">
         <span className="flex items-center gap-2 text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -248,6 +244,7 @@ export function AiModelSection() {
             type="button"
             variant="ghost"
             size="icon-sm"
+            disabled={!secretsUnlocked}
             className="absolute top-1/2 right-1 -translate-y-1/2"
             aria-label={
               showApiKey
@@ -362,6 +359,7 @@ export function AiModelSection() {
           </span>
         ) : null}
       </div>
+      <RelatedScriptureSettings />
     </div>
   )
 }

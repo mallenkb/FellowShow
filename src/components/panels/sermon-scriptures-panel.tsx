@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { Undo2Icon, XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -7,8 +14,10 @@ import {
   type SermonDirectReference,
 } from "@/lib/sermon-direct-references"
 import { relatedScripturesForTranscript } from "@/lib/related-scriptures"
+import { useRelatedScriptureReview } from "@/hooks/use-related-scripture-review"
 import {
   useBroadcastStore,
+  useBibleStore,
   useDetectionStore,
   useQueueStore,
   useSermonStore,
@@ -17,6 +26,12 @@ import {
 import { SermonScriptureRow } from "@/components/panels/sermon-scripture-row"
 import { RelatedScripturesPanel } from "@/components/panels/related-scriptures-panel"
 import type { ClearedScriptureQueue } from "@/stores/queue-store"
+import type { DetectionResult, TranscriptSegment } from "@/types"
+import { useAppNavigationStore } from "@/stores/app-navigation-store"
+
+const EMPTY_DETECTIONS: DetectionResult[] = []
+const EMPTY_SEGMENTS: TranscriptSegment[] = []
+const EMPTY_REFERENCES: string[] = []
 
 function scriptureKey(bookNumber: number, chapter: number, verse: number) {
   return `${bookNumber}:${chapter}:${verse}`
@@ -34,12 +49,20 @@ export function SermonScripturesPanel({
     "direct"
   )
   const detections = useDetectionStore((state) => state.detections)
+  const detectionSessionId = useDetectionStore((state) => state.sessionId)
   const segments = useTranscriptStore((state) => state.segments)
   const highlightedReferences = useTranscriptStore(
     (state) => state.highlightedScriptures
   )
   const queueItems = useQueueStore((state) => state.items)
   const activeSessionId = useSermonStore((state) => state.activeSessionId)
+  const selectedSessionId = useSermonStore((state) => state.selectedSessionId)
+  const viewingSessionId = activeSessionId ?? selectedSessionId
+  const sessions = useSermonStore((state) => state.sessions)
+  const books = useBibleStore((state) => state.books)
+  const workspaceVisible = useAppNavigationStore(
+    (state) => state.screen === "workspace"
+  )
   const liveScriptureKey = useBroadcastStore((state) =>
     state.isLive ? (state.liveVerse?.scriptureKey ?? null) : null
   )
@@ -57,30 +80,68 @@ export function SermonScripturesPanel({
   } | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const dismissedKeys =
-    dismissed.sessionId === activeSessionId ? dismissed.keys : null
-  const canUndoClear = cleared !== null && cleared.sessionId === activeSessionId
+    dismissed.sessionId === viewingSessionId ? dismissed.keys : null
+  const canUndoClear =
+    cleared !== null && cleared.sessionId === viewingSessionId
 
   useEffect(
     () =>
       useSermonStore.subscribe((state, previous) => {
-        if (state.activeSessionId !== previous.activeSessionId) setCleared(null)
+        if (
+          (state.activeSessionId ?? state.selectedSessionId) !==
+          (previous.activeSessionId ?? previous.selectedSessionId)
+        )
+          setCleared(null)
       }),
     []
   )
 
+  const session = sessions.find((item) => item.id === viewingSessionId)
+  const sessionSegments = useMemo(() => {
+    if (!session || session.prepared) return EMPTY_SEGMENTS
+    if (session.id === activeSessionId) {
+      return segments.slice(session.transcriptStartIndex)
+    }
+    return session.transcriptSegments ?? EMPTY_SEGMENTS
+  }, [session, activeSessionId, segments])
+  const relatedDetections = session
+    ? detectionSessionId === session.id
+      ? detections
+      : (session.scriptureDetections ?? EMPTY_DETECTIONS)
+    : EMPTY_DETECTIONS
+  const directDetections = session ? relatedDetections : detections
+  const sessionHighlights =
+    session && session.id !== activeSessionId
+      ? (session.scriptures ?? EMPTY_REFERENCES)
+      : highlightedReferences
   const directReferences = useMemo(
     () =>
       getSermonDirectReferences({
-        detections,
-        highlightedReferences,
-        transcriptSegments: segments,
+        detections: directDetections,
+        highlightedReferences: sessionHighlights,
+        transcriptSegments: session ? sessionSegments : segments,
+        savedReferences: session?.directScriptures,
+        books,
       }),
-    [detections, highlightedReferences, segments]
+    [
+      directDetections,
+      sessionHighlights,
+      session,
+      sessionSegments,
+      segments,
+      books,
+    ]
   )
   const relatedScriptures = useMemo(
-    () => relatedScripturesForTranscript(detections, segments),
-    [detections, segments]
+    () => relatedScripturesForTranscript(relatedDetections, sessionSegments),
+    [relatedDetections, sessionSegments]
   )
+  const relatedReview = useRelatedScriptureReview({
+    sessionId: session?.id ?? null,
+    candidates: relatedScriptures.results,
+    isActive:
+      isActive && workspaceVisible && detectionSessionId === session?.id,
+  })
   const queuedKeys = useMemo(
     () =>
       new Set(
@@ -101,6 +162,7 @@ export function SermonScripturesPanel({
       directReferences.map((reference) => [reference.key, reference])
     )
     for (const item of queueItems) {
+      if (session) break
       if (item.verse.book_number <= 0 || item.source !== "direct") continue
       const key = scriptureKey(
         item.verse.book_number,
@@ -127,7 +189,7 @@ export function SermonScripturesPanel({
       (reference) =>
         !dismissedKeys?.has(reference.key) || queuedKeys.has(reference.key)
     )
-  }, [directReferences, dismissedKeys, queueItems, queuedKeys])
+  }, [directReferences, dismissedKeys, queueItems, queuedKeys, session])
 
   const removeScripture = (reference: SermonDirectReference) => {
     const queue = useQueueStore.getState()
@@ -140,7 +202,7 @@ export function SermonScripturesPanel({
       queue.removeItem(queue.items[index].id)
     }
     setCleared((previous) => {
-      if (!previous || previous.sessionId !== activeSessionId) return previous
+      if (!previous || previous.sessionId !== viewingSessionId) return previous
       const removed = previous.queue.items.filter(
         (item) =>
           item.verse.book_number > 0 &&
@@ -169,9 +231,9 @@ export function SermonScripturesPanel({
       }
     })
     setDismissed((previous) => ({
-      sessionId: activeSessionId,
+      sessionId: viewingSessionId,
       keys: new Set([
-        ...(previous.sessionId === activeSessionId ? previous.keys : []),
+        ...(previous.sessionId === viewingSessionId ? previous.keys : []),
         reference.key,
       ]),
     }))
@@ -182,23 +244,23 @@ export function SermonScripturesPanel({
       .getState()
       .clearScriptures(new Set(references.map((reference) => reference.key)))
     setCleared({
-      sessionId: activeSessionId,
+      sessionId: viewingSessionId,
       queue,
       dismissedKeys: directReferences
         .map((reference) => reference.key)
         .filter((key) => !dismissedKeys?.has(key)),
     })
     setDismissed((previous) => ({
-      sessionId: activeSessionId,
+      sessionId: viewingSessionId,
       keys: new Set([
-        ...(previous.sessionId === activeSessionId ? previous.keys : []),
+        ...(previous.sessionId === viewingSessionId ? previous.keys : []),
         ...directReferences.map((reference) => reference.key),
       ]),
     }))
   }
 
   const undoClearScriptures = useCallback(() => {
-    if (!cleared || cleared.sessionId !== activeSessionId) return
+    if (!cleared || cleared.sessionId !== viewingSessionId) return
     useQueueStore.getState().restoreScriptures(cleared.queue)
     setDismissed((previous) => {
       if (previous.sessionId !== cleared.sessionId) return previous
@@ -207,7 +269,7 @@ export function SermonScripturesPanel({
       return { ...previous, keys }
     })
     setCleared(null)
-  }, [activeSessionId, cleared])
+  }, [viewingSessionId, cleared])
 
   useEffect(() => {
     if (!isActive || scriptureTab !== "direct" || !canUndoClear) return
@@ -272,7 +334,7 @@ export function SermonScripturesPanel({
           </TabsTrigger>
           <TabsTrigger
             value="related"
-            aria-label={`Related scriptures, ${relatedScriptures.results.length} ${relatedScriptures.results.length === 1 ? "verse" : "verses"}`}
+            aria-label={`Related scriptures, ${relatedReview.matches.length} ${relatedReview.matches.length === 1 ? "verse" : "verses"}`}
             className={SCRIPTURE_TAB_CLASS}
           >
             <span>
@@ -283,7 +345,7 @@ export function SermonScripturesPanel({
               </span>
             </span>
             <span className="font-normal text-muted-foreground">
-              ({relatedScriptures.results.length})
+              ({relatedReview.matches.length})
             </span>
           </TabsTrigger>
         </TabsList>
@@ -325,16 +387,23 @@ export function SermonScripturesPanel({
             </p>
           </div>
         ) : (
-          <div className="space-y-1.5">
-            {references.map((reference) => (
-              <SermonScriptureRow
-                key={reference.key}
-                reference={reference}
-                isQueued={queuedKeys.has(reference.key)}
-                isShowingLive={liveScriptureKey === reference.key}
-                isShowingPreview={previewScriptureKey === reference.key}
-                onRemove={removeScripture}
-              />
+          <div>
+            {references.map((reference, index) => (
+              <Fragment key={reference.key}>
+                {index > 0 && (
+                  <hr
+                    aria-hidden="true"
+                    className="scripture-card-divider mx-3 text-muted-foreground/35"
+                  />
+                )}
+                <SermonScriptureRow
+                  reference={reference}
+                  isQueued={queuedKeys.has(reference.key)}
+                  isShowingLive={liveScriptureKey === reference.key}
+                  isShowingPreview={previewScriptureKey === reference.key}
+                  onRemove={removeScripture}
+                />
+              </Fragment>
             ))}
           </div>
         )}
@@ -345,9 +414,12 @@ export function SermonScripturesPanel({
         className="flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
       >
         <RelatedScripturesPanel
-          results={relatedScriptures.results}
+          sessionId={session?.id ?? null}
+          matches={relatedReview.matches}
           hasTranscript={relatedScriptures.hasTranscript}
-          bestMatchKey={relatedScriptures.bestMatchKey}
+          reviewStatus={relatedReview.status}
+          reviewError={relatedReview.error}
+          onRetryReview={relatedReview.retry}
         />
       </TabsContent>
     </Tabs>

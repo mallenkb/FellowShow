@@ -12,7 +12,6 @@ interface AudioPart {
 export function useSermonAudio(
   sermonId: string,
   isLive: boolean,
-  visible: boolean,
   audioRef: React.RefObject<HTMLAudioElement | null>,
   onPosition: (timestamp: number) => void
 ) {
@@ -22,6 +21,7 @@ export function useSermonAudio(
   const [error, setError] = useState(false)
   const [playing, setPlaying] = useState(false)
   const parts = result ?? []
+  const hasAudio = parts.length > 0 && !isLive
 
   useEffect(() => {
     if (isLive || !isTauri()) return
@@ -46,11 +46,10 @@ export function useSermonAudio(
 
   useEffect(() => {
     const audio = audioRef.current
-    if (!visible || isLive) audio?.pause()
     return () => {
       audio?.pause()
     }
-  }, [visible, isLive, audioRef])
+  }, [hasAudio, audioRef])
 
   function reportPosition(audio: HTMLAudioElement) {
     const part = currentPart.current
@@ -107,7 +106,7 @@ export function useSermonAudio(
   }
 
   return {
-    hasAudio: parts.length > 0 && !isLive,
+    hasAudio,
     loading: isTauri() && !isLive && result === null,
     error,
     playing,
@@ -135,7 +134,7 @@ export function useSermonAudio(
           ? parts.indexOf(currentPart.current)
           : -1
         const next = index >= 0 ? parts[index + 1] : undefined
-        if (next && visible) loadPart(next, 0, true)
+        if (next) loadPart(next, 0, true)
         else setPlaying(false)
       },
     },

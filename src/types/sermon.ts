@@ -1,6 +1,11 @@
-import type { PreachingSummary } from "./summary"
+import type {
+  PreachingSummary,
+  SermonReviewSummary,
+  SermonSummaryLayout,
+} from "./summary"
 import type { AnnouncementDocument } from "./announcements"
 import type { TranscriptSegment } from "./transcript"
+import type { DetectionResult } from "./detection"
 
 export interface SermonRecordingSpan {
   startedAt: number
@@ -33,6 +38,7 @@ export interface SermonSession {
   prepared?: boolean
   id: string
   title: string
+  titleManuallyEdited?: boolean
   speaker?: string
   series?: string
   startedAt: number
@@ -44,7 +50,10 @@ export interface SermonSession {
   notes: SermonNote[]
   queuedNoteIds: string[]
   finalSummary: PreachingSummary | null
+  summaryLayout?: SermonSummaryLayout
+  reviewSummary?: SermonReviewSummary
   summaryTitle: string
+  summaryTitleManuallyEdited?: boolean
   summaryDocument: AnnouncementDocument | null
   /** Last generated block, used to refresh AI text without replacing edits. */
   summaryAiDraft?: AnnouncementDocument | null
@@ -54,6 +63,7 @@ export interface SermonSession {
   scriptures?: string[]
   /** References from direct detections, kept separately from reading advances. */
   directScriptures?: string[]
+  scriptureDetections?: DetectionResult[]
   /** Older sessions can only provide direct detections collected after upgrading. */
   directScripturesIncomplete?: boolean
   recordingSpans?: SermonRecordingSpan[]

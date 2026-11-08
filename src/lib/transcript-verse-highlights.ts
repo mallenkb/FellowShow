@@ -1,4 +1,8 @@
-import { findQuotedSpan } from "./transcript-quote-match"
+import {
+  findTokenizedQuoteSpan,
+  MIN_QUOTE_WORDS,
+  tokenizeQuote,
+} from "./transcript-quote-match"
 
 export interface TranscriptVerseAnnotation {
   id: string
@@ -64,7 +68,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-function numberWords(value: number): string[] {
+export function numberWords(value: number): string[] {
   if (value < 0 || value > 150) return []
   if (value < SMALL_NUMBERS.length) return [SMALL_NUMBERS[value]]
   if (value < 100) {
@@ -89,8 +93,12 @@ function numberAlternatives(value: number): string[] {
   return [String(value), ...numberWords(value)]
 }
 
-function patternForText(text: string): RegExp {
-  return new RegExp(`(^|\\b)${escapeRegExp(text)}(?=$|\\b|[.,;:!?])`, "i")
+function patternForText(text: string, compactReference = false): RegExp {
+  const escaped = escapeRegExp(text)
+  const pattern = compactReference
+    ? escaped.replace(/\s+/g, "[\\s-]+")
+    : escaped
+  return new RegExp(`(^|\\b)${pattern}(?=$|\\b|[.,;:!?])`, "i")
 }
 
 function phrasePatterns(annotation: TranscriptVerseAnnotation): {
@@ -110,6 +118,10 @@ function phrasePatterns(annotation: TranscriptVerseAnnotation): {
         patterns.push(
           {
             pattern: patternForText(`${book} ${chapter}:${annotation.verse}`),
+            specificity: "explicit",
+          },
+          {
+            pattern: patternForText(`${book} ${chapter} ${verse}`, true),
             specificity: "explicit",
           },
           {
@@ -177,19 +189,61 @@ function phrasePatterns(annotation: TranscriptVerseAnnotation): {
   return patterns
 }
 
+type QuoteTokens = ReturnType<typeof tokenizeQuote>
+
+function* quoteWindows(tokens: QuoteTokens) {
+  for (let start = 0; start + MIN_QUOTE_WORDS <= tokens.length; start += 1) {
+    yield tokens
+      .slice(start, start + MIN_QUOTE_WORDS)
+      .map((token) => token.word)
+      .join(" ")
+  }
+}
+
+type CompiledAnnotation =
+  | { quoteTokens: QuoteTokens; windows: Set<string> }
+  | { patterns: ReturnType<typeof phrasePatterns> }
+
+const compiledAnnotations = new WeakMap<
+  TranscriptVerseAnnotation,
+  CompiledAnnotation
+>()
+
+function compileAnnotation(annotation: TranscriptVerseAnnotation) {
+  const cached = compiledAnnotations.get(annotation)
+  if (cached) return cached
+  let compiled: CompiledAnnotation
+  if (annotation.kind === "quote") {
+    const quoteTokens = tokenizeQuote(annotation.verseText)
+    compiled = { quoteTokens, windows: new Set(quoteWindows(quoteTokens)) }
+  } else {
+    compiled = { patterns: phrasePatterns(annotation) }
+  }
+  compiledAnnotations.set(annotation, compiled)
+  return compiled
+}
+
 function findMatches(
   text: string,
-  annotations: TranscriptVerseAnnotation[]
+  spoken: QuoteTokens,
+  annotations: readonly TranscriptVerseAnnotation[],
+  compiled: readonly CompiledAnnotation[],
+  indices: readonly number[],
+  latestAnnotationTime: number
 ): CandidateMatch[] {
   const matches: CandidateMatch[] = []
 
-  for (const annotation of annotations) {
-    if (annotation.kind === "quote") {
-      const span = findQuotedSpan(text, annotation.verseText)
+  for (const index of indices) {
+    const annotation = annotations[index]
+    if (annotation.timestamp && annotation.timestamp > latestAnnotationTime)
+      continue
+    const entry = compiled[index]
+    if ("quoteTokens" in entry) {
+      const span = findTokenizedQuoteSpan(spoken, entry.quoteTokens)
       if (span) matches.push({ ...span, annotation, specificity: "explicit" })
       continue
     }
-    for (const { pattern, specificity } of phrasePatterns(annotation)) {
+    for (const { pattern, specificity } of entry.patterns) {
       const match = pattern.exec(text)
       if (!match) continue
       const prefixLength = match[1]?.length ?? 0
@@ -216,11 +270,10 @@ function findMatches(
     })
 }
 
-export function buildTranscriptHighlightParts(
+function highlightParts(
   text: string,
-  annotations: TranscriptVerseAnnotation[]
+  matches: CandidateMatch[]
 ): TranscriptHighlightPart[] {
-  const matches = findMatches(text, annotations)
   if (matches.length === 0) return [{ type: "text", text }]
 
   const parts: TranscriptHighlightPart[] = []
@@ -251,4 +304,58 @@ export function buildTranscriptHighlightParts(
   }
 
   return parts
+}
+
+/** Index exact four-word runs so each line only checks quotes it could match. */
+export function createTranscriptHighlightMatcher(
+  annotations: readonly TranscriptVerseAnnotation[]
+) {
+  const compiled = annotations.map(compileAnnotation)
+  const referenceIndices: number[] = []
+  const quotesByWindow = new Map<string, number[]>()
+  for (const [index, entry] of compiled.entries()) {
+    if ("patterns" in entry) {
+      referenceIndices.push(index)
+      continue
+    }
+    for (const window of entry.windows) {
+      const existing = quotesByWindow.get(window)
+      if (existing) existing.push(index)
+      else quotesByWindow.set(window, [index])
+    }
+  }
+
+  return (text: string, latestAnnotationTime = Infinity) => {
+    const spoken = quotesByWindow.size > 0 ? tokenizeQuote(text) : []
+    const quoteIndices = new Set<number>()
+    for (const window of quoteWindows(spoken)) {
+      for (const index of quotesByWindow.get(window) ?? [])
+        quoteIndices.add(index)
+    }
+    // Preserve annotation order for overlapping matches with the same span.
+    const indices =
+      quoteIndices.size > 0
+        ? [...referenceIndices, ...quoteIndices].sort(
+            (left, right) => left - right
+          )
+        : referenceIndices
+    return highlightParts(
+      text,
+      findMatches(
+        text,
+        spoken,
+        annotations,
+        compiled,
+        indices,
+        latestAnnotationTime
+      )
+    )
+  }
+}
+
+export function buildTranscriptHighlightParts(
+  text: string,
+  annotations: TranscriptVerseAnnotation[]
+): TranscriptHighlightPart[] {
+  return createTranscriptHighlightMatcher(annotations)(text)
 }

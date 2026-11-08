@@ -1515,7 +1515,7 @@ dependencies = [
 
 [[package]]
 name = "fellowshow"
-version = "0.1.55"
+version = "0.1.56"
 dependencies = [
  "crossbeam-channel",
  "dotenvy",
@@ -1528,6 +1528,8 @@ dependencies = [
  "fellowshow-stt",
  "keyring",
  "log",
+ "objc2",
+ "objc2-app-kit",
  "reqwest 0.12.28",
  "rusqlite",
  "serde",
@@ -1546,6 +1548,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+ "zip",
 ]
 
 [[package]]

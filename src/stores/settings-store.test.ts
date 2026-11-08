@@ -150,7 +150,7 @@ describe("settings store", () => {
     expect(mockSave).not.toHaveBeenCalled()
   })
 
-  it("does not open the vault for startup or ordinary settings changes", async () => {
+  it("does not open the vault when loading or saving ordinary settings", async () => {
     mockGet.mockResolvedValue(null)
     const { hydrateSettings, saveSettingsNow, useSettingsStore } =
       await import("./settings-store")

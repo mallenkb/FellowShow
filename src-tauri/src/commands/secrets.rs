@@ -2,13 +2,14 @@ use std::collections::BTreeMap;
 
 const KEYRING_SERVICE: &str = "com.openbezal.fellowshow";
 const KEYRING_ACCOUNT: &str = "provider-api-keys";
-const ALLOWED_KEYS: [&str; 6] = [
+const ALLOWED_KEYS: [&str; 7] = [
     "deepgramApiKey",
     "openaiApiKey",
     "groqApiKey",
     "claudeApiKey",
     "openRouterApiKey",
     "sermonOpenAiApiKey",
+    "decisionsApiKey",
 ];
 
 #[tauri::command]

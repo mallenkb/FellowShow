@@ -1,4 +1,11 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react"
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { SermonTranscriptGap } from "@/components/panels/sermon-transcript-gap"
 import { PanelHeader } from "@/components/ui/panel-header"
 import { LevelMeter } from "@/components/ui/level-meter"
@@ -20,14 +27,23 @@ import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import type { DetectionResult, ReadingAdvance, Verse } from "@/types"
 import { bestSpokenScriptureMatch } from "@/lib/related-scriptures"
+import { directChapterQuote } from "@/lib/chapter-quote-detection"
+import {
+  isDirectScriptureLoading,
+  presentDirectDetection,
+} from "@/lib/direct-scripture-live"
 import { switchScriptureTranslation } from "@/lib/switch-scripture-translation"
 import { toast } from "sonner"
-import type { TranscriptVerseAnnotation } from "@/lib/transcript-verse-highlights"
+import {
+  createTranscriptHighlightMatcher,
+  type TranscriptVerseAnnotation,
+} from "@/lib/transcript-verse-highlights"
 import {
   annotationFromAdvance,
   annotationFromDetection,
+  annotationsForDirectDetection,
+  annotationsFromSavedDetections,
   isHighlightedDetection,
-  isQuoteDetection,
   selectAnnotation,
 } from "@/lib/transcript-annotations"
 import type { TranscriptSegment } from "@/types"
@@ -39,18 +55,10 @@ import { useAppNavigationStore } from "@/stores/app-navigation-store"
 import { HighlightedTranscriptText } from "./transcript-highlighted-text"
 
 const MAX_TRANSCRIPT_ANNOTATIONS = 120
+const EMPTY_ANNOTATIONS: TranscriptVerseAnnotation[] = []
+const EMPTY_SEGMENTS: TranscriptSegment[] = []
 // Detection can finish after the transcript segment has already arrived.
 const SEGMENT_ANNOTATION_GRACE_MS = 30_000
-function annotationsForSegment(
-  segment: TranscriptSegment,
-  annotations: TranscriptVerseAnnotation[]
-) {
-  return annotations.filter(
-    (annotation) =>
-      !annotation.timestamp ||
-      annotation.timestamp <= segment.timestamp + SEGMENT_ANNOTATION_GRACE_MS
-  )
-}
 
 /**
  * Leaf component that subscribes to the audio level only. Isolated so the
@@ -66,9 +74,9 @@ function AudioLevelMeter() {
  * Leaf component that subscribes to `currentPartial`. Partials update per audio tick.
  */
 function LivePartialLine({
-  annotations,
+  matchHighlights,
 }: {
-  annotations: TranscriptVerseAnnotation[]
+  matchHighlights: ReturnType<typeof createTranscriptHighlightMatcher>
 }) {
   const currentPartial = useTranscriptStore((s) => s.currentPartial)
 
@@ -77,7 +85,7 @@ function LivePartialLine({
   return (
     <HighlightedTranscriptText
       text={currentPartial}
-      annotations={annotations}
+      matchHighlights={matchHighlights}
       className="border-l-2 border-primary-emphasis pl-2 text-base leading-relaxed text-foreground"
       pulse
     />
@@ -85,10 +93,40 @@ function LivePartialLine({
 }
 
 export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
-  const { segments, isTranscribing, connectionStatus, transition } =
-    useTranscription()
-  const hasPartial = useTranscriptStore((s) => s.currentPartial.length > 0)
+  const {
+    segments: liveSegments,
+    isTranscribing,
+    connectionStatus,
+    transition,
+  } = useTranscription()
+  const hasLivePartial = useTranscriptStore((s) => s.currentPartial.length > 0)
   const sermonTransition = useSermonStore((state) => state.transition)
+  const activeSessionId = useSermonStore((state) => state.activeSessionId)
+  const selectedSessionId = useSermonStore((state) => state.selectedSessionId)
+  const sessions = useSermonStore((state) => state.sessions)
+  const session = sessions.find(
+    (item) => item.id === (activeSessionId ?? selectedSessionId)
+  )
+  const segments = useMemo(() => {
+    if (!session) return liveSegments
+    if (session.prepared) return EMPTY_SEGMENTS
+    if (session.id === activeSessionId) {
+      return liveSegments.slice(session.transcriptStartIndex)
+    }
+    return (
+      session.transcriptSegments ??
+      session.transcript.map((text, index) => ({
+        id: `${session.id}-saved-${index}`,
+        text,
+        timestamp: session.startedAt,
+        is_final: true,
+        confidence: 0,
+        words: [],
+      }))
+    )
+  }, [session, activeSessionId, liveSegments])
+  const showPartial = !session || session.id === activeSessionId
+  const hasPartial = showPartial && hasLivePartial
   const isBusy = transition !== null || sermonTransition !== null
   const workspaceVisible = useAppNavigationStore(
     (state) => state.screen === "workspace"
@@ -104,11 +142,47 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
           : null
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const pendingDirectRef = useRef<{
+    sessionId: string
+    detection: DetectionResult
+  } | null>(null)
   const shouldFollowTranscriptRef = useRef(true)
   const [isFollowingTranscript, setIsFollowingTranscript] = useState(true)
-  const [transcriptAnnotations, setTranscriptAnnotations] = useState<
-    TranscriptVerseAnnotation[]
-  >([])
+  const [annotationsBySession, setAnnotationsBySession] = useState<
+    Record<string, TranscriptVerseAnnotation[]>
+  >({})
+  const currentAnnotations =
+    annotationsBySession[session?.id ?? "unscoped"] ?? EMPTY_ANNOTATIONS
+  const savedAnnotations = useMemo(
+    () => annotationsFromSavedDetections(session?.scriptureDetections ?? []),
+    [session?.scriptureDetections]
+  )
+  const matchHighlights = useMemo(
+    () =>
+      createTranscriptHighlightMatcher([
+        ...currentAnnotations,
+        ...savedAnnotations,
+      ]),
+    [currentAnnotations, savedAnnotations]
+  )
+
+  useEffect(
+    () =>
+      useSermonStore.subscribe((state, previous) => {
+        const pending = pendingDirectRef.current
+        if (!pending) return
+        if (state.activeSessionId === pending.sessionId) {
+          pendingDirectRef.current = null
+          presentDirectDetection(pending.detection, pending.sessionId)
+        } else if (
+          previous.transition === "starting" &&
+          state.transition !== "starting"
+        ) {
+          pendingDirectRef.current = null
+        }
+      }),
+    []
+  )
 
   const addTranscriptAnnotations = useCallback(
     (annotations: TranscriptVerseAnnotation[]) => {
@@ -118,30 +192,18 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
         .addHighlightedScriptures(
           annotations.map((annotation) => annotation.reference)
         )
-      setTranscriptAnnotations((current) =>
-        [...annotations, ...current].slice(0, MAX_TRANSCRIPT_ANNOTATIONS)
-      )
-    },
-    []
-  )
-
-  // Quotes only mark the transcript. They never feed highlighted scriptures or the queue.
-  const addQuoteAnnotations = useCallback(
-    (annotations: TranscriptVerseAnnotation[]) => {
-      if (annotations.length === 0) return
-      const references = new Set(
-        annotations.map((annotation) => annotation.reference)
-      )
-      setTranscriptAnnotations((current) =>
-        [
-          ...annotations,
-          ...current.filter(
-            (annotation) =>
-              annotation.kind !== "quote" ||
-              !references.has(annotation.reference)
-          ),
-        ].slice(0, MAX_TRANSCRIPT_ANNOTATIONS)
-      )
+      const sermon = useSermonStore.getState()
+      const owner =
+        (sermon.transition === "starting"
+          ? useDetectionStore.getState().sessionId
+          : (sermon.activeSessionId ?? sermon.selectedSessionId)) ?? "unscoped"
+      setAnnotationsBySession((current) => ({
+        ...current,
+        [owner]: [...annotations, ...(current[owner] ?? [])].slice(
+          0,
+          MAX_TRANSCRIPT_ANNOTATIONS
+        ),
+      }))
     },
     []
   )
@@ -155,15 +217,27 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
     abbreviation: string
     translation_id: number
     verse?: Verse | null
+    source?: "spoken" | "quote"
   }>("translation_command", (data) => {
     void switchScriptureTranslation(data.translation_id, {
       alreadySet: true,
       verse: data.verse,
-    }).catch((error: unknown) => {
-      toast.error(`Could not switch to ${data.abbreviation}`, {
-        description: String(error),
-      })
     })
+      .then(() => {
+        if (
+          data.source === "quote" &&
+          useBibleStore.getState().activeTranslationId === data.translation_id
+        ) {
+          toast.info(`Detected ${data.abbreviation} from the quote`, {
+            description: "Bible version updated.",
+          })
+        }
+      })
+      .catch((error: unknown) => {
+        toast.error(`Could not switch to ${data.abbreviation}`, {
+          description: String(error),
+        })
+      })
   })
 
   useTauriEvent<string>("translation_unavailable", (abbreviation) => {
@@ -174,8 +248,32 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
 
   // Listen for detection results from the backend (batch replaces previous detections)
   useTauriEvent<DetectionResult[]>("verse_detections", (detections) => {
-    useDetectionStore.getState().addDetections(detections)
-    const highlightedDetections = detections.filter(isHighlightedDetection)
+    const sermon = useSermonStore.getState()
+    const activeSession = sermon.sessions.find(
+      (item) => item.id === sermon.activeSessionId
+    )
+    const previous = useDetectionStore.getState().detections
+    const promoted = activeSession
+      ? directChapterQuote(
+          detections,
+          useTranscriptStore
+            .getState()
+            .segments.slice(activeSession.transcriptStartIndex)
+        )
+      : null
+    const isNewPromotion =
+      promoted &&
+      ![...previous, ...detections].some(
+        (item) =>
+          isHighlightedDetection(item) &&
+          item.book_number === promoted.book_number &&
+          item.chapter === promoted.chapter &&
+          item.verse === promoted.verse
+      )
+    const allDetections =
+      isNewPromotion && promoted ? [...detections, promoted] : detections
+    useDetectionStore.getState().addDetections(allDetections)
+    const highlightedDetections = allDetections.filter(isHighlightedDetection)
     const references = highlightedDetections
       .map((detection) => detection.verse_ref.trim())
       .filter(Boolean)
@@ -204,47 +302,21 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
       })
     }
     addTranscriptAnnotations(
-      highlightedDetections.map((detection) =>
-        annotationFromDetection(detection)
-      )
-    )
-    addQuoteAnnotations(
-      detections
-        .filter(isQuoteDetection)
-        .map((detection) => annotationFromDetection(detection, "quote"))
+      highlightedDetections.flatMap(annotationsForDirectDetection)
     )
 
     // Auto-navigate book search + select verse for preview/live
     const directHit = highlightedDetections.at(-1)
     if (directHit && directHit.book_number > 0) {
-      if (useSermonStore.getState().activeSessionId && directHit.verse_text) {
-        const verse = {
-          id: 0,
-          translation_id:
-            directHit.translation_id ??
-            useBibleStore.getState().activeTranslationId,
-          book_number: directHit.book_number,
-          book_name: directHit.book_name,
-          book_abbreviation: "",
-          chapter: directHit.chapter,
-          verse: directHit.verse,
-          verse_end: directHit.verse_end,
-          verse_parts: directHit.verse_parts,
-          text: directHit.verse_text,
-        }
-        bibleActions.selectVerse(verse)
-        useBibleStore.getState().setPendingNavigation({
-          activate: false,
-          bookNumber: verse.book_number,
-          chapter: verse.chapter,
-          verse: verse.verse,
-        })
-        useBroadcastStore
-          .getState()
-          .presentOnLive(
-            toVerseRenderData(verse, activeTranslationAbbreviation()),
-            "preview"
-          )
+      if (activeSession) {
+        presentDirectDetection(directHit, activeSession.id)
+      } else if (
+        sermon.transition === "starting" &&
+        useDetectionStore.getState().sessionId
+      ) {
+        const sessionId = useDetectionStore.getState().sessionId
+        if (sessionId)
+          pendingDirectRef.current = { sessionId, detection: directHit }
       } else {
         selectAnnotation(annotationFromDetection(directHit), false)
       }
@@ -252,7 +324,11 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
 
     // Strong word matches may fill an unattended Preview. They never replace
     // the explicit passage on Live or an operator's staged selection.
-    if (!directHit && useSermonStore.getState().activeSessionId) {
+    if (
+      !directHit &&
+      activeSession &&
+      !isDirectScriptureLoading(activeSession.id)
+    ) {
       const match = bestSpokenScriptureMatch(detections)
       if (match)
         stageVerseInBackground({
@@ -487,10 +563,10 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
                   />
                   <HighlightedTranscriptText
                     text={seg.text}
-                    annotations={annotationsForSegment(
-                      seg,
-                      transcriptAnnotations
-                    )}
+                    matchHighlights={matchHighlights}
+                    latestAnnotationTime={
+                      seg.timestamp + SEGMENT_ANNOTATION_GRACE_MS
+                    }
                     className={`text-sm leading-relaxed transition-colors duration-300 ${opacity}`}
                   />
                 </Fragment>
@@ -498,7 +574,9 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
             })}
 
             {/* Partial (in-progress) text rendered by leaf subscriber */}
-            <LivePartialLine annotations={transcriptAnnotations} />
+            {showPartial ? (
+              <LivePartialLine matchHighlights={matchHighlights} />
+            ) : null}
           </div>
         </div>
       </div>

@@ -6,11 +6,39 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use super::detection::{FTS5_CONFIDENCE_DECAY, FTS5_MIN_CONFIDENCE, FTS5_RANK0_CONFIDENCE};
+use super::local_speech_models::{installed_provider, LocalSpeechModel};
+use super::whisper_models::WhisperModel;
 use crate::events::{
     AudioLevelPayload, TranscriptPayload, EVENT_AUDIO_LEVEL, EVENT_TRANSCRIPT_FINAL,
     EVENT_TRANSCRIPT_PARTIAL,
 };
 use crate::state::{AppState, SttSession};
+
+#[derive(serde::Serialize, Clone)]
+struct TranslationSwitch {
+    abbreviation: String,
+    translation_id: i64,
+    verse: Option<fellowshow_bible::Verse>,
+    source: &'static str,
+}
+
+fn emit_translation_switch(
+    app: &AppHandle,
+    translation_id: i64,
+    abbreviation: String,
+    source: &'static str,
+) {
+    let verse = refresh_reading_translation(app, translation_id);
+    let _ = app.emit(
+        "translation_command",
+        TranslationSwitch {
+            abbreviation,
+            translation_id,
+            verse,
+            source,
+        },
+    );
+}
 
 struct SttSessionGuard {
     app: AppHandle,
@@ -195,6 +223,7 @@ async fn test_bearer_connection(
     clippy::too_many_lines,
     reason = "pipeline setup is inherently complex"
 )]
+#[expect(clippy::too_many_arguments, reason = "Tauri command arguments")]
 #[tauri::command]
 pub async fn start_transcription(
     app: AppHandle,
@@ -204,33 +233,23 @@ pub async fn start_transcription(
     gain: Option<f32>,
     provider: Option<String>,
     sermon_id: Option<String>,
+    whisper_model: Option<WhisperModel>,
+    local_speech_model: Option<LocalSpeechModel>,
 ) -> Result<u64, String> {
     let provider_name = provider.as_deref().unwrap_or("deepgram");
+    #[cfg(not(feature = "whisper"))]
+    let _ = whisper_model;
 
     // ── 2. Build the STT provider ───────────────────────────────────────
-    let stt_provider: Box<dyn SttProvider> = match provider_name {
+    let stt_provider: Box<dyn SttProvider> = match (provider_name, local_speech_model) {
+        ("whisper", Some(model)) => Box::new(installed_provider(&app, model)?),
         #[cfg(feature = "whisper")]
-        "whisper" => {
-            // Resolve bundled Whisper model path.
-            // Dev: {CARGO_MANIFEST_DIR}/../models/whisper/ggml-large-v3-turbo-q8_0.bin
-            // Prod: resource_dir()/models/whisper/ggml-large-v3-turbo-q8_0.bin
-            let model_filename = "ggml-large-v3-turbo-q8_0.bin";
-            let model_path = {
-                let base_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
-                let dev_path = base_dir.join("models").join("whisper").join(model_filename);
-                if dev_path.exists() {
-                    dev_path
-                } else {
-                    app.path()
-                        .resource_dir()
-                        .map(|p| p.join("models").join("whisper").join(model_filename))
-                        .ok()
-                        .filter(|p| p.exists())
-                        .ok_or_else(|| {
-                            "Whisper model not found. Run: bun run download:whisper".to_string()
-                        })?
-                }
-            };
+        ("whisper", None) => {
+            let model_path = super::whisper_models::installed_model_path(
+                &app,
+                whisper_model.unwrap_or_default(),
+            )
+            .ok_or("Download a Whisper model in Settings → Speech before starting.")?;
 
             let parallelism = std::thread::available_parallelism().map_or(4, usize::from);
             let n_threads = i32::try_from(parallelism / 2).unwrap_or(2).max(1);
@@ -245,10 +264,10 @@ pub async fn start_transcription(
             ))
         }
         #[cfg(not(feature = "whisper"))]
-        "whisper" => {
+        ("whisper", None) => {
             return Err("Whisper support not compiled. Rebuild with --features whisper".into());
         }
-        "openai" | "groq" => {
+        ("openai" | "groq", _) => {
             let env_var = if provider_name == "openai" {
                 "OPENAI_API_KEY"
             } else {
@@ -956,19 +975,20 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
     );
 
     // FTS5 BM25 phrase search (~5ms)
-    let fts_results = {
+    let (database, searched_translation_id) = {
         let managed: State<'_, Mutex<AppState>> = app.state();
         let Ok(app_state) = managed.lock() else {
             log::error!("Failed to lock AppState for FTS5");
             return;
         };
-        app_state
-            .bible_db
-            .as_ref()
-            .and_then(|db| db.search_verses_bm25(transcript, 10).ok())
+        (app_state.bible_db.clone(), app_state.active_translation_id)
     };
 
-    let Some(fts) = fts_results else {
+    let Some(database) = database else {
+        log::info!("[DET-SEMANTIC] No Bible database");
+        return;
+    };
+    let Ok(fts) = database.search_verses_bm25(transcript, 10) else {
         log::info!("[DET-SEMANTIC] No FTS5 results");
         return;
     };
@@ -976,6 +996,8 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
         log::info!("[DET-SEMANTIC] No FTS5 results");
         return;
     }
+
+    maybe_switch_translation_from_quote(app, transcript, &fts, searched_translation_id);
 
     // Build results directly from FTS5 hits — no ONNX, no vector search.
     // Resolve verse text from DB for each FTS5 hit.
@@ -1048,6 +1070,82 @@ fn run_semantic_detection(app: &AppHandle, transcript: &str) {
     drop(app_state);
     let _ = app.emit("verse_detections", &results);
     log::info!("[DET-SEMANTIC] Total: {:?}", t0.elapsed());
+}
+
+fn maybe_switch_translation_from_quote(
+    app: &AppHandle,
+    transcript: &str,
+    passages: &[fellowshow_bible::Bm25Result],
+    searched_translation_id: i64,
+) {
+    // A spoken version name always wins over inference, including when both
+    // occur in the same transcript fragment.
+    let detector: State<'_, Mutex<fellowshow_detection::DirectDetector>> = app.state();
+    let Ok(detector) = detector.try_lock() else {
+        return;
+    };
+    if detector.detect_translation_command(transcript).is_some() {
+        return;
+    }
+    drop(detector);
+
+    let managed: State<'_, Mutex<AppState>> = app.state();
+    let Ok(state) = managed.lock() else {
+        return;
+    };
+    if state.active_translation_id != searched_translation_id
+        || state
+            .stt_session
+            .as_ref()
+            .is_none_or(|session| session.cancelled.load(Ordering::SeqCst))
+        || state
+            .translation_changed_at
+            .is_some_and(|changed| changed.elapsed() < Duration::from_secs(5))
+    {
+        return;
+    }
+    let Some(database) = state.bible_db.clone() else {
+        return;
+    };
+    let Some(session_id) = state.stt_session.as_ref().map(|session| session.id) else {
+        return;
+    };
+    drop(state);
+
+    // Neither matching words nor comparing installed versions holds AppState.
+    let Some(translation) =
+        super::translation_detection::infer_from_quote(&database, transcript, passages)
+    else {
+        return;
+    };
+    let Ok(mut state) = managed.lock() else {
+        return;
+    };
+    if state.active_translation_id != searched_translation_id
+        || state.stt_session.as_ref().is_none_or(|session| {
+            session.id != session_id || session.cancelled.load(Ordering::SeqCst)
+        })
+        || state
+            .translation_changed_at
+            .is_some_and(|changed| changed.elapsed() < Duration::from_secs(5))
+        || state
+            .bible_db
+            .as_ref()
+            .is_none_or(|current| !Arc::ptr_eq(current, &database))
+    {
+        return;
+    }
+    if translation.id == state.active_translation_id {
+        return;
+    }
+    state.active_translation_id = translation.id;
+    state.translation_changed_at = Some(std::time::Instant::now());
+    drop(state);
+    log::info!(
+        "[BIBLE] Detected distinctive wording from {}",
+        translation.abbreviation
+    );
+    emit_translation_switch(app, translation.id, translation.abbreviation, "quote");
 }
 
 fn is_next_verse_request(text: &str) -> bool {
@@ -1323,13 +1421,6 @@ pub(crate) fn refresh_reading_translation(
 
 /// Returns an unavailable version name so the caller can notify once per utterance.
 fn check_translation_command(app: &AppHandle, transcript: &str) -> Option<String> {
-    #[derive(serde::Serialize, Clone)]
-    struct TranslationSwitch {
-        abbreviation: String,
-        translation_id: i64,
-        verse: Option<fellowshow_bible::Verse>,
-    }
-
     let detector: State<'_, Mutex<fellowshow_detection::DirectDetector>> = app.state();
     let abbreviation = detector
         .lock()
@@ -1338,6 +1429,9 @@ fn check_translation_command(app: &AppHandle, transcript: &str) -> Option<String
     let translation_id = {
         let managed: State<'_, Mutex<AppState>> = app.state();
         let mut state = managed.try_lock().ok()?;
+        // A recently spoken request takes precedence over queued quote searches,
+        // even when the requested version is already selected or unavailable.
+        state.translation_changed_at = Some(std::time::Instant::now());
         let translations = state.bible_db.as_ref()?.list_translations().ok()?;
         let Some(translation) = translations
             .iter()
@@ -1354,15 +1448,7 @@ fn check_translation_command(app: &AppHandle, transcript: &str) -> Option<String
         state.active_translation_id = translation.id;
         translation.id
     };
-    let verse = refresh_reading_translation(app, translation_id);
-    let _ = app.emit(
-        "translation_command",
-        TranslationSwitch {
-            abbreviation,
-            translation_id,
-            verse,
-        },
-    );
+    emit_translation_switch(app, translation_id, abbreviation, "spoken");
     None
 }
 

@@ -3,7 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window"
 
 type IconTheme = "light" | "dark"
 
-function appIconPath(theme: IconTheme) {
+export function appIconPath(theme: IconTheme) {
   return `/fellowshow-${theme}.png`
 }
 

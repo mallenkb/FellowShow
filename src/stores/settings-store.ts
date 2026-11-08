@@ -1,6 +1,11 @@
 import { create } from "zustand"
 import { load, type Store } from "@tauri-apps/plugin-store"
-import { invoke } from "@/lib/ipc"
+import {
+  invoke,
+  LOCAL_SPEECH_MODEL_IDS,
+  type LocalSpeechModel,
+  type WhisperModel,
+} from "@/lib/ipc"
 import {
   SECRET_SETTING_KEYS,
   type SecureSettings,
@@ -42,7 +47,9 @@ interface SettingsState {
   openRouterApiKey: string | null
   openRouterModel: string
   sermonOpenAiApiKey: string | null
+  decisionsApiKey: string | null
   sermonOpenAiModel: string
+  relatedScriptureAiEnabled: boolean
   audioDeviceId: string | null
   gain: number
   autoMode: boolean
@@ -51,6 +58,8 @@ interface SettingsState {
   cooldownMs: number
   onboardingComplete: boolean
   sttProvider: SttProvider
+  whisperModel: WhisperModel
+  localSpeechModel: LocalSpeechModel | null
   hiddenTranslationIds: number[]
   pinnedTranslationIds: number[]
   translationOrderIds: number[]
@@ -66,7 +75,9 @@ interface SettingsState {
   setOpenRouterApiKey: (key: string | null) => void
   setOpenRouterModel: (model: string) => void
   setSermonOpenAiApiKey: (key: string | null) => void
+  setDecisionsApiKey: (key: string | null) => void
   setSermonOpenAiModel: (model: string) => void
+  setRelatedScriptureAiEnabled: (enabled: boolean) => void
   setAudioDeviceId: (id: string | null) => void
   setGain: (gain: number) => void
   setAutoMode: (auto: boolean) => void
@@ -74,6 +85,8 @@ interface SettingsState {
   setConfidenceThreshold: (threshold: number) => void
   setOnboardingComplete: (complete: boolean) => void
   setSttProvider: (provider: SttProvider) => void
+  setWhisperModel: (model: WhisperModel) => void
+  setLocalSpeechModel: (model: LocalSpeechModel) => void
   setHiddenTranslationIds: (ids: number[]) => void
   toggleHiddenTranslation: (id: number) => void
   setPinnedTranslationIds: (ids: number[]) => void
@@ -92,7 +105,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   openRouterApiKey: null,
   openRouterModel: DEFAULT_OPENROUTER_MODEL,
   sermonOpenAiApiKey: null,
+  decisionsApiKey: null,
   sermonOpenAiModel: DEFAULT_OPENAI_MODEL,
+  relatedScriptureAiEnabled: false,
   audioDeviceId: null,
   gain: 1.0,
   autoMode: false,
@@ -101,6 +116,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   cooldownMs: 2500,
   onboardingComplete: false,
   sttProvider: "deepgram",
+  whisperModel: "large-v3-turbo",
+  localSpeechModel: null,
   hiddenTranslationIds: [],
   pinnedTranslationIds: DEFAULT_PINNED_TRANSLATION_IDS,
   translationOrderIds: [],
@@ -115,7 +132,10 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setOpenRouterApiKey: (openRouterApiKey) => set({ openRouterApiKey }),
   setOpenRouterModel: (openRouterModel) => set({ openRouterModel }),
   setSermonOpenAiApiKey: (sermonOpenAiApiKey) => set({ sermonOpenAiApiKey }),
+  setDecisionsApiKey: (decisionsApiKey) => set({ decisionsApiKey }),
   setSermonOpenAiModel: (sermonOpenAiModel) => set({ sermonOpenAiModel }),
+  setRelatedScriptureAiEnabled: (relatedScriptureAiEnabled) =>
+    set({ relatedScriptureAiEnabled }),
   setAudioDeviceId: (audioDeviceId) => set({ audioDeviceId }),
   setGain: (gain) => set({ gain }),
   setAutoMode: (autoMode) => set({ autoMode }),
@@ -123,6 +143,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setConfidenceThreshold: (confidenceThreshold) => set({ confidenceThreshold }),
   setOnboardingComplete: (onboardingComplete) => set({ onboardingComplete }),
   setSttProvider: (sttProvider) => set({ sttProvider }),
+  setWhisperModel: (whisperModel) =>
+    set({ whisperModel, localSpeechModel: null }),
+  setLocalSpeechModel: (localSpeechModel) => set({ localSpeechModel }),
   setHiddenTranslationIds: (hiddenTranslationIds) =>
     set({ hiddenTranslationIds }),
   toggleHiddenTranslation: (id) =>
@@ -156,6 +179,7 @@ const PERSISTED_KEYS = [
   "aiProvider",
   "openRouterModel",
   "sermonOpenAiModel",
+  "relatedScriptureAiEnabled",
   "audioDeviceId",
   "gain",
   "autoMode",
@@ -164,6 +188,8 @@ const PERSISTED_KEYS = [
   "cooldownMs",
   "onboardingComplete",
   "sttProvider",
+  "whisperModel",
+  "localSpeechModel",
   "hiddenTranslationIds",
   "pinnedTranslationIds",
   "translationOrderIds",
@@ -183,7 +209,7 @@ let hydrationPromise: Promise<void> | null = null
 let persistedSecrets: SecureSettings = {}
 let secretsPromise: Promise<void> | null = null
 
-/** Access the credential vault only after a user requests keys or a cloud feature. */
+/** Load or migrate saved keys once per app session. Concurrent callers share the request. */
 export function unlockSecureSettings(): Promise<void> {
   if (useSettingsStore.getState().secretsUnlocked) return Promise.resolve()
   if (secretsPromise) return secretsPromise
@@ -357,6 +383,9 @@ async function loadValidatedSettings(
       case "sermonOpenAiModel":
         if (isNonEmptyString(value)) patch.sermonOpenAiModel = value.trim()
         break
+      case "relatedScriptureAiEnabled":
+        if (typeof value === "boolean") patch.relatedScriptureAiEnabled = value
+        break
       case "audioDeviceId":
         if (value === null || typeof value === "string") {
           patch.audioDeviceId = value
@@ -390,6 +419,19 @@ async function loadValidatedSettings(
         break
       case "sttProvider":
         if (isSttProvider(value)) patch.sttProvider = value
+        break
+      case "whisperModel":
+        if (value === "small.en" || value === "large-v3-turbo") {
+          patch.whisperModel = value
+        }
+        break
+      case "localSpeechModel":
+        if (value === null) {
+          patch.localSpeechModel = null
+        } else {
+          const model = LOCAL_SPEECH_MODEL_IDS.find((id) => id === value)
+          if (model) patch.localSpeechModel = model
+        }
         break
       case "hiddenTranslationIds":
         if (Array.isArray(value)) {

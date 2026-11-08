@@ -1,4 +1,4 @@
-import { invoke as tauriInvoke } from "@tauri-apps/api/core"
+import { invoke as tauriInvoke, type Channel } from "@tauri-apps/api/core"
 import type {
   Book,
   CrossReference,
@@ -17,6 +17,30 @@ import type { NdiFrameRequest } from "@/types/ndi"
 interface ConnectionTestResult {
   ok: boolean
   message: string
+}
+
+export const LOCAL_SPEECH_MODEL_IDS = [
+  "nemotron",
+  "moonshine",
+  "zipformer",
+  "voxtral",
+  "parakeet",
+] as const
+
+export type LocalSpeechModel = (typeof LOCAL_SPEECH_MODEL_IDS)[number]
+
+export interface LocalSpeechModelStatus {
+  model: LocalSpeechModel
+  installed: boolean
+  unavailableReason: string | null
+}
+
+export type WhisperModel = "small.en" | "large-v3-turbo"
+
+export interface WhisperModelStatus {
+  model: WhisperModel
+  sizeBytes: number
+  installed: boolean
 }
 
 interface EasyWorshipImportedSong {
@@ -132,6 +156,16 @@ export interface Commands {
   test_deepgram_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
   test_openai_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
   test_groq_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
+  list_local_speech_models: NoArgs<LocalSpeechModelStatus[]>
+  download_local_speech_model: WithArgs<
+    { model: LocalSpeechModel; progress: Channel<string> },
+    void
+  >
+  list_whisper_models: NoArgs<WhisperModelStatus[]>
+  download_whisper_model: WithArgs<
+    { model: WhisperModel; progress: Channel<number> },
+    void
+  >
   start_transcription: WithArgs<
     {
       apiKey: string
@@ -139,6 +173,8 @@ export interface Commands {
       gain: number | null
       provider: string | null
       sermonId?: string
+      whisperModel?: WhisperModel
+      localSpeechModel?: LocalSpeechModel
     },
     number
   >
@@ -152,6 +188,14 @@ export interface Commands {
   export_sermon_audio: WithArgs<
     { sermonId: string; destination: string; format: string },
     void
+  >
+  export_sermon_bundle: WithArgs<
+    {
+      sermonId: string
+      destination: string
+      content: { coverPng: number[]; transcript: string; summary: string }
+    },
+    boolean
   >
   load_secure_settings: NoArgs<SecureSettings>
   save_secure_settings: WithArgs<{ secrets: SecureSettings }, void>

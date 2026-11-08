@@ -6,7 +6,13 @@ import {
 } from "@/lib/sermon-session"
 import type { SermonSession } from "@/types"
 
-export function SermonSessionTiming({ session }: { session: SermonSession }) {
+export function SermonSessionTiming({
+  session,
+  directScriptureCount,
+}: {
+  session: SermonSession
+  directScriptureCount?: number
+}) {
   const [now, setNow] = useState(() => Date.now())
   const unfinished = session.endedAt === null
   useEffect(() => {
@@ -34,6 +40,14 @@ export function SermonSessionTiming({ session }: { session: SermonSession }) {
             {formatSermonDuration(away)}
           </dd>
         </div>
+        {directScriptureCount !== undefined ? (
+          <div className="space-y-1">
+            <dt>Direct scriptures</dt>
+            <dd className="font-medium text-foreground tabular-nums">
+              {directScriptureCount}
+            </dd>
+          </div>
+        ) : null}
       </dl>
       {session.interrupted ? (
         <p>

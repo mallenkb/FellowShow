@@ -632,7 +632,7 @@ export function drawVerseText(
     const fontSize = isNumber ? vn.fontSize : vt.fontSize
     const y =
       isNumber && vn.superscript
-        ? drawY + Math.max(0, (vt.fontSize - vn.fontSize) * 0.1)
+        ? drawY + Math.max(0, (vt.fontSize - vn.fontSize) * 0.35)
         : drawY + Math.max(0, (vt.fontSize - fontSize) * 0.45)
 
     ctx.font = isNumber ? numberFont : mainFont

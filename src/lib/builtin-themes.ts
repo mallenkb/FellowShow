@@ -90,7 +90,7 @@ const baseTheme: Omit<
   resolution: { width: 1920, height: 1080 },
   verseNumbers: {
     visible: true,
-    fontSize: 14,
+    fontSize: 28,
     color: "#ffffff",
     superscript: true,
   },
@@ -130,7 +130,7 @@ const CLASSIC_DARK: BroadcastTheme = {
   },
   verseNumbers: {
     visible: true,
-    fontSize: 20,
+    fontSize: 40,
     color: "#F1E600",
     superscript: true,
   },
@@ -201,7 +201,7 @@ const MODERN_LIGHT: BroadcastTheme = {
   },
   verseNumbers: {
     visible: true,
-    fontSize: 18,
+    fontSize: 36,
     color: "#666666",
     superscript: true,
   },
@@ -278,7 +278,7 @@ const BROADCAST_OVERLAY: BroadcastTheme = {
   },
   verseNumbers: {
     visible: true,
-    fontSize: 18,
+    fontSize: 36,
     color: "#fbbf24",
     superscript: true,
   },
@@ -355,7 +355,7 @@ const BIBLE_VERSE_PREVIEW: BroadcastTheme = {
   },
   verseNumbers: {
     visible: true,
-    fontSize: 42,
+    fontSize: 84,
     color: "#f4c95d",
     superscript: true,
   },
@@ -485,7 +485,7 @@ const PRESENTATION_TICKER: BroadcastTheme = {
   },
   verseNumbers: {
     visible: false,
-    fontSize: 16,
+    fontSize: 32,
     color: "#f8fafc",
     superscript: true,
   },

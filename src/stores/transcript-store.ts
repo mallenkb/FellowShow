@@ -104,7 +104,7 @@ export const useTranscriptStore = create<TranscriptState>((set) => ({
     set((state) => ({
       highlightedScriptures: [
         ...new Set([...state.highlightedScriptures, ...references]),
-      ].slice(-120),
+      ],
     })),
   setPartial: (currentPartial) => set({ currentPartial }),
   setTranscribing: (isTranscribing) => set({ isTranscribing }),

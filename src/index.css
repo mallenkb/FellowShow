@@ -375,6 +375,17 @@
   }
 }
 
+.scripture-card-divider {
+  height: 1px;
+  border: 0;
+  background-image: radial-gradient(
+    circle at 0.5px 0.5px,
+    currentColor 0.5px,
+    transparent 0.75px
+  );
+  background-size: 6px 1px;
+}
+
 @container displays-panel (min-width: 300px) {
   .displays-grid {
     grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));

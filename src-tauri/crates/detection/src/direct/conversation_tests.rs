@@ -76,6 +76,14 @@ fn ordinary_numbers_and_commentary_do_not_navigate() {
         detector.detect_translation_command("This message is for you"),
         None
     );
+    assert_eq!(
+        detector.detect_translation_command("The fish were in the net"),
+        None
+    );
+    assert_eq!(
+        detector.detect_translation_command("We bring good news to everyone"),
+        None
+    );
 }
 
 #[test]

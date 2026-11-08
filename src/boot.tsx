@@ -9,7 +9,7 @@ import App from "./App.tsx"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
 import { StartupErrorBoundary } from "@/components/startup-error-boundary.tsx"
 import { TooltipProvider } from "@/components/ui/tooltip.tsx"
-import { hydrateSettings } from "@/stores/settings-store"
+import { hydrateSettings, unlockSecureSettings } from "@/stores/settings-store"
 import { hydrateBibleStore, initBiblePersistence } from "@/stores/bible-store"
 import { hydrateBroadcastThemes } from "@/stores/broadcast-store-persistence"
 import { initProgramOutputAutostart } from "@/lib/program-output-autostart"
@@ -63,4 +63,7 @@ if (isTauri()) {
       console.error("Failed to hydrate app state", error)
     })
   setStartupReady(ready.then(() => {}))
+  void unlockSecureSettings().catch(() => {
+    console.warn("[settings] Could not load saved API keys")
+  })
 }

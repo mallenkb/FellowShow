@@ -131,6 +131,7 @@ export function PreachingSummaryPanel({
     ? editorDocument
     : (pendingSummaryDocument ?? EMPTY_SUMMARY_DOCUMENT)
   const currentTitle = session ? editorTitle : pendingSummaryTitle
+  const notesHeading = currentTitle.trim() || "Sermon notes"
   const [manualEditIds, setManualEditIds] = useState<ReadonlySet<string>>(
     () => new Set()
   )
@@ -152,7 +153,7 @@ export function PreachingSummaryPanel({
     if (session.finalSummary) return summaryToDocument(session.finalSummary)
     return EMPTY_SUMMARY_DOCUMENT
   }, [session])
-  const storedTitle = session?.summaryTitle.trim() || "Sermon notes"
+  const storedTitle = session?.summaryTitle ?? "Sermon notes"
 
   useEffect(() => {
     const sessionId = session?.id ?? null
@@ -361,16 +362,9 @@ export function PreachingSummaryPanel({
             key_points: [],
             scriptures: [],
           })
-    const title =
-      editorTitle.trim() ||
-      draft?.title.trim() ||
-      session.summaryTitle ||
-      "Sermon notes"
     const store = useSermonStore.getState()
-    store.setSummaryTitle(session.id, title)
     store.setFinalSummary(session.id, summary, document)
     editorDocumentsRef.current.set(session.id, document)
-    editorTitlesRef.current.set(session.id, title)
     manualEditIdsRef.current.delete(session.id)
     setManualEditIds((current) => {
       if (!current.has(session.id)) return current
@@ -379,43 +373,25 @@ export function PreachingSummaryPanel({
       return next
     })
     setEditorDocument(document)
-    setEditorTitle(title)
     toast.success("Sermon notes saved")
-  }, [
-    draft,
-    editorDocument,
-    editorTitle,
-    hasManualEdits,
-    hasStoredSummary,
-    session,
-  ])
+  }, [draft, editorDocument, hasManualEdits, hasStoredSummary, session])
 
   const showSummaryLive = useCallback(() => {
     const document = normalizeSummaryDocument(currentDocument)
     if (!announcementPlainText(document)) return
-    const heading =
-      currentTitle.trim() ||
-      draft?.title.trim() ||
-      session?.summaryTitle ||
-      "Sermon notes"
     useBroadcastStore
       .getState()
-      .presentOnLive(announcementDocumentToVerse(document, heading))
-  }, [currentDocument, currentTitle, draft, session])
+      .presentOnLive(announcementDocumentToVerse(document, notesHeading))
+  }, [currentDocument, notesHeading])
 
   const sendSummaryToNotes = useCallback(() => {
     const document = normalizeSummaryDocument(currentDocument)
     if (!announcementPlainText(document)) return
-    const title =
-      currentTitle.trim() ||
-      draft?.title.trim() ||
-      session?.summaryTitle ||
-      "Sermon notes"
     useAnnouncementStore
       .getState()
-      .addNoteFromDocument(SUMMARY_NOTES_SET, title, document)
+      .addNoteFromDocument(SUMMARY_NOTES_SET, notesHeading, document)
     toast.success(`Added to Notes › ${SUMMARY_NOTES_SET}`)
-  }, [currentDocument, currentTitle, draft, session])
+  }, [currentDocument, notesHeading])
 
   const hasSummaryContent = Boolean(announcementPlainText(currentDocument))
   const showFooter =
@@ -548,10 +524,7 @@ export function PreachingSummaryPanel({
                 label="the sermon notes"
                 className="size-8 [&_svg]:size-3.5"
                 getContent={() => ({
-                  heading:
-                    currentTitle.trim() ||
-                    session?.summaryTitle ||
-                    "Sermon notes",
+                  heading: notesHeading,
                   text: announcementPlainText(
                     normalizeSummaryDocument(currentDocument)
                   ),

@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
 import { CheckIcon } from "lucide-react"
-import { UnlockSavedKeys } from "./unlock-saved-keys"
+import { SavedKeysStatus } from "./saved-keys-status"
+import { LocalSpeechModels } from "./local-speech-models"
+import { WhisperModels } from "./whisper-models"
 
 export function SpeechSection() {
   const {
@@ -31,7 +33,12 @@ export function SpeechSection() {
         : sttProvider === "groq"
           ? groqApiKey
           : null
-  const [keyValue, setKeyValue] = useState(activeApiKey ?? "")
+  const [keyDraft, setKeyDraft] = useState<{
+    provider: typeof sttProvider
+    value: string
+  } | null>(null)
+  const keyValue =
+    keyDraft?.provider === sttProvider ? keyDraft.value : (activeApiKey ?? "")
   const [saved, setSaved] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionResult, setConnectionResult] = useState<{
@@ -40,7 +47,7 @@ export function SpeechSection() {
   } | null>(null)
 
   useEffect(() => {
-    setKeyValue(activeApiKey ?? "")
+    setKeyDraft(null)
     setConnectionResult(null)
     setSaved(false)
   }, [activeApiKey, sttProvider])
@@ -150,7 +157,7 @@ export function SpeechSection() {
             </div>
           </label>
 
-          {/* Whisper (local) */}
+          {/* Local models */}
           <label
             className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20 ${
               sttProvider !== "whisper"
@@ -160,21 +167,26 @@ export function SpeechSection() {
           >
             <RadioGroupItem value="whisper" className="mt-0.5" />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="text-xs font-medium text-foreground">
-                Local (Whisper)
-              </span>
+              <span className="text-xs font-medium text-foreground">Local</span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Runs Whisper large-v3-turbo offline. Audio stays on your device
-                and no API key is needed.
+                Download a model once, then transcribe offline. Audio stays on
+                your device.
               </p>
             </div>
           </label>
         </RadioGroup>
       </div>
 
+      {sttProvider === "whisper" && (
+        <>
+          <WhisperModels />
+          <LocalSpeechModels />
+        </>
+      )}
+
       {sttProvider !== "whisper" && (
         <div className="flex flex-col gap-2">
-          <UnlockSavedKeys />
+          <SavedKeysStatus />
           <div className="flex items-center gap-2">
             <label className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
               {sttProvider === "deepgram"
@@ -196,7 +208,9 @@ export function SpeechSection() {
               disabled={!secretsUnlocked}
               placeholder={`Enter your ${sttProvider === "deepgram" ? "Deepgram" : sttProvider === "openai" ? "OpenAI" : "Groq"} API key...`}
               value={keyValue}
-              onChange={(e) => setKeyValue(e.target.value)}
+              onChange={(e) =>
+                setKeyDraft({ provider: sttProvider, value: e.target.value })
+              }
               className="min-w-0 flex-[1_1_12rem] text-xs"
             />
             <Button

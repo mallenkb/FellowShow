@@ -2,7 +2,7 @@ mod commands;
 mod events;
 mod state;
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 /// Resolves a writable path to the working Bible database.
 ///
@@ -136,10 +136,15 @@ pub fn run() {
             commands::stt::test_groq_connection,
             commands::stt::start_transcription,
             commands::stt::stop_transcription,
+            commands::local_speech_models::list_local_speech_models,
+            commands::local_speech_models::download_local_speech_model,
+            commands::whisper_models::list_whisper_models,
+            commands::whisper_models::download_whisper_model,
             commands::sermon_audio::list_sermon_audio,
             commands::sermon_audio::delete_sermon_audio,
             commands::sermon_audio::sermon_audio_formats,
             commands::sermon_audio::export_sermon_audio,
+            commands::sermon_audio::export_sermon_bundle,
             commands::secrets::load_secure_settings,
             commands::secrets::save_secure_settings,
             commands::summary::summarize_preaching,
@@ -182,7 +187,7 @@ pub fn run() {
                 let mut state = managed_state
                     .lock()
                     .unwrap_or_else(std::sync::PoisonError::into_inner);
-                state.bible_db = Some(bible_db);
+                state.bible_db = Some(Arc::new(bible_db));
                 drop(state);
                 log::info!("Bible database loaded from {}", db_path.display());
             } else {
@@ -257,6 +262,16 @@ pub fn run() {
         .build(tauri::generate_context!());
     match app {
         Ok(app) => app.run(|app, event| {
+            #[cfg(all(dev, target_os = "macos"))]
+            if matches!(event, tauri::RunEvent::Ready)
+                && std::env::var_os("FELLOWSHOW_NATIVE_DEV_BUNDLE").is_some()
+            {
+                if let Some(main_thread) = objc2::MainThreadMarker::new() {
+                    let application = objc2_app_kit::NSApplication::sharedApplication(main_thread);
+                    // SAFETY: On the main thread, clear Tauri's bitmap override so the Dock reads Assets.car.
+                    unsafe { application.setApplicationIconImage(None) };
+                }
+            }
             if let tauri::RunEvent::ExitRequested { api, code, .. } = event {
                 if code != Some(tauri::RESTART_EXIT_CODE) && commands::lifecycle::request_close(app)
                 {

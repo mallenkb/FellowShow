@@ -166,6 +166,12 @@ export const transcriptionActions = {
                 ? (settings.groqApiKey ?? "")
                 : ""
 
+        const localModelOptions = settings.localSpeechModel
+          ? { localSpeechModel: settings.localSpeechModel }
+          : settings.whisperModel === "small.en"
+            ? { whisperModel: settings.whisperModel }
+            : {}
+
         transcript.setTranscribing(true)
         awaitingNativeStart = true
         stoppedDuringStart.clear()
@@ -175,6 +181,7 @@ export const transcriptionActions = {
           gain: settings.gain,
           provider: settings.sttProvider,
           ...(sermonId ? { sermonId } : {}),
+          ...(settings.sttProvider === "whisper" ? localModelOptions : {}),
         })
         awaitingNativeStart = false
         nativeSessionId = typeof sessionId === "number" ? sessionId : null

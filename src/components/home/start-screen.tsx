@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ArrowLeftIcon, PlusIcon, SettingsIcon } from "lucide-react"
+import { PlusIcon, SettingsIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,8 +28,8 @@ import { useSermonDeleteDialogStore } from "@/lib/sermon-delete-dialog"
 import { waitForStartup } from "@/lib/startup-ready"
 import type { TranscriptionKeyService } from "@/hooks/use-transcription"
 
-function openWorkspace(sessionId?: string) {
-  if (sessionId) useSermonStore.getState().selectSession(sessionId)
+function openWorkspace(sessionId: string) {
+  useSermonStore.getState().selectSession(sessionId)
   useSermonStore.setState({ recoverySessionId: null })
   useAppNavigationStore.getState().navigate("workspace")
 }
@@ -169,21 +169,7 @@ export function StartScreen() {
           className={APP_HEADER_LOGO_CLASS}
           draggable={false}
         />
-        <nav
-          aria-label="Start screen"
-          className="min-w-0 flex-1 [scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden"
-        >
-          <Button
-            variant="ghost"
-            className={APP_HEADER_TILE_SURFACE_CLASS}
-            disabled={pending || transition !== null}
-            onClick={() => openWorkspace()}
-          >
-            <ArrowLeftIcon aria-hidden="true" />
-            Go to workspace
-          </Button>
-        </nav>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
             className={APP_HEADER_TILE_SURFACE_CLASS}
@@ -252,7 +238,7 @@ export function StartScreen() {
           />
         ) : null}
         <form
-          className={`${SESSION_CARD_CLASS} space-y-3`}
+          className={`${SESSION_CARD_CLASS} sticky top-16 z-20 space-y-3 shadow-sm`}
           onSubmit={(event) => {
             event.preventDefault()
             if (!draftTitle.trim() || busy || activeId !== null) return

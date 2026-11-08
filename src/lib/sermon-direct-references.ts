@@ -1,4 +1,5 @@
-import type { DetectionResult, TranscriptSegment, Verse } from "@/types"
+import type { Book, DetectionResult, TranscriptSegment, Verse } from "@/types"
+import { getAutocompleteSuggestion } from "@/lib/quick-search"
 
 export interface SermonDirectReference {
   key: string
@@ -20,6 +21,8 @@ interface SermonDirectReferenceInput {
   highlightedReferences?: readonly string[]
   transcriptSegments?: readonly TranscriptSegment[]
   currentPartial?: string
+  savedReferences?: readonly string[]
+  books?: Book[]
 }
 
 function normalizeReference(value: string): string {
@@ -80,6 +83,8 @@ export function getSermonDirectReferences({
   highlightedReferences = [],
   transcriptSegments = [],
   currentPartial = "",
+  savedReferences = [],
+  books = [],
 }: SermonDirectReferenceInput): SermonDirectReference[] {
   const highlighted = new Set(
     highlightedReferences.map(normalizeReference).filter(Boolean)
@@ -125,6 +130,36 @@ export function getSermonDirectReferences({
     ) {
       references.set(key, candidate)
     }
+  }
+
+  // Sessions saved by older versions contain references but not the detection payload.
+  for (const reference of savedReferences) {
+    const range = /[-–—]\s*(\d+)\s*$/.exec(reference)
+    const input = range ? reference.slice(0, range.index).trim() : reference
+    const parsed = getAutocompleteSuggestion(input, books)
+    if (
+      parsed.stage !== "complete" ||
+      !parsed.matchedBook ||
+      !parsed.chapter ||
+      !parsed.verse
+    )
+      continue
+    const key = `${parsed.matchedBook.book_number}:${parsed.chapter}:${parsed.verse}`
+    if (references.has(key)) continue
+    const end = range ? Number(range[1]) : undefined
+    references.set(key, {
+      key,
+      reference,
+      verseText: "",
+      bookName: parsed.matchedBook.name,
+      bookNumber: parsed.matchedBook.book_number,
+      chapter: parsed.chapter,
+      verse: parsed.verse,
+      ...(end && end > parsed.verse ? { verseEnd: end } : {}),
+      confidence: 1,
+      transcriptSnippet: "",
+      evidence: "direct-detection",
+    })
   }
 
   return [...references.values()]

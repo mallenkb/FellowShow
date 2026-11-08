@@ -447,6 +447,7 @@ pub fn set_active_translation(
     let mut app_state = state.lock().map_err(|e| e.to_string())?;
     if translation_id == 0 {
         app_state.active_translation_id = 0;
+        app_state.translation_changed_at = Some(std::time::Instant::now());
         log::info!("[BIBLE] Active translation cleared");
         return Ok(0);
     }
@@ -465,6 +466,7 @@ pub fn set_active_translation(
         }
     }
     app_state.active_translation_id = translation_id;
+    app_state.translation_changed_at = Some(std::time::Instant::now());
     drop(app_state);
     super::stt::refresh_reading_translation(&app, translation_id);
     log::info!("[BIBLE] Active translation set to ID {translation_id}");

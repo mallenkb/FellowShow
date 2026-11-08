@@ -27,6 +27,10 @@ const BOOK_NAMES = [
   "Joshua",
   "Judges",
   "Ruth",
+  "Ezra",
+  "Nehemiah",
+  "Esther",
+  "Job",
   "Psalms?",
   "Proverbs",
   "Ecclesiastes",
@@ -99,19 +103,36 @@ const TENS: Record<string, number> = {
   ninety: 90,
 }
 
+const ONES = SMALL_NUMBERS.slice(1, 10).join("|")
+const TENS_WORDS = Object.keys(TENS).join("|")
+const UNDER_HUNDRED = `(?:${TENS_WORDS})(?:(?:\\s+|-)(?:${ONES}))?|${SMALL_NUMBERS.join("|")}`
+const SPOKEN_NUMBER = `(?:(?:(?:${ONES})\\s+)?hundred(?:(?:\\s+and)?\\s+(?:${UNDER_HUNDRED}))?|${UNDER_HUNDRED})`
+const NUMBER = `(?:\\d{1,3}|${SPOKEN_NUMBER})`
+const SINGLE_NUMBER = new RegExp(`^${NUMBER}$`, "i")
 const NUMBER_WORDS = [...SMALL_NUMBERS, ...Object.keys(TENS), "hundred"].join(
   "|"
 )
-const NUMBER = `(?:\\d{1,3}|(?:${NUMBER_WORDS})(?:[ -](?:${NUMBER_WORDS}))*)`
-const BOOK = `(?:${BOOK_NAMES.join("|")})`
+const BOOK = `(?:${BOOK_NAMES.map((name) =>
+  name.replace(/^([123]) /, (_, digit: string) => {
+    const spoken =
+      digit === "1" ? "first|one" : digit === "2" ? "second|two" : "third|three"
+    return `(?:${digit}|${spoken})\\s+`
+  })
+).join("|")})`
+const VERSE_MARKER = `(?:\\s*,)?\\s+(?:and\\s+)?(?:verses?|vs\\.?)\\s+`
+const COMPACT_END = `(?!:|[-\\s]+(?:${NUMBER_WORDS}|\\d+)\\b(?!\\s+${BOOK}\\b))`
 const SPOKEN_REFERENCE = new RegExp(
-  `\\b(${BOOK})\\s+(?:chapter\\s+)?(${NUMBER})\\s+(?:verse|verses|vs\\.?)[ ]+(${NUMBER})(?=\\b)`,
+  `\\b(${BOOK})\\s+(?:chapter\\s+)?(${NUMBER})(?:${VERSE_MARKER}(${NUMBER})\\b|\\s+(${NUMBER})\\b${COMPACT_END})`,
   "gi"
 )
 
 function numberValue(value: string): number | null {
   if (/^\d+$/.test(value.trim())) return Number(value)
-  const words = value.toLowerCase().replace(/-/g, " ").split(/\s+/)
+  const words = value
+    .toLowerCase()
+    .replace(/-/g, " ")
+    .split(/\s+/)
+    .filter((word) => word !== "and")
   let total = 0
   let current = 0
   for (const word of words) {
@@ -130,20 +151,46 @@ function numberValue(value: string): number | null {
   return total > 0 ? total : null
 }
 
-function formatScriptureReferences(text: string): string {
-  if (!text.trim()) return text
-  return text.replace(
-    SPOKEN_REFERENCE,
-    (match, bookValue: unknown, chapterValue: unknown, verseValue: unknown) => {
-      const book = String(bookValue)
-      const chapter = String(chapterValue)
-      const verse = String(verseValue)
-      const chapterNumber = numberValue(chapter)
-      const verseNumber = numberValue(verse)
-      if (!chapterNumber || !verseNumber) return match
-      return `${book} ${chapterNumber}:${verseNumber}`
-    }
-  )
+export function spokenScriptureReferences(
+  text: string
+): { start: number; end: number; text: string }[] {
+  return [...text.matchAll(SPOKEN_REFERENCE)].flatMap((match) => {
+    const [, bookName, chapter, markedVerse, compactVerse] = match
+    const verse = markedVerse ?? compactVerse
+    // "Psalm twenty eight" is a single chapter number. A reference
+    // without a verse marker needs two separate numbers.
+    if (!markedVerse && SINGLE_NUMBER.test(`${chapter} ${verse}`)) return []
+    const book = bookName
+      .replace(/^(?:first|one)\s+/i, "1 ")
+      .replace(/^(?:second|two)\s+/i, "2 ")
+      .replace(/^(?:third|three)\s+/i, "3 ")
+    const chapterNumber = numberValue(chapter)
+    const verseNumber = numberValue(verse)
+    if (
+      !chapterNumber ||
+      chapterNumber > 150 ||
+      !verseNumber ||
+      verseNumber > 176
+    )
+      return []
+    return [
+      {
+        start: match.index,
+        end: match.index + match[0].length,
+        text: `${book} ${chapterNumber}:${verseNumber}`,
+      },
+    ]
+  })
+}
+
+export function formatScriptureReferences(text: string): string {
+  let result = ""
+  let cursor = 0
+  for (const match of spokenScriptureReferences(text)) {
+    result += text.slice(cursor, match.start) + match.text
+    cursor = match.end
+  }
+  return result + text.slice(cursor)
 }
 
 export function normalizePreachingSummary(

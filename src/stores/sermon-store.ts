@@ -1,6 +1,11 @@
 import { create } from "zustand"
 import { recoverSermon, sanitizeSermonCapture } from "@/lib/sermon-session"
+import {
+  parseReviewSummary,
+  parseSummaryLayout,
+} from "@/lib/sermon-summary-layout"
 import { useTranscriptStore } from "@/stores/transcript-store"
+import { useDetectionStore } from "@/stores/detection-store"
 import { load, type Store } from "@tauri-apps/plugin-store"
 import {
   announcementPlainText,
@@ -13,6 +18,7 @@ import type {
   SermonSession,
 } from "@/types"
 import type { SermonNoteDraft } from "@/types/sermon"
+import type { SermonReviewSummary, SermonSummaryLayout } from "@/types/summary"
 
 interface SermonState {
   sessions: SermonSession[]
@@ -48,6 +54,8 @@ interface SermonState {
     document: AnnouncementDocument
   ) => void
   setSummaryTitle: (id: string, title: string) => void
+  setSummaryLayout: (id: string, layout: SermonSummaryLayout) => void
+  setReviewSummary: (id: string, summary: SermonReviewSummary) => void
   updateSessionTitle: (id: string, title: string) => void
   setNoteTickerMessage: (
     sessionId: string,
@@ -94,15 +102,6 @@ interface SermonDetails {
 
 const STORE_FILE = "sermon-sessions.json"
 const STORE_KEY = "sessions"
-const MAX_SESSIONS = 50
-function retainSession(
-  session: SermonSession,
-  index: number,
-  sessions: SermonSession[]
-) {
-  // History limits must never discard a sermon the operator intends to resume.
-  return session.endedAt === null || index >= sessions.length - MAX_SESSIONS
-}
 let sermonStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -227,7 +226,11 @@ function sanitizeSessions(value: unknown): SermonSession[] {
       const noteIds = new Set(notes.map((note) => note.id))
       return {
         id: typeof item.id === "string" ? item.id : crypto.randomUUID(),
-        title: sanitizeSessionTitle(item.title, startedAt),
+        title:
+          item.titleManuallyEdited === true
+            ? (optionalSessionText(item.title) ?? defaultTitle())
+            : sanitizeSessionTitle(item.title, startedAt),
+        titleManuallyEdited: item.titleManuallyEdited === true,
         speaker: optionalSessionText(item.speaker),
         series: optionalSessionText(item.series),
         prepared:
@@ -266,10 +269,14 @@ function sanitizeSessions(value: unknown): SermonSession[] {
             )
           : [],
         finalSummary: sanitizeSummary(item.finalSummary),
+        summaryLayout: parseSummaryLayout(item.summaryLayout),
+        reviewSummary: parseReviewSummary(item.reviewSummary) ?? undefined,
         summaryTitle:
-          typeof item.summaryTitle === "string" && item.summaryTitle.trim()
+          typeof item.summaryTitle === "string" &&
+          (item.summaryTitleManuallyEdited === true || item.summaryTitle.trim())
             ? item.summaryTitle
             : "Sermon notes",
+        summaryTitleManuallyEdited: item.summaryTitleManuallyEdited === true,
         summaryDocument:
           item.summaryDocument && typeof item.summaryDocument === "object"
             ? sanitizeAnnouncementDocument(item.summaryDocument)
@@ -281,7 +288,6 @@ function sanitizeSessions(value: unknown): SermonSession[] {
         summaryAiTitle: optionalSessionText(item.summaryAiTitle),
       }
     })
-    .filter(retainSession)
 }
 
 async function getStore() {
@@ -292,8 +298,8 @@ async function getStore() {
 async function persist(state: SermonState) {
   try {
     const store = await getStore()
-    await store.set("version", 5)
-    await store.set(STORE_KEY, state.sessions.filter(retainSession))
+    await store.set("version", 7)
+    await store.set(STORE_KEY, state.sessions)
     await store.set("selectedSessionId", state.selectedSessionId)
     await store.set("pendingSummaryDocument", state.pendingSummaryDocument)
     await store.set("pendingSummaryTitle", state.pendingSummaryTitle)
@@ -345,6 +351,7 @@ export const useSermonStore = create<SermonState>((set) => ({
         {
           id,
           title: title.trim().slice(0, 120) || defaultTitle(),
+          titleManuallyEdited: Boolean(title.trim()),
           speaker: optionalSessionText(details?.speaker),
           series: optionalSessionText(details?.series),
           prepared: true,
@@ -357,13 +364,14 @@ export const useSermonStore = create<SermonState>((set) => ({
           queuedNoteIds: [],
           finalSummary: null,
           summaryTitle: state.pendingSummaryTitle.trim() || "Sermon notes",
+          summaryTitleManuallyEdited: Boolean(state.pendingSummaryTitle.trim()),
           summaryDocument: state.pendingSummaryDocument,
           directScriptures: [],
           recordingSpans: [],
           pausedAt: null,
           lastCheckpointAt: now,
         },
-      ].filter(retainSession),
+      ],
       selectedSessionId: id,
       pendingSummaryDocument: null,
       pendingSummaryTitle: "",
@@ -377,6 +385,8 @@ export const useSermonStore = create<SermonState>((set) => ({
           ? {
               ...session,
               title: details.title?.trim().slice(0, 120) || session.title,
+              titleManuallyEdited:
+                session.titleManuallyEdited || Boolean(details.title?.trim()),
               speaker: optionalSessionText(details.speaker),
               series: optionalSessionText(details.series),
             }
@@ -399,6 +409,7 @@ export const useSermonStore = create<SermonState>((set) => ({
         queuedNoteIds: [],
         finalSummary: null,
         summaryTitle: state.pendingSummaryTitle.trim() || "Sermon notes",
+        summaryTitleManuallyEdited: Boolean(state.pendingSummaryTitle.trim()),
         summaryDocument: state.pendingSummaryDocument,
         transcriptSegments: [],
         scriptures: [],
@@ -408,7 +419,7 @@ export const useSermonStore = create<SermonState>((set) => ({
         lastCheckpointAt: startedAt,
       }
       return {
-        sessions: [...state.sessions, session].filter(retainSession),
+        sessions: [...state.sessions, session],
         activeSessionId: id,
         selectedSessionId: id,
         pendingSummaryDocument: null,
@@ -515,9 +526,10 @@ export const useSermonStore = create<SermonState>((set) => ({
       sessions: state.sessions.map((session) => {
         if (session.id !== id) return session
         const updateTitle =
-          !session.summaryTitle.trim() ||
-          session.summaryTitle === "Sermon notes" ||
-          session.summaryTitle === session.summaryAiTitle
+          !session.summaryTitleManuallyEdited &&
+          (!session.summaryTitle.trim() ||
+            session.summaryTitle === "Sermon notes" ||
+            session.summaryTitle === session.summaryAiTitle)
         return {
           ...session,
           summaryDocument: sanitizeAnnouncementDocument(document),
@@ -563,13 +575,29 @@ export const useSermonStore = create<SermonState>((set) => ({
   setSummaryTitle: (id, summaryTitle) =>
     set((state) => ({
       sessions: state.sessions.map((session) =>
-        session.id === id ? { ...session, summaryTitle } : session
+        session.id === id
+          ? { ...session, summaryTitle, summaryTitleManuallyEdited: true }
+          : session
+      ),
+    })),
+  setSummaryLayout: (id, summaryLayout) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === id ? { ...session, summaryLayout } : session
+      ),
+    })),
+  setReviewSummary: (id, reviewSummary) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === id ? { ...session, reviewSummary } : session
       ),
     })),
   updateSessionTitle: (id, title) =>
     set((state) => ({
       sessions: state.sessions.map((session) =>
-        session.id === id ? { ...session, title } : session
+        session.id === id
+          ? { ...session, title, titleManuallyEdited: true }
+          : session
       ),
     })),
   setNoteTickerMessage: (sessionId, noteIds, tickerMessageId) =>
@@ -858,6 +886,23 @@ export function hydrateSermonSessions(): Promise<void> {
           checkpointActiveSermon()
         }
       })
+      useDetectionStore.subscribe((state, previous) => {
+        if (state.detections === previous.detections || !state.sessionId) return
+        const sermon = useSermonStore.getState()
+        if (sermon.activeSessionId === state.sessionId) {
+          checkpointActiveSermon()
+        } else if (
+          sermon.sessions.some((session) => session.id === state.sessionId)
+        ) {
+          useSermonStore.setState({
+            sessions: sermon.sessions.map((session) =>
+              session.id === state.sessionId
+                ? { ...session, scriptureDetections: state.detections }
+                : session
+            ),
+          })
+        }
+      })
       // A heartbeat bounds the interruption time even during a silent passage.
       setInterval(checkpointActiveSermon, 5_000)
       if (
@@ -942,6 +987,7 @@ export function checkpointActiveSermon(): void {
   )
   if (!session) return
   const live = useTranscriptStore.getState()
+  const captured = useDetectionStore.getState()
   const transcriptSegments = live.segments.slice(session.transcriptStartIndex)
   useSermonStore.setState({
     sessions: state.sessions.map((candidate) =>
@@ -951,6 +997,10 @@ export function checkpointActiveSermon(): void {
             transcriptSegments,
             transcript: transcriptSegments.map((segment) => segment.text),
             scriptures: [...live.highlightedScriptures],
+            scriptureDetections:
+              captured.sessionId === session.id
+                ? captured.detections
+                : candidate.scriptureDetections,
             lastCheckpointAt: Date.now(),
           }
         : candidate
