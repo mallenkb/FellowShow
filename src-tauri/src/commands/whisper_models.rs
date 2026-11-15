@@ -230,7 +230,7 @@ async fn install_model(
             last_update = Instant::now();
         }
     }
-    if received != file.size_bytes || format!("{:x}", hasher.finalize()) != file.sha256 {
+    if received != file.size_bytes || hex::encode(hasher.finalize()) != file.sha256 {
         return Err("The Whisper model download failed verification. Try again.".into());
     }
     output.flush().await.map_err(|error| error.to_string())?;

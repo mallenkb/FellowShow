@@ -329,7 +329,7 @@ async fn download_translation_inner(
             use sha2::{Digest, Sha256};
             let mut hasher = Sha256::new();
             hasher.update(&bytes);
-            format!("{:x}", hasher.finalize())
+            hex::encode(hasher.finalize())
         };
         if !actual_sha.eq_ignore_ascii_case(expected_sha) {
             return Err(format!(

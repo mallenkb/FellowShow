@@ -214,7 +214,7 @@ fn audit(songs: &[ImportedSong]) -> Vec<Finding<'_>> {
 }
 
 fn checksum(path: &str) -> Result<String, Box<dyn Error>> {
-    Ok(format!("{:x}", Sha256::digest(fs::read(path)?)))
+    Ok(hex::encode(Sha256::digest(fs::read(path)?)))
 }
 
 fn checksums(databases: &EasyWorshipDatabases) -> Result<[String; 2], Box<dyn Error>> {
