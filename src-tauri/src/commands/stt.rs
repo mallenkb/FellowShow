@@ -95,8 +95,8 @@ fn truncate_safe(s: &str, max_bytes: usize) -> &str {
 }
 use fellowshow_audio::{AudioConfig, AudioFrame};
 use fellowshow_stt::{
-    DeepgramClient, OpenAiCompatibleConfig, OpenAiCompatibleSttProvider, SttConfig, SttProvider,
-    TranscriptEvent,
+    DeepgramClient, OpenAiCompatibleConfig, OpenAiCompatibleSttProvider, OpenAiRealtimeSttProvider,
+    SttConfig, SttProvider, TranscriptEvent, OPENAI_LIVE_MODEL, OPENAI_LIVE_SAMPLE_RATE,
 };
 
 #[derive(Serialize)]
@@ -233,10 +233,24 @@ pub async fn start_transcription(
     gain: Option<f32>,
     provider: Option<String>,
     sermon_id: Option<String>,
+    cloud_model: Option<String>,
     whisper_model: Option<WhisperModel>,
     local_speech_model: Option<LocalSpeechModel>,
 ) -> Result<u64, String> {
     let provider_name = provider.as_deref().unwrap_or("deepgram");
+    let cloud_model = match provider_name {
+        "openai" | "groq" => Some(super::cloud_speech_models::resolve_model(
+            provider_name,
+            cloud_model.as_deref(),
+        )?),
+        _ => cloud_model.as_deref(),
+    };
+    let capture_sample_rate = if provider_name == "openai" && cloud_model == Some(OPENAI_LIVE_MODEL)
+    {
+        OPENAI_LIVE_SAMPLE_RATE
+    } else {
+        16_000
+    };
     #[cfg(not(feature = "whisper"))]
     let _ = whisper_model;
 
@@ -296,31 +310,31 @@ pub async fn start_transcription(
                     ));
                 }
 
-                let (endpoint, model, provider_label) = if provider_name == "openai" {
-                    (
-                        "https://api.openai.com/v1/audio/transcriptions",
-                        "gpt-4o-mini-transcribe",
-                        "OpenAI",
-                    )
+                let (endpoint, provider_label) = if provider_name == "openai" {
+                    ("https://api.openai.com/v1/audio/transcriptions", "OpenAI")
                 } else {
                     (
                         "https://api.groq.com/openai/v1/audio/transcriptions",
-                        "whisper-large-v3-turbo",
                         "Groq",
                     )
                 };
 
+                let model = cloud_model.ok_or("No transcription model is configured.")?;
                 log::info!(
-                "Starting {provider_label} transcription: model={model}, device_id={device_id:?}, gain={gain:?}"
-            );
+                    "Starting {provider_label} transcription: model={model}, device_id={device_id:?}, gain={gain:?}"
+                );
 
-                Box::new(OpenAiCompatibleSttProvider::new(OpenAiCompatibleConfig {
-                    api_key: resolved_api_key,
-                    endpoint: endpoint.to_string(),
-                    model: model.to_string(),
-                    provider_name: provider_label,
-                    sample_rate: 16_000,
-                }))
+                if model == OPENAI_LIVE_MODEL {
+                    Box::new(OpenAiRealtimeSttProvider::new(resolved_api_key))
+                } else {
+                    Box::new(OpenAiCompatibleSttProvider::new(OpenAiCompatibleConfig {
+                        api_key: resolved_api_key,
+                        endpoint: endpoint.into(),
+                        model: model.into(),
+                        provider_name: provider_label,
+                        sample_rate: capture_sample_rate,
+                    }))
+                }
             }
             _ => {
                 // Deepgram (default)
@@ -343,7 +357,8 @@ pub async fn start_transcription(
 
                 let stt_config = SttConfig {
                     api_key: resolved_api_key,
-                    model: "nova-3".to_string(),
+                    model: super::cloud_speech_models::resolve_model("deepgram", cloud_model)?
+                        .to_owned(),
                     sample_rate: 16_000,
                     encoding: "linear16".to_string(),
                     language: None,
@@ -395,7 +410,7 @@ pub async fn start_transcription(
         .spawn(move || {
             let config = AudioConfig {
                 device_id,
-                sample_rate: 16_000,
+                sample_rate: capture_sample_rate,
                 gain: gain_val,
             };
 
@@ -438,7 +453,8 @@ pub async fn start_transcription(
                     Ok(frame) => {
                         frame_count += 1;
                         if frame_count == 1 {
-                            let duration_ms = frame.samples.len() as u64 * 1_000 / 16_000;
+                            let duration_ms =
+                                frame.samples.len() as u64 * 1_000 / u64::from(capture_sample_rate);
                             fan_audio_started_at.store(
                                 frame.timestamp_ms.saturating_sub(duration_ms),
                                 Ordering::Release,
@@ -610,6 +626,7 @@ pub async fn start_transcription(
                 && matches!(
                     &event,
                     TranscriptEvent::Partial { .. }
+                        | TranscriptEvent::Preview(_)
                         | TranscriptEvent::SpeechStarted
                         | TranscriptEvent::Connected
                 )
@@ -618,6 +635,17 @@ pub async fn start_transcription(
             }
 
             match event {
+                TranscriptEvent::Preview(text) => {
+                    let _ = event_app.emit(
+                        EVENT_TRANSCRIPT_PARTIAL,
+                        TranscriptPayload {
+                            text,
+                            is_final: false,
+                            confidence: 0.0,
+                            timestamp: None,
+                        },
+                    );
+                }
                 TranscriptEvent::Partial { transcript, .. } => {
                     if !transcript.is_empty() {
                         let t0 = std::time::Instant::now();

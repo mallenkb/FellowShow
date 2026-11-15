@@ -4,7 +4,7 @@ export type ThemeAwareMode =
   "book" | "context" | "songs" | "announcements" | "presentation" | "on-display"
 
 export const THEME_SECTION_LABELS: Record<BroadcastThemeSection, string> = {
-  bible: "Scriptures",
+  bible: "Bible Passages",
   songs: "Songs",
   announcements: "Announcements",
   presentation: "Presentation",

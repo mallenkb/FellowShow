@@ -24,7 +24,6 @@ import {
   MusicIcon,
   RadioIcon,
   RefreshCwIcon,
-  SparklesIcon,
   SunIcon,
   TvIcon,
   XIcon,
@@ -35,12 +34,11 @@ import {
 } from "@/lib/settings-dialog"
 import { cn } from "@/lib/utils"
 import { AudioSection } from "@/components/settings/audio-section"
-import { AiModelSection } from "@/components/settings/ai-model-section"
+import { ModelSettingsSection } from "@/components/settings/model-settings-section"
 import { BibleSection } from "@/components/settings/bible-section"
 import { DisplayModeSection } from "@/components/settings/display-mode-section"
 import { HelpSection } from "@/components/settings/help-section"
 import { RemoteControlSection } from "@/components/settings/remote-control-section"
-import { SpeechSection } from "@/components/settings/speech-section"
 import { UpdatesSection } from "@/components/settings/updates-section"
 import { WorkspaceSection } from "@/components/settings/workspace-section"
 import { AppearanceSection } from "@/components/settings/appearance-section"
@@ -59,17 +57,12 @@ const navGroups: {
     items: [
       { name: "Audio", id: "audio", icon: <MicIcon strokeWidth={2} /> },
       {
-        name: "Speech Recognition",
+        name: "Models",
         id: "speech",
         icon: <BrainCircuitIcon strokeWidth={2} />,
       },
       {
-        name: "AI Model",
-        id: "ai-model",
-        icon: <SparklesIcon strokeWidth={2} />,
-      },
-      {
-        name: "Scriptures",
+        name: "Bible Translations",
         id: "bible",
         icon: <BookOpenIcon strokeWidth={2} />,
       },
@@ -136,9 +129,10 @@ const navGroups: {
 
 const sectionTitles: Record<NavSection, string> = {
   audio: "Audio",
-  speech: "Speech Recognition",
-  "ai-model": "AI Model Provider",
-  bible: "Scripture Translation",
+  speech: "Models",
+  "ai-model": "Models",
+  decisions: "Models",
+  bible: "Bible Translations",
   songs: "Song collections",
   display: "Display Mode",
   workspace: "Workspace",
@@ -150,8 +144,9 @@ const sectionTitles: Record<NavSection, string> = {
 
 const sectionComponents: Record<NavSection, React.FC> = {
   audio: AudioSection,
-  speech: SpeechSection,
-  "ai-model": AiModelSection,
+  speech: ModelSettingsSection,
+  "ai-model": ModelSettingsSection,
+  decisions: ModelSettingsSection,
   bible: BibleSection,
   songs: SongCollectionsSection,
   display: DisplayModeSection,
@@ -178,6 +173,10 @@ export function SettingsDialog() {
   )
 
   const ActiveContent = sectionComponents[activeSection]
+  const navSection =
+    activeSection === "ai-model" || activeSection === "decisions"
+      ? "speech"
+      : activeSection
 
   return (
     <Dialog
@@ -228,12 +227,10 @@ export function SettingsDialog() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      aria-current={
-                        item.id === activeSection ? "page" : undefined
-                      }
+                      aria-current={item.id === navSection ? "page" : undefined}
                       className={cn(
                         "h-9 w-full justify-start gap-3 px-3 text-xs font-normal text-muted-foreground hover:bg-accent hover:text-foreground dark:hover:bg-muted/50",
-                        item.id === activeSection &&
+                        item.id === navSection &&
                           "bg-primary/10 font-medium text-primary-emphasis hover:bg-primary/10 hover:text-primary-emphasis"
                       )}
                       onClick={() => setActiveSection(item.id)}
@@ -269,7 +266,7 @@ export function SettingsDialog() {
             </header>
             <div className="shrink-0 border-b border-border bg-background px-3 py-2 @[42rem]/settings-modal:hidden">
               <Select
-                value={activeSection}
+                value={navSection}
                 onValueChange={(value) => {
                   const section = navGroups
                     .flatMap((group) => group.items)

@@ -5,7 +5,7 @@
 //! [`TranscriptEvent`] types as the Deepgram provider.
 
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -25,6 +25,12 @@ const MAX_BUFFER_SAMPLES: usize = 16_000 * 10;
 /// Minimum audio buffer for inference (1.0 seconds).
 /// Whisper warns "input is too short" below 1s.
 const MIN_BUFFER_SAMPLES: usize = 16_000;
+const MIN_PREVIEW_INTERVAL: usize = 2 * 16_000;
+
+enum InferenceKind {
+    Preview,
+    Final,
+}
 
 fn whisper_vad_config() -> fellowshow_audio::VadConfig {
     fellowshow_audio::VadConfig {
@@ -154,11 +160,15 @@ impl SttProvider for WhisperProvider {
         let n_threads = self.n_threads;
         let cancelled = self.cancelled.clone();
 
-        let (inference_tx, mut inference_rx) = mpsc::channel::<(u64, Vec<i16>)>(4);
+        let (inference_tx, mut inference_rx) = mpsc::channel::<(u64, Vec<i16>, InferenceKind)>(4);
+        let preview_interval = Arc::new(AtomicUsize::new(MIN_PREVIEW_INTERVAL));
+        let preview_pending = Arc::new(AtomicBool::new(false));
 
         // ── Task 1: VAD + audio accumulation ─────────────────────────────
         let vad_cancelled = cancelled.clone();
         let vad_event_tx = event_tx.clone();
+        let vad_preview_interval = preview_interval.clone();
+        let vad_preview_pending = preview_pending.clone();
         let vad_handle = tokio::task::spawn_blocking(move || {
             use fellowshow_audio::{AudioFrame, Vad, VadTransition};
 
@@ -168,12 +178,16 @@ impl SttProvider for WhisperProvider {
             let mut audio_buffer: Vec<i16> = Vec::new();
             let mut buffer_start_ms = 0;
             let mut received = 0u64;
+            let mut last_preview_samples = 0;
 
             loop {
                 if vad_cancelled.load(Ordering::SeqCst) {
                     if audio_buffer.len() >= MIN_BUFFER_SAMPLES {
-                        let _ = inference_tx
-                            .blocking_send((buffer_start_ms, std::mem::take(&mut audio_buffer)));
+                        let _ = inference_tx.blocking_send((
+                            buffer_start_ms,
+                            std::mem::take(&mut audio_buffer),
+                            InferenceKind::Final,
+                        ));
                     }
                     break;
                 }
@@ -194,10 +208,12 @@ impl SttProvider for WhisperProvider {
                                         vad_event_tx.blocking_send(TranscriptEvent::SpeechStarted);
                                 }
                                 VadTransition::SpeechEnded => {
+                                    last_preview_samples = 0;
                                     if audio_buffer.len() >= MIN_BUFFER_SAMPLES {
                                         let _ = inference_tx.blocking_send((
                                             buffer_start_ms,
                                             std::mem::take(&mut audio_buffer),
+                                            InferenceKind::Final,
                                         ));
                                     } else {
                                         audio_buffer.clear();
@@ -217,7 +233,26 @@ impl SttProvider for WhisperProvider {
                             let _ = inference_tx.blocking_send((
                                 buffer_start_ms,
                                 std::mem::take(&mut audio_buffer),
+                                InferenceKind::Final,
                             ));
+                            last_preview_samples = 0;
+                        } else if audio_buffer.len().saturating_sub(last_preview_samples)
+                            >= vad_preview_interval.load(Ordering::Relaxed)
+                            && inference_tx.capacity() == inference_tx.max_capacity()
+                            && !vad_preview_pending.swap(true, Ordering::Relaxed)
+                        {
+                            if inference_tx
+                                .try_send((
+                                    buffer_start_ms,
+                                    audio_buffer.clone(),
+                                    InferenceKind::Preview,
+                                ))
+                                .is_ok()
+                            {
+                                last_preview_samples = audio_buffer.len();
+                            } else {
+                                vad_preview_pending.store(false, Ordering::Relaxed);
+                            }
                         }
                     }
                     Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
@@ -226,6 +261,7 @@ impl SttProvider for WhisperProvider {
                             let _ = inference_tx.blocking_send((
                                 buffer_start_ms,
                                 std::mem::take(&mut audio_buffer),
+                                InferenceKind::Final,
                             ));
                         }
                         break;
@@ -265,7 +301,8 @@ impl SttProvider for WhisperProvider {
                 log::info!("[Whisper] Model loaded, ready for inference");
                 let _ = inf_event_tx.blocking_send(TranscriptEvent::Connected);
 
-                while let Some((buffer_start_ms, audio_i16)) = inference_rx.blocking_recv() {
+                while let Some((buffer_start_ms, audio_i16, kind)) = inference_rx.blocking_recv() {
+                    let preview = matches!(kind, InferenceKind::Preview);
                     if inf_cancelled.load(Ordering::SeqCst) {
                         break;
                     }
@@ -295,6 +332,13 @@ impl SttProvider for WhisperProvider {
                         if inf_cancelled.load(Ordering::SeqCst) {
                             break;
                         }
+                        if preview {
+                            preview_interval.store(MAX_BUFFER_SAMPLES, Ordering::Relaxed);
+                            preview_pending.store(false, Ordering::Relaxed);
+                            log::warn!("[Whisper] Preview inference failed: {e}");
+                            continue;
+                        }
+                        let _ = inf_event_tx.blocking_send(TranscriptEvent::Preview(String::new()));
                         log::error!("[Whisper] Inference error: {e}");
                         let _ = inf_event_tx.blocking_send(TranscriptEvent::Error(format!(
                             "Whisper inference error: {e}"
@@ -304,6 +348,17 @@ impl SttProvider for WhisperProvider {
                     let elapsed = start.elapsed();
 
                     let (text, words, confidence) = extract_segments(&state);
+                    if preview {
+                        // Leave enough time for the final decode on slower devices.
+                        let next = usize::try_from(elapsed.as_millis())
+                            .unwrap_or(MAX_BUFFER_SAMPLES)
+                            .saturating_mul(64)
+                            .clamp(MIN_PREVIEW_INTERVAL, MAX_BUFFER_SAMPLES);
+                        preview_interval.store(next, Ordering::Relaxed);
+                        preview_pending.store(false, Ordering::Relaxed);
+                        let _ = inf_event_tx.blocking_send(TranscriptEvent::Preview(text));
+                        continue;
+                    }
 
                     #[expect(
                         clippy::cast_precision_loss,
@@ -314,7 +369,9 @@ impl SttProvider for WhisperProvider {
                     "[Whisper] Transcribed {audio_duration_s:.1}s audio in {elapsed:.1?}: \"{text}\""
                 );
 
-                    if !text.is_empty() {
+                    if text.is_empty() {
+                        let _ = inf_event_tx.blocking_send(TranscriptEvent::Preview(String::new()));
+                    } else {
                         let word_offset = words
                             .first()
                             .and_then(|word| Duration::try_from_secs_f64(word.start).ok())

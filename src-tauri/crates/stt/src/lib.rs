@@ -22,6 +22,7 @@ pub mod error;
 pub mod keyterms;
 pub mod local_speech;
 pub mod openai_compatible;
+mod openai_realtime;
 pub mod provider;
 pub mod rest;
 pub mod types;
@@ -33,6 +34,7 @@ pub use deepgram::DeepgramClient;
 pub use error::SttError;
 pub use keyterms::bible_keyterms;
 pub use openai_compatible::{OpenAiCompatibleConfig, OpenAiCompatibleSttProvider};
+pub use openai_realtime::{OpenAiRealtimeSttProvider, OPENAI_LIVE_MODEL, OPENAI_LIVE_SAMPLE_RATE};
 pub use provider::SttProvider;
 pub use types::{SttConfig, TranscriptEvent, Word};
 

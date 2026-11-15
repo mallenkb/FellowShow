@@ -1,3 +1,10 @@
+import { currentAiModels, isOpenAiSummaryModel } from "@/lib/current-ai-models"
+import {
+  OPENAI_SUMMARY_COST_LIMIT,
+  exampleSummaryCost,
+  openAiModelPricing,
+  type AiModelPricing,
+} from "@/lib/ai-model-metrics"
 import {
   DEFAULT_OPENAI_MODEL,
   DEFAULT_OPENROUTER_MODEL,
@@ -6,7 +13,8 @@ import {
 } from "@/stores/settings-store"
 
 const OPENROUTER_CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
-const OPENROUTER_MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models"
+const OPENROUTER_MODELS_ENDPOINT =
+  "https://openrouter.ai/api/v1/models?output_modalities=text"
 const OPENAI_RESPONSES_ENDPOINT = "https://api.openai.com/v1/responses"
 const OPENAI_MODELS_ENDPOINT = "https://api.openai.com/v1/models"
 const MAX_TRANSIENT_RETRIES = 2
@@ -33,6 +41,8 @@ export interface AiRequestOptions {
 export interface AiModelOption {
   id: string
   name: string | null
+  pricing?: AiModelPricing
+  reasoning?: boolean
 }
 
 export interface AiProviderConfigOverrides {
@@ -62,6 +72,7 @@ interface ProviderErrorDetails {
 }
 
 export function getAiProviderName(provider: AiProvider): string {
+  if (provider === "off") return "Sermon summary"
   return provider === "openai" ? "OpenAI" : "OpenRouter"
 }
 
@@ -380,7 +391,7 @@ async function requestAiTextWithConfig(
   config: AiProviderConfig,
   options: AiRequestOptions
 ): Promise<string> {
-  if (!config.apiKey) {
+  if (config.provider === "off" || !config.apiKey) {
     throw new AiProviderNotConfiguredError(config.provider)
   }
   return config.provider === "openai"
@@ -408,6 +419,25 @@ export async function testAiProviderConnection(
   })
 }
 
+function nonNegativePrice(value: unknown): number | undefined {
+  if (typeof value !== "number" && (typeof value !== "string" || !value.trim()))
+    return
+  const price = Number(value)
+  if (Number.isFinite(price) && price >= 0) return price
+}
+
+function parseOpenRouterPricing(value: unknown): AiModelPricing | undefined {
+  const rates = asRecord(value)
+  const input = nonNegativePrice(rates?.prompt)
+  const output = nonNegativePrice(rates?.completion)
+  if (input === undefined || output === undefined) return
+  return {
+    inputPerMillion: input * 1_000_000,
+    outputPerMillion: output * 1_000_000,
+    requestUsd: nonNegativePrice(rates?.request),
+  }
+}
+
 function parseModelOptions(
   provider: AiProvider,
   value: unknown
@@ -420,15 +450,43 @@ function parseModelOptions(
     const record = asRecord(item)
     const id = typeof record?.id === "string" ? record.id.trim() : ""
     if (!id) continue
+    if (provider === "openai" && !isOpenAiSummaryModel(id)) continue
+    if (provider === "openrouter") {
+      const architecture = asRecord(record?.architecture)
+      const modalities = [
+        architecture?.input_modalities,
+        architecture?.output_modalities,
+      ]
+      if (
+        modalities.some(
+          (values) => Array.isArray(values) && !values.includes("text")
+        )
+      )
+        continue
+    }
     const rawName = provider === "openrouter" ? record?.name : null
     const name =
       typeof rawName === "string" && rawName.trim() && rawName.trim() !== id
         ? rawName.trim()
         : null
-    byId.set(id, { id, name })
+    const pricing =
+      provider === "openrouter"
+        ? parseOpenRouterPricing(record?.pricing)
+        : openAiModelPricing(id)
+    if (
+      provider === "openai" &&
+      (exampleSummaryCost(pricing) ?? Infinity) > OPENAI_SUMMARY_COST_LIMIT
+    )
+      continue
+    const parameters = record?.supported_parameters
+    const reasoning = Array.isArray(parameters)
+      ? parameters.includes("reasoning") ||
+        parameters.includes("reasoning_effort")
+      : undefined
+    byId.set(id, { id, name, pricing, reasoning })
   }
 
-  return [...byId.values()].sort((left, right) =>
+  return currentAiModels(byId.values()).sort((left, right) =>
     (left.name ?? left.id).localeCompare(right.name ?? right.id)
   )
 }
@@ -438,7 +496,7 @@ export async function fetchAiProviderModels(
   signal?: AbortSignal
 ): Promise<AiModelOption[]> {
   const config = getAiProviderConfig(overrides)
-  if (!config.apiKey) {
+  if (config.provider === "off" || !config.apiKey) {
     throw new AiProviderNotConfiguredError(config.provider)
   }
   const endpoint =

@@ -61,6 +61,7 @@ impl LocalSpeechProvider {
 enum WorkerEvent {
     Ready,
     Partial { text: String },
+    Preview { text: String },
     Final { text: String, start: f64 },
     Error { text: String },
 }
@@ -130,6 +131,7 @@ impl SttProvider for LocalSpeechProvider {
                         ready = true;
                         TranscriptEvent::Connected
                     }
+                    WorkerEvent::Preview { text } => TranscriptEvent::Preview(text),
                     WorkerEvent::Partial { text } => TranscriptEvent::Partial {
                         transcript: text,
                         words: Vec::new(),

@@ -18,11 +18,20 @@ pub enum LocalSpeechModel {
     Zipformer,
     Voxtral,
     Parakeet,
+    #[serde(rename = "parakeet-ultra")]
+    ParakeetUltra,
+    #[serde(rename = "parakeet-unified")]
+    ParakeetUnified,
+    #[serde(rename = "parakeet-redux")]
+    ParakeetRedux,
 }
 
 impl LocalSpeechModel {
-    const ALL: [Self; 5] = [
+    const ALL: [Self; 8] = [
         Self::Parakeet,
+        Self::ParakeetUltra,
+        Self::ParakeetUnified,
+        Self::ParakeetRedux,
         Self::Nemotron,
         Self::Moonshine,
         Self::Zipformer,
@@ -36,6 +45,9 @@ impl LocalSpeechModel {
             Self::Zipformer => "zipformer",
             Self::Voxtral => "voxtral",
             Self::Parakeet => "parakeet",
+            Self::ParakeetUltra => "parakeet-ultra",
+            Self::ParakeetUnified => "parakeet-unified",
+            Self::ParakeetRedux => "parakeet-redux",
         }
     }
 
@@ -59,7 +71,11 @@ impl LocalSpeechModel {
             Self::Moonshine => &["moonshine-voice==0.1.6", "numpy"],
             Self::Voxtral => &["mlx-audio==0.6.4"],
             Self::Zipformer => &["sherpa-onnx==2.0.1", "numpy", "sentencepiece"],
-            Self::Nemotron | Self::Parakeet => &["sherpa-onnx==2.0.1", "numpy"],
+            Self::Nemotron
+            | Self::Parakeet
+            | Self::ParakeetUltra
+            | Self::ParakeetUnified
+            | Self::ParakeetRedux => &["sherpa-onnx==2.0.1", "numpy"],
         }
     }
 
@@ -227,6 +243,18 @@ pub async fn download_local_speech_model(
     let _install = INSTALLING
         .try_lock()
         .map_err(|_| "Another local speech model is already downloading.")?;
+    super::model_download_cancel::cancellable_download(
+        super::model_download_cancel::TranscriptionModelKind::LocalSpeech,
+        install_model(app, model, progress),
+    )
+    .await
+}
+
+async fn install_model(
+    app: AppHandle,
+    model: LocalSpeechModel,
+    progress: Channel<String>,
+) -> Result<(), String> {
     let root = model.root(&app)?;
     if is_installed(&root) {
         return Ok(());

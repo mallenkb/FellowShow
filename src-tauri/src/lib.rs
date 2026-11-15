@@ -136,6 +136,8 @@ pub fn run() {
             commands::stt::test_groq_connection,
             commands::stt::start_transcription,
             commands::stt::stop_transcription,
+            commands::cloud_speech_models::list_cloud_transcription_models,
+            commands::model_download_cancel::cancel_transcription_model_download,
             commands::local_speech_models::list_local_speech_models,
             commands::local_speech_models::download_local_speech_model,
             commands::local_speech_models::delete_local_speech_model,

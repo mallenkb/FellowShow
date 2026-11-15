@@ -12,6 +12,7 @@ use crate::provider::{wait_for_stop, SttProvider};
 use crate::types::TranscriptEvent;
 
 const CHUNK_SECONDS: usize = 5;
+const GROQ_CHUNK_SECONDS: usize = 3;
 
 #[derive(Debug, Clone)]
 pub struct OpenAiCompatibleConfig {
@@ -144,7 +145,12 @@ impl SttProvider for OpenAiCompatibleSttProvider {
         }
         let _ = event_tx.send(TranscriptEvent::Connected).await;
 
-        let target_samples = self.config.sample_rate as usize * CHUNK_SECONDS;
+        let chunk_seconds = if self.config.provider_name == "Groq" {
+            GROQ_CHUNK_SECONDS
+        } else {
+            CHUNK_SECONDS
+        };
+        let target_samples = self.config.sample_rate as usize * chunk_seconds;
         let mut buffer = Vec::<i16>::new();
         let mut consumed = 0u64;
         let sample_rate = u64::from(self.config.sample_rate);

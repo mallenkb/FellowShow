@@ -25,6 +25,9 @@ export const LOCAL_SPEECH_MODEL_IDS = [
   "zipformer",
   "voxtral",
   "parakeet",
+  "parakeet-ultra",
+  "parakeet-unified",
+  "parakeet-redux",
 ] as const
 
 export type LocalSpeechModel = (typeof LOCAL_SPEECH_MODEL_IDS)[number]
@@ -166,6 +169,10 @@ export interface Commands {
   test_deepgram_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
   test_openai_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
   test_groq_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
+  cancel_transcription_model_download: WithArgs<
+    { kind: "whisper" | "local-speech" },
+    boolean
+  >
   list_local_speech_models: NoArgs<LocalSpeechModelStatus[]>
   download_local_speech_model: WithArgs<
     { model: LocalSpeechModel; progress: Channel<string> },
@@ -178,6 +185,10 @@ export interface Commands {
     { model: WhisperModel; progress: Channel<number> },
     void
   >
+  list_cloud_transcription_models: WithArgs<
+    { provider: "deepgram" | "openai" | "groq"; apiKey: string },
+    string[]
+  >
   start_transcription: WithArgs<
     {
       apiKey: string
@@ -185,6 +196,7 @@ export interface Commands {
       gain: number | null
       provider: string | null
       sermonId?: string
+      cloudModel?: string
       whisperModel?: WhisperModel
       localSpeechModel?: LocalSpeechModel
     },

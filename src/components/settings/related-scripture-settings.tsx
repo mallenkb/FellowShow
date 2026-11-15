@@ -30,10 +30,7 @@ export function RelatedScriptureSettings() {
   }
 
   return (
-    <section
-      className="space-y-3 border-t border-border pt-5"
-      aria-labelledby="related-ai-settings"
-    >
+    <section className="space-y-3" aria-labelledby="related-ai-settings">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h3 id="related-ai-settings" className="text-sm font-medium">

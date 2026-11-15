@@ -11,6 +11,8 @@ pub struct Word {
 
 #[derive(Debug, Clone)]
 pub enum TranscriptEvent {
+    /// Revisable display text that never triggers voice commands.
+    Preview(String),
     Partial {
         transcript: String,
         words: Vec<Word>,

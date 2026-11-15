@@ -86,9 +86,9 @@ export function SessionScripturesPanel({
   return (
     <section aria-label="Saved scriptures" className="space-y-6">
       <div>
-        <h2 className="text-base font-medium">Scriptures</h2>
+        <h2 className="text-base font-medium">Bible Passages</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Scriptures saved during this sermon.
+          Passages saved during this sermon.
         </p>
       </div>
       {isEmpty ? (

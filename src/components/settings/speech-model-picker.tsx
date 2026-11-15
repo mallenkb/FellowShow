@@ -2,10 +2,7 @@ import { toast } from "sonner"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { LOCAL_SPEECH_MODEL_IDS, WHISPER_MODEL_IDS } from "@/lib/ipc"
 import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
-import {
-  LocalModelDownloadHelp,
-  useLocalSpeechModels,
-} from "./local-speech-models"
+import { useLocalSpeechModels } from "./local-speech-models"
 import { useWhisperModels } from "./whisper-models"
 
 async function chooseLocalModel(value: string) {
@@ -42,7 +39,6 @@ export function SpeechModelPicker() {
 
   return (
     <div className="flex flex-col gap-2">
-      <LocalModelDownloadHelp />
       {local.error && (
         <p role="alert" className="text-xs text-destructive">
           {local.error}

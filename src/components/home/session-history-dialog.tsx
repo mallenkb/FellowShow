@@ -146,7 +146,7 @@ export function SessionHistoryDialog({
                       value="scriptures"
                       className="workspace-segment"
                     >
-                      <BookOpenIcon aria-hidden="true" /> Scriptures
+                      <BookOpenIcon aria-hidden="true" /> Bible Passages
                     </TabsTrigger>
                     <TabsTrigger value="notes" className="workspace-segment">
                       <NotebookTextIcon aria-hidden="true" /> Sermon notes

@@ -18,6 +18,7 @@ url = "2"
 futures-util = "0.3"
 crossbeam-channel = "0.5"
 async-trait = "0.1"
+base64 = "0.23"
 
 # Whisper local STT (optional)
 fellowshow-audio = { path = "../audio", optional = true }

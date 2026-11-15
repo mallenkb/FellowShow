@@ -77,9 +77,7 @@ describe("OverlayLiveControls", () => {
     expect(
       screen.getByRole("button", { name: "Update graphics on Live" })
     ).toBeTruthy()
-    fireEvent.click(
-      screen.getByRole("button", { name: "Stop graphics" })
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Stop graphics" }))
     expect(stopOverlayOutputLive).toHaveBeenCalledExactlyOnceWith(
       "overlay-output"
     )

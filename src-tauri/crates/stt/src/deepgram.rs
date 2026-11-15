@@ -63,7 +63,12 @@ impl DeepgramClient {
                 q.append_pair("language", lang);
             }
 
-            // Deepgram Nova-3 keyword boosting: uses `keyterm` (not `keywords`).
+            let vocabulary_parameter = if self.config.model == "nova-2" {
+                "keywords"
+            } else {
+                "keyterm"
+            };
+            // Nova-2 uses keywords and Nova-3 uses keyterm prompting.
             // Each keyterm is a separate query param. Max 100 per request.
             let core_terms = vec![
                 "Jesus".to_string(),
@@ -87,10 +92,10 @@ impl DeepgramClient {
             }
 
             for term in &all_keyterms {
-                q.append_pair("keyterm", term);
+                q.append_pair(vocabulary_parameter, term);
             }
             log::info!(
-                "Deepgram keyterm boosting: {} keyterms added",
+                "Deepgram vocabulary hints: {} terms added",
                 all_keyterms.len()
             );
         }

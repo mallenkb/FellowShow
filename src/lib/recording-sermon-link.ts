@@ -8,27 +8,7 @@ import { useSermonStore } from "@/stores/sermon-store"
  * stops it; resuming the sermon (or GoStream coming back) starts a new part.
  */
 
-function startFeed(): void {
-  void useReturnFeedStore
-    .getState()
-    .start()
-    .catch((error: unknown) => {
-      console.warn("[recording] Could not start the GoStream return", error)
-    })
-}
-
-function savedSourcePresent(): boolean {
-  const state = useReturnFeedStore.getState()
-  return (
-    (state.status === "off" || state.status === "error") &&
-    state.videoDeviceId !== null &&
-    state.devices.video.some(
-      (device) => device.deviceId === state.videoDeviceId
-    )
-  )
-}
-
-function reconcile(sermonStarted: boolean): void {
+function reconcile(): void {
   const sermonId = useSermonStore.getState().activeSessionId
   const feed = useReturnFeedStore.getState()
   const recording = useRecordingStore.getState()
@@ -62,49 +42,23 @@ function reconcile(sermonStarted: boolean): void {
       .catch((error: unknown) => {
         console.warn("[recording] Failed to start with the sermon", error)
       })
-  } else if (
-    sermonStarted &&
-    feed.status !== "requesting" &&
-    feed.videoDeviceId !== null
-  ) {
-    // The sermon started without GoStream connected: try the saved source.
-    startFeed()
   }
 }
 
-/** Connects to the saved GoStream source when it is plugged in. */
-function connectSavedReturnFeed(): void {
-  const feed = useReturnFeedStore.getState()
-  if (feed.status !== "off" || feed.videoDeviceId === null) return
-  void feed
-    .refreshDevices()
-    .then(() => {
-      if (savedSourcePresent()) startFeed()
-    })
-    .catch((error: unknown) => {
-      console.warn("[recording] Could not list video sources", error)
-    })
-}
-
 export function initRecordingSermonLink(): () => void {
-  connectSavedReturnFeed()
   const unsubscribers = [
     useSermonStore.subscribe((state, previous) => {
-      if (state.activeSessionId !== previous.activeSessionId)
-        reconcile(state.activeSessionId !== null)
+      if (state.activeSessionId !== previous.activeSessionId) reconcile()
     }),
     useReturnFeedStore.subscribe((state, previous) => {
-      if (state.status !== previous.status) reconcile(false)
-      // GoStream plugged in (again) after launch: the device watch lists it.
-      if (state.devices !== previous.devices && savedSourcePresent())
-        startFeed()
+      if (state.status !== previous.status) reconcile()
     }),
     useRecordingStore.subscribe((state, previous) => {
       if (state.status !== previous.status && state.status === "idle")
-        reconcile(false)
+        reconcile()
     }),
   ]
-  reconcile(false)
+  reconcile()
   return () => {
     for (const unsubscribe of unsubscribers) unsubscribe()
   }

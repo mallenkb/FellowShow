@@ -1,12 +1,14 @@
 pub mod audio;
 pub mod bible;
 pub mod broadcast;
+pub mod cloud_speech_models;
 pub mod detection;
 pub mod documents;
 pub mod easyworship;
 pub mod identify;
 pub mod lifecycle;
 pub mod local_speech_models;
+pub mod model_download_cancel;
 pub mod ndi_frame_clock;
 pub mod remote;
 pub mod secrets;

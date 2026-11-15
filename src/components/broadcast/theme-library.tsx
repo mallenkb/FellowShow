@@ -50,7 +50,7 @@ const PRESENTATION_HIDDEN_BUILTIN_THEME_IDS = new Set([
 ])
 
 const sectionLabels: Record<BroadcastThemeSection, string> = {
-  bible: "Scriptures",
+  bible: "Bible Passages",
   songs: "Songs",
   announcements: "Announcements",
   presentation: "Presentation",

@@ -1,9 +1,9 @@
 import { Channel } from "@tauri-apps/api/core"
-import { openUrl } from "@tauri-apps/plugin-opener"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { create } from "zustand"
 
+import { ModelDownloadButton } from "./model-download-button"
 import { Button } from "@/components/ui/button"
 import { RadioGroupItem } from "@/components/ui/radio-group"
 import {
@@ -33,6 +33,18 @@ const MODELS: Record<LocalSpeechModel, { name: string; detail: string }> = {
   parakeet: {
     name: "NVIDIA Parakeet TDT 0.6B v3",
     detail: "Default · Multilingual · 671 MB",
+  },
+  "parakeet-ultra": {
+    name: "Parakeet Ultra",
+    detail: "Multilingual · 671 MB",
+  },
+  "parakeet-unified": {
+    name: "Parakeet Unified",
+    detail: "English · Streaming · 663 MB",
+  },
+  "parakeet-redux": {
+    name: "Parakeet Redux",
+    detail: "Multilingual · 169 MB download · 407 MB installed",
   },
 }
 
@@ -66,6 +78,7 @@ async function downloadModel(model: LocalSpeechModel) {
     await selectModel(model)
     toast.success(`${MODELS[model].name} is ready for offline use`)
   } catch (error) {
+    if (String(error) === "Model download canceled.") return
     toast.error("Could not download the speech model", {
       description: String(error),
     })
@@ -142,16 +155,23 @@ export function useLocalSpeechModels() {
             </span>
           )}
           {!installed && !unavailableReason && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
+            <ModelDownloadButton
+              name={name}
+              kind="local-speech"
               disabled={pending !== null || deleting}
-              aria-label={`Download and use ${name}`}
-              onClick={() => void downloadModel(model)}
-            >
-              {pending === model ? "Downloading…" : "Download and use"}
-            </Button>
+              onDownload={() => void downloadModel(model)}
+              progress={
+                pending === model
+                  ? {
+                      status: phase,
+                      percent:
+                        filePercent === undefined
+                          ? undefined
+                          : Number(filePercent),
+                    }
+                  : undefined
+              }
+            />
           )}
           {installed && (
             <Button
@@ -165,48 +185,10 @@ export function useLocalSpeechModels() {
               Delete
             </Button>
           )}
-          {pending === model && (
-            <div className="w-full" role="status">
-              <progress
-                className="w-full"
-                max={100}
-                value={
-                  filePercent === undefined ? undefined : Number(filePercent)
-                }
-                aria-label={phase}
-              />
-              <p className="text-xs text-muted-foreground">{phase}</p>
-            </div>
-          )}
         </div>
       ),
     }
   })
 
   return { rows, error, loading: !error && models.length === 0 }
-}
-
-export function LocalModelDownloadHelp() {
-  return (
-    <p className="text-xs text-muted-foreground">
-      Parakeet and other non-Whisper models require{" "}
-      <button
-        type="button"
-        className="text-foreground underline underline-offset-2"
-        onClick={() => {
-          void openUrl(
-            "https://docs.astral.sh/uv/getting-started/installation/"
-          ).catch((failure: unknown) => {
-            toast.error("Could not open the uv installation guide", {
-              description: String(failure),
-            })
-          })
-        }}
-      >
-        uv
-      </button>{" "}
-      and an internet connection. Sizes are for model files. Model changes apply
-      the next time you start transcription.
-    </p>
-  )
 }

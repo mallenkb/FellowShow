@@ -159,6 +159,18 @@ pub async fn download_whisper_model(
     let _lock = DOWNLOAD_LOCK
         .try_lock()
         .map_err(|_| "A Whisper model is already downloading.")?;
+    super::model_download_cancel::cancellable_download(
+        super::model_download_cancel::TranscriptionModelKind::Whisper,
+        install_model(app, model, progress),
+    )
+    .await
+}
+
+async fn install_model(
+    app: AppHandle,
+    model: WhisperModel,
+    progress: Channel<u64>,
+) -> Result<(), String> {
     if installed_model_path(&app, model).is_some() {
         return Ok(());
     }

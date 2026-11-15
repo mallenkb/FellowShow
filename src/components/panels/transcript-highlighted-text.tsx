@@ -1,4 +1,5 @@
 import { Fragment, memo, useMemo, type KeyboardEvent } from "react"
+import { formatScriptureReferences } from "@/lib/scripture-format"
 import { selectAnnotation } from "@/lib/transcript-annotations"
 import {
   type createTranscriptHighlightMatcher,
@@ -28,7 +29,12 @@ function TranscriptText({
   pulse?: boolean
 }) {
   const parts = useMemo(
-    () => matchHighlights(text, latestAnnotationTime),
+    () =>
+      matchHighlights(text, latestAnnotationTime).map((part) =>
+        part.type === "reference"
+          ? part
+          : { ...part, text: formatScriptureReferences(part.text) }
+      ),
     [text, matchHighlights, latestAnnotationTime]
   )
 

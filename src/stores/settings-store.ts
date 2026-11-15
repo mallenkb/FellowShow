@@ -13,17 +13,18 @@ import {
   type SecretSettingKey,
 } from "@/types"
 
-type SttProvider = "deepgram" | "openai" | "groq" | "whisper"
+export type CloudSttProvider = "deepgram" | "openai" | "groq"
+type SttProvider = CloudSttProvider | "whisper"
 
-export type AiProvider = "openrouter" | "openai"
+export type AiProvider = "openrouter" | "openai" | "off"
 
 const DEFAULT_AI_PROVIDER: AiProvider = "openrouter"
 export const DEFAULT_OPENROUTER_MODEL = "openrouter/free"
 const RETIRED_OPENROUTER_DEFAULT = "inclusionai/ling-3.0-flash:free"
-export const DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
+export const DEFAULT_OPENAI_MODEL = "gpt-6-luna"
 
 export function isAiProvider(value: unknown): value is AiProvider {
-  return value === "openrouter" || value === "openai"
+  return value === "openrouter" || value === "openai" || value === "off"
 }
 
 export const DEFAULT_PINNED_TRANSLATION_IDS = [6, 2]
@@ -58,6 +59,7 @@ interface SettingsState {
   confidenceThreshold: number
   cooldownMs: number
   onboardingComplete: boolean
+  cloudSttModels: Record<CloudSttProvider, string>
   sttProvider: SttProvider
   whisperModel: WhisperModel
   localSpeechModel: LocalSpeechModel | null
@@ -85,6 +87,7 @@ interface SettingsState {
   setAutoUpdateEnabled: (enabled: boolean) => void
   setConfidenceThreshold: (threshold: number) => void
   setOnboardingComplete: (complete: boolean) => void
+  setCloudSttModel: (provider: CloudSttProvider, model: string) => void
   setSttProvider: (provider: SttProvider) => void
   setWhisperModel: (model: WhisperModel) => void
   setLocalSpeechModel: (model: LocalSpeechModel) => void
@@ -116,6 +119,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   confidenceThreshold: 0.8,
   cooldownMs: 2500,
   onboardingComplete: false,
+  cloudSttModels: { deepgram: "", openai: "", groq: "" },
   sttProvider: "deepgram",
   whisperModel: "large-v3-turbo",
   localSpeechModel: "parakeet",
@@ -143,6 +147,10 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setAutoUpdateEnabled: (autoUpdateEnabled) => set({ autoUpdateEnabled }),
   setConfidenceThreshold: (confidenceThreshold) => set({ confidenceThreshold }),
   setOnboardingComplete: (onboardingComplete) => set({ onboardingComplete }),
+  setCloudSttModel: (provider, model) =>
+    set((state) => ({
+      cloudSttModels: { ...state.cloudSttModels, [provider]: model },
+    })),
   setSttProvider: (sttProvider) => set({ sttProvider }),
   setWhisperModel: (whisperModel) =>
     set({ whisperModel, localSpeechModel: null }),
@@ -188,6 +196,7 @@ const PERSISTED_KEYS = [
   "confidenceThreshold",
   "cooldownMs",
   "onboardingComplete",
+  "cloudSttModels",
   "sttProvider",
   "whisperModel",
   "localSpeechModel",
@@ -376,7 +385,8 @@ async function loadValidatedSettings(
     const value = await store.get<unknown>(key)
     switch (key) {
       case "aiProvider":
-        if (isAiProvider(value)) patch.aiProvider = value
+        if (value === "local") patch.aiProvider = "off"
+        else if (isAiProvider(value)) patch.aiProvider = value
         break
       case "openRouterModel":
         if (isNonEmptyString(value)) patch.openRouterModel = value.trim()
@@ -417,6 +427,20 @@ async function loadValidatedSettings(
         break
       case "onboardingComplete":
         if (typeof value === "boolean") patch.onboardingComplete = value
+        break
+      case "cloudSttModels":
+        if (typeof value === "object" && value !== null) {
+          const models = value as Record<string, unknown>
+          const model = (provider: CloudSttProvider) => {
+            const id = models[provider]
+            return typeof id === "string" && id.length <= 128 ? id.trim() : ""
+          }
+          patch.cloudSttModels = {
+            deepgram: model("deepgram"),
+            openai: model("openai"),
+            groq: model("groq"),
+          }
+        }
         break
       case "sttProvider":
         if (isSttProvider(value)) patch.sttProvider = value

@@ -88,7 +88,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
   theme: "Theme",
   outline: "Sermon outline",
   declarations: "Declarations",
-  scriptures: "Scriptures",
+  scriptures: "Bible Passages",
   assignment: "Assignment for the week",
 }
 

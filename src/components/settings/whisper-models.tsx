@@ -2,6 +2,7 @@ import { Channel } from "@tauri-apps/api/core"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { create } from "zustand"
+import { ModelDownloadButton } from "./model-download-button"
 import { Button } from "@/components/ui/button"
 import { RadioGroupItem } from "@/components/ui/radio-group"
 import { invoke, type WhisperModel, type WhisperModelStatus } from "@/lib/ipc"
@@ -47,6 +48,7 @@ async function downloadModel(model: WhisperModel) {
     await selectModel(model)
     toast.success(`${MODEL_NAMES[model]} is ready for offline use`)
   } catch (error) {
+    if (String(error) === "Model download canceled.") return
     toast.error("Could not download the Whisper model", {
       description: String(error),
     })
@@ -121,16 +123,17 @@ export function useWhisperModels() {
           </div>
 
           {!installed && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
+            <ModelDownloadButton
+              name={MODEL_NAMES[model]}
+              kind="whisper"
               disabled={downloading !== null || deleting}
-              aria-label={`Download and use ${MODEL_NAMES[model]}`}
-              onClick={() => void downloadModel(model)}
-            >
-              {pending ? "Downloading…" : "Download and use"}
-            </Button>
+              onDownload={() => void downloadModel(model)}
+              progress={
+                pending
+                  ? { status: `Downloading ${percent}%`, percent }
+                  : undefined
+              }
+            />
           )}
           {canDelete && (
             <Button
@@ -143,14 +146,6 @@ export function useWhisperModels() {
             >
               Delete
             </Button>
-          )}
-          {pending && (
-            <progress
-              className="w-full"
-              max={100}
-              value={percent}
-              aria-label={`Downloading ${MODEL_NAMES[model]}`}
-            />
           )}
         </div>
       ),

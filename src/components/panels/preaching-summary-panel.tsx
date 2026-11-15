@@ -1,3 +1,4 @@
+import { getAiProviderName } from "@/lib/ai-provider"
 import {
   lazy,
   Suspense,
@@ -91,14 +92,15 @@ export function PreachingSummaryPanel({
   const aiConfigured = useSettingsStore((state) =>
     state.aiProvider === "openai"
       ? Boolean(state.sermonOpenAiApiKey?.trim())
-      : Boolean(state.openRouterApiKey?.trim())
+      : state.aiProvider === "openrouter" &&
+        Boolean(state.openRouterApiKey?.trim())
   )
   const aiModel = useSettingsStore((state) =>
     state.aiProvider === "openai"
       ? state.sermonOpenAiModel
       : state.openRouterModel
   )
-  const aiProviderName = aiProvider === "openai" ? "OpenAI" : "OpenRouter"
+  const aiProviderName = getAiProviderName(aiProvider)
   const session =
     sessions.find((candidate) => candidate.id === selectedSessionId) ??
     sessions.at(-1) ??
@@ -406,7 +408,9 @@ export function PreachingSummaryPanel({
           ? "AI draft ready"
           : "AI draft pending"
   const aiHelp = !aiConfigured
-    ? "Set up or unlock an AI key in Settings"
+    ? aiProvider === "off"
+      ? "Choose a summary provider in Settings"
+      : "Set up or unlock an AI key in Settings"
     : !session
       ? "Start a sermon to generate AI notes"
       : !hasEnoughTranscript

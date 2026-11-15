@@ -19,6 +19,7 @@ import { useReturnFeedStore } from "@/stores/return-feed-store"
 export function ReturnFeedPanel() {
   const [isOpen, setIsOpen] = useState(true)
   const status = useReturnFeedStore((s) => s.status)
+  const showingPreview = status === "live" && isOpen
   const recording = useRecordingStore((s) => s.status === "recording")
   const statusText = recording
     ? "Recording"
@@ -26,9 +27,7 @@ export function ReturnFeedPanel() {
       ? "Live"
       : status === "requesting"
         ? "Connecting"
-        : status === "error"
-          ? "Needs attention"
-          : "Off"
+        : "Not connected"
 
   return (
     <section
@@ -41,7 +40,8 @@ export function ReturnFeedPanel() {
           type="button"
           onClick={() => setIsOpen((open) => !open)}
           className="flex h-full min-w-0 flex-1 items-center gap-2 px-3 text-left transition hover:bg-muted/35"
-          aria-expanded={isOpen}
+          disabled={status !== "live"}
+          aria-expanded={showingPreview}
         >
           <span className="min-w-0 flex-1 truncate text-xs font-medium tracking-wider text-muted-foreground uppercase">
             GoStream return
@@ -54,9 +54,7 @@ export function ReturnFeedPanel() {
                 ? "text-red-400"
                 : status === "live"
                   ? "text-emerald-400"
-                  : status === "error"
-                    ? "text-amber-400"
-                    : "text-muted-foreground"
+                  : "text-muted-foreground"
             )}
           >
             <span
@@ -67,20 +65,20 @@ export function ReturnFeedPanel() {
                   ? "bg-red-500"
                   : status === "live"
                     ? "bg-emerald-400"
-                    : status === "error"
-                      ? "bg-amber-400"
-                      : "bg-muted-foreground/60"
+                    : "bg-muted-foreground/60"
               )}
             />
             {statusText}
           </span>
-          <ChevronDownIcon
-            aria-hidden="true"
-            className={cn(
-              "size-4 shrink-0 text-muted-foreground transition-transform",
-              !isOpen && "-rotate-90"
-            )}
-          />
+          {status === "live" && (
+            <ChevronDownIcon
+              aria-hidden="true"
+              className={cn(
+                "size-4 shrink-0 text-muted-foreground transition-transform",
+                !isOpen && "-rotate-90"
+              )}
+            />
+          )}
         </button>
         <Popover>
           <PopoverTrigger asChild>
@@ -99,7 +97,7 @@ export function ReturnFeedPanel() {
           </PopoverContent>
         </Popover>
       </div>
-      {isOpen ? (
+      {showingPreview ? (
         <div className="p-3">
           <div className="aspect-video w-full overflow-hidden rounded-lg border border-border">
             <ReturnFeedMonitor />

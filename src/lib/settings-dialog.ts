@@ -4,6 +4,7 @@ type SettingsSection =
   | "audio"
   | "speech"
   | "ai-model"
+  | "decisions"
   | "bible"
   | "songs"
   | "display"

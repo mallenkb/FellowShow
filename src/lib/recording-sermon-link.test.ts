@@ -73,10 +73,10 @@ describe("recording follows the sermon", () => {
     expect(start).toHaveBeenCalledTimes(2)
   })
 
-  it("connects the saved GoStream source when a sermon starts", () => {
+  it("leaves the saved GoStream source disconnected when a sermon starts", () => {
     useReturnFeedStore.setState({ status: "off", videoDeviceId: "gostream" })
     useSermonStore.setState({ activeSessionId: "s1" })
-    expect(feedStart).toHaveBeenCalledTimes(1)
+    expect(feedStart).not.toHaveBeenCalled()
     expect(start).not.toHaveBeenCalled()
   })
 })

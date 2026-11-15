@@ -172,6 +172,10 @@ export const transcriptionActions = {
             ? { whisperModel: settings.whisperModel }
             : {}
 
+        const cloudModel =
+          settings.sttProvider === "whisper"
+            ? ""
+            : settings.cloudSttModels[settings.sttProvider]
         transcript.setTranscribing(true)
         awaitingNativeStart = true
         stoppedDuringStart.clear()
@@ -181,6 +185,7 @@ export const transcriptionActions = {
           gain: settings.gain,
           provider: settings.sttProvider,
           ...(sermonId ? { sermonId } : {}),
+          ...(cloudModel ? { cloudModel } : {}),
           ...(settings.sttProvider === "whisper" ? localModelOptions : {}),
         })
         awaitingNativeStart = false
@@ -273,6 +278,13 @@ export const transcriptionActions = {
   },
 }
 
+function formatTranscriptText(text: string): string {
+  return text
+    .trim()
+    .replace(/[\t ]+/g, " ")
+    .replace(/ +([,.;!?])/g, "$1")
+}
+
 export function useTranscription(options?: UseTranscriptionOptions) {
   const segments = useTranscriptStore((s) => s.segments)
   const isTranscribing = useTranscriptStore((s) => s.isTranscribing)
@@ -306,7 +318,7 @@ export function useTranscription(options?: UseTranscriptionOptions) {
       store.connectionStatus === "connecting" ||
       store.connectionStatus === "connected"
     )
-      store.setPartial(payload.text)
+      store.setPartial(formatTranscriptText(payload.text))
   })
 
   useTauriEvent<TranscriptPartialPayload>("transcript_final", (payload) => {
@@ -319,7 +331,7 @@ export function useTranscription(options?: UseTranscriptionOptions) {
       return
     useTranscriptStore.getState().addSegment({
       id: crypto.randomUUID(),
-      text: payload.text,
+      text: formatTranscriptText(payload.text),
       is_final: true,
       confidence: payload.confidence,
       words: [],

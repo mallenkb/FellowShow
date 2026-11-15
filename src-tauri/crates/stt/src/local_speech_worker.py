@@ -1,9 +1,13 @@
 """Bridge installed speech engines to FellowShow's PCM and transcript streams."""
 
+import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import sys
+import time
+import tarfile
 import urllib.request
 
 SAMPLE_RATE = 16_000
@@ -28,7 +32,24 @@ SHERPA_ASSETS = {
         "ed5d745623472f97cfc2e6c2916ee248798fc5a8",
         "{part}.int8.onnx",
     ),
+    "parakeet-ultra": (
+        "csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-ultra-int8",
+        "402e1190ce85b9793118ee223db21fb0d12f52db",
+        "{part}.int8.onnx",
+    ),
+    "parakeet-unified": (
+        "csukuangfj2/sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-streaming-560ms",
+        "7551fd26fc810cc1e4e043e608db4d13b59be31e",
+        "{part}.int8.onnx",
+    ),
+    "parakeet-redux": (
+        "Codyfederer/sherpa-onnx-nemo-parakeet-redux",
+        "1436e63fdb2f03c4c5772589dc7bc95a3f9b32fe",
+        "{part}.onnx",
+    ),
 }
+
+OFFLINE_PARAKEET = {"parakeet", "parakeet-ultra", "parakeet-redux"}
 
 
 def emit(kind, text="", start=0.0):
@@ -64,6 +85,39 @@ def download_file(url, path, index, count):
     pending.replace(path)
 
 
+def install_redux(source, weights, names):
+    if all((weights / name).is_file() for name in names):
+        return
+    archive = weights / "sherpa-onnx-nemo-parakeet-redux.tar.bz2"
+    download_file(f"{source}/{archive.name}", archive, 1, 1)
+    try:
+        with archive.open("rb") as compressed:
+            digest = hashlib.file_digest(compressed, "sha256").hexdigest()
+        if digest != "4f1b06857fa85abab4d7fb14b644a6a98f2e241d92f9e5227f6719e0050417c4":
+            raise OSError("Parakeet Redux download failed verification")
+
+        emit("progress", "Unpacking Parakeet Redux…")
+        remaining = set(names)
+        with tarfile.open(archive, "r|bz2") as bundle:
+            for member in bundle:
+                name = Path(member.name).name
+                if not member.isfile() or name not in remaining:
+                    continue
+                contents = bundle.extractfile(member)
+                if contents is None:
+                    raise OSError(f"Could not read {name} from Parakeet Redux")
+                target = weights / name
+                pending = target.with_suffix(target.suffix + ".part")
+                with contents, pending.open("wb") as dest:
+                    shutil.copyfileobj(contents, dest)
+                pending.replace(target)
+                remaining.remove(name)
+        if remaining:
+            raise OSError("Parakeet Redux archive is missing model files")
+    finally:
+        archive.unlink(missing_ok=True)
+
+
 def load_sherpa(model, root, download):
     import sherpa_onnx
 
@@ -76,18 +130,17 @@ def load_sherpa(model, root, download):
         names = list(files.values())
         if model == "zipformer":
             names.append("bpe.model")
-        for index, name in enumerate(names, 1):
-            download_file(
-                f"https://huggingface.co/{repo}/resolve/{revision}/{name}",
-                weights / name,
-                index,
-                len(names),
-            )
+        source = f"https://huggingface.co/{repo}/resolve/{revision}"
+        if model == "parakeet-redux":
+            install_redux(source, weights, names)
+        else:
+            for index, name in enumerate(names, 1):
+                download_file(f"{source}/{name}", weights / name, index, len(names))
         emit("progress", "Checking the model…")
 
     threads = min(4, max(1, (os.cpu_count() or 2) // 2))
     config = {key: str(weights / name) for key, name in files.items()}
-    if model == "parakeet":
+    if model in OFFLINE_PARAKEET:
         return sherpa_onnx.OfflineRecognizer.from_transducer(
             **config, num_threads=threads, model_type="nemo_transducer"
         )
@@ -213,7 +266,7 @@ def utterances(frames, max_seconds):
         duration += len(samples)
         silence = silence + len(samples) if quiet else 0
         finished = silence >= SAMPLE_RATE * 0.6 or duration >= SAMPLE_RATE * max_seconds
-        yield samples, offset / SAMPLE_RATE, finished
+        yield samples, offset / SAMPLE_RATE, finished, quiet
         if finished:
             offset += duration
             duration = silence = 0
@@ -222,21 +275,61 @@ def utterances(frames, max_seconds):
 def parakeet_stream(recognizer, frames):
     import numpy as np
 
-    def transcribe(parts, start):
+    def transcribe(parts):
         stream = recognizer.create_stream()
         stream.accept_waveform(SAMPLE_RATE, np.concatenate(parts))
         recognizer.decode_stream(stream)
-        emit("final", stream.result.text, start)
+        return stream.result.text.strip()
 
     parts = []
     start = 0.0
-    for samples, start, finished in utterances(frames, max_seconds=8):
+    samples_in_chunk = 0
+    first_preview_samples = SAMPLE_RATE * 12 // 10
+    update_interval_samples = SAMPLE_RATE * 15 // 10
+    chunk_seconds = 8
+    max_chunk_samples = chunk_seconds * SAMPLE_RATE
+    final_margin_samples = SAMPLE_RATE // 2
+    preview_cost_samples = 0
+    next_preview = first_preview_samples
+    previous = ""
+    for samples, start, finished, quiet in utterances(frames, max_seconds=chunk_seconds):
         parts.append(samples)
+        samples_in_chunk += len(samples)
         if finished:
-            transcribe(parts, start)
+            text = transcribe(parts)
+            if text:
+                emit("final", text, start)
+            elif previous:
+                emit("preview")
             parts.clear()
+            samples_in_chunk = 0
+            next_preview = max(first_preview_samples, 4 * preview_cost_samples)
+            previous = ""
+        elif (
+            not quiet
+            and samples_in_chunk >= next_preview
+            and samples_in_chunk + preview_cost_samples + final_margin_samples < max_chunk_samples
+        ):
+            began = time.monotonic()
+            try:
+                text = transcribe(parts)
+            except Exception as error:
+                print(f"Could not preview Parakeet audio: {error}", file=sys.stderr)
+                next_preview = max_chunk_samples
+                continue
+            if text != previous:
+                emit("preview", text)
+                previous = text
+            # Slow hosts spend less time repeating inference on the same audio.
+            preview_cost_samples = int((time.monotonic() - began) * SAMPLE_RATE)
+            next_preview = samples_in_chunk + max(update_interval_samples, 4 * preview_cost_samples)
+
     if parts:
-        transcribe(parts, start)
+        text = transcribe(parts)
+        if text:
+            emit("final", text, start)
+        elif previous:
+            emit("preview")
 
 
 def voxtral_stream(model, frames):
@@ -249,7 +342,7 @@ def voxtral_stream(model, frames):
     session = None
     text = ""
     start = 0.0
-    for samples, start, finished in utterances(frames, max_seconds=12):
+    for samples, start, finished, _quiet in utterances(frames, max_seconds=12):
         if session is None:
             session = model.create_streaming_session(transcription_delay_ms=480)
             text = ""
@@ -276,7 +369,7 @@ def main(model, action, directory):
         run = voxtral_stream
     else:
         engine = load_sherpa(model, root, download)
-        run = parakeet_stream if model == "parakeet" else online_stream
+        run = parakeet_stream if model in OFFLINE_PARAKEET else online_stream
     emit("ready")
     if not download:
         run(engine, audio_frames())

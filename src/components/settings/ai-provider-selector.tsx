@@ -1,4 +1,10 @@
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { isAiProvider, type AiProvider } from "@/stores/settings-store"
 
 interface AiProviderSelectorProps {
@@ -11,36 +17,25 @@ export function AiProviderSelector({
   onChange,
 }: AiProviderSelectorProps) {
   return (
-    <div className="grid gap-3">
-      <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+    <div className="grid gap-2">
+      <label htmlFor="summary-provider" className="text-xs font-medium">
         Provider
-      </span>
-      <RadioGroup
+      </label>
+      <Select
         value={provider}
         onValueChange={(value) => {
           if (isAiProvider(value)) onChange(value)
         }}
-        className="grid gap-3 md:grid-cols-2"
       >
-        <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20">
-          <RadioGroupItem value="openrouter" className="mt-0.5" />
-          <span className="min-w-0">
-            <span className="block text-xs font-medium">OpenRouter</span>
-            <span className="mt-1 block text-[0.625rem] leading-relaxed text-muted-foreground">
-              Use a supported model through your OpenRouter account.
-            </span>
-          </span>
-        </label>
-        <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors has-data-[state=checked]:border-primary-emphasis/50 has-data-[state=checked]:bg-primary/5 has-data-[state=checked]:ring-1 has-data-[state=checked]:ring-primary-emphasis/20">
-          <RadioGroupItem value="openai" className="mt-0.5" />
-          <span className="min-w-0">
-            <span className="block text-xs font-medium">OpenAI (direct)</span>
-            <span className="mt-1 block text-[0.625rem] leading-relaxed text-muted-foreground">
-              Connect directly to the OpenAI API without OpenRouter.
-            </span>
-          </span>
-        </label>
-      </RadioGroup>
+        <SelectTrigger id="summary-provider" className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="openrouter">OpenRouter</SelectItem>
+          <SelectItem value="openai">OpenAI</SelectItem>
+          <SelectItem value="off">Off</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   )
 }
