@@ -4,6 +4,14 @@
 <dict>
   <key>CFBundleIconName</key>
   <string>FellowShow</string>
+  <key>NSBonjourServices</key>
+  <array>
+    <string>_ndi._tcp.</string>
+  </array>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Fellow Show uses the local network to publish NDI video to other devices.</string>
+  <key>NSCameraUsageDescription</key>
+  <string>Fellow Show shows the GoStream return feed and records it with the sermon.</string>
   <key>NSMicrophoneUsageDescription</key>
   <string>Fellow Show uses the microphone to transcribe live speech for verse detection and broadcast preparation.</string>
 </dict>

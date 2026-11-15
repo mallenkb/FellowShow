@@ -1,0 +1,95 @@
+{
+  "scope": "New Live Notes source context and View Source navigation",
+  "date": "2026-10-17",
+  "native_observation": {
+    "profile": "isolated lyric-verification profile",
+    "new_session_notes": 4,
+    "notes_without_source_metadata": 4,
+    "metadata_only_inspected": true,
+    "stage": "Historical observation before the fix; retained as reproduction evidence."
+  },
+  "cause": "TransportBar used the older native extractive summary generator, which saved note strings through addNotes without source context. LiveNotesPanel used a separate source-aware AI path. Matching existing unlinked notes were also discarded by deduplication instead of receiving their source metadata.",
+  "fixed": [
+    "The automatic native generator snapshots its source transcript and stores exact source text, segment IDs, and global indexes with every retained note.",
+    "Display normalization such as John chapter three verse sixteen to John 3:16 and native note truncation preserve the complete original source.",
+    "A native summary point with no matching captured source is not stored with a guessed source.",
+    "Deduplication attaches missing source metadata to a matching old note while preserving its identity, creation time, and queue membership. Repeated drafts within one batch do not duplicate a note.",
+    "Native extractive generation keeps the separate AI cursor unchanged, so manual AI generation still processes the captured transcript.",
+    "View Source resolves segment identity in the current transcript. Stale indexes cannot highlight unrelated newer text. Historical notes lacking metadata retain the existing unavailable-source fallback."
+  ],
+  "checks": {
+    "targeted_tests": {
+      "passed": 9,
+      "native_generator_and_store_tests": 4,
+      "rendered_panel_integration_tests": 5
+    },
+    "typecheck": "passed",
+    "scoped_eslint": "passed",
+    "prettier_and_diff_whitespace": "passed"
+  },
+  "verified": [
+    "Four automatic native notes have exact source metadata, including nonzero global session offsets, and metadata is retained in the persisted session payload.",
+    "A shortened note retains the complete source segment.",
+    "An existing matching unlinked note gains its source without losing its queued identity.",
+    "Automatic notes render enabled View Source controls and clicking one scrolls/highlights the exact transcript paragraph.",
+    "Manual AI generation through the real parser and store adds source-linked notes without removing automatic note links.",
+    "Changed transcript positions follow the stable source segment ID.",
+    "A source segment absent from the visible transcript does not cause unrelated text to be highlighted.",
+    "A true historical note without metadata still displays the fallback and disables View Source."
+  ],
+  "limits": [
+    "This subagent did not make paid calls, access credentials, control the native UI, or capture microphone audio. The main agent performed and reported the real native and cloud checks above.",
+    "The four existing unlinked historical test notes are preserved; the fix supplies metadata on new generation and can enrich matching notes when regenerated.",
+    "Native View Source was checked on the observed new automatic and manual notes. This does not claim inspection of every note in every session."
+  ],
+  "files": [
+    "src/lib/sermon-actions.ts",
+    "src/stores/sermon-store.ts",
+    "src/components/panels/live-notes-panel.tsx",
+    "src/lib/sermon-actions.test.ts",
+    "src/components/panels/live-notes-panel.test.tsx"
+  ],
+  "native_optimized_release_verification": {
+    "evidence_source": "Actual native UI observations reported by the main agent; this subagent did not control the UI or read credentials.",
+    "app_identifier": "com.openbezal.fellowshow.release-verification",
+    "optimized_release": true,
+    "pid": 21757,
+    "session_started": "2026-10-17 12:03:55 UTC",
+    "status": "passed",
+    "automatic_note": {
+      "text": "Reflect on the love of God and the promise of eternal life.",
+      "source_context_present": true,
+      "view_source_enabled": true,
+      "view_source_result": "Highlighted the two exact source transcript segments in the running native app."
+    },
+    "manual_ai_generation": {
+      "status": "passed",
+      "observation": "The Notes action added the neighbors sentence. Its View Source control was enabled and checked against its source."
+    },
+    "real_openai_summary": {
+      "provider": "OpenAI direct",
+      "model": "gpt-4.1-mini",
+      "completed": "2026-10-17 12:05 UTC",
+      "title": "The Love of God and the Promise of Eternal Life",
+      "save_result": "Saved"
+    },
+    "screenshots": [
+      "screenshots/final-live-notes-source.png",
+      "screenshots/final-manual-ai-note-source.png",
+      "screenshots/final-openai-summary.png",
+      "screenshots/final-speech-stopped-tab-return.png"
+    ],
+    "generated_fixture_final_segments": 5,
+    "full_retained_transcript_segments": 7,
+    "additional_transcript_segments": "Two ambient segments arrived after fixture playback while notes were being checked.",
+    "stop": {
+      "status": "passed",
+      "observation": "After Stop sermon, the native UI showed Start transcribing and Start Sermon, both microphone meters were exactly zero, and Program was OFF AIR."
+    },
+    "post_stop_tab_return": {
+      "status": "passed",
+      "observation": "A Songs to Sermon tab round trip retained John > Chapter 3 with verse 16 selected and scrolled into view. Six notes remained, with View Source enabled.",
+      "screenshot": "screenshots/final-speech-stopped-tab-return.png"
+    }
+  }
+}

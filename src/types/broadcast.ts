@@ -128,6 +128,7 @@ export interface BroadcastTheme {
   }
   verseNumbers: {
     visible: boolean
+    /** Retained for saved themes. The renderer uses half the verse text size. */
     fontSize: number
     color: string
     superscript: boolean

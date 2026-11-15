@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-17",
+  "scope": "Document conversion and media import validation, with fixture preparation for the native UI test controlled by the parent agent",
+  "nativeUiVerifiedByThisAgent": false,
+  "fixtures": "fixtures/manifest.json",
+  "nativeConverter": {
+    "implementation": "src-tauri/src/commands/documents.rs prepare_document",
+    "runtime": "Codex bundled LibreOfficeDev 26.8.0.0.alpha0 AARCH64",
+    "passedChecks": 7,
+    "validDocx": "Converted successfully to a two-page PDF. Both rendered pages were inspected.",
+    "validPptx": "Converted successfully to a two-page PDF. Both rendered pages were inspected.",
+    "invalidDocxBeforeFix": "LibreOffice accepted the corrupted fixture as text and returned a PDF. The regression test failed.",
+    "invalidDocxAfterFix": "Rejected before conversion with a file-format error.",
+    "invalidPptxAfterFix": "Rejected before conversion with a file-format error.",
+    "command": "LIBREOFFICE_PATH=<bundled-soffice> FELLOWSHOW_DOCUMENT_TEST_DIR=<fixture-directory> cargo test --locked -p fellowshow --lib commands::documents::tests -- --include-ignored"
+  },
+  "frontendChecks": {
+    "testFiles": 5,
+    "passedTests": 23,
+    "coverage": [
+      "Image decode success, failure, invalid dimensions, and timeout",
+      "Video frame decode success, failure, and decoder cleanup",
+      "Invalid cached media removal",
+      "Mixed valid and invalid file imports preserve the valid files",
+      "Corrupted PDF load always destroys the PDF.js task",
+      "Existing media canvas operator interactions"
+    ],
+    "typecheck": "passed",
+    "scopedEslint": "passed",
+    "scopedPrettier": "passed"
+  },
+  "fixes": [
+    "Reject modern Office and OpenDocument files without a ZIP package header so LibreOffice cannot silently import corrupted bytes as text.",
+    "Decode imported images and videos before adding presentation slides, reject damaged or unsupported media, and remove failed cache copies.",
+    "Grant file removal only within the application's media directory so deleting imported documents can remove their cached page images.",
+    "Destroy the PDF.js loading task after both failed and successful loads."
+  ],
+  "rustChecks": {
+    "format": "passed",
+    "strictClippy": "passed for fellowshow --lib --tests before a separate concurrent STT edit",
+    "optionalLatestConversionRerun": "An additional rerun after removing the fixture's default Word title border was blocked by a concurrent whisper.rs type-inference error. The completed 7-check native conversion run had already passed."
+  },
+  "limitations": [
+    "This agent did not operate the native UI. The parent agent must verify the actual app's file picker, page navigation, preview-to-live flow, and file cleanup.",
+    "The file-header check validates the ZIP container signature, not every part of an Office package. LibreOffice still performs the full conversion.",
+    "The media check validates an image or the first decoded video frame. It cannot prove every later video frame is intact.",
+    "No installed Office application, credential, external display, or microphone was used."
+  ],
+  "actualNativeCacheVerification": {
+    "scope": "Read-only verification of fixture entries and cached page images written by the actual native import flow. This does not verify UI selection behavior.",
+    "profileStore": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/presentation-documents.json",
+    "documents": [
+      {
+        "source": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/fixtures/e2e-two-pages.pdf",
+        "status": "ready",
+        "totalPages": 2,
+        "pages": [
+          {
+            "pageNumber": 1,
+            "width": 1920,
+            "height": 1080,
+            "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/12640f5f-f168-4d08-a2d4-390f32f78cbf.png",
+            "exists": true,
+            "sha256": "f6e6adb62ccba4b7667507b11f3de46969f26ab253321e18797793a65df67c12"
+          },
+          {
+            "pageNumber": 2,
+            "width": 1920,
+            "height": 1080,
+            "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/8d822734-6fff-44c9-80d7-a1d4403c2cc1.png",
+            "exists": true,
+            "sha256": "e431863e605409535e5961b6540994e8c8e3833c15700a130428a21d36f20cc7"
+          }
+        ]
+      },
+      {
+        "source": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/fixtures/mixed-import/e2e-two-pages.docx",
+        "status": "removed_by_explicit_native_ui_control_after_visual_verification",
+        "totalPages": 2,
+        "pages": [
+          {
+            "pageNumber": 1,
+            "width": 1484,
+            "height": 1920,
+            "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/4d1bdf4b-8601-42f2-b7d6-66ffb5d50add.png",
+            "exists": true,
+            "sha256": "d3dd27efc1bbc6e8ac79be0c6af9ec8a8344a547b3aec99d756d3e03f141c753",
+            "existsAfterExplicitRemoval": false
+          },
+          {
+            "pageNumber": 2,
+            "width": 1484,
+            "height": 1920,
+            "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/7979e73b-d08a-49df-8393-9ee763c9c593.png",
+            "exists": true,
+            "sha256": "dcc1f5fd09b6b4e0925095014e8960ca7b7ffd58dedeef0a5cbc08b3133fc886",
+            "existsAfterExplicitRemoval": false
+          }
+        ]
+      },
+      {
+        "source": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/fixtures/mixed-import/e2e-two-pages.pdf",
+        "status": "ready",
+        "totalPages": 2,
+        "pages": [
+          {
+            "pageNumber": 1,
+            "width": 1920,
+            "height": 1080,
+            "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/51ff37eb-d868-443d-bea1-9781949578f8.png",
+            "exists": true,
+            "sha256": "f6e6adb62ccba4b7667507b11f3de46969f26ab253321e18797793a65df67c12"
+          },
+          {
+            "pageNumber": 2,
+            "width": 1920,
+            "height": 1080,
+            "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/eb6dc257-af4b-4867-a642-d13a7188d2e5.png",
+            "exists": true,
+            "sha256": "e431863e605409535e5961b6540994e8c8e3833c15700a130428a21d36f20cc7"
+          }
+        ]
+      }
+    ],
+    "visualFindings": [
+      "DOCX pages 1 and 2 preserve their respective page titles and order markers, the main sentence, and the three authored lines with no clipping.",
+      "PDF page 1 has the expected teal background, page 1 text, top-left marker, and bottom-right white square.",
+      "PDF page 2 has the expected orange background, page 2 text, top-left marker, and bottom-right white square."
+    ],
+    "originalAndMixedImportPdfRgbPixelsIdentical": [
+      true,
+      true
+    ],
+    "pptCleanup": "The original PowerPoint document was removed by the prior nested-button accessibility defect. Its former cache filenames were not retained. Reimported PowerPoint pages are now ready, present, and visually verified.",
+    "profileOrCachedFilesModified": false,
+    "reimportedPowerPoint": {
+      "source": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/fixtures/mixed-import/e2e-two-slides.pptx",
+      "status": "ready",
+      "totalPages": 2,
+      "pages": [
+        {
+          "pageNumber": 1,
+          "width": 1921,
+          "height": 1080,
+          "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/4b0bc535-eea3-42c4-bcd4-fc6f27f3bffb.png",
+          "exists": true,
+          "sha256": "59df32a98d822ef3a2c903f33ba4bf4bb0a6e19afb4c9c831455efc41e6d0e8b"
+        },
+        {
+          "pageNumber": 2,
+          "width": 1921,
+          "height": 1080,
+          "cachedPath": "/Users/mallenkb/Library/Application Support/com.openbezal.fellowshow.lyric-verification/media/54b84d3a-e174-4537-85c4-ae8fc7ea67ac.png",
+          "exists": true,
+          "sha256": "f605076bf4da24451d88d2b8291bcc61a9d7d042709e18d01393a7bee6fa9740"
+        }
+      ],
+      "visualVerification": "Actual native cache page 1 has teal background, PowerPoint slide 1 title, the source sentence, and slide-order marker 1. Page 2 has orange background, slide 2 title and marker 2. Text, color and order are correct with no clipping."
+    },
+    "laterNativeUiVerificationByRoot": {
+      "wordPage2CanvasPreviewLive": "passed",
+      "wordEvidence": "screenshots/docx-page2-preview-live.png",
+      "separateSelectAndRemoveControls": "passed, selection preserves documents until explicit Remove",
+      "cacheCleanupEvidence": "document-cleanup-results.json",
+      "cacheCleanup": "The explicitly removed Word document pages are gone, source is retained, and other document pages remain."
+    }
+  }
+}

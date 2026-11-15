@@ -3,6 +3,7 @@ import { PaletteIcon, MonitorIcon, SettingsIcon } from "lucide-react"
 import { useAppNavigationStore } from "@/stores/app-navigation-store"
 import { Button } from "@/components/ui/button"
 import { SermonControl } from "@/components/controls/sermon-control"
+import { RecordingIndicator } from "@/components/return-feed/recording-indicator"
 import { ServiceTitleEditor } from "@/components/controls/service-title-editor"
 import {
   APP_HEADER_CLASS,
@@ -130,6 +131,7 @@ export function TransportBar({
             : "flex shrink-0 items-center gap-1"
         }
       >
+        <RecordingIndicator />
         <SermonControl
           layout="header"
           elapsed={activeSession ? sermonTime : undefined}

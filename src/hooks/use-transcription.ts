@@ -168,7 +168,7 @@ export const transcriptionActions = {
 
         const localModelOptions = settings.localSpeechModel
           ? { localSpeechModel: settings.localSpeechModel }
-          : settings.whisperModel === "small.en"
+          : settings.whisperModel !== "large-v3-turbo"
             ? { whisperModel: settings.whisperModel }
             : {}
 

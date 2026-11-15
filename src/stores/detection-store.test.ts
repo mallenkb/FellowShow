@@ -16,9 +16,7 @@ const detection: DetectionResult = {
   is_chapter_only: false,
 }
 
-beforeEach(() =>
-  useDetectionStore.setState({ sessionId: null, detections: [] })
-)
+beforeEach(() => useDetectionStore.setState({ sessionId: null, detections: [] }))
 
 it("keeps detections when resuming a session and clears them for another", () => {
   useDetectionStore.getState().setSession("first")

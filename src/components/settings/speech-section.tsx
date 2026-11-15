@@ -9,8 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
 import { CheckIcon } from "lucide-react"
 import { SavedKeysStatus } from "./saved-keys-status"
-import { LocalSpeechModels } from "./local-speech-models"
-import { WhisperModels } from "./whisper-models"
+import { SpeechModelPicker } from "./speech-model-picker"
 
 export function SpeechSection() {
   const {
@@ -169,20 +168,15 @@ export function SpeechSection() {
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span className="text-xs font-medium text-foreground">Local</span>
               <p className="text-[0.625rem] leading-relaxed text-muted-foreground">
-                Download a model once, then transcribe offline. Audio stays on
-                your device.
+                Download a model before you need it. Select Local to transcribe
+                offline when Deepgram is unavailable.
               </p>
             </div>
           </label>
         </RadioGroup>
       </div>
 
-      {sttProvider === "whisper" && (
-        <>
-          <WhisperModels />
-          <LocalSpeechModels />
-        </>
-      )}
+      {sttProvider === "whisper" && <SpeechModelPicker />}
 
       {sttProvider !== "whisper" && (
         <div className="flex flex-col gap-2">

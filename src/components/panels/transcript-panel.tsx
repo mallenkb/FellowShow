@@ -548,13 +548,14 @@ export function TranscriptPanel({ isVisible = true }: { isVisible?: boolean }) {
             {segments.map((seg, idx) => {
               const distFromEnd = segments.length - 1 - idx
               const opacity =
+                // Dark-mode tiers stay at or above 4.5:1 on the card surface.
                 distFromEnd === 0
-                  ? "text-foreground dark:text-foreground/80"
+                  ? "text-foreground"
                   : distFromEnd === 1
-                    ? "text-foreground/80 dark:text-foreground/60"
+                    ? "text-foreground/80 dark:text-foreground/85"
                     : distFromEnd <= 3
-                      ? "text-muted-foreground dark:text-foreground/40"
-                      : "text-muted-foreground dark:text-foreground/25"
+                      ? "text-muted-foreground dark:text-foreground/70"
+                      : "text-muted-foreground dark:text-foreground/55"
               return (
                 <Fragment key={seg.id}>
                   <SermonTranscriptGap

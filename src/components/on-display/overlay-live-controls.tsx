@@ -47,10 +47,8 @@ export function OverlayLiveControls() {
       {!onAir || pending ? (
         <LiveActionButton
           action={pending ? "update" : "show"}
+          label={pending ? "Update graphics on Live" : "Show graphics on Live"}
           className="flex-1"
-          aria-label={
-            pending ? "Update graphics on Live" : "Show graphics on Live"
-          }
           disabled={busy || !output || (previewEmpty && !onAir)}
           onClick={() => void run("show")}
         />
@@ -58,8 +56,8 @@ export function OverlayLiveControls() {
       {onAir ? (
         <LiveActionButton
           action={pending ? "stop" : "stop-live"}
+          label="Stop graphics"
           className="flex-1"
-          aria-label="Stop graphics on Live"
           disabled={busy}
           onClick={() => void run("stop")}
         />

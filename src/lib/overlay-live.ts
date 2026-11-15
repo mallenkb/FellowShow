@@ -59,8 +59,8 @@ export async function showOverlayPreviewOnLive(
 }
 
 /**
- * Takes graphics off air. Preview keeps its selection. A Video Overlays output
- * closes; a General display stays on and just drops the graphics.
+ * Takes graphics off air. Preview keeps its selection. NDI stays available
+ * to receivers, and General displays stay open for Program.
  */
 export async function stopOverlayOutputLive(outputId: string): Promise<void> {
   const store = useBroadcastStore.getState()
@@ -69,7 +69,7 @@ export async function stopOverlayOutputLive(outputId: string): Promise<void> {
       candidate.id === outputId && carriesGraphics(candidate, store.outputs)
   )
   if (!output) return
-  if (output.content === "everything") {
+  if (output.content === "everything" || output.outputType === "ndi") {
     store.setOverlayOutputLive(output.id, false)
     return
   }

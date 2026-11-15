@@ -9,6 +9,7 @@ import { SermonSessionDialog } from "@/components/controls/sermon-session-dialog
 import { SermonDeleteDialog } from "@/components/controls/sermon-delete-dialog"
 import { StartScreen } from "@/components/home/start-screen"
 import { useAppNavigationStore } from "@/stores/app-navigation-store"
+import { openSettings } from "@/lib/settings-dialog"
 
 const TutorialOverlay = lazy(() =>
   import("@/components/tutorial/tutorial-overlay").then((module) => ({
@@ -35,6 +36,31 @@ function App() {
   useRemoteControl()
   const [tutorialReady, setTutorialReady] = useState(false)
   const home = useAppNavigationStore((state) => state.screen === "home")
+
+  useEffect(() => {
+    const isMac = navigator.platform.startsWith("Mac")
+    const onKeyDown = (event: KeyboardEvent) => {
+      const modifier = isMac
+        ? event.metaKey && !event.ctrlKey
+        : event.ctrlKey && !event.metaKey
+      if (
+        !modifier ||
+        event.key !== "," ||
+        event.altKey ||
+        event.shiftKey ||
+        event.isComposing ||
+        event.defaultPrevented
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      if (!event.repeat) openSettings()
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setTutorialReady(true), 250)

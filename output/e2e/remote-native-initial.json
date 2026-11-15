@@ -1,0 +1,71 @@
+{
+  "phase": "native app before current fixes are rebuilt",
+  "health": {
+    "status": 200,
+    "body": {
+      "status": "ok",
+      "service": "fellowshow",
+      "version": "0.1.0"
+    }
+  },
+  "before": {
+    "status": 200,
+    "body": {
+      "on_air": false,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": null,
+      "queue_length": 0,
+      "confidence_threshold": 0.8
+    }
+  },
+  "httpOpacity": {
+    "status": 200,
+    "body": {
+      "success": true
+    }
+  },
+  "after": {
+    "status": 200,
+    "body": {
+      "on_air": false,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": null,
+      "queue_length": 0,
+      "confidence_threshold": 0.8
+    }
+  },
+  "oscConfidencePacketSent": true,
+  "oscVerification": "Threshold changed from 0.8 to 0.79 via real UDP, then returned to 0.8 via HTTP. Native UI command log confirmed both transports, with the pre-fix source label bug.",
+  "oscConfidenceChangedTo079": {
+    "status": 200,
+    "body": {
+      "on_air": false,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": null,
+      "queue_length": 0,
+      "confidence_threshold": 0.79
+    }
+  },
+  "httpConfidenceRestore": {
+    "status": 200,
+    "body": {
+      "success": true
+    }
+  },
+  "httpConfidenceRestoredTo08": {
+    "status": 200,
+    "body": {
+      "on_air": false,
+      "active_theme": "Bible Verse Preview",
+      "live_verse": null,
+      "queue_length": 0,
+      "confidence_threshold": 0.8
+    }
+  },
+  "httpOpacityRestore": {
+    "status": 200,
+    "body": {
+      "success": true
+    }
+  }
+}

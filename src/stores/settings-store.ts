@@ -4,6 +4,7 @@ import {
   invoke,
   LOCAL_SPEECH_MODEL_IDS,
   type LocalSpeechModel,
+  WHISPER_MODEL_IDS,
   type WhisperModel,
 } from "@/lib/ipc"
 import {
@@ -117,7 +118,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   onboardingComplete: false,
   sttProvider: "deepgram",
   whisperModel: "large-v3-turbo",
-  localSpeechModel: null,
+  localSpeechModel: "parakeet",
   hiddenTranslationIds: [],
   pinnedTranslationIds: DEFAULT_PINNED_TRANSLATION_IDS,
   translationOrderIds: [],
@@ -420,11 +421,11 @@ async function loadValidatedSettings(
       case "sttProvider":
         if (isSttProvider(value)) patch.sttProvider = value
         break
-      case "whisperModel":
-        if (value === "small.en" || value === "large-v3-turbo") {
-          patch.whisperModel = value
-        }
+      case "whisperModel": {
+        const model = WHISPER_MODEL_IDS.find((id) => id === value)
+        if (model) patch.whisperModel = model
         break
+      }
       case "localSpeechModel":
         if (value === null) {
           patch.localSpeechModel = null

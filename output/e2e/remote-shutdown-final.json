@@ -1,0 +1,5 @@
+{
+  "httpConnectionsRefused": true,
+  "httpPortReusable": true,
+  "oscPortReusable": true
+}

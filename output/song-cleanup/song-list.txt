@@ -1,0 +1,228 @@
+Song cleanup results at the requested stopping point
+
+Scanned 1088 bundled and imported catalog entries.
+Listed 71 entries with confirmed issues so far. This is not a completed inventory of every possible issue.
+Catalog data has not been edited. Three entries benefit from the parser correction.
+Typecheck, targeted ESLint and whitespace checks passed. Tests and runtime/visual checks were not run.
+
+english-228 | We'll be like Him, When Jesus Christ the Son of | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+english-229 | Jehovah is Your majestic Name; God of the living You are | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+english-230 | Jesus Christ is Wonderful Counsellor, God Almighty | Needs cleanup
+  Other songs are appended after the intended song and its translation credit.
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+english-231 | But if by a still, small voice He calls | Needs cleanup
+  The hymn is incomplete and starts partway through a verse. A complete local variant exists.
+
+english-234 | We are in your hands O Lord Prepare us, give us grace and | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+twi-260 | Onyame kae me 1! Kae me ma 1ny1 yiye! | Needs cleanup
+  The song includes following songs and an index, totaling 651 lines.
+
+pentecostal-book-9 | All His ways are | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-17 | Ancient fire at work in us | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-21 | Ar-ise, shine, still move forward | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-27 | Be steadfast and Immovable | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+theme-2025-28 | TWI & OTHER GHANAIAN | Needs cleanup
+  This is a category heading and table of contents, not a song.
+
+theme-2025-29 | Yɛfri atifi, ne anafoɔ | Needs cleanup
+  This contains table-of-contents entries, not lyrics.
+
+pentecostal-book-30 | Behold he comes, in power | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-42 | Christ is born for us today | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-43 | Christ is risen from the dead! | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-47 | Come, let us all rejoice! (x2) | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-50 | Cover me with the Cloud | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-54 | Declaring what I know | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-68 | For God so loved the world, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-72 | From season to season | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-76 | Glory! Glory! Glory! | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-82 | Gracious God you are | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-96 | He carried my shame | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-97 | He died for me, He died for me | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-102 | He lives, He lives, He’s risen | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-109 | He’s shown up Himself once | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-115 | Holy Spirit, Holy Spirit | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-134 | I have Jesus within my heart | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-152 | I will render praises to my God, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-153 | I’ll build my house upon the | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-155 | I’ll keep on serving you | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-178 | Jehovah is Your majestic | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-191 | Jesus is the Bread of Life; | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-192 | Jesus! Jesus, my Saviour, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-196 | Jesus, my King, my | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-197 | Jesus, my Saviour, came | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-205 | Jesus, you are my friend | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-210 | Just as I am | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-224 | Let Your anointing fall on us; | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-225 | Let your fire burn (x2) | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-253 | My soul is seeking after you | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-282 | Our mighty tower is the Lord | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-295 | Prepare me, Lord, prepare me, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-296 | Preserve my life, keep me | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-304 | Rise now upon your feet, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-305 | Rise, shine, give God the glory, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-312 | Send us the Rain, Lord, send | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-321 | Speak to me, Lord, speak, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-326 | Sweep over my soul, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-331 | The Ancient Pentecost Power | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-339 | The fire will never die | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-341 | The heavens are all Yours | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-342 | The Lord has set the fire of | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-376 | Upon the hill of Calvary, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-380 | We are in your hands, O Lord | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-388 | We praise you, O Lord, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-392 | We will praise your holy name, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-393 | We’ll be like Him, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-397 | What a Master I follow; | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-398 | What a Sovereign God He is! | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-420 | With my lips I will praise you | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-432 | You are my Great Redeemer, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-435 | You are the Lord, you never | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-439 | You are worthy of our thanks | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-443 | Your resting place! I come | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-444 | Your will, not mine, be done, | Needs cleanup
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-445 | Zion's Strong Tower | Needs cleanup
+  The song includes an appended index and following songs, totaling 7,018 lines.
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+pentecostal-book-477 | Oebubu mo mpokyer1 m’ | Needs cleanup
+  The song includes following songs and an index, totaling 5,801 lines.
+  Translation credits and their continuation lines are mixed into the displayed lyrics.
+
+english-36 | Jesus shall reign where’er the sun | Parser fixed
+  The source-credit matcher removed legitimate lyric lines beginning with Blessings. The matcher now requires a catalog number.
+
+english-56 | “Great is Thy faithfulness” O God my Father | Parser fixed
+  The source-credit matcher removed legitimate lyric lines beginning with Blessings. The matcher now requires a catalog number.
+
+pentecostal-book-202 | Jesus shall reign where’er | Parser fixed
+  The source-credit matcher removed legitimate lyric lines beginning with Blessings. The matcher now requires a catalog number.
+
+Source references
+https://copdenmark.dk/media/docs/cop_english_twi.pdf
+https://copaustria.org/wp-content/uploads/2019/06/copsongsbook.pdf
+https://manual.openlp.org/songs.html
+https://learn.renewedvision.com/propresenter/working-with-slides

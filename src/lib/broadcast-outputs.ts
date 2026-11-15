@@ -9,6 +9,10 @@ import {
 } from "./ndi-output-config"
 import type { OutputType } from "@/lib/broadcast-output-control"
 import { selectFreeMonitorIndex } from "@/lib/broadcast-output-control"
+import {
+  sanitizeScreenIdentity,
+  type ScreenIdentity,
+} from "@/lib/screen-identity"
 
 /**
  * What a broadcast output shows. "everything" mirrors the full program
@@ -88,6 +92,8 @@ export interface BroadcastOutputConfig {
   themeId: string | null
   outputType: OutputType
   monitorIndex: number | null
+  /** The screen this output was set to, so it survives screen reordering. */
+  screen?: ScreenIdentity
   /** Keyer background for the graphics-only output role. */
   overlayMode?: OverlayOutputMode
   /** Saved sender choices. Active sessions and open windows remain ephemeral. */
@@ -325,6 +331,7 @@ export function sanitizeOutputConfigs(
       candidate.ndi,
       defaultNdiOutputConfig(name)
     )
+    const screen = sanitizeScreenIdentity(candidate.screen)
     const output = {
       id,
       name,
@@ -341,6 +348,7 @@ export function sanitizeOutputConfigs(
         candidate.monitorIndex >= 0
           ? candidate.monitorIndex
           : null,
+      ...(screen ? { screen } : {}),
       ...(ndi ? { ndi } : {}),
       ...(content === "overlays"
         ? {
@@ -367,13 +375,14 @@ export function sanitizeOutputConfigs(
 
 /**
  * Spread display outputs across monitors: outputs keep any valid selection,
- * the rest are assigned unused monitors in order (externals first). When
+ * outputs waiting for an unplugged screen are skipped, and the rest are
+ * assigned unused monitors in order (externals first). When
  * more outputs than monitors exist, leftovers get the first external and the
  * overlap warning in the dialog takes it from there.
  */
 export function assignDefaultMonitorIndices(
   outputs: Array<
-    Pick<BroadcastOutputConfig, "id" | "outputType" | "monitorIndex">
+    Pick<BroadcastOutputConfig, "id" | "outputType" | "monitorIndex" | "screen">
   >,
   monitors: Array<{ isPrimary: boolean }>
 ): Record<string, number> {
@@ -393,7 +402,12 @@ export function assignDefaultMonitorIndices(
   }
 
   for (const output of outputs) {
-    if (output.outputType !== "display" || isValid(output.monitorIndex)) {
+    // An output whose saved screen is unplugged waits for the operator.
+    if (
+      output.outputType !== "display" ||
+      isValid(output.monitorIndex) ||
+      output.screen
+    ) {
       continue
     }
     const free = selectFreeMonitorIndex(monitors, taken)

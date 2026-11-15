@@ -89,11 +89,25 @@ describe("MonitorSelectField", () => {
       takenMonitors: [{ index: 1, outputName: "Main Output" }],
     })
 
-    await user.click(
-      screen.getByRole("button", { name: /use monitor #41054/i })
-    )
+    await user.click(screen.getByRole("button", { name: /use screen 3/i }))
 
     expect(onValueChange).toHaveBeenCalledWith("2")
+  })
+
+  it("asks for a screen when the saved screen is unplugged", () => {
+    renderField({
+      value: "",
+      missingScreen: {
+        name: "Monitor #18288",
+        x: 3648,
+        y: 0,
+        width: 1920,
+        height: 1080,
+      },
+    })
+    expect(screen.getByRole("alert").textContent).toMatch(
+      /Monitor #18288, 1920×1080\) isn't connected/
+    )
   })
 
   it("offers no quick fix when every monitor is taken", () => {

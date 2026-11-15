@@ -3,11 +3,17 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { create } from "zustand"
 import { Button } from "@/components/ui/button"
+import { RadioGroupItem } from "@/components/ui/radio-group"
 import { invoke, type WhisperModel, type WhisperModelStatus } from "@/lib/ipc"
 import { saveSettingsNow, useSettingsStore } from "@/stores/settings-store"
 
 const MODEL_NAMES: Record<WhisperModel, string> = {
-  "small.en": "Small English",
+  tiny: "Tiny",
+  base: "Base",
+  small: "Small",
+  "small.en": "SermonCast",
+  medium: "Medium",
+  "large-v3": "Large v3",
   "large-v3-turbo": "Large v3 Turbo",
 }
 
@@ -49,13 +55,26 @@ async function downloadModel(model: WhisperModel) {
   }
 }
 
-export function WhisperModels() {
-  const selected = useSettingsStore((state) =>
-    state.localSpeechModel ? null : state.whisperModel
-  )
+export function useWhisperModels() {
   const { model: downloading, received } = useModelDownload()
   const [models, setModels] = useState<WhisperModelStatus[]>([])
   const [error, setError] = useState<string>()
+  const [deleting, setDeleting] = useState(false)
+  const [modelListRevision, setModelListRevision] = useState(0)
+
+  async function deleteModel(model: WhisperModel) {
+    setDeleting(true)
+    try {
+      await invoke("delete_whisper_model", { model })
+    } catch (failure) {
+      toast.error("Could not delete the model", {
+        description: String(failure),
+      })
+    } finally {
+      setDeleting(false)
+      setModelListRevision((revision) => revision + 1)
+    }
+  }
 
   useEffect(() => {
     let ignore = false
@@ -71,67 +90,72 @@ export function WhisperModels() {
     return () => {
       ignore = true
     }
-  }, [downloading])
+  }, [downloading, modelListRevision])
 
-  return (
-    <section aria-label="Whisper models" className="flex flex-col gap-2">
-      <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-        Whisper models
-      </h3>
-      {error ? (
-        <p role="alert" className="text-xs text-destructive">
-          {error}
-        </p>
-      ) : models.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Checking local models…</p>
-      ) : (
-        models.map(({ model, sizeBytes, installed }) => {
-          const active = installed && model === selected
-          const pending = downloading === model
-          const percent = Math.min(
-            100,
-            Math.floor((received / sizeBytes) * 100)
-          )
-          return (
-            <div
-              key={model}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3"
+  const rows = models.map(({ model, sizeBytes, installed, canDelete }) => {
+    const pending = downloading === model
+    const percent = Math.min(100, Math.floor((received / sizeBytes) * 100))
+    return {
+      model,
+      installed,
+      row: (
+        <div
+          key={model}
+          className="flex flex-wrap items-center gap-3 px-3 py-2.5 has-data-[state=checked]:bg-primary/5"
+        >
+          {installed ? (
+            <RadioGroupItem
+              value={model}
+              aria-label={`Use ${MODEL_NAMES[model]}`}
+              disabled={downloading !== null || deleting}
+            />
+          ) : (
+            <span className="size-4 shrink-0" aria-hidden="true" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium">{MODEL_NAMES[model]}</p>
+            <p className="text-xs text-muted-foreground">
+              {Math.round(sizeBytes / 1024 ** 2)} MiB
+              {model === "small.en" ? " · Whisper Small English" : ""}
+            </p>
+          </div>
+
+          {!installed && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={downloading !== null || deleting}
+              aria-label={`Download and use ${MODEL_NAMES[model]}`}
+              onClick={() => void downloadModel(model)}
             >
-              <div>
-                <p className="text-xs font-medium">{MODEL_NAMES[model]}</p>
-                <p className="text-xs text-muted-foreground">
-                  {Math.round(sizeBytes / 1024 ** 2)} MiB · Q8_0
-                  {model === "small.en" ? " · English only" : ""}
-                </p>
-              </div>
-              {active ? (
-                <span className="text-xs text-muted-foreground">Selected</span>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={downloading !== null}
-                  aria-label={
-                    installed
-                      ? `Use ${MODEL_NAMES[model]}`
-                      : `Download and use ${MODEL_NAMES[model]}`
-                  }
-                  onClick={() =>
-                    void (installed ? selectModel(model) : downloadModel(model))
-                  }
-                >
-                  {pending
-                    ? `Downloading ${percent}%`
-                    : installed
-                      ? "Use model"
-                      : "Download and use"}
-                </Button>
-              )}
-            </div>
-          )
-        })
-      )}
-    </section>
-  )
+              {pending ? "Downloading…" : "Download and use"}
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              disabled={downloading !== null || deleting}
+              aria-label={`Delete ${MODEL_NAMES[model]}`}
+              onClick={() => void deleteModel(model)}
+            >
+              Delete
+            </Button>
+          )}
+          {pending && (
+            <progress
+              className="w-full"
+              max={100}
+              value={percent}
+              aria-label={`Downloading ${MODEL_NAMES[model]}`}
+            />
+          )}
+        </div>
+      ),
+    }
+  })
+
+  return { rows, error, loading: !error && models.length === 0 }
 }

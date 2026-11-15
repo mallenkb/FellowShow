@@ -1,0 +1,151 @@
+{
+  "scope": "Audio conversion, provider transports, transcription lifecycle, and local Whisper inference",
+  "date": "2026-10-17",
+  "fixed": [
+    {
+      "issue": "Stopping a native session did not call the provider stop method, leaving requests and workers running.",
+      "change": "The session runner forwards cancellation after up to 3 seconds of graceful drain, awaits provider cleanup, releases capture, and forwards startup errors. Responsive providers preserve captured final words. Unresponsive requests are cancelled after the grace. Already-cancelled sessions do not start a provider, and stopped per-session provider instances remain stopped."
+    },
+    {
+      "issue": "OpenAI, Groq, and Deepgram hybrid polling blocked the async runtime while waiting for audio.",
+      "change": "Audio waits now yield to transcript, transport, and stop tasks."
+    },
+    {
+      "issue": "OpenAI and Groq silently discarded failed requests for the last buffered audio chunk.",
+      "change": "Both full and final chunks return and publish request failures. Requests have a time limit and cancellation interrupts in-flight requests."
+    },
+    {
+      "issue": "Deepgram socket tasks could outlive disconnected sessions, and final transcripts could be lost during stream close.",
+      "change": "Socket reads, writes, and audio bridging share one lifecycle. Unexpected closes reconnect. Normal input close waits for the final server transcript."
+    },
+    {
+      "issue": "Deepgram explicit error messages were ignored and hybrid REST failures were only logged.",
+      "change": "Explicit provider errors reach the operator. Hybrid fallback reports failures and flushes remaining audio when its input closes."
+    },
+    {
+      "issue": "A corrupt Whisper model left its audio worker waiting and reported connected before loading completed.",
+      "change": "Model failures stop the audio worker and return an error. Connected is emitted only after the model and inference state are ready. Stop can abort active inference."
+    },
+    {
+      "issue": "Whisper required six voiced frames but retained four pre-speech frames, cutting off the start of speech.",
+      "change": "Whisper retains six pre-speech frames. The generated spoken fixture now retains its first word."
+    },
+    {
+      "issue": "After transcription stopped, the microphone meters retained their last live level.",
+      "change": "Both explicit Stop and native session completion reset RMS and peak to zero. A failed Stop preserves the still-active meter state."
+    }
+  ],
+  "checks": {
+    "audio_unit_and_fuzz_tests": {
+      "passed": 12,
+      "generated_cases": 20000
+    },
+    "stt_standard_tests": {
+      "passed": 19,
+      "manually_run_tests_normally_ignored": 2,
+      "generated_cases": 20000
+    },
+    "main_command_lifecycle_tests": {
+      "passed": 4
+    },
+    "audio_stt_strict_clippy": "passed",
+    "formatting_and_diff_whitespace": "passed",
+    "main_strict_clippy": "passed",
+    "transcription_frontend_tests": {
+      "passed": 14
+    },
+    "typecheck": "passed",
+    "frontend_scoped_eslint_and_prettier": "passed"
+  },
+  "local_end_to_end": [
+    "Generated stereo PCM is downmixed to the active channel, resampled from 48 kHz to 16 kHz, and gain limited.",
+    "Real loopback HTTP multipart WAV request preserves PCM bytes and returns a final transcript.",
+    "Final HTTP 401 errors reach the event stream and return an error.",
+    "Real loopback Deepgram WebSocket session reconnects after server close and resumes transcript delivery.",
+    "WebSocket stream closure preserves its last final transcript and all buffered PCM bytes.",
+    "Idle sockets and audio readers stop without requiring audio input to be closed.",
+    "Explicit Deepgram error messages terminate the socket session and reach the event stream.",
+    "Real loopback Deepgram REST requests preserve raw PCM bytes and word timestamps, and reject HTTP 429 and malformed JSON.",
+    "Native session cancellation closes an in-flight HTTP transcription request promptly.",
+    "Missing and corrupt Whisper models fail without a false connected event or a retained audio worker.",
+    "Generated speech passes through the native voice detector and real Whisper tiny.en inference.",
+    "Active real Whisper inference cancels cleanly without an error event.",
+    "Pre-cancelled sessions and stopped providers do not activate the connection or process queued audio.",
+    "Explicit Stop preserves the last partial audio batch and its final transcript when the local server responds promptly; a held request is force cancelled after the 3-second grace.",
+    "A mounted transcription hook handles native stt_stopped by clearing its audio meter and recording state."
+  ],
+  "real_whisper": {
+    "source": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin",
+    "model_path": "/Users/mallenkb/Documents/Code Projects/FellowShow/.tmp/verification/audio/ggml-tiny.en.bin",
+    "model_bytes": 77704715,
+    "sha256": "921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f",
+    "fixture": "Generated with macOS Samantha speech, converted to mono 16 kHz PCM16. No microphone recording used.",
+    "spoken_text": "For God so loved the world, that he gave his only begotten Son. John chapter three, verse sixteen.",
+    "transcript_before_onset_fix": "God so loved the world, that he gave his only begotten son. John chapter 3, verse 16.",
+    "transcript_after_onset_fix": "For God so loved the world, that he gave his only begotten son, John chapter 3, verse 16.",
+    "model_scope": "Public tiny.en test model. The standard app model was not replaced."
+  },
+  "limits": [
+    "This agent did not operate the native UI or access the microphone. The parent agent owns those app checks.",
+    "No real cloud API keys or vault credentials were accessed by this agent, and no paid calls were made.",
+    "Cloud provider request and failure tests used local HTTP and WebSocket servers with test keys.",
+    "The normal large-v3-turbo model was not present locally. Real offline inference used the public tiny.en test model.",
+    "Deepgram REST transport was exercised separately; automatic fallback from the official cloud endpoint was not forced."
+  ],
+  "reproduction": {
+    "before_fix": "The final-buffer HTTP 401 regression failed because the provider returned Ok without reporting its failed final request.",
+    "after_fix": "The regression and transport/lifecycle checks pass."
+  },
+  "independent_review": "The broadcast/remote agent reviewed socket/audio worker cleanup, the pre-cancelled start race, and the 3-second graceful Stop branch. No further concrete lifecycle issue remained after the fixes.",
+  "coordinated_change": "The direct transcription detection path now filters unresolved invalid verses with detection::to_result, waits for AppState resolution instead of emitting unvalidated lock-contention fallbacks, and derives high confidence from resolved results. Parser and DB validation tests belong to the documents/media agent.",
+  "native_release_history": [
+    {
+      "app_identifier": "com.openbezal.fellowshow.release-verification",
+      "pid": 10516,
+      "status": "connected_without_transcript",
+      "connected": "2026-10-17 11:29:26 UTC",
+      "gain": 1.0,
+      "observation": "Generated speech played through speakers produced no visible transcript during this run. Capture and a microphone meter were active. A brief provider-channel backpressure burst reached 300 dropped frames; no further 100-frame drop report appeared before Stop.",
+      "stop": "Capture stopped at 11:31:49 UTC; websocket, provider, and event consumer exited at 11:31:50 UTC.",
+      "cause": "Not established. A sample completed after Stop could not identify an earlier wait. The final fresh optimized run below produced transcripts successfully; that success does not establish the cause of this earlier empty run."
+    }
+  ],
+  "native_optimized_release_verification": {
+    "evidence_source": "Actual native UI observations reported by the main agent; this subagent did not control the UI or read credentials.",
+    "app_identifier": "com.openbezal.fellowshow.release-verification",
+    "optimized_release": true,
+    "pid": 21757,
+    "session_started": "2026-10-17 12:03:55 UTC",
+    "status": "passed",
+    "connected": "2026-10-17 12:03:56 UTC",
+    "provider": "Deepgram cloud",
+    "capture_device": "MacBook microphone",
+    "gain": 1.9,
+    "fixture": "Generated four-sentence sermon-workflow.aiff with 1.2-second pauses, played through real Mac speakers and microphone.",
+    "observed": [
+      "Actual cloud speech produced final transcript segments.",
+      "John 3:16 detection opened John chapter 3 and selected/scrolled verse 16.",
+      "New automatic and manually generated live notes retained usable source links.",
+      "Real OpenAI gpt-4.1-mini summary generation and Save summary completed."
+    ],
+    "stop": {
+      "status": "passed",
+      "observation": "After Stop sermon, the native UI showed Start transcribing and Start Sermon, both microphone meters were exactly zero, and Program was OFF AIR."
+    },
+    "screenshots": [
+      "screenshots/final-speech-auto-john3verse16.png",
+      "screenshots/final-live-notes-source.png",
+      "screenshots/final-manual-ai-note-source.png",
+      "screenshots/final-openai-summary.png",
+      "screenshots/final-speech-stopped-tab-return.png"
+    ],
+    "generated_fixture_final_segments": 5,
+    "full_retained_transcript_segments": 7,
+    "additional_transcript_segments": "Two ambient segments arrived after fixture playback while notes were being checked.",
+    "post_stop_tab_return": {
+      "status": "passed",
+      "observation": "A Songs to Sermon tab round trip retained John > Chapter 3 with verse 16 selected and scrolled into view. Six notes remained, with View Source enabled.",
+      "screenshot": "screenshots/final-speech-stopped-tab-return.png"
+    }
+  }
+}

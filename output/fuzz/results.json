@@ -1,0 +1,519 @@
+{
+  "date": "2026-10-16",
+  "method": "Bounded, seeded property testing and parser input mutation",
+  "productionCodeChanged": true,
+  "typescript": {
+    "seeds": [
+      1592598566,
+      20261016
+    ],
+    "casesPerPropertyPerSeed": 10000,
+    "randomizedProperties": 35,
+    "persistedSettingsProfilesPerSeed": 1000,
+    "generatedCasesPerSeed": 351000,
+    "totalGeneratedCases": 702000,
+    "fullSuiteTestsPassedPerSeed": 434,
+    "fullSuiteTestFilesPerSeed": 74,
+    "testsFailed": 0,
+    "command": "FUZZ_CASES=10000 FUZZ_SEED=<seed> bun run test --run --testTimeout=30000",
+    "note": "The extra timeout accommodates 10,000 cases per property while the full suite runs concurrently."
+  },
+  "rust": {
+    "generatedCases": 101000,
+    "fuzzTestsPassed": 11,
+    "totalTestsPassed": 314,
+    "testsFailed": 0,
+    "ignoredTests": 0,
+    "command": "cargo test --workspace --locked",
+    "clippyCommand": "cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
+    "seeds": [
+      "0x5eed2026",
+      "0x5eed2027",
+      "0x5eed2028",
+      "0x5eed2029"
+    ],
+    "note": "In-process generated inputs and state transitions. These tests do not perform microphone capture, paid transcription, or NDI transmission."
+  },
+  "existingSuiteBeforeFuzzTests": {
+    "passed": 363,
+    "failed": 4,
+    "failureFile": "src/components/songs/song-editor-dialog.test.tsx",
+    "firstError": "ReferenceError: ResizeObserver is not defined",
+    "otherErrors": "Three song editor tests could not find the expected song input; ResizeObserver errors also appear in the log"
+  },
+  "fullTypeScriptSuiteWithFuzzTests": {
+    "passed": 434,
+    "failed": 0,
+    "files": 74,
+    "seeds": [
+      1592598566,
+      20261016
+    ]
+  },
+  "staticChecks": {
+    "typecheck": "passed",
+    "eslintNewTypeScriptFiles": "passed",
+    "clippySelectedCratesTestsWithWarningsDenied": "passed",
+    "newFilesFormatted": true,
+    "eslintChangedFilesAndFuzzTests": "passed",
+    "prettierChangedFilesAndFuzzTests": "passed",
+    "knip": "passed",
+    "productionBuild": "passed",
+    "eslintEntireProject": "passed",
+    "clippyEntireWorkspaceAllTargetsAllFeaturesWarningsDenied": "passed",
+    "rustfmtEntireWorkspace": "passed",
+    "nativeDebugAppBundle": "passed"
+  },
+  "findings": [
+    {
+      "id": "FUZZ-001",
+      "title": "Deeply nested announcements exhaust the call stack",
+      "test": "src/lib/storage.fuzz.test.ts:128",
+      "reproduction": "Wrap a text node in 12000 bulletList nodes, each with one content child, and pass it inside a doc to sanitizeAnnouncementDocument",
+      "expected": "Bound input depth and reject or truncate excessive nesting without recursive stack exhaustion",
+      "sourceAtDiscovery": "src/lib/announcements.ts:304",
+      "observedBeforeFix": "RangeError: Maximum call stack size exceeded",
+      "casesFailedAtDiscovery": 1,
+      "casesCheckedAtDiscovery": 1,
+      "status": "fixed and verified",
+      "fix": "Sanitization drops announcement nodes beyond the 64-level depth limit",
+      "verification": {
+        "casesChecked": 1,
+        "casesFailed": 0
+      }
+    },
+    {
+      "id": "FUZZ-002",
+      "title": "Scripture autocomplete accepts unsafe and infinite chapter numbers",
+      "test": "src/lib/search.fuzz.test.ts:82",
+      "reproduction": "Autocomplete John 9999999999999999:16 with a John book entry; also try 309 repeated 9 digits as the chapter",
+      "expected": "Reject chapter and verse numbers outside the supported integer range",
+      "consumer": "src/components/panels/search/use-scripture-search.ts:388",
+      "sourceAtDiscovery": "src/lib/quick-search.ts:312",
+      "observedBeforeFix": "The first chapter rounds to 10000000000000000; the 309-digit chapter becomes Infinity. Both are accepted as complete references",
+      "casesFailedAtDiscovery": 10000,
+      "casesCheckedAtDiscovery": 10000,
+      "status": "fixed and verified",
+      "fix": "The parser rejects chapter and verse values outside the native Rust i32 range as well as unsafe JavaScript integers",
+      "verification": {
+        "casesChecked": 10000,
+        "casesFailed": 0
+      }
+    },
+    {
+      "id": "FUZZ-003",
+      "title": "Giving network validation accepts inherited object properties",
+      "test": "src/lib/storage.fuzz.test.ts:40",
+      "reproduction": {
+        "accounts": [
+          {
+            "id": "a",
+            "network": "__proto__",
+            "number": "123"
+          }
+        ]
+      },
+      "expected": "Accept only the four explicitly supported giving networks",
+      "sourceAtDiscovery": "src/lib/giving.ts:33",
+      "observedBeforeFix": "The invalid network survives sanitization, and givingPlainText renders [object Object]: 123",
+      "casesFailedAtDiscovery": 4845,
+      "casesCheckedAtDiscovery": 10000,
+      "status": "fixed and verified",
+      "fix": "Giving network validation uses Object.hasOwn to reject inherited property names",
+      "verification": {
+        "casesChecked": 10000,
+        "casesFailed": 0
+      }
+    },
+    {
+      "id": "FUZZ-004",
+      "title": "Astral Unicode lyric tokens exceed the parser's slide row budget",
+      "test": "src/lib/lyrics.fuzz.test.ts:43",
+      "reproduction": "Parse Verse 1 followed by a line containing 137 repeated smiling-face emoji",
+      "expected": "Preserve authored lyric lines and sections and fit text to the output without reflow",
+      "limitation": "Notes-to-Preview-to-Live text preservation is verified by the component test; browser visual checks cover the actual shared renderer. Native broadcast transport was not exercised.",
+      "sourceAtDiscovery": "src/lib/lyrics.ts:164",
+      "relatedSourceAtDiscovery": "src/lib/lyrics.ts:188",
+      "observedBeforeFix": "The returned block has 274 UTF-16 code units, which the parser estimates as nine rows against its eight-row budget",
+      "casesFailedAtDiscovery": 2502,
+      "casesCheckedAtDiscovery": 10000,
+      "status": "resolved under the authored-line requirement",
+      "fix": "Automatic parser splitting and lyric canvas wrapping are disabled. The shared lyric renderer scales the font to fit the exact authored lines.",
+      "verification": {
+        "casesChecked": 10000,
+        "casesFailed": 0
+      },
+      "expectedAtDiscovery": "Use a consistent length measure when splitting long tokens and estimating row count"
+    },
+    {
+      "id": "FUZZ-005",
+      "title": "Negative song result limits behave differently for empty queries",
+      "test": "src/lib/search.fuzz.test.ts:121",
+      "reproduction": "Search a four-song index with an empty query and limit -3, then with a nonempty query and the same limit",
+      "expected": "Apply the nonpositive-limit guard before handling an empty query",
+      "impact": "Low-level API inconsistency; no UI trigger verified",
+      "sourceAtDiscovery": "src/lib/song-search.ts:135",
+      "observedBeforeFix": "The empty query returns one song; the nonempty query returns no songs",
+      "casesFailedAtDiscovery": 1517,
+      "casesCheckedAtDiscovery": 10000,
+      "status": "fixed and verified",
+      "fix": "The nonpositive result-limit guard runs before the empty-query branch",
+      "verification": {
+        "casesChecked": 10000,
+        "casesFailed": 0
+      }
+    }
+  ],
+  "limitations": [
+    "This is bounded seeded property testing, not proof that every possible input or feature is correct.",
+    "Microphone capture, speech recognition accuracy, paid AI or STT calls, physical displays, NDI receivers and network streaming were not exercised end to end.",
+    "PDF, PowerPoint and document converter binaries, operating-system file dialogs, updater downloads, and platform-specific behavior outside this macOS machine were not fuzzed.",
+    "Native visual checks cover the lyric Notes, Preview and internal Live program canvases. Physical outputs remained off.",
+    "The working tree contains existing unrelated changes. Nothing was committed."
+  ],
+  "verificationDate": "2026-10-16",
+  "status": "Expanded fuzz verification passed. Native Notes, Preview and Live preserve the verified authored lyric lines.",
+  "verificationModifiedProductionCode": [
+    "src/stores/queue-store.ts",
+    "src/stores/presenter-timer-store.ts",
+    "src/lib/broadcast-outputs.ts",
+    "src/lib/overlays.ts",
+    "src/lib/presentation-media-transform.ts",
+    "src/stores/settings-store.ts",
+    "src-tauri/crates/api/src/coerce.rs",
+    "src-tauri/crates/bible/src/search.rs",
+    "src-tauri/crates/audio/src/vad.rs",
+    "src/components/panels/songs-queue-panel.tsx",
+    "src/stores/bible-store.ts",
+    "src/components/settings/remote-control-section.tsx"
+  ],
+  "typescriptAtDiscovery": {
+    "seed": 1592598566,
+    "casesPerProperty": 10000,
+    "randomizedProperties": 14,
+    "generatedCases": 140000,
+    "fixedDepthCases": 1,
+    "testsPassed": 10,
+    "testsFailed": 5,
+    "command": "FUZZ_CASES=10000 FUZZ_SEED=1592598566 bun run test --run src/lib/search.fuzz.test.ts src/lib/lyrics.fuzz.test.ts src/lib/storage.fuzz.test.ts"
+  },
+  "fullTypeScriptSuiteAtDiscovery": {
+    "passed": 373,
+    "failed": 9,
+    "existingFailures": 4,
+    "newFuzzFailures": 5,
+    "command": "FUZZ_CASES=10000 bun run test --run"
+  },
+  "priorFixVerificationFullSuite": {
+    "passed": 378,
+    "failed": 4,
+    "existingFailures": 4,
+    "newFuzzFailures": 0,
+    "command": "FUZZ_CASES=10000 FUZZ_SEED=1592598566 bun run test --run"
+  },
+  "expandedVerification": {
+    "generatedCases": 803000,
+    "newFuzzFindingsFixed": 11,
+    "typescriptSeeds": [
+      1592598566,
+      20261016
+    ],
+    "typescriptTestsPassedPerSeed": 434,
+    "rustWorkspaceTestsPassed": 314,
+    "failed": 0,
+    "coverage": "See coverage and limitations fields."
+  },
+  "followupFindings": [
+    {
+      "id": "VERIFY-001",
+      "title": "Safe JavaScript numbers still exceeded the native command integer range",
+      "source": "src/lib/quick-search.ts:24",
+      "observedBeforeFix": "John 2147483648:16 was accepted even though native chapter and verse arguments use Rust i32",
+      "fix": "Reject chapter and verse numbers greater than 2147483647",
+      "status": "fixed and verified",
+      "evidence": "Boundary tests cover chapter and verse overflow, natural-language and compact inputs, exact native maximum values, and normal John 3:16 navigation"
+    },
+    {
+      "id": "VERIFY-002",
+      "title": "Long unbroken lyric tokens were clipped by the canvas renderer",
+      "source": "src/lib/verse-render/measure.ts",
+      "observedBeforeFix": "The first block of 137 smiling-face emoji was drawn on one line and clipped horizontally",
+      "fix": "Lyrics preserve complete authored lines and shrink to fit. Oversized-word wrapping is retained only for non-lyric text.",
+      "status": "fixed and verified",
+      "evidence": "Canvas tests compare exact authored lines and fitted bounds. The real browser preview confirms six manual lines and a long single emoji line without reflow."
+    }
+  ],
+  "browserVerification": {
+    "environment": "Current source in the actual SongEditorDialog and CanvasVerse components inside a local Vite verification page",
+    "authoredLinePreview": "Six input lines render as the same six lines, including lowercase continuations",
+    "longLinePreview": "The authored long emoji line stays on one line and one slide; font size scales to fit",
+    "runtimeErrors": 0,
+    "testSongSaved": false,
+    "screenshots": [
+      "output/fuzz/authored-lyric-lines.jpg",
+      "output/fuzz/authored-long-lyric-line.jpg"
+    ]
+  },
+  "previousVerificationFullSuite": {
+    "passed": 408,
+    "failed": 0,
+    "existingFailures": 0,
+    "newFuzzFailures": 0,
+    "command": "FUZZ_CASES=10000 FUZZ_SEED=1592598566 bun run test --run"
+  },
+  "authoredLyricLines": {
+    "contract": "Keep authored lyric section boundaries and hard line breaks unchanged. Do not join lowercase continuations, add wrapping, or split sections automatically. Scale lyric text to fit the available area.",
+    "editor": "Opening saved lyrics no longer inserts blank lines or section formatting",
+    "notesToPreviewToLiveTest": "src/components/panels/songs-queue-panel.test.tsx",
+    "canvasRegressionTest": "src/lib/verse-render/lyric-lines.test.ts",
+    "browserCases": [
+      "Six authored lines including lowercase continuations",
+      "A single long emoji line remaining one line and one slide"
+    ],
+    "screenshots": [
+      "output/fuzz/authored-lyric-lines.jpg",
+      "output/fuzz/authored-long-lyric-line.jpg"
+    ],
+    "staticChecks": {
+      "typecheck": "passed",
+      "scopedESLint": "passed",
+      "formatting": "passed",
+      "knip": "passed",
+      "productionBuild": "passed"
+    },
+    "nativeScreenshots": [
+      "output/fuzz/native-notes-preview-live-verse.png",
+      "output/fuzz/native-notes-preview-live-chorus.png",
+      "output/fuzz/native-notes-preview-live-long-line.png"
+    ],
+    "notesLongLines": "Horizontal scrolling preserves hard line breaks and spacing."
+  },
+  "previousBrowserVerification": {
+    "environment": "Local Vite harness importing the actual React SongEditorDialog and CanvasVerse components from the current source",
+    "parserChecksPassed": 5,
+    "normalLyricsPreview": "passed",
+    "emojiFirstSlidePreview": "passed after canvas wrapping fix",
+    "secondSlideNavigation": "passed",
+    "runtimeErrorsAfterFix": 0,
+    "nonBlockingWarning": "Existing Select uncontrolled-to-controlled warning when the first lyric section appears",
+    "testSongSaved": false,
+    "temporaryServerStopped": true,
+    "screenshots": [
+      "output/fuzz/song-editor-normal.jpg",
+      "output/fuzz/song-editor-emoji-first.jpg",
+      "output/fuzz/song-editor-emoji-fixed.jpg",
+      "output/fuzz/song-editor-emoji-second.jpg"
+    ]
+  },
+  "nativeDesktopVerification": {
+    "status": "Visual comparison completed for the six-line verse and long two-line verse in the rebuilt native app; three-line chorus also verified in the preceding native build.",
+    "application": "FellowShow Line Check",
+    "applicationPath": "src-tauri/target/debug/bundle/macos/FellowShow Line Check.app",
+    "identifier": "com.openbezal.fellowshow.lyric-verification",
+    "profileIsolated": true,
+    "fixture": "output/fuzz/native-lyrics-fixture.json",
+    "savedLyricsMatchExactly": true,
+    "notesAuthoredLineCounts": [
+      6,
+      3,
+      2
+    ],
+    "notesTextMatchesFixture": true,
+    "showOnLiveClicked": true,
+    "programLiveIndicatorObserved": true,
+    "previewCanvasVisuallyVerified": true,
+    "liveCanvasVisuallyVerified": true,
+    "blocker": null,
+    "cleanupPending": false,
+    "packagingNote": "Temporary local configuration disables updater artifact generation for the test bundle. Release signing settings are unchanged.",
+    "testAppLeftOpenForReview": true,
+    "physicalOutputsEnabled": false,
+    "screenshots": [
+      "output/fuzz/native-notes-preview-live-verse.png",
+      "output/fuzz/native-notes-preview-live-chorus.png",
+      "output/fuzz/native-notes-preview-live-long-line.png"
+    ],
+    "longLineBehavior": "Notes scrolls horizontally. Preview and Live shrink the text to keep the authored line intact."
+  },
+  "totalGeneratedCases": 803000,
+  "broadFuzzFindings": [
+    {
+      "area": "Scripture queue",
+      "problem": "Prepending another verse moved the active selection to the wrong item.",
+      "fix": "Shift the active index when prepending a new item.",
+      "file": "src/stores/queue-store.ts",
+      "salt": 50
+    },
+    {
+      "area": "Presenter timer",
+      "problem": "NaN or infinity durations poisoned timer state and render data.",
+      "fix": "Ignore non-finite durations and cap finite durations to safe integers.",
+      "file": "src/stores/presenter-timer-store.ts",
+      "salt": 52
+    },
+    {
+      "area": "Output settings",
+      "problem": "Restoring six outputs without main inserted a seventh output.",
+      "fix": "Reserve one of the six slots for the required main output.",
+      "file": "src/lib/broadcast-outputs.ts",
+      "salt": 30
+    },
+    {
+      "area": "Monitor selection",
+      "problem": "Unsafe integer indexes survived storage validation; fractional indexes could skip reassignment.",
+      "fix": "Require safe stored integer indexes and whole indexes within the connected monitor list.",
+      "file": "src/lib/broadcast-outputs.ts",
+      "salts": [
+        30,
+        32
+      ]
+    },
+    {
+      "area": "Overlays",
+      "problem": "Non-finite saved timestamps did not survive JSON round trips.",
+      "fix": "Replace non-finite timestamps with the current time.",
+      "file": "src/lib/overlays.ts",
+      "salt": 33
+    },
+    {
+      "area": "Media drag and resize",
+      "problem": "Invalid frame dimensions and deltas could produce NaN coordinates.",
+      "fix": "Validate dimensions, normalize starting positions and discard non-finite deltas.",
+      "file": "src/lib/presentation-media-transform.ts",
+      "salt": 40
+    },
+    {
+      "area": "Media outlines",
+      "problem": "Negative or invalid aspect ratios produced negative or invalid selection sizes.",
+      "fix": "Use the whole-frame fallback for invalid aspect ratios.",
+      "file": "src/lib/presentation-media-transform.ts",
+      "salt": 41
+    },
+    {
+      "area": "Saved settings",
+      "problem": "Translation IDs larger than the safe integer range survived validation.",
+      "fix": "Require positive safe integer IDs.",
+      "file": "src/stores/settings-store.ts",
+      "salt": 70
+    },
+    {
+      "area": "Remote controls",
+      "problem": "Non-finite OSC values were accepted as numeric controls or false toggles.",
+      "fix": "Reject non-finite float and double controls before dispatch.",
+      "file": "src-tauri/crates/api/src/coerce.rs"
+    },
+    {
+      "area": "Bible search",
+      "problem": "Huge search limits overflowed multiplication and could wrap the SQLite limit.",
+      "fix": "Saturate multiplication and safely convert limits to SQLite integer values.",
+      "file": "src-tauri/crates/bible/src/search.rs"
+    },
+    {
+      "area": "Voice activity",
+      "problem": "A disabled pre-buffer caused removal from an empty vector.",
+      "fix": "Skip buffer operations when the configured pre-buffer is zero.",
+      "file": "src-tauri/crates/audio/src/vad.rs"
+    }
+  ],
+  "additionalCorrections": [
+    {
+      "area": "Native lyric Notes",
+      "change": "Preserve authored spaces and hard line breaks with horizontal scrolling for long lines.",
+      "file": "src/components/panels/songs-queue-panel.tsx"
+    },
+    {
+      "area": "Bible persistence",
+      "change": "Catch and report rejected background saves; add a failure-path regression test.",
+      "file": "src/stores/bible-store.ts"
+    },
+    {
+      "area": "Remote status polling",
+      "change": "Use a synchronous interval callback with explicit promise rejection handling.",
+      "file": "src/components/settings/remote-control-section.tsx"
+    }
+  ],
+  "coverage": {
+    "Scripture and search": [
+      "reference parsing and native integer bounds",
+      "Unicode and quoted offsets",
+      "database FTS queries, limits and deduplication",
+      "queue insertion, removal and selected-item identity"
+    ],
+    "Songs": [
+      "search filters and limits",
+      "ordering and jump keys",
+      "chorus repetition",
+      "authored sections and hard line breaks",
+      "Unicode, emoji and oversized lines",
+      "EasyWorship RTF mutation and UTF-16 decoding"
+    ],
+    "Notes and giving": [
+      "announcement sanitization and nesting limits",
+      "expiry, pagination and item navigation",
+      "giving-network prototype keys",
+      "Preview-to-Live wiring"
+    ],
+    "Media and themes": [
+      "saved slide sanitization",
+      "composition identity and arrangement",
+      "dragging, resizing and aspect ratios",
+      "slide backgrounds",
+      "theme import schema and round trips"
+    ],
+    "Broadcast": [
+      "role routing and off-air filtering",
+      "output count, IDs, screen indexes and monitor assignment",
+      "overlay settings, expiry, opacity and output targeting",
+      "protected content hides master overlays"
+    ],
+    "Timers": [
+      "model-based start, pause, reset, tick and duration changes",
+      "malformed duration inputs"
+    ],
+    "Sermon and transcription": [
+      "direct evidence filtering and deduplication",
+      "overlapping quote highlighting",
+      "generated Deepgram responses",
+      "malformed provider messages",
+      "generated PCM levels and VAD sequences"
+    ],
+    "AI": [
+      "both provider response formats using a local fetch stub",
+      "summary title and bullet bounds",
+      "malformed success response rejection"
+    ],
+    "Settings": [
+      "1000 malformed persisted profiles per seed",
+      "translation IDs, numeric bounds and tab deduplication",
+      "no vault access during hydration",
+      "Bible persistence debounce and failure handling"
+    ]
+  },
+  "previousExpandedVerification": {
+    "boundaryAndCanvasTestsAdded": 26,
+    "seededRuns": [
+      {
+        "seed": 20261016,
+        "generatedCases": 140000,
+        "passed": 15,
+        "failed": 0,
+        "stage": "Before follow-up changes"
+      },
+      {
+        "seed": 3735928559,
+        "generatedCases": 140000,
+        "passed": 15,
+        "failed": 0,
+        "stage": "After the native integer guard"
+      },
+      {
+        "seed": 1592598566,
+        "generatedCases": 140000,
+        "passed": 15,
+        "failed": 0,
+        "stage": "Final full suite including the canvas wrapping fix"
+      }
+    ],
+    "testEnvironmentFix": "The song editor component tests now mock CanvasVerse, as established panel tests do. The four editor save and edit flows pass. The real canvas was checked separately in rendering tests and the browser."
+  }
+}

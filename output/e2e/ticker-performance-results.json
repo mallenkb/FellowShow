@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-17",
+  "scope": "Master and legacy ticker text rendering",
+  "issue": "Long repeated ticker text was measured and rasterized repeatedly on each display frame",
+  "fix": "Cache one measured glyph strip per output context, then translate it with fractional positions. Invalidate on text, font, color, size, shadow or font-load changes. Bound raster memory and preserve a direct drawing fallback.",
+  "files": [
+    "src/lib/ticker-text-track.ts",
+    "src/lib/overlay-renderer.ts",
+    "src/lib/verse-render/color.ts"
+  ],
+  "checks": {
+    "focusedRendererSchedulerTests": {
+      "passed": 19,
+      "files": 5
+    },
+    "legacyIntegrationTests": {
+      "passed": 5,
+      "reportedBy": "audio_transcription_e2e"
+    },
+    "wholeProjectTypecheck": "passed",
+    "scopedESLint": "passed",
+    "prettier": "passed",
+    "regressions": [
+      "120-frame master and 240-frame legacy reuse",
+      "Exact measured repeat geometry and width floor",
+      "Fractional movement and wrap continuity",
+      "Color, font, shadow, dimension and font-load invalidation",
+      "Bounded raster memory and oversized-track fallback",
+      "Zero-width font measurement avoids an unbounded loop"
+    ]
+  },
+  "native60fpsVerification": {
+    "status": "passed",
+    "pid": 44018,
+    "isolatedOptimizedProfile": true,
+    "userDebugProcessUntouched": 33107,
+    "uiInteraction": "Background-only Computer AX configured the sender; this agent used loopback SDK tools only and did not raise or focus any window",
+    "sourceName": "FellowShow Overlay Smoothness",
+    "publicTickerText": "FellowShow verification: welcome to the service.",
+    "sourceAddress": "127.0.0.1:5962",
+    "discovery": "output/e2e/ticker-smoothness-discovery.json",
+    "capture": "output/e2e/screenshots/ticker-smoothness-1080p60.json",
+    "screenshot": "output/e2e/screenshots/ticker-smoothness-1080p60.png",
+    "frames": 180,
+    "width": 1920,
+    "height": 1080,
+    "configuredFps": 60,
+    "observedCaptureFps": 60.2570620058906,
+    "observedSourceTimecodeFps": 59.999880000240005,
+    "distinctFrames": 180,
+    "arrivalP95Milliseconds": 18.48016699999999,
+    "arrivalMaxMilliseconds": 19.341832999999976,
+    "pixelMotion": {
+      "method": "Horizontal pixel-column matching with subpixel parabolic interpolation, processed after capture",
+      "regionPixels": {
+        "left": 576,
+        "right": 1344,
+        "top": 1009,
+        "bottom": 1058
+      },
+      "framePairs": 179,
+      "medianLeftwardPixelsPerFrame": 1.9165974520074485,
+      "medianLeftwardPixelsPerSecond": 114.99561712921265,
+      "minimumLeftwardPixelsPerFrame": 1.6652407296075658,
+      "maximumLeftwardPixelsPerFrame": 2.125441772234749,
+      "stationaryPairsUnderQuarterPixel": 0,
+      "rightwardPairsOverQuarterPixel": 0,
+      "matchedPairsBelow15PercentNormalizedError": 179,
+      "p95PixelsPerFrame": 2.0243983938669676
+    },
+    "interpretation": "Every consecutive captured frame visibly advances the ticker left; no stationary or backward frame pairs were measured. Pixel displacement is a subpixel estimate rather than an exact speed calibration.",
+    "shutdown": {
+      "status": "isolated verification resource cleanup passed",
+      "evidence": "output/e2e/ticker-smoothness-cleanup.json",
+      "method": "SIGTERM of only verified optimized PID44018 by parent",
+      "senderPort5962Closed": true,
+      "userDebug33107StillRunning": true,
+      "limitation": "This cleanup does not establish an additional native UI Stop regression pass for the latest build."
+    }
+  }
+}

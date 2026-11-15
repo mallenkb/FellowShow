@@ -14,10 +14,13 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import {
   OUTPUT_CONTENT_OPTIONS,
+  carriesGraphics,
   type BroadcastOutputConfig,
   type OutputContent,
 } from "@/lib/broadcast-outputs"
 import { userFacingOutputLabel } from "@/components/broadcast/output-content-label"
+import { NdiOutputSettings } from "@/components/broadcast/ndi-output-settings"
+import { GoStreamNdiNotice } from "@/components/broadcast/gostream-ndi-notice"
 import {
   MonitorSelectField,
   type TakenMonitor,
@@ -31,26 +34,8 @@ import {
   type OutputRuntime,
 } from "@/lib/broadcast-output-runtime"
 import { useBroadcastStore } from "@/stores"
-import type { NdiAlphaMode, NdiFrameRate, NdiResolution } from "@/types"
+import { screenIdentityFor } from "@/lib/screen-identity"
 import { Loader2Icon, MonitorIcon, RadioIcon, XIcon } from "lucide-react"
-
-const NDI_RESOLUTION_OPTIONS: Array<{ value: NdiResolution; label: string }> = [
-  { value: "r1080p", label: "1080p (1920×1080)" },
-  { value: "r720p", label: "720p (1280×720)" },
-  { value: "r4k", label: "4K (3840×2160)" },
-]
-
-const NDI_FRAME_RATE_OPTIONS: Array<{ value: NdiFrameRate; label: string }> = [
-  { value: "fps24", label: "24 fps" },
-  { value: "fps30", label: "30 fps" },
-  { value: "fps60", label: "60 fps" },
-]
-
-const NDI_ALPHA_OPTIONS: Array<{ value: NdiAlphaMode; label: string }> = [
-  { value: "noneOpaque", label: "None (Opaque)" },
-  { value: "straightAlpha", label: "Straight Alpha" },
-  { value: "premultipliedAlpha", label: "Premultiplied Alpha" },
-]
 
 export function OutputCard({
   output,
@@ -71,7 +56,8 @@ export function OutputCard({
   compact?: boolean
 }) {
   const themes = useBroadcastStore((s) => s.themes)
-  const runtime =
+  const outputs = useBroadcastStore((s) => s.outputs)
+  const runtime: OutputRuntime =
     useOutputRuntimeStore((s) => s.byId[output.id]) ??
     ({
       isDisplayOpen: false,
@@ -122,9 +108,13 @@ export function OutputCard({
 
   const handleMonitorChange = (value: string) => {
     const monitorIndex = Number(value)
-    updateOutput({ monitorIndex })
+    const monitor = monitors.find((m) => m.index === monitorIndex)
+    const choice = monitor
+      ? { monitorIndex, screen: screenIdentityFor(monitor) }
+      : { monitorIndex }
+    updateOutput(choice)
     if (runtime.isDisplayOpen) {
-      void openDisplayOutput({ ...output, monitorIndex }).catch((error) => {
+      void openDisplayOutput({ ...output, ...choice }).catch((error) => {
         console.error(`Failed to move display for ${output.name}`, error)
       })
     }
@@ -213,14 +203,28 @@ export function OutputCard({
           refreshing={refreshing}
           onRefresh={onRefresh}
           takenMonitors={takenMonitors}
+          missingScreen={
+            output.monitorIndex === null ? (output.screen ?? null) : null
+          }
           showRefresh={!compact}
         />
       ) : (
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">
-            NDI High Bandwidth. HX-only receivers, including GoStream Duet,
-            cannot receive it directly.
+          <GoStreamNdiNotice
+            outputId={output.id}
+            resolution={runtime.ndiResolution}
+            disabled={pending || runtime.ndiActive}
+          />
+          <p className="text-xs text-muted-foreground" role="status">
+            {runtime.ndiActive
+              ? "The NDI source is on."
+              : "Turn on the output to publish this NDI source."}
           </p>
+          {runtime.ndiStartError ? (
+            <p className="text-xs text-destructive" role="alert">
+              {runtime.ndiStartError}
+            </p>
+          ) : null}
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground">Source Name</label>
             <Input
@@ -231,88 +235,12 @@ export function OutputCard({
             />
           </div>
           {(showAdvanced || !compact) && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">
-                    Resolution
-                  </label>
-                  <Select
-                    value={runtime.ndiResolution}
-                    disabled={pending || runtime.ndiActive}
-                    onValueChange={(value) =>
-                      updateRuntime({ ndiResolution: value as NdiResolution })
-                    }
-                  >
-                    <SelectTrigger
-                      className="w-full"
-                      aria-label="NDI resolution"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {NDI_RESOLUTION_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs text-muted-foreground">
-                    Frame Rate
-                  </label>
-                  <Select
-                    value={runtime.ndiFrameRate}
-                    disabled={pending || runtime.ndiActive}
-                    onValueChange={(value) =>
-                      updateRuntime({ ndiFrameRate: value as NdiFrameRate })
-                    }
-                  >
-                    <SelectTrigger
-                      className="w-full"
-                      aria-label="NDI frame rate"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {NDI_FRAME_RATE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">
-                  Alpha Channel
-                </label>
-                <Select
-                  value={runtime.ndiAlphaMode}
-                  disabled={pending || runtime.ndiActive}
-                  onValueChange={(value) =>
-                    updateRuntime({ ndiAlphaMode: value as NdiAlphaMode })
-                  }
-                >
-                  <SelectTrigger
-                    className="w-full"
-                    aria-label="NDI alpha channel"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NDI_ALPHA_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
+            <NdiOutputSettings
+              settings={runtime}
+              disabled={pending || runtime.ndiActive}
+              carriesGraphics={carriesGraphics(output, outputs)}
+              onChange={updateRuntime}
+            />
           )}
         </div>
       )}
@@ -382,6 +310,7 @@ export function OutputCard({
               </Badge>
             )}
             <Switch
+              aria-label={`Turn ${output.name} output ${enabled ? "off" : "on"}`}
               checked={enabled}
               disabled={pending}
               onCheckedChange={(checked) => void handleToggle(checked)}
@@ -449,6 +378,7 @@ export function OutputCard({
             </Badge>
           )}
           <Switch
+            aria-label={`Turn ${output.name} output ${enabled ? "off" : "on"}`}
             checked={enabled}
             disabled={pending}
             onCheckedChange={(checked) => void handleToggle(checked)}

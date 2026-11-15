@@ -49,8 +49,8 @@ trait ProjectorWindowOps {
     fn set_decorations(&self, decorations: bool) -> Result<(), String>;
     fn set_fullscreen(&self, fullscreen: bool) -> Result<(), String>;
     fn set_skip_taskbar(&self, skip: bool) -> Result<(), String>;
-    fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String>;
-    fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String>;
+    fn set_window_position(&self, position: tauri::Position) -> Result<(), String>;
+    fn set_window_size(&self, size: tauri::Size) -> Result<(), String>;
     fn show(&self) -> Result<(), String>;
     fn set_focus(&self) -> Result<(), String>;
 }
@@ -68,14 +68,12 @@ impl ProjectorWindowOps for tauri::WebviewWindow {
         self.set_skip_taskbar(skip).map_err(|e| e.to_string())
     }
 
-    fn set_physical_position(&self, position: tauri::PhysicalPosition<i32>) -> Result<(), String> {
-        self.set_position(tauri::Position::Physical(position))
-            .map_err(|e| e.to_string())
+    fn set_window_position(&self, position: tauri::Position) -> Result<(), String> {
+        self.set_position(position).map_err(|e| e.to_string())
     }
 
-    fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String> {
-        self.set_size(tauri::Size::Physical(size))
-            .map_err(|e| e.to_string())
+    fn set_window_size(&self, size: tauri::Size) -> Result<(), String> {
+        self.set_size(size).map_err(|e| e.to_string())
     }
 
     fn show(&self) -> Result<(), String> {
@@ -89,25 +87,52 @@ impl ProjectorWindowOps for tauri::WebviewWindow {
 
 fn show_projector_window(
     window: &impl ProjectorWindowOps,
-    position: tauri::PhysicalPosition<i32>,
-    size: tauri::PhysicalSize<u32>,
+    position: tauri::Position,
+    size: tauri::Size,
 ) -> Result<(), String> {
     window.set_fullscreen(false)?;
     window.set_decorations(false)?;
     window.set_skip_taskbar(true)?;
-    window.set_physical_position(position)?;
-    window.set_physical_size(size)?;
+    window.set_window_position(position)?;
+    window.set_window_size(size)?;
     window.show()?;
     window.set_fullscreen(true)?;
     window.set_focus()?;
     Ok(())
 }
 
+/// Where to place a projector so it lands on `monitor`.
+///
+/// macOS lays out displays in points, and Tauri converts a physical position
+/// to points with the scale factor of the display the window is on now. A
+/// window on a 2x Retina laptop sent to a 1x display at physical x=1728 would
+/// land at x=864 on the laptop. Points from the target monitor's own scale
+/// factor avoid that. Windows lays out displays in physical pixels.
+pub(crate) fn projector_placement(
+    position: tauri::PhysicalPosition<i32>,
+    size: tauri::PhysicalSize<u32>,
+    scale_factor: f64,
+) -> (tauri::Position, tauri::Size) {
+    if cfg!(target_os = "macos") {
+        (
+            tauri::Position::Logical(position.to_logical(scale_factor)),
+            tauri::Size::Logical(size.to_logical(scale_factor)),
+        )
+    } else {
+        (
+            tauri::Position::Physical(position),
+            tauri::Size::Physical(size),
+        )
+    }
+}
+
 fn show_projector_window_on_monitor(
     window: &impl ProjectorWindowOps,
     monitor: &tauri::Monitor,
 ) -> Result<(), String> {
-    show_projector_window(window, *monitor.position(), *monitor.size())?;
+    let (position, size) =
+        projector_placement(*monitor.position(), *monitor.size(), monitor.scale_factor());
+    show_projector_window(window, position, size)?;
     Ok(())
 }
 
@@ -291,6 +316,10 @@ pub fn start_ndi(
     clocks: State<'_, NdiFrameClocks>,
     request: NdiStartRequest,
 ) -> Result<NdiSessionInfo, String> {
+    request
+        .resolution
+        .validate()
+        .map_err(|error| error.to_string())?;
     let window = app
         .get_webview_window(&window_label(&output_id))
         .ok_or_else(|| "NDI output window is unavailable".to_owned())?;
@@ -426,8 +455,8 @@ mod tests {
         Decorations(bool),
         Fullscreen(bool),
         SkipTaskbar(bool),
-        Position(tauri::PhysicalPosition<i32>),
-        Size(tauri::PhysicalSize<u32>),
+        Position(tauri::Position),
+        Size(tauri::Size),
         Show,
         Focus,
     }
@@ -459,17 +488,14 @@ mod tests {
             Ok(())
         }
 
-        fn set_physical_position(
-            &self,
-            position: tauri::PhysicalPosition<i32>,
-        ) -> Result<(), String> {
+        fn set_window_position(&self, position: tauri::Position) -> Result<(), String> {
             self.operations
                 .borrow_mut()
                 .push(WindowOperation::Position(position));
             Ok(())
         }
 
-        fn set_physical_size(&self, size: tauri::PhysicalSize<u32>) -> Result<(), String> {
+        fn set_window_size(&self, size: tauri::Size) -> Result<(), String> {
             self.operations
                 .borrow_mut()
                 .push(WindowOperation::Size(size));
@@ -490,11 +516,11 @@ mod tests {
     #[test]
     fn projector_window_should_be_positioned_and_sized_before_being_shown() {
         let window = RecordingWindow::default();
-        let position = tauri::PhysicalPosition { x: -1920, y: 0 };
-        let size = tauri::PhysicalSize {
+        let position = tauri::Position::Physical(tauri::PhysicalPosition { x: -1920, y: 0 });
+        let size = tauri::Size::Physical(tauri::PhysicalSize {
             width: 1920,
             height: 1080,
-        };
+        });
 
         show_projector_window(&window, position, size).unwrap();
 
@@ -510,6 +536,32 @@ mod tests {
                 WindowOperation::Fullscreen(true),
                 WindowOperation::Focus,
             ]
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn projector_on_external_display_uses_its_own_points_on_macos() {
+        // A 1x GoStream to the right of a 2x laptop that is 1728 points wide.
+        let (position, size) = projector_placement(
+            tauri::PhysicalPosition { x: 1728, y: 0 },
+            tauri::PhysicalSize {
+                width: 1920,
+                height: 1080,
+            },
+            1.0,
+        );
+
+        assert_eq!(
+            position,
+            tauri::Position::Logical(tauri::LogicalPosition { x: 1728.0, y: 0.0 })
+        );
+        assert_eq!(
+            size,
+            tauri::Size::Logical(tauri::LogicalSize {
+                width: 1920.0,
+                height: 1080.0
+            })
         );
     }
 

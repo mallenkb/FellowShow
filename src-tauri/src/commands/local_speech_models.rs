@@ -4,6 +4,7 @@ use std::process::Stdio;
 use fellowshow_stt::local_speech::LocalSpeechProvider;
 use serde::{Deserialize, Serialize};
 use tauri::{ipc::Channel, AppHandle, Manager};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 use tokio::process::Command;
 
 static INSTALLING: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
@@ -21,11 +22,11 @@ pub enum LocalSpeechModel {
 
 impl LocalSpeechModel {
     const ALL: [Self; 5] = [
+        Self::Parakeet,
         Self::Nemotron,
         Self::Moonshine,
         Self::Zipformer,
         Self::Voxtral,
-        Self::Parakeet,
     ];
 
     const fn id(self) -> &'static str {
@@ -195,11 +196,30 @@ async fn install_step(command: &mut Command, stage: &str) -> Result<(), String> 
     Err(format!("{stage}: {detail}"))
 }
 
+/// The first 66 keyterms are full book names. Zipformer's tokenizer uses
+/// uppercase text and spells out numbers.
+async fn write_zipformer_keyterms(root: &Path) -> Result<(), String> {
+    let terms = fellowshow_stt::bible_keyterms()
+        .into_iter()
+        .take(66)
+        .map(|term| {
+            term.to_ascii_uppercase()
+                .replace("1 ", "FIRST ")
+                .replace("2 ", "SECOND ")
+                .replace("3 ", "THIRD ")
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    tokio::fs::write(root.join("bible-keyterms.txt"), terms)
+        .await
+        .map_err(|error| format!("Could not save Bible keyterms: {error}"))
+}
+
 #[tauri::command]
 pub async fn download_local_speech_model(
     app: AppHandle,
     model: LocalSpeechModel,
-    progress: Channel<&'static str>,
+    progress: Channel<String>,
 ) -> Result<(), String> {
     if let Some(reason) = model.unavailable_reason() {
         return Err(reason.into());
@@ -216,7 +236,7 @@ pub async fn download_local_speech_model(
     tokio::fs::create_dir_all(&root)
         .await
         .map_err(|error| format!("Could not create local speech storage: {error}"))?;
-    let _ = progress.send("Setting up Python…");
+    let _ = progress.send("Setting up Python…".into());
     if !python.is_file() {
         install_step(
             uv_command(&app, &root)
@@ -226,7 +246,7 @@ pub async fn download_local_speech_model(
         )
         .await?;
     }
-    let _ = progress.send("Installing runtime…");
+    let _ = progress.send("Installing runtime…".into());
     install_step(
         uv_command(&app, &root)
             .args([
@@ -244,32 +264,76 @@ pub async fn download_local_speech_model(
     )
     .await?;
     if matches!(model, LocalSpeechModel::Zipformer) {
-        // The first 66 entries are full book names. Zipformer's tokenizer
-        // uses uppercase text and spells out numbers.
-        let terms = fellowshow_stt::bible_keyterms()
-            .into_iter()
-            .take(66)
-            .map(|term| {
-                term.to_ascii_uppercase()
-                    .replace("1 ", "FIRST ")
-                    .replace("2 ", "SECOND ")
-                    .replace("3 ", "THIRD ")
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-        tokio::fs::write(root.join("bible-keyterms.txt"), terms)
-            .await
-            .map_err(|error| format!("Could not save Bible keyterms: {error}"))?;
+        write_zipformer_keyterms(&root).await?;
     }
 
-    let _ = progress.send("Downloading model…");
+    let _ = progress.send("Downloading model…".into());
     let provider = LocalSpeechProvider::new(python, root.clone(), model.id());
-    install_step(
-        &mut provider.worker_command("download"),
-        "Download the model",
-    )
-    .await?;
+    let mut child = provider
+        .worker_command("download")
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|error| format!("Could not start model download: {error}"))?;
+    let mut stdout = BufReader::new(child.stdout.take().ok_or("Missing download output")?).lines();
+    let mut stderr = child.stderr.take().ok_or("Missing download diagnostics")?;
+    let read_events = async {
+        let mut worker_error = None;
+        while let Some(line) = stdout.next_line().await? {
+            if let Ok(event) = serde_json::from_str::<serde_json::Value>(&line) {
+                if let Some(message) = event["text"].as_str() {
+                    match event["type"].as_str() {
+                        Some("progress") => {
+                            let _ = progress.send(message.to_owned());
+                        }
+                        Some("error") => worker_error = Some(message.to_owned()),
+                        _ => {}
+                    }
+                }
+            }
+        }
+        Ok::<_, std::io::Error>(worker_error)
+    };
+    let mut diagnostics = Vec::new();
+    let (worker_error, _) = tokio::try_join!(read_events, stderr.read_to_end(&mut diagnostics))
+        .map_err(|error| format!("Could not read download progress: {error}"))?;
+    let status = child.wait().await.map_err(|error| error.to_string())?;
+    if !status.success() {
+        return Err(worker_error.unwrap_or_else(|| {
+            String::from_utf8_lossy(&diagnostics)
+                .lines()
+                .last()
+                .unwrap_or("The model download failed. Try again.")
+                .to_owned()
+        }));
+    }
     tokio::fs::write(root.join(READY_FILE), [])
         .await
         .map_err(|error| format!("Could not mark the model as installed: {error}"))
+}
+
+#[tauri::command]
+pub async fn delete_local_speech_model(
+    app: AppHandle,
+    model: LocalSpeechModel,
+) -> Result<(), String> {
+    let _lock = INSTALLING
+        .try_lock()
+        .map_err(|_| "Wait for the model download to finish.")?;
+    let path = model.root(&app)?;
+    tokio::task::spawn_blocking(move || {
+        let state = app.state::<std::sync::Mutex<crate::state::AppState>>();
+        let state = state.lock().map_err(|error| error.to_string())?;
+        if state.stt_session.is_some() {
+            return Err("Stop transcription before deleting a model.".into());
+        }
+        match std::fs::remove_dir_all(path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(format!("Could not delete the model: {error}")),
+        }
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }

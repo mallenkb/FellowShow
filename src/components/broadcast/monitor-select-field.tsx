@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { selectFreeMonitorIndex } from "@/lib/broadcast-output-control"
+import { screenLabel, type ScreenIdentity } from "@/lib/screen-identity"
 import { RefreshCwIcon, TriangleAlertIcon } from "lucide-react"
 
 /** A monitor already claimed by another display output. */
@@ -24,6 +25,7 @@ export function MonitorSelectField({
   refreshing,
   onRefresh,
   takenMonitors,
+  missingScreen = null,
   showRefresh = true,
 }: {
   monitors: MonitorInfo[]
@@ -32,6 +34,8 @@ export function MonitorSelectField({
   refreshing: boolean
   onRefresh: () => void
   takenMonitors: TakenMonitor[]
+  /** The saved screen when it isn't connected, so the operator re-picks. */
+  missingScreen?: ScreenIdentity | null
   showRefresh?: boolean
 }) {
   const collidingWith =
@@ -85,7 +89,11 @@ export function MonitorSelectField({
               .map((taken) => taken.outputName)
             return (
               <SelectItem key={m.index} value={String(m.index)}>
-                {m.name} ({m.width}&times;{m.height})
+                {screenLabel(m)}
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {m.name} ({m.width}&times;{m.height})
+                </span>
                 {usedBy.length > 0 && (
                   <span className="text-muted-foreground">
                     {" "}
@@ -97,6 +105,17 @@ export function MonitorSelectField({
           })}
         </SelectContent>
       </Select>
+      {missingScreen && value === "" && (
+        <div
+          role="alert"
+          className="flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[0.6875rem] text-amber-800 dark:text-amber-400"
+        >
+          <TriangleAlertIcon className="size-3 shrink-0" />
+          Its screen ({missingScreen.name}, {missingScreen.width}&times;
+          {missingScreen.height}) isn&apos;t connected. Plug it in and refresh,
+          or choose another screen.
+        </div>
+      )}
       {collidingWith.length > 0 && (
         <div className="flex items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[0.6875rem] text-amber-800 dark:text-amber-400">
           <span className="flex items-center gap-1.5">
@@ -111,7 +130,7 @@ export function MonitorSelectField({
               onClick={() => onValueChange(String(freeMonitor.index))}
               className="shrink-0 font-medium underline underline-offset-2 hover:opacity-80"
             >
-              Use {freeMonitor.name}
+              Use {screenLabel(freeMonitor)}
             </button>
           )}
         </div>

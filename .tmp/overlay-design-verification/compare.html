@@ -1,0 +1,290 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>FellowShow Lower Thirds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Barlow+Condensed:wght@500;600;700&family=Geist+Mono:wght@500&display=swap">
+<style>
+/* Layout: design board. Sticky controls, then a two-column grid of 16:9 output frames, each showing one lower third for a preacher and a guest speaker. Single dark studio theme, matching FellowShow. */
+:root{
+  color-scheme:dark;
+  --bg:#0c0c0f;--card:#17171b;--raised:#202025;--line:#ffffff1a;--input:#ffffff26;
+  --fg:#fafafa;--muted:#a1a1aa;--primary:#f1e600;--amber:#f59e0b;
+  --ui:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Geist Mono",ui-monospace,Consolas,monospace;
+  --display:"Fraunces",Georgia,serif;
+  --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--ui);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:1320px;margin:0 auto;display:grid;gap:22px}
+header{display:grid;gap:8px;max-width:76ch}
+.eyebrow{font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+header h1{font:600 clamp(26px,3.4vw,38px)/1.1 var(--display);letter-spacing:-.01em;text-wrap:balance}
+header p{color:var(--muted)}
+.controls{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:18px;flex-wrap:wrap;align-items:center;padding:10px 12px;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:12px}
+.ctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ctl>span{font-size:12px;color:var(--muted)}
+.seg{display:flex;gap:3px;padding:3px;border:1px solid var(--input);border-radius:9px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:6px;padding:6px 11px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--raised);color:var(--fg)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:grid;align-content:start;min-width:0}
+.frames{display:grid;gap:2px;background:#000}
+.meta{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;padding:14px 16px 16px;align-items:start}
+.num{font:500 12px/1.6 var(--mono);color:var(--amber)}
+.meta h3{font-size:15px;font-weight:600}
+.meta p{grid-column:2/3;color:var(--muted);font-size:13px}
+.tags{grid-column:2/4;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tags span{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.big{border:1px solid var(--line);background:var(--raised);border-radius:8px;padding:6px 10px;font-size:12px;white-space:nowrap}
+.big:hover{border-color:#ffffff40}
+
+/* Output frame */
+.stage{position:relative;aspect-ratio:16/9;width:100%;max-width:100%;overflow:hidden;container-type:inline-size;isolation:isolate}
+.stage .bg{position:absolute;inset:0;z-index:-1}
+.stage .lbl{position:absolute;top:1.6cqw;left:1.6cqw;font:600 max(9px,1.4cqw)/1 var(--ui);letter-spacing:.1em;text-transform:uppercase;padding:.6cqw 1cqw;border-radius:.5cqw;background:#000000a0;color:#fff;z-index:3}
+.bg.worship{background:
+  radial-gradient(ellipse 22% 40% at 50% 30%,#fff7da 0%,#ffd98a 25%,transparent 70%),
+  radial-gradient(ellipse 70% 55% at 50% 32%,#c4802a 0%,transparent 72%),
+  repeating-linear-gradient(180deg,#ffffff00 0 1.4%,#ffe2a514 1.4% 1.9%) 0 62%/100% 38% no-repeat,
+  linear-gradient(180deg,#2e1c0c 0%,#6d4316 40%,#9b6420 58%,#3a250f 64%,#6b4416 100%)}
+.bg.worship::before,.bg.worship::after{content:"";position:absolute;background:linear-gradient(#fffdf3,#ffe9b0);box-shadow:0 0 4cqw 1.2cqw #ffe7a399;border-radius:.3cqw}
+.bg.worship::before{left:48.6%;top:13%;width:2.8%;height:44%}
+.bg.worship::after{left:42%;top:22%;width:16%;height:4.4%}
+.bg.camera{background:
+  radial-gradient(circle at 62% 38%,#06070d 0 7%,transparent 7.2%),
+  radial-gradient(ellipse 18% 40% at 62% 86%,#06070d 0 97%,transparent 100%),
+  radial-gradient(ellipse 30% 80% at 30% -5%,#7d8cff55,transparent 70%),
+  radial-gradient(ellipse 30% 80% at 75% -5%,#ff7ad655,transparent 70%),
+  linear-gradient(180deg,#0b0d1a,#1a2040 62%,#0a0b14)}
+.bg.bright{background:
+  radial-gradient(circle at 78% 22%,#ffffff 0 4%,#fff6d6 7%,transparent 22%),
+  linear-gradient(180deg,#bcdcff 0%,#e9f3fc 55%,#d9e6d3 62%,#b9cfa8 100%)}
+
+.lt{position:absolute;left:5%;bottom:11%;max-width:72%}
+.lt .nm{display:block;overflow-wrap:anywhere}
+.lt .tt{display:block;overflow-wrap:anywhere}
+
+/* 01 Clean white */
+.d1{background:#fff;color:#0f172a;padding:1.4cqw 2.4cqw 1.5cqw 2.2cqw;border-left:.6cqw solid #2563eb;border-radius:.3cqw;box-shadow:0 1cqw 3cqw #0004;font-family:var(--ui)}
+.d1 .nm{font-size:3.4cqw;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.d1 .tt{font-size:1.9cqw;color:#475569;margin-top:.4cqw;font-weight:500}
+
+/* 02 Smoked glass */
+.d2{background:linear-gradient(90deg,#0a0a0fcc,#0a0a0f99);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#f8f5ee;padding:1.5cqw 3cqw 1.6cqw;border-bottom:.2cqw solid #d9b25f;font-family:var(--ui)}
+.d2 .nm{font-size:3.2cqw;font-weight:300;letter-spacing:.01em;line-height:1.1}
+.d2 .tt{font-size:1.5cqw;letter-spacing:.24em;text-transform:uppercase;color:#d9b25f;margin-top:.7cqw;font-weight:500}
+
+/* 03 Stacked tabs */
+.d3{display:grid;justify-items:start;font-family:var(--ui)}
+.d3 .nm{background:#111827;color:#fff;font-size:3.3cqw;font-weight:700;padding:1cqw 2.4cqw 1.1cqw;line-height:1.05}
+.d3 .tt{background:#f1e600;color:#111;font-size:1.8cqw;font-weight:600;padding:.6cqw 2.4cqw;margin-left:2cqw}
+
+/* 04 Photo circle */
+.d4{display:flex;align-items:center;gap:1.8cqw;background:#0f172ae6;color:#fff;padding:1.2cqw 3cqw 1.2cqw 1.2cqw;border-radius:99cqw;font-family:var(--ui)}
+.d4 .ph{width:6.4cqw;aspect-ratio:1;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-weight:700;font-size:2.2cqw;background:radial-gradient(circle at 35% 30%,#93c5fd,#1d4ed8);box-shadow:0 0 0 .3cqw #fff}
+.d4 .nm{font-size:2.9cqw;font-weight:700;line-height:1.1}
+.d4 .tt{font-size:1.6cqw;color:#cbd5e1;margin-top:.2cqw}
+
+/* 05 Capsule */
+.d5{display:inline-flex;align-items:center;gap:1.4cqw;background:#fff;color:#111;padding:.9cqw 2.6cqw .9cqw 1.6cqw;border-radius:99cqw;box-shadow:0 .8cqw 2.4cqw #0005;font-family:var(--ui)}
+.d5 i{width:1.5cqw;height:1.5cqw;border-radius:50%;background:#f1e600;box-shadow:0 0 0 .35cqw #f1e60055;flex-shrink:0}
+.d5 .nm{display:inline;font-size:2.6cqw;font-weight:700}
+.d5 .tt{display:inline;font-size:2cqw;color:#555;font-weight:500;padding-left:1.4cqw;margin-left:1.4cqw;border-left:.15cqw solid #ddd}
+
+/* 06 News strap */
+.d6{font-family:var(--cond);display:grid;justify-items:start}
+.d6 .tag{background:#dc2626;color:#fff;font-size:1.7cqw;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:.5cqw 2.4cqw;line-height:1.2}
+.d6 .box{display:grid;justify-items:start;gap:.4cqw;background:#fff;color:#111;padding:1cqw 2.4cqw 1.1cqw;border-bottom:.5cqw solid #111;min-width:38cqw}
+.d6 .nm{font-size:4.2cqw;font-weight:700;text-transform:uppercase;line-height:1}
+.d6 .tt{font-family:var(--ui);font-size:1.7cqw;color:#444;font-weight:500;line-height:1.3}
+
+/* 07 Text only */
+.d7{color:#fff;font-family:var(--ui);text-shadow:0 .2cqw 1.2cqw #000c,0 0 .3cqw #0008}
+.d7 .nm{font-size:3.8cqw;font-weight:800;letter-spacing:-.015em;line-height:1.05}
+.d7 .rule{display:block;width:8cqw;height:.3cqw;background:#f1e600;margin:.9cqw 0 .7cqw;box-shadow:0 .1cqw .6cqw #0008}
+.d7 .tt{font-size:1.9cqw;font-weight:500;color:#f1f5f9}
+
+/* 08 Ivory serif */
+.d8{background:#f6f1e7;color:#2b2118;padding:1.6cqw 3cqw 1.6cqw;box-shadow:inset 0 .4cqw #b08d57,0 1cqw 3cqw #0004;font-family:var(--display)}
+.d8 .nm{font-size:3.4cqw;font-weight:600;line-height:1.1}
+.d8 .tt{font-style:italic;font-size:2cqw;color:#8a6a3b;margin-top:.3cqw}
+
+/* 09 Angled */
+.d9{font-family:var(--ui);display:grid;justify-items:start}
+.d9 .nm{background:linear-gradient(90deg,#6d28d9,#a21caf);color:#fff;font-size:3.2cqw;font-weight:700;padding:1cqw 4cqw 1cqw 2.4cqw;clip-path:polygon(0 0,100% 0,calc(100% - 2.4cqw) 100%,0 100%);line-height:1.1}
+.d9 .tt{background:#fff;color:#4c1d95;font-size:1.7cqw;font-weight:600;padding:.6cqw 3.6cqw .6cqw 2.4cqw;clip-path:polygon(0 0,calc(100% - 1.6cqw) 0,100% 100%,0 100%);letter-spacing:.04em}
+
+/* 10 Thick accent */
+.d10{display:grid;grid-template-columns:auto 1fr;gap:1.8cqw;align-items:stretch;font-family:var(--ui);color:#fff;text-shadow:0 .15cqw .8cqw #0009}
+.d10 i{width:.9cqw;background:#f59e0b;border-radius:.2cqw;box-shadow:0 0 1.2cqw #f59e0b88}
+.d10 .nm{font-size:3.9cqw;font-weight:800;line-height:1.02}
+.d10 .tt{font-size:1.6cqw;font-variant:small-caps;letter-spacing:.12em;color:#fde68a;margin-top:.5cqw;font-weight:600}
+
+/* 11 Split strip */
+.d11{font-family:var(--ui);display:grid;justify-items:start;box-shadow:0 1cqw 3cqw #0004}
+.d11 .nm{background:#fff;color:#0b1b3a;font-size:3.2cqw;font-weight:700;padding:1cqw 2.6cqw .9cqw;line-height:1.1;width:100%}
+.d11 .tt{background:#0b1b3a;color:#e2e8f0;font-size:1.6cqw;padding:.6cqw 2.6cqw;width:100%;letter-spacing:.06em;border-top:.25cqw solid #38bdf8}
+
+/* 12 Logo square */
+.d12{display:flex;align-items:stretch;font-family:var(--ui);box-shadow:0 1cqw 3cqw #0005}
+.d12 .sq{width:7.4cqw;flex-shrink:0;background:#111;display:grid;place-items:center}
+.d12 .sq span{width:4.6cqw;aspect-ratio:1;border-radius:50%;background:conic-gradient(#f97316,#db2777,#7c3aed,#f97316);display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.6cqw}
+.d12 .tx{background:linear-gradient(95deg,#f97316,#db2777 70%);color:#fff;padding:1.2cqw 3cqw 1.3cqw 2.2cqw;display:grid;align-content:center}
+.d12 .nm{font-size:3cqw;font-weight:800;line-height:1.1}
+.d12 .tt{font-size:1.7cqw;font-weight:500;opacity:.92;margin-top:.2cqw}
+
+/* 13 Outline frame */
+.d13{border:.25cqw solid #fff;padding:1.3cqw 2.6cqw 1.4cqw;color:#fff;font-family:var(--ui);background:#00000040;text-shadow:0 .1cqw .6cqw #000a}
+.d13::before{content:"";position:absolute;left:-.25cqw;top:-.25cqw;width:3cqw;height:.25cqw;background:#f1e600}
+.d13 .nm{font-size:3.1cqw;font-weight:600;letter-spacing:.02em;line-height:1.1}
+.d13 .tt{font-size:1.6cqw;letter-spacing:.2em;text-transform:uppercase;margin-top:.5cqw;color:#e5e7eb}
+
+/* 14 Long rule */
+.d14{left:5%;right:0;max-width:none;color:#fff;font-family:var(--ui);text-shadow:0 .15cqw .8cqw #000b}
+.d14 .nm{font-size:4.2cqw;font-weight:300;letter-spacing:-.01em;line-height:1}
+.d14 .nm b{font-weight:700}
+.d14 .row{display:flex;align-items:center;gap:1.6cqw;margin-top:.9cqw}
+.d14 .tt{font-size:1.7cqw;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#bae6fd;white-space:nowrap}
+.d14 .row i{flex:1;height:.18cqw;background:linear-gradient(90deg,#bae6fd,#bae6fd00)}
+
+/* 15 Centered */
+.d15{left:50%;transform:translateX(-50%);bottom:9%;text-align:center;font-family:var(--ui);display:grid;justify-items:center;max-width:80%}
+.d15 .nm{background:#0b0b0fcc;color:#fff;font-size:3cqw;font-weight:700;padding:.9cqw 3.2cqw;border-radius:.4cqw .4cqw 0 0;line-height:1.1}
+.d15 .tt{background:#f1e600;color:#111;font-size:1.6cqw;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:.5cqw 2.4cqw;border-radius:0 0 .4cqw .4cqw}
+
+/* Large view */
+dialog.view{width:min(1200px,calc(100% - 32px));max-height:calc(100% - 32px);padding:0;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:14px;overflow:auto}
+dialog.view::backdrop{background:#000000c0}
+.vhead{display:flex;align-items:center;gap:12px;padding:12px 14px;flex-wrap:wrap}
+.vhead h2{font-size:15px;font-weight:600;flex:1;min-width:0}
+.vbtn{border:1px solid var(--line);background:var(--raised);border-radius:8px;padding:6px 10px;font-size:12.5px}
+
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.lt{animation:rise .4s ease-out both}.d15{animation-name:rise-c}}
+@keyframes rise{from{transform:translateY(20%);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise-c{from{transform:translate(-50%,20%);opacity:0}to{transform:translateX(-50%);opacity:1}}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">FellowShow · Video overlays · Lower thirds</span>
+    <h1>Fifteen lower third designs</h1>
+    <p>Each card shows the same design for the preacher and for a guest speaker. Switch to Long title to see how each one handles a long name and role, and change the picture behind to check it reads on any background. Tell me the numbers you like and I will add them as styles.</p>
+  </header>
+
+  <div class="controls">
+    <div class="ctl"><span id="s-lbl">Show</span><div class="seg" role="group" aria-labelledby="s-lbl" data-group="show">
+      <button type="button" id="s-both" data-v="both" aria-pressed="true">Preacher and guest</button>
+      <button type="button" id="s-pre" data-v="preacher" aria-pressed="false">Preacher only</button>
+      <button type="button" id="s-long" data-v="long" aria-pressed="false">Long title</button>
+    </div></div>
+    <div class="ctl"><span id="b-lbl">Picture behind</span><div class="seg" role="group" aria-labelledby="b-lbl" data-group="bg">
+      <button type="button" id="b-worship" data-v="worship" aria-pressed="false">Worship slide</button>
+      <button type="button" id="b-camera" data-v="camera" aria-pressed="true">Camera</button>
+      <button type="button" id="b-bright" data-v="bright" aria-pressed="false">Bright</button>
+    </div></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <dialog class="view" id="view" aria-labelledby="v-title">
+    <div class="vhead"><span class="num" id="v-num"></span><h2 id="v-title"></h2><button class="vbtn" type="button" id="v-prev" aria-label="Previous design">‹ Previous</button><button class="vbtn" type="button" id="v-next" aria-label="Next design">Next ›</button><button class="vbtn" type="button" id="v-close">Close</button></div>
+    <div id="v-stage" class="frames"></div>
+  </dialog>
+</div>
+
+<script>
+(() => {
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PEOPLE={
+  preacher:{label:'Preacher',name:'Pastor Daniel Mensah',title:'The God who restores',role:'Preacher',initials:'DM'},
+  guest:{label:'Guest speaker',name:'Elder Grace Owusu',title:'Women\'s ministry leader',role:'Guest speaker',initials:'GO'},
+  long:{label:'Long title',name:'Apostle Dr. Emmanuel Kwabena Asante-Boateng',title:'General Overseer, Fellowship International Ministries, Accra District',role:'Guest speaker',initials:'EA'}
+};
+const first=n=>{const p=n.split(' ');return p.length>1?`${esc(p.slice(0,-1).join(' '))} <b>${esc(p.at(-1))}</b>`:esc(n);};
+const DESIGNS=[
+  {name:'Clean white',note:'White card, blue edge, dark text. Reads on almost any shot and is the easiest to start with.',tags:['Any picture','Safe default'],
+   html:p=>`<div class="lt d1"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Smoked glass',note:'A blurred dark panel with a gold underline. Light name, gold role in spaced capitals.',tags:['Worship slides','Calm'],
+   html:p=>`<div class="lt d2"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Stacked tabs',note:'The name on a black tab and the role on a yellow tab set in below it. Uses FellowShow yellow.',tags:['Bold','Livestream'],
+   html:p=>`<div class="lt d3"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Photo circle',note:'A round photo spot on the left of a dark capsule. Shows initials until you add a photo.',tags:['Guest speakers','Friendly'],
+   html:p=>`<div class="lt d4"><span class="ph">${esc(p.initials)}</span><span><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></span></div>`},
+  {name:'Capsule',note:'One white pill with a yellow dot, name and role on a single line. Small and quick to read.',tags:['Minimal','Short names'],
+   html:p=>`<div class="lt d5"><i aria-hidden="true"></i><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'News strap',note:'A red tag names the role, the name sits large in condensed capitals on white, like TV news.',tags:['Easy to read from far','Livestream'],
+   html:p=>`<div class="lt d6"><span class="tag">${esc(p.role)}</span><span class="box"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></span></div>`},
+  {name:'Text only',note:'No box at all. Heavy white type with a soft shadow and a short yellow rule.',tags:['Cinematic','Camera shots'],
+   html:p=>`<div class="lt d7"><span class="nm">${esc(p.name)}</span><span class="rule" aria-hidden="true"></span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Ivory serif',note:'Warm paper card with a gold top line, the name in serif and the role in italics.',tags:['Traditional','Bright pictures'],
+   html:p=>`<div class="lt d8"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Angled',note:'A violet name block cut at an angle with the role on a white slanted strip below.',tags:['Youth','Energetic'],
+   html:p=>`<div class="lt d9"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Thick accent',note:'A glowing amber bar beside very large white type, with the role in small capitals.',tags:['Camera shots','Bold'],
+   html:p=>`<div class="lt d10"><i aria-hidden="true"></i><span><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></span></div>`},
+  {name:'Split strip',note:'The name on white above a navy strip with a thin sky blue line for the role.',tags:['Clear order','Any picture'],
+   html:p=>`<div class="lt d11"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Logo square',note:'Your church logo in a black square beside a warm gradient panel with the name.',tags:['Branding','Youth'],
+   html:p=>`<div class="lt d12"><span class="sq"><span>FC</span></span><span class="tx"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></span></div>`},
+  {name:'Outline frame',note:'A thin white outline with a yellow corner tick. See-through, so the picture stays visible.',tags:['Modern','Dark shots'],
+   html:p=>`<div class="lt d13"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`},
+  {name:'Long rule',note:'Light first name and bold surname, with the role followed by a line that fades to the edge.',tags:['Cinematic','Sermon intro'],
+   html:p=>`<div class="lt d14"><span class="nm">${first(p.name)}</span><span class="row"><span class="tt">${esc(p.title)}</span><i aria-hidden="true"></i></span></div>`},
+  {name:'Centered',note:'Name and role centered at the bottom, for wide shots and close-ups where the speaker is in the middle.',tags:['Close-ups','Wide shots'],
+   html:p=>`<div class="lt d15"><span class="nm">${esc(p.name)}</span><span class="tt">${esc(p.title)}</span></div>`}
+];
+let show='both',bg='camera',open=-1;
+try{const s=JSON.parse(localStorage.getItem('fs-lower-thirds')||'{}');if(['both','preacher','long'].includes(s.show))show=s.show;if(['worship','camera','bright'].includes(s.bg))bg=s.bg;}catch(_){}
+const people=()=>show==='both'?[PEOPLE.preacher,PEOPLE.guest]:show==='long'?[PEOPLE.long]:[PEOPLE.preacher];
+const frame=(i,p)=>`<div class="stage" role="img" aria-label="${esc(DESIGNS[i].name)} lower third for ${esc(p.name)} over a ${bg} background"><div class="bg ${bg}"></div>${show==='both'?`<span class="lbl">${esc(p.label)}</span>`:''}${DESIGNS[i].html(p)}</div>`;
+const frames=i=>people().map(p=>frame(i,p)).join('');
+const pad=i=>String(i+1).padStart(2,'0');
+function render(){
+  document.getElementById('grid').innerHTML=DESIGNS.map((d,i)=>`<article class="card"><div class="frames">${frames(i)}</div><div class="meta"><span class="num">${pad(i)}</span><h3>${esc(d.name)}</h3><button class="big" type="button" data-open="${i}" aria-label="View ${esc(d.name)} large">View large</button><p>${esc(d.note)}</p><div class="tags">${d.tags.map(t=>`<span>${esc(t)}</span>`).join('')}</div></div></article>`).join('');
+  const val={show,bg};
+  document.querySelectorAll('.seg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===val[g.dataset.group]))));
+  if(open>=0)renderView();
+  try{localStorage.setItem('fs-lower-thirds',JSON.stringify(val));}catch(_){}
+}
+function renderView(){document.getElementById('v-num').textContent=pad(open);document.getElementById('v-title').textContent=DESIGNS[open].name;document.getElementById('v-stage').innerHTML=frames(open);}
+document.querySelector('.controls').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;if(b.closest('[data-group]').dataset.group==='show')show=b.dataset.v;else bg=b.dataset.v;render();});
+const view=document.getElementById('view');
+document.getElementById('grid').addEventListener('click',e=>{const b=e.target.closest('[data-open]');if(!b)return;open=Number(b.dataset.open);renderView();view.showModal();});
+document.getElementById('v-close').addEventListener('click',()=>view.close());
+document.getElementById('v-prev').addEventListener('click',()=>{open=(open+DESIGNS.length-1)%DESIGNS.length;renderView();});
+document.getElementById('v-next').addEventListener('click',()=>{open=(open+1)%DESIGNS.length;renderView();});
+view.addEventListener('close',()=>{const o=open;open=-1;document.querySelector('[data-open="'+o+'"]')?.focus();});
+view.addEventListener('keydown',e=>{if(e.key==='ArrowRight')document.getElementById('v-next').click();if(e.key==='ArrowLeft')document.getElementById('v-prev').click();});
+render();
+})();
+</script>
+
+</body></html><script type="module">
+import '/src/index.css';
+import { drawBroadcastOverlays } from '/src/lib/overlay-renderer.ts';
+import { LOWER_THIRD_DESIGN_OPTIONS } from '/src/types/lower-third-designs.ts';
+await Promise.all([document.fonts.load('700 64px Inter'),document.fonts.load('600 64px Fraunces'),document.fonts.load('700 80px "Barlow Condensed"'),document.fonts.load('700 64px "Inter Variable"'),document.fonts.load('600 64px "Fraunces Variable"'),document.fonts.load('italic 400 38px "Fraunces Variable"')]);
+document.querySelector('.controls').remove();document.querySelector('header').remove();
+const style=document.createElement('style');style.textContent='.grid{grid-template-columns:1fr!important}.frames{grid-template-columns:1920px 1920px!important}.stage{width:1920px!important;max-width:none!important}.lt{animation:none!important}.meta{display:none!important}body{padding:16px}.wrap{max-width:none!important}';document.head.append(style);
+const reports=[];
+for(const [i,card] of [...document.querySelectorAll('.card')].entries()){
+ const frames=card.querySelector('.frames');const stage=frames.querySelector('.stage');const original=stage.querySelector('.lt');
+ const title=original.querySelector('.nm').textContent;const role=original.querySelector('.tt').textContent;const label=original.querySelector('.tag')?.textContent;
+ frames.replaceChildren(stage);stage.querySelector('.bg').style.background='#324252';stage.querySelector('.lbl').textContent='Reference '+String(i+1).padStart(2,'0');
+ const holder=document.createElement('div');holder.className='stage';const canvas=document.createElement('canvas');canvas.width=1920;canvas.height=1080;canvas.style.cssText='display:block;width:100%;height:100%';holder.append(canvas);frames.append(holder);
+ const ctx=canvas.getContext('2d');const rects=[];const proxy=new Proxy(ctx,{get(t,p){const v=t[p];if(p==='roundRect')return(...args)=>{rects.push(args.slice(0,4));return v.apply(t,args)};return typeof v==='function'?v.bind(t):v},set(t,p,v){t[p]=v;return true}});
+ const option=LOWER_THIRD_DESIGN_OPTIONS[i];ctx.fillStyle='#324252';ctx.fillRect(0,0,1920,1080);
+ const graphic={id:option.value,theme:'preacher',title,subtitle:role,label,style:option.value,backgroundColor:option.defaultBackgroundColor,textColor:option.defaultTextColor,widthPercent:i===14?80:72,anchor:i===14?'bottom-center':'bottom-left',xPercent:i===14?50:5,yPercent:i===14?91:89,durationMs:14000,startedAt:0};
+ drawBroadcastOverlays(proxy,{width:1920,height:1080},{logos:[],ticker:null,lowerThird:graphic},{now:2500});
+ await document.fonts.ready;
+ const b=original.getBoundingClientRect();const s=stage.getBoundingClientRect();const expected=[(b.x-s.x)*1920/s.width,(b.y-s.y)*1920/s.width,b.width*1920/s.width,b.height*1920/s.width];
+ reports.push({style:option.value,expected:expected.map(n=>+n.toFixed(2)),rects:rects.map(r=>r.map(n=>+n.toFixed(2)))});
+}
+const report=document.createElement('pre');report.id='geometry-report';report.style.display='none';report.textContent=JSON.stringify(reports);document.body.append(report);
+</script>

@@ -1,0 +1,15 @@
+{
+  "framesCaptured": 5,
+  "width": 1920,
+  "height": 1080,
+  "rateNumerator": 24,
+  "rateDenominator": 1,
+  "fps": 24.0,
+  "fourcc": "BGRA",
+  "sha256": "4eba320612f0cb48c64bed329d745d2792deaa7a6b819115ea6a79f2f3df6af3",
+  "loopbackReceiverAddress": "127.0.0.1:5961",
+  "distinctBytes": 256,
+  "distinctNonuniformFrames": 1,
+  "output": "/Users/mallenkb/Documents/Code Projects/FellowShow/output/e2e/screenshots/native-ndi-slide1.png",
+  "captureSpanSeconds": 3.511674708
+}

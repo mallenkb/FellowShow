@@ -1,0 +1,32 @@
+{
+  "title": "Native line-break verification 2026-10-16",
+  "sections": [
+    {
+      "label": "Verse 1",
+      "lines": [
+        "Bearing shame and scoffing",
+        "rude,",
+        "In my place condemned he stood;",
+        "Sealed my pardon with his",
+        "blood;",
+        "Hallelujah! What a saviour!"
+      ]
+    },
+    {
+      "label": "Chorus",
+      "lines": [
+        "First chorus line stays here",
+        "second chorus line stays here",
+        "Third chorus line stays here"
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "lines": [
+        "This deliberately longer lyric line must stay on one line across Notes, Preview and Live without reflow.",
+        "lowercase second line must remain separate"
+      ]
+    }
+  ],
+  "lyrics": "Verse 1\nBearing shame and scoffing\nrude,\nIn my place condemned he stood;\nSealed my pardon with his\nblood;\nHallelujah! What a saviour!\n\nChorus\nFirst chorus line stays here\nsecond chorus line stays here\nThird chorus line stays here\n\nVerse 2\nThis deliberately longer lyric line must stay on one line across Notes, Preview and Live without reflow.\nlowercase second line must remain separate"
+}

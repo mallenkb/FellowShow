@@ -240,116 +240,118 @@ pub async fn start_transcription(
     #[cfg(not(feature = "whisper"))]
     let _ = whisper_model;
 
-    // ── 2. Build the STT provider ───────────────────────────────────────
-    let stt_provider: Box<dyn SttProvider> = match (provider_name, local_speech_model) {
-        ("whisper", Some(model)) => Box::new(installed_provider(&app, model)?),
-        #[cfg(feature = "whisper")]
-        ("whisper", None) => {
-            let model_path = super::whisper_models::installed_model_path(
-                &app,
-                whisper_model.unwrap_or_default(),
-            )
-            .ok_or("Download a Whisper model in Settings → Speech before starting.")?;
-
-            let parallelism = std::thread::available_parallelism().map_or(4, usize::from);
-            let n_threads = i32::try_from(parallelism / 2).unwrap_or(2).max(1);
-
-            log::info!(
-                "Starting Whisper transcription: model={}, threads={n_threads}, device_id={device_id:?}",
-                model_path.display()
-            );
-
-            Box::new(fellowshow_stt::WhisperProvider::new(
-                model_path, None, n_threads,
-            ))
-        }
-        #[cfg(not(feature = "whisper"))]
-        ("whisper", None) => {
-            return Err("Whisper support not compiled. Rebuild with --features whisper".into());
-        }
-        ("openai" | "groq", _) => {
-            let env_var = if provider_name == "openai" {
-                "OPENAI_API_KEY"
-            } else {
-                "GROQ_API_KEY"
-            };
-            let resolved_api_key = if api_key.trim().is_empty() {
-                std::env::var(env_var).unwrap_or_default()
-            } else {
-                api_key.trim().to_string()
-            };
-
-            if resolved_api_key.is_empty() {
-                let label = if provider_name == "openai" {
-                    "OpenAI"
-                } else {
-                    "Groq"
-                };
-                return Err(format!(
-                    "No {label} API key provided. Set it in Settings or via {env_var} env var."
-                ));
-            }
-
-            let (endpoint, model, provider_label) = if provider_name == "openai" {
-                (
-                    "https://api.openai.com/v1/audio/transcriptions",
-                    "gpt-4o-mini-transcribe",
-                    "OpenAI",
-                )
-            } else {
-                (
-                    "https://api.groq.com/openai/v1/audio/transcriptions",
-                    "whisper-large-v3-turbo",
-                    "Groq",
-                )
-            };
-
-            log::info!(
-                "Starting {provider_label} transcription: model={model}, device_id={device_id:?}, gain={gain:?}"
-            );
-
-            Box::new(OpenAiCompatibleSttProvider::new(OpenAiCompatibleConfig {
-                api_key: resolved_api_key,
-                endpoint: endpoint.to_string(),
-                model: model.to_string(),
-                provider_name: provider_label,
-                sample_rate: 16_000,
-            }))
-        }
-        _ => {
-            // Deepgram (default)
-            let resolved_api_key = if api_key.trim().is_empty() {
-                std::env::var("DEEPGRAM_API_KEY").unwrap_or_default()
-            } else {
-                api_key.trim().to_string()
-            };
-
-            if resolved_api_key.is_empty() {
-                return Err(
-                    "No Deepgram API key provided. Set it in Settings or via DEEPGRAM_API_KEY env var."
-                        .into(),
-                );
-            }
-
-            log::info!("Starting Deepgram transcription: device_id={device_id:?}, gain={gain:?}");
-
-            let stt_config = SttConfig {
-                api_key: resolved_api_key,
-                model: "nova-3".to_string(),
-                sample_rate: 16_000,
-                encoding: "linear16".to_string(),
-                language: None,
-            };
-
-            Box::new(DeepgramClient::new(stt_config))
-        }
-    };
-
-    let (session_id, cancelled, finished, stt_active, audio_active) = {
+    let (stt_provider, session_id, cancelled, finished, stt_active, audio_active) = {
         let mut app_state = state.lock().map_err(|e| e.to_string())?;
         if app_state.stt_session.is_some() {
             return Err("Transcription is already running or stopping".into());
         }
+
+        // ── 2. Build the STT provider ───────────────────────────────────────
+        let stt_provider: Box<dyn SttProvider> = match (provider_name, local_speech_model) {
+            ("whisper", Some(model)) => Box::new(installed_provider(&app, model)?),
+            #[cfg(feature = "whisper")]
+            ("whisper", None) => {
+                let model_path = super::whisper_models::installed_model_path(
+                    &app,
+                    whisper_model.unwrap_or_default(),
+                )
+                .ok_or("Download a Whisper model in Settings → Speech before starting.")?;
+
+                let parallelism = std::thread::available_parallelism().map_or(4, usize::from);
+                let n_threads = i32::try_from(parallelism / 2).unwrap_or(2).max(1);
+
+                log::info!(
+                "Starting Whisper transcription: model={}, threads={n_threads}, device_id={device_id:?}",
+                model_path.display()
+            );
+
+                Box::new(fellowshow_stt::WhisperProvider::new(
+                    model_path, None, n_threads,
+                ))
+            }
+            #[cfg(not(feature = "whisper"))]
+            ("whisper", None) => {
+                return Err("Whisper support not compiled. Rebuild with --features whisper".into());
+            }
+            ("openai" | "groq", _) => {
+                let env_var = if provider_name == "openai" {
+                    "OPENAI_API_KEY"
+                } else {
+                    "GROQ_API_KEY"
+                };
+                let resolved_api_key = if api_key.trim().is_empty() {
+                    std::env::var(env_var).unwrap_or_default()
+                } else {
+                    api_key.trim().to_string()
+                };
+
+                if resolved_api_key.is_empty() {
+                    let label = if provider_name == "openai" {
+                        "OpenAI"
+                    } else {
+                        "Groq"
+                    };
+                    return Err(format!(
+                        "No {label} API key provided. Set it in Settings or via {env_var} env var."
+                    ));
+                }
+
+                let (endpoint, model, provider_label) = if provider_name == "openai" {
+                    (
+                        "https://api.openai.com/v1/audio/transcriptions",
+                        "gpt-4o-mini-transcribe",
+                        "OpenAI",
+                    )
+                } else {
+                    (
+                        "https://api.groq.com/openai/v1/audio/transcriptions",
+                        "whisper-large-v3-turbo",
+                        "Groq",
+                    )
+                };
+
+                log::info!(
+                "Starting {provider_label} transcription: model={model}, device_id={device_id:?}, gain={gain:?}"
+            );
+
+                Box::new(OpenAiCompatibleSttProvider::new(OpenAiCompatibleConfig {
+                    api_key: resolved_api_key,
+                    endpoint: endpoint.to_string(),
+                    model: model.to_string(),
+                    provider_name: provider_label,
+                    sample_rate: 16_000,
+                }))
+            }
+            _ => {
+                // Deepgram (default)
+                let resolved_api_key = if api_key.trim().is_empty() {
+                    std::env::var("DEEPGRAM_API_KEY").unwrap_or_default()
+                } else {
+                    api_key.trim().to_string()
+                };
+
+                if resolved_api_key.is_empty() {
+                    return Err(
+                    "No Deepgram API key provided. Set it in Settings or via DEEPGRAM_API_KEY env var."
+                        .into(),
+                );
+                }
+
+                log::info!(
+                    "Starting Deepgram transcription: device_id={device_id:?}, gain={gain:?}"
+                );
+
+                let stt_config = SttConfig {
+                    api_key: resolved_api_key,
+                    model: "nova-3".to_string(),
+                    sample_rate: 16_000,
+                    encoding: "linear16".to_string(),
+                    language: None,
+                };
+
+                Box::new(DeepgramClient::new(stt_config))
+            }
+        };
 
         let session_id = app_state.next_stt_session_id;
         app_state.next_stt_session_id = app_state.next_stt_session_id.wrapping_add(1).max(1);
@@ -363,6 +365,7 @@ pub async fn start_transcription(
         app_state.stt_active.store(true, Ordering::SeqCst);
         app_state.audio_active.store(true, Ordering::SeqCst);
         (
+            stt_provider,
             session_id,
             cancelled,
             finished,

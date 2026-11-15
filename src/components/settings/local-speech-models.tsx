@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { create } from "zustand"
 
 import { Button } from "@/components/ui/button"
+import { RadioGroupItem } from "@/components/ui/radio-group"
 import {
   invoke,
   type LocalSpeechModel,
@@ -31,7 +32,7 @@ const MODELS: Record<LocalSpeechModel, { name: string; detail: string }> = {
   },
   parakeet: {
     name: "NVIDIA Parakeet TDT 0.6B v3",
-    detail: "Multilingual · Short segments · 671 MB",
+    detail: "Default · Multilingual · 671 MB",
   },
 }
 
@@ -73,12 +74,28 @@ async function downloadModel(model: LocalSpeechModel) {
   }
 }
 
-export function LocalSpeechModels() {
-  const selected = useSettingsStore((state) => state.localSpeechModel)
+export function useLocalSpeechModels() {
   const pending = useDownload((state) => state.pending)
   const phase = useDownload((state) => state.phase)
+  const filePercent = phase.match(/(\d+)%$/)?.[1]
   const [models, setModels] = useState<LocalSpeechModelStatus[]>([])
   const [error, setError] = useState<string>()
+  const [deleting, setDeleting] = useState(false)
+  const [modelListRevision, setModelListRevision] = useState(0)
+
+  async function deleteModel(model: LocalSpeechModel) {
+    setDeleting(true)
+    try {
+      await invoke("delete_local_speech_model", { model })
+    } catch (failure) {
+      toast.error("Could not delete the model", {
+        description: String(failure),
+      })
+    } finally {
+      setDeleting(false)
+      setModelListRevision((revision) => revision + 1)
+    }
+  }
 
   useEffect(() => {
     let ignore = false
@@ -94,82 +111,102 @@ export function LocalSpeechModels() {
     return () => {
       ignore = true
     }
-  }, [pending])
+  }, [pending, modelListRevision])
 
-  return (
-    <section
-      aria-label="More local speech models"
-      className="flex flex-col gap-2"
-    >
-      <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-        More local speech models
-      </h3>
-      <p className="text-xs text-muted-foreground">
-        The first download requires{" "}
-        <button
-          type="button"
-          className="text-foreground underline underline-offset-2"
-          onClick={() => {
-            void openUrl(
-              "https://docs.astral.sh/uv/getting-started/installation/"
-            ).catch((failure: unknown) => {
-              toast.error("Could not open the uv installation guide", {
-                description: String(failure),
-              })
-            })
-          }}
+  const rows = models.map(({ model, installed, unavailableReason }) => {
+    const { name, detail } = MODELS[model]
+    return {
+      model,
+      installed,
+      row: (
+        <div
+          key={model}
+          className="flex flex-wrap items-center gap-3 px-3 py-2.5 has-data-[state=checked]:bg-primary/5"
         >
-          uv
-        </button>{" "}
-        and an internet connection. Sizes are for model files. Model changes
-        apply the next time you start transcription.
-      </p>
-      {error && (
-        <p role="alert" className="text-xs text-destructive">
-          {error}
-        </p>
-      )}
-      {!error && models.length === 0 && (
-        <p className="text-xs text-muted-foreground">Checking local models…</p>
-      )}
-      {models.map(({ model, installed, unavailableReason }) => {
-        const { name, detail } = MODELS[model]
-        return (
-          <div
-            key={model}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3"
-          >
-            <div>
-              <p className="text-xs font-medium">{name}</p>
-              <p className="text-xs text-muted-foreground">{detail}</p>
-            </div>
-            {unavailableReason || (installed && selected === model) ? (
-              <span className="text-xs text-muted-foreground">
-                {unavailableReason ?? "Selected"}
-              </span>
-            ) : (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={pending !== null}
-                aria-label={
-                  installed ? `Use ${name}` : `Download and use ${name}`
-                }
-                onClick={() =>
-                  void (installed ? selectModel(model) : downloadModel(model))
-                }
-              >
-                {pending === model
-                  ? phase
-                  : installed
-                    ? "Use model"
-                    : "Download and use"}
-              </Button>
-            )}
+          {installed && !unavailableReason ? (
+            <RadioGroupItem
+              value={model}
+              aria-label={`Use ${name}`}
+              disabled={pending !== null || deleting}
+            />
+          ) : (
+            <span className="size-4 shrink-0" aria-hidden="true" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium">{name}</p>
+            <p className="text-xs text-muted-foreground">{detail}</p>
           </div>
-        )
-      })}
-    </section>
+          {unavailableReason && (
+            <span className="text-xs text-muted-foreground">
+              {unavailableReason}
+            </span>
+          )}
+          {!installed && !unavailableReason && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pending !== null || deleting}
+              aria-label={`Download and use ${name}`}
+              onClick={() => void downloadModel(model)}
+            >
+              {pending === model ? "Downloading…" : "Download and use"}
+            </Button>
+          )}
+          {installed && (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              disabled={pending !== null || deleting}
+              aria-label={`Delete ${name}`}
+              onClick={() => void deleteModel(model)}
+            >
+              Delete
+            </Button>
+          )}
+          {pending === model && (
+            <div className="w-full" role="status">
+              <progress
+                className="w-full"
+                max={100}
+                value={
+                  filePercent === undefined ? undefined : Number(filePercent)
+                }
+                aria-label={phase}
+              />
+              <p className="text-xs text-muted-foreground">{phase}</p>
+            </div>
+          )}
+        </div>
+      ),
+    }
+  })
+
+  return { rows, error, loading: !error && models.length === 0 }
+}
+
+export function LocalModelDownloadHelp() {
+  return (
+    <p className="text-xs text-muted-foreground">
+      Parakeet and other non-Whisper models require{" "}
+      <button
+        type="button"
+        className="text-foreground underline underline-offset-2"
+        onClick={() => {
+          void openUrl(
+            "https://docs.astral.sh/uv/getting-started/installation/"
+          ).catch((failure: unknown) => {
+            toast.error("Could not open the uv installation guide", {
+              description: String(failure),
+            })
+          })
+        }}
+      >
+        uv
+      </button>{" "}
+      and an internet connection. Sizes are for model files. Model changes apply
+      the next time you start transcription.
+    </p>
   )
 }

@@ -13,6 +13,16 @@ static DOWNLOAD_LOCK: Mutex<()> = Mutex::const_new(());
 
 #[derive(Clone, Copy, Default, Deserialize, Serialize)]
 pub enum WhisperModel {
+    #[serde(rename = "tiny")]
+    Tiny,
+    #[serde(rename = "base")]
+    Base,
+    #[serde(rename = "small")]
+    Small,
+    #[serde(rename = "medium")]
+    Medium,
+    #[serde(rename = "large-v3")]
+    LargeV3,
     #[serde(rename = "small.en")]
     SmallEnglish,
     #[default]
@@ -29,6 +39,31 @@ struct ModelFile {
 impl WhisperModel {
     fn file(self) -> ModelFile {
         match self {
+            Self::Tiny => ModelFile {
+                filename: "ggml-tiny-q5_1.bin",
+                size_bytes: 32_152_673,
+                sha256: "818710568da3ca15689e31a743197b520007872ff9576237bda97bd1b469c3d7",
+            },
+            Self::Base => ModelFile {
+                filename: "ggml-base-q5_1.bin",
+                size_bytes: 59_707_625,
+                sha256: "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898",
+            },
+            Self::Small => ModelFile {
+                filename: "ggml-small-q5_1.bin",
+                size_bytes: 190_085_487,
+                sha256: "ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb",
+            },
+            Self::Medium => ModelFile {
+                filename: "ggml-medium-q5_0.bin",
+                size_bytes: 539_212_467,
+                sha256: "19fea4b380c3a618ec4723c3eef2eb785ffba0d0538cf43f8f235e7b3b34220f",
+            },
+            Self::LargeV3 => ModelFile {
+                filename: "ggml-large-v3-q5_0.bin",
+                size_bytes: 1_081_140_203,
+                sha256: "d75795ecff3f83b5faa89d1900604ad8c780abd5739fae406de19f23ecd98ad1",
+            },
             Self::SmallEnglish => ModelFile {
                 filename: "ggml-small.en-q8_0.bin",
                 size_bytes: 264_477_561,
@@ -80,6 +115,7 @@ pub struct WhisperModelStatus {
     model: WhisperModel,
     size_bytes: u64,
     installed: bool,
+    can_delete: bool,
 }
 
 #[tauri::command]
@@ -91,14 +127,24 @@ pub fn list_whisper_models(app: AppHandle) -> Result<Vec<WhisperModelStatus>, St
     if !cfg!(feature = "whisper") {
         return Err("This build does not include local Whisper support.".into());
     }
-    Ok([WhisperModel::SmallEnglish, WhisperModel::LargeV3Turbo]
-        .into_iter()
-        .map(|model| WhisperModelStatus {
-            model,
-            size_bytes: model.file().size_bytes,
-            installed: installed_model_path(&app, model).is_some(),
-        })
-        .collect())
+    Ok([
+        WhisperModel::Tiny,
+        WhisperModel::Base,
+        WhisperModel::Small,
+        WhisperModel::SmallEnglish,
+        WhisperModel::Medium,
+        WhisperModel::LargeV3Turbo,
+        WhisperModel::LargeV3,
+    ]
+    .into_iter()
+    .map(|model| WhisperModelStatus {
+        model,
+        size_bytes: model.file().size_bytes,
+        installed: installed_model_path(&app, model).is_some(),
+        can_delete: model_directory(&app)
+            .is_ok_and(|directory| directory.join(model.file().filename).is_file()),
+    })
+    .collect())
 }
 
 #[tauri::command]
@@ -187,4 +233,26 @@ pub async fn download_whisper_model(
         .map_err(|error| format!("Could not install the Whisper model: {error}"))?;
     let _ = progress.send(received);
     Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_whisper_model(app: AppHandle, model: WhisperModel) -> Result<(), String> {
+    let _lock = DOWNLOAD_LOCK
+        .try_lock()
+        .map_err(|_| "Wait for the model download to finish.")?;
+    let path = model_directory(&app)?.join(model.file().filename);
+    tokio::task::spawn_blocking(move || {
+        let state = app.state::<std::sync::Mutex<crate::state::AppState>>();
+        let state = state.lock().map_err(|error| error.to_string())?;
+        if state.stt_session.is_some() {
+            return Err("Stop transcription before deleting a model.".into());
+        }
+        match std::fs::remove_file(path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(format!("Could not delete the model: {error}")),
+        }
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }

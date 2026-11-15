@@ -1,0 +1,78 @@
+{
+  "fixtures": [
+    {
+      "name": "e2e-corrupted.docx",
+      "bytes": 28,
+      "sha256": "c04bf73cfa594b1bed9fd1d01bfe5e3c441ad0f9e6af395a4c536448b468a892"
+    },
+    {
+      "name": "e2e-corrupted.mp4",
+      "bytes": 28,
+      "sha256": "c04bf73cfa594b1bed9fd1d01bfe5e3c441ad0f9e6af395a4c536448b468a892"
+    },
+    {
+      "name": "e2e-corrupted.pdf",
+      "bytes": 28,
+      "sha256": "c04bf73cfa594b1bed9fd1d01bfe5e3c441ad0f9e6af395a4c536448b468a892"
+    },
+    {
+      "name": "e2e-corrupted.png",
+      "bytes": 28,
+      "sha256": "c04bf73cfa594b1bed9fd1d01bfe5e3c441ad0f9e6af395a4c536448b468a892"
+    },
+    {
+      "name": "e2e-corrupted.pptx",
+      "bytes": 28,
+      "sha256": "c04bf73cfa594b1bed9fd1d01bfe5e3c441ad0f9e6af395a4c536448b468a892"
+    },
+    {
+      "name": "e2e-motion.mp4",
+      "bytes": 421310,
+      "sha256": "2c6d8b47aa51d6e95e7f7802fa9170d7c23c0ac1445c43a1946cfbd8f24e1d43"
+    },
+    {
+      "name": "e2e-quadrants.png",
+      "bytes": 14353,
+      "sha256": "d29ea22ebfeca8fa42f49326d806d5bfbaa4fb1ceb79bdd88b2be7773439dcdd"
+    },
+    {
+      "name": "e2e-two-pages.docx",
+      "bytes": 36740,
+      "sha256": "c47ffc74cc1c963fd26fe421b55a2c63ff9661ecc9acd9c95f5b5b7e2431f3cb"
+    },
+    {
+      "name": "e2e-two-pages.pdf",
+      "bytes": 2271,
+      "sha256": "66351e61518c8f2b97ee1fd170ca9a770b14fe27463d2deeaa6465ded62803a8"
+    },
+    {
+      "name": "e2e-two-slides.pptx",
+      "bytes": 29443,
+      "sha256": "e81afd73d89343a9007d0e77906df52f91e12a034c616ab9fd2068735a124f47"
+    }
+  ],
+  "expected": {
+    "e2e-two-pages.pdf": {
+      "pages": 2,
+      "width": 960,
+      "height": 540
+    },
+    "e2e-two-pages.docx": {
+      "pages": 2
+    },
+    "e2e-two-slides.pptx": {
+      "pages": 2,
+      "aspect": 1.7777777777777777
+    },
+    "e2e-quadrants.png": {
+      "width": 960,
+      "height": 540
+    },
+    "e2e-motion.mp4": {
+      "seconds": 3,
+      "width": 960,
+      "height": 540
+    },
+    "corruptedFiles": "reject with an actionable import error"
+  }
+}

@@ -3,7 +3,6 @@
 import json
 import os
 from pathlib import Path
-import shutil
 import sys
 import urllib.request
 
@@ -45,13 +44,21 @@ def audio_frames():
         yield np.frombuffer(raw, dtype="<i2").astype(np.float32) / 32768.0
 
 
-def download_file(url, path):
+def download_file(url, path, index, count):
     if path.is_file():
         return
     pending = path.with_suffix(path.suffix + ".part")
     with urllib.request.urlopen(url, timeout=60) as source, pending.open("wb") as dest:
-        shutil.copyfileobj(source, dest)
         expected = source.headers.get("Content-Length")
+        total = int(expected) if expected is not None else 0
+        last_percent = -1
+        while chunk := source.read(1024 * 1024):
+            dest.write(chunk)
+            percent = dest.tell() * 100 // total if total else 0
+            if percent != last_percent:
+                last_percent = percent
+                progress = f"{percent}%" if total else ""
+                emit("progress", f"Downloading file {index} of {count} {progress}")
         if expected is not None and dest.tell() != int(expected):
             raise OSError(f"Incomplete download of {path.name}")
     pending.replace(path)
@@ -69,8 +76,14 @@ def load_sherpa(model, root, download):
         names = list(files.values())
         if model == "zipformer":
             names.append("bpe.model")
-        for name in names:
-            download_file(f"https://huggingface.co/{repo}/resolve/{revision}/{name}", weights / name)
+        for index, name in enumerate(names, 1):
+            download_file(
+                f"https://huggingface.co/{repo}/resolve/{revision}/{name}",
+                weights / name,
+                index,
+                len(names),
+            )
+        emit("progress", "Checking the model…")
 
     threads = min(4, max(1, (os.cpu_count() or 2) // 2))
     config = {key: str(weights / name) for key, name in files.items()}

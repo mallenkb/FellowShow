@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-17T12:10:58.794345+00:00",
+  "path": "/Users/mallenkb/Documents/Code Projects/FellowShow/src-tauri/target/release/bundle/macos/FellowShow Release Check.app",
+  "identifier": "com.openbezal.fellowshow.release-verification",
+  "optimizedRelease": true,
+  "pid": null,
+  "binarySHA256": "515e73c8f80714b6cd4c45c3cdd17bb66010ea6acb82c6c18ed32f3581382733",
+  "frontendTestsPassed": 523,
+  "frontendFilesPassed": 95,
+  "fuzzCasesPerProperty": 10000,
+  "fuzzSeed": 1592598566,
+  "nativeChecks": "Session ended by user. Earlier native speech, AI, exact line breaks, Designer and NDI passed. Latest overlay rehearsal remains unresolved.",
+  "lastProcess": 23971
+}

@@ -553,8 +553,8 @@ export function PreachingSummaryPanel({
           {hasSummaryContent ? (
             <LiveActionButton
               action="show"
+              label="Show notes on Live"
               className="ml-auto shrink"
-              aria-label="Show sermon notes on Live"
               onClick={showSummaryLive}
             />
           ) : null}

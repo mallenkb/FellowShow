@@ -16,6 +16,8 @@ import { initProgramOutputAutostart } from "@/lib/program-output-autostart"
 import { hydrateAnnouncements } from "@/stores/announcement-store"
 import { hydratePresentationDocuments } from "@/stores/presentation-store"
 import { hydrateSermonSessions } from "@/stores/sermon-store"
+import { hydrateReturnFeed } from "@/stores/return-feed-store"
+import { initRecordingSermonLink } from "@/lib/recording-sermon-link"
 import {
   initTranscriptPersistence,
   resetTranscriptSession,
@@ -53,10 +55,12 @@ if (isTauri()) {
         hydratePresentationDocuments(),
         hydrateSermonSessions(),
         resetTranscriptSession(),
+        hydrateReturnFeed(),
       ])
     )
     .then(() => {
       initProgramOutputAutostart()
+      initRecordingSermonLink()
       return Promise.all([initBiblePersistence(), initTranscriptPersistence()])
     })
     .catch((error) => {

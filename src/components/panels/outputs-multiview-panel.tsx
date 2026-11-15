@@ -344,7 +344,7 @@ export function OutputsMultiviewPanel({
                       : "border-border"
                 )}
               >
-                <div className="relative aspect-video">
+                <div className="relative aspect-video bg-neutral-950">
                   {theme && (
                     <CanvasVerse
                       theme={theme}
@@ -356,13 +356,13 @@ export function OutputsMultiviewPanel({
                       }
                       overlays={overlays}
                       overlayMode={overlayMode ?? undefined}
-                      className={cn("h-full", !active && "opacity-40")}
+                      className={cn("h-full", !active && "opacity-30")}
                       fillContainer
                     />
                   )}
                   {!active && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
-                      <span className="text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase">
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <span className="rounded bg-black/80 px-1.5 text-[0.625rem] leading-4 font-semibold tracking-wide text-white uppercase ring-1 ring-white/15">
                         Off
                       </span>
                     </div>

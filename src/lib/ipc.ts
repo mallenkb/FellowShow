@@ -35,9 +35,19 @@ export interface LocalSpeechModelStatus {
   unavailableReason: string | null
 }
 
-export type WhisperModel = "small.en" | "large-v3-turbo"
+export const WHISPER_MODEL_IDS = [
+  "tiny",
+  "base",
+  "small",
+  "small.en",
+  "medium",
+  "large-v3-turbo",
+  "large-v3",
+] as const
+export type WhisperModel = (typeof WHISPER_MODEL_IDS)[number]
 
 export interface WhisperModelStatus {
+  canDelete: boolean
   model: WhisperModel
   sizeBytes: number
   installed: boolean
@@ -161,6 +171,8 @@ export interface Commands {
     { model: LocalSpeechModel; progress: Channel<string> },
     void
   >
+  delete_local_speech_model: WithArgs<{ model: LocalSpeechModel }, void>
+  delete_whisper_model: WithArgs<{ model: WhisperModel }, void>
   list_whisper_models: NoArgs<WhisperModelStatus[]>
   download_whisper_model: WithArgs<
     { model: WhisperModel; progress: Channel<number> },
@@ -200,6 +212,12 @@ export interface Commands {
   load_secure_settings: NoArgs<SecureSettings>
   save_secure_settings: WithArgs<{ secrets: SecureSettings }, void>
   list_monitors: NoArgs<MonitorInfo[]>
+  identify_screens: WithArgs<
+    {
+      screens: Array<{ monitorIndex: number; title: string; detail: string }>
+    },
+    void
+  >
   ensure_broadcast_window: WithArgs<{ outputId: string; title: string }, void>
   open_broadcast_window: WithArgs<
     { outputId: string; monitorIndex: number; title: string },

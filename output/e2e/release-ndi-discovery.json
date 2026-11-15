@@ -1,0 +1,12 @@
+{
+  "expectedSenderName": "FellowShow Release Verify",
+  "matched": true,
+  "sources": [
+    {
+      "name": "FELLOWSHOW-LOOPBACK-TEST (FellowShow Release Verify)",
+      "address": "127.0.0.1:5961"
+    }
+  ],
+  "discoveryExtraIp": "127.0.0.1",
+  "group": "FellowShowTest"
+}

@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-17T14:36:33.472395+00:00",
+  "status": "passed",
+  "method": "Actual native Tauri/WebKit rehearsal component, public fixture, bounded pixel readback after settling. Hidden nonfocusable window, no screen capture or user input.",
+  "window": {
+    "visible": false,
+    "focus": false,
+    "focusable": false,
+    "fullscreen": false,
+    "skipTaskbar": true
+  },
+  "observations": [
+    {
+      "region": "lower",
+      "brightPixels": 51540,
+      "videoReadyState": 4,
+      "decodedVideoPainted": true,
+      "sequence": 1
+    },
+    {
+      "region": "ticker",
+      "brightPixels": 119469,
+      "videoReadyState": 4,
+      "decodedVideoPainted": true,
+      "sequence": 1
+    },
+    {
+      "region": "lower",
+      "brightPixels": 51540,
+      "videoReadyState": 4,
+      "decodedVideoPainted": true,
+      "sequence": 2
+    },
+    {
+      "region": "ticker",
+      "brightPixels": 118928,
+      "videoReadyState": 4,
+      "decodedVideoPainted": true,
+      "sequence": 2
+    },
+    {
+      "region": "lower",
+      "brightPixels": 51540,
+      "videoReadyState": 4,
+      "decodedVideoPainted": true,
+      "sequence": 3
+    },
+    {
+      "region": "ticker",
+      "brightPixels": 118268,
+      "videoReadyState": 4,
+      "decodedVideoPainted": true,
+      "sequence": 3
+    }
+  ],
+  "normalUnmountAndClose": true,
+  "limits": [
+    "Pixel readback verifies the native canvas composition; OS screenshot/compositor appearance was not checked in the foreground."
+  ]
+}

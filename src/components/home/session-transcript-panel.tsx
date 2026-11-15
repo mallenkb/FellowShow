@@ -12,6 +12,7 @@ import { SermonSessionTiming } from "@/components/controls/sermon-session-timing
 import { Button } from "@/components/ui/button"
 import { SermonAudioDownload } from "./sermon-audio-download"
 import { SermonBundleDownload } from "./sermon-bundle-download"
+import { SermonFolderButton } from "./sermon-folder-button"
 import { SermonTranscriptExport } from "./sermon-transcript-export"
 import { useSermonAudio } from "./use-sermon-audio"
 import { Input } from "@/components/ui/input"
@@ -225,6 +226,7 @@ export function SessionTranscriptPanel({
             ) : null}
           </div>
         </div>
+        <SermonFolderButton session={session} lines={lines} isLive={isLive} />
         {session.endedAt !== null && !isLive ? (
           <SermonBundleDownload session={session} lines={lines} />
         ) : null}

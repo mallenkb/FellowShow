@@ -9,6 +9,7 @@ import { PreviewPanel } from "@/components/panels/preview-panel"
 import { ThemesPanel } from "@/components/panels/themes-panel"
 import { LiveOutputPanel } from "@/components/panels/live-output-panel"
 import { OutputsMultiviewPanel } from "@/components/panels/outputs-multiview-panel"
+import { ReturnFeedPanel } from "@/components/panels/return-feed-panel"
 import { QueuePanel } from "@/components/panels/queue-panel"
 import { SearchPanel } from "@/components/panels/search-panel"
 import { SongsQueuePanel } from "@/components/panels/songs-queue-panel"
@@ -129,7 +130,7 @@ export function Dashboard() {
         rowGap: "4px",
         overflow: "hidden",
       }}
-      className="bg-background"
+      className="bg-canvas"
     >
       <div>
         <TransportBar navigationRef={setNavigationTarget} />
@@ -138,7 +139,7 @@ export function Dashboard() {
 
       <div
         ref={gridRef}
-        className="grid min-h-0 bg-background *:min-h-0"
+        className="grid min-h-0 bg-canvas *:min-h-0"
         style={{
           gridTemplateColumns:
             focusedWorkspace === "media"
@@ -328,7 +329,7 @@ export function Dashboard() {
           }
         />
 
-        <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch overflow-y-auto overscroll-contain bg-background *:min-h-0 [&>*+*]:border-t-4 [&>*+*]:border-background">
+        <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch overflow-y-auto overscroll-contain bg-canvas *:min-h-0 [&>*+*]:border-t-4 [&>*+*]:border-canvas">
           <div
             role="group"
             aria-label="Live and preview"
@@ -346,6 +347,7 @@ export function Dashboard() {
               onOverlayActionPendingChange={setOverlayActionPending}
             />
           </div>
+          <ReturnFeedPanel />
           <OutputsMultiviewPanel mode={searchMode} />
           {searchMode !== "presentation" && searchMode !== "on-display" ? (
             <ThemesPanel mode={searchMode} />

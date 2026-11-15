@@ -95,9 +95,7 @@ function numberAlternatives(value: number): string[] {
 
 function patternForText(text: string, compactReference = false): RegExp {
   const escaped = escapeRegExp(text)
-  const pattern = compactReference
-    ? escaped.replace(/\s+/g, "[\\s-]+")
-    : escaped
+  const pattern = compactReference ? escaped.replace(/\s+/g, "[\\s-]+") : escaped
   return new RegExp(`(^|\\b)${pattern}(?=$|\\b|[.,;:!?])`, "i")
 }
 

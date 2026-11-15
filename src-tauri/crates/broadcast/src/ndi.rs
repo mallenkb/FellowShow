@@ -51,6 +51,7 @@ pub enum NdiResolution {
     R720p,
     R1080p,
     R4k,
+    Custom { width: u32, height: u32 },
 }
 
 impl NdiResolution {
@@ -59,7 +60,25 @@ impl NdiResolution {
             Self::R720p => (1280, 720),
             Self::R1080p => (1920, 1080),
             Self::R4k => (3840, 2160),
+            Self::Custom { width, height } => (*width, *height),
         }
+    }
+
+    pub fn validate(&self) -> Result<(), NdiError> {
+        if let Self::Custom { width, height } = *self {
+            const MAX_DIMENSION: u32 = 3840;
+            const MAX_PIXELS: u64 = 3840 * 2160;
+
+            if !(2..=MAX_DIMENSION).contains(&width)
+                || !(2..=MAX_DIMENSION).contains(&height)
+                || !width.is_multiple_of(2)
+                || !height.is_multiple_of(2)
+                || u64::from(width) * u64::from(height) > MAX_PIXELS
+            {
+                return Err(NdiError::InvalidCustomResolution { width, height });
+            }
+        }
+        Ok(())
     }
 }
 
@@ -106,6 +125,10 @@ pub struct NdiSessionInfo {
 pub enum NdiError {
     #[error("NDI source name must not be empty")]
     EmptySourceName,
+    #[error(
+        "Custom NDI resolution {width}×{height} is invalid. Use even dimensions from 2 to 3840 pixels and an area no larger than 3840×2160."
+    )]
+    InvalidCustomResolution { width: u32, height: u32 },
     #[error(
         "unable to locate NDI library at {0}. Install the NDI runtime from https://ndi.video/tools/ or bundle libndi.dylib with the application"
     )]
@@ -167,6 +190,8 @@ impl NdiRuntime {
         session_id: String,
         request: NdiStartRequest,
     ) -> Result<NdiSessionInfo, NdiError> {
+        request.resolution.validate()?;
+
         // Stop existing session with this ID if running
         if let Some(existing) = self.sessions.remove(&session_id) {
             log::info!("NDI[{session_id}]: shutting down existing session before restart");

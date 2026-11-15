@@ -1,0 +1,657 @@
+{
+  "songsScanned": 1088,
+  "confirmedSongsListed": 71,
+  "completed": "Parser fixes, rendered song-editor preview, and song-specific Follow live identity.",
+  "catalogEditsApplied": false,
+  "checks": "TypeScript typecheck, targeted ESLint and git diff --check passed. Tests and runtime/visual checks were not run.",
+  "sources": [
+    "https://copdenmark.dk/media/docs/cop_english_twi.pdf",
+    "https://copaustria.org/wp-content/uploads/2019/06/copsongsbook.pdf",
+    "https://manual.openlp.org/songs.html",
+    "https://learn.renewedvision.com/propresenter/working-with-slides"
+  ],
+  "songs": [
+    {
+      "id": "english-228",
+      "title": "We'll be like Him, When Jesus Christ the Son of",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "english-229",
+      "title": "Jehovah is Your majestic Name; God of the living You are",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "english-230",
+      "title": "Jesus Christ is Wonderful Counsellor, God Almighty",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Other songs are appended after the intended song and its translation credit.",
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "english-231",
+      "title": "But if by a still, small voice He calls",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "The hymn is incomplete and starts partway through a verse. A complete local variant exists."
+      ]
+    },
+    {
+      "id": "english-234",
+      "title": "We are in your hands O Lord Prepare us, give us grace and",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "twi-260",
+      "title": "Onyame kae me 1! Kae me ma 1ny1 yiye!",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "The song includes following songs and an index, totaling 651 lines."
+      ]
+    },
+    {
+      "id": "pentecostal-book-9",
+      "title": "All His ways are",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-17",
+      "title": "Ancient fire at work in us",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-21",
+      "title": "Ar-ise, shine, still move forward",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-27",
+      "title": "Be steadfast and Immovable",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "theme-2025-28",
+      "title": "TWI & OTHER GHANAIAN",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "This is a category heading and table of contents, not a song."
+      ]
+    },
+    {
+      "id": "theme-2025-29",
+      "title": "Yɛfri atifi, ne anafoɔ",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "This contains table-of-contents entries, not lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-30",
+      "title": "Behold he comes, in power",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-42",
+      "title": "Christ is born for us today",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-43",
+      "title": "Christ is risen from the dead!",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-47",
+      "title": "Come, let us all rejoice! (x2)",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-50",
+      "title": "Cover me with the Cloud",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-54",
+      "title": "Declaring what I know",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-68",
+      "title": "For God so loved the world,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-72",
+      "title": "From season to season",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-76",
+      "title": "Glory! Glory! Glory!",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-82",
+      "title": "Gracious God you are",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-96",
+      "title": "He carried my shame",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-97",
+      "title": "He died for me, He died for me",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-102",
+      "title": "He lives, He lives, He’s risen",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-109",
+      "title": "He’s shown up Himself once",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-115",
+      "title": "Holy Spirit, Holy Spirit",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-134",
+      "title": "I have Jesus within my heart",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-152",
+      "title": "I will render praises to my God,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-153",
+      "title": "I’ll build my house upon the",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-155",
+      "title": "I’ll keep on serving you",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-178",
+      "title": "Jehovah is Your majestic",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-191",
+      "title": "Jesus is the Bread of Life;",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-192",
+      "title": "Jesus! Jesus, my Saviour,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-196",
+      "title": "Jesus, my King, my",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-197",
+      "title": "Jesus, my Saviour, came",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-205",
+      "title": "Jesus, you are my friend",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-210",
+      "title": "Just as I am",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-224",
+      "title": "Let Your anointing fall on us;",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-225",
+      "title": "Let your fire burn (x2)",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-253",
+      "title": "My soul is seeking after you",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-282",
+      "title": "Our mighty tower is the Lord",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-295",
+      "title": "Prepare me, Lord, prepare me,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-296",
+      "title": "Preserve my life, keep me",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-304",
+      "title": "Rise now upon your feet,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-305",
+      "title": "Rise, shine, give God the glory,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-312",
+      "title": "Send us the Rain, Lord, send",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-321",
+      "title": "Speak to me, Lord, speak,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-326",
+      "title": "Sweep over my soul,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-331",
+      "title": "The Ancient Pentecost Power",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-339",
+      "title": "The fire will never die",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-341",
+      "title": "The heavens are all Yours",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-342",
+      "title": "The Lord has set the fire of",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-376",
+      "title": "Upon the hill of Calvary,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-380",
+      "title": "We are in your hands, O Lord",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-388",
+      "title": "We praise you, O Lord,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-392",
+      "title": "We will praise your holy name,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-393",
+      "title": "We’ll be like Him,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-397",
+      "title": "What a Master I follow;",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-398",
+      "title": "What a Sovereign God He is!",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-420",
+      "title": "With my lips I will praise you",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-432",
+      "title": "You are my Great Redeemer,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-435",
+      "title": "You are the Lord, you never",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-439",
+      "title": "You are worthy of our thanks",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-443",
+      "title": "Your resting place! I come",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-444",
+      "title": "Your will, not mine, be done,",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-445",
+      "title": "Zion's Strong Tower",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "The song includes an appended index and following songs, totaling 7,018 lines.",
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "pentecostal-book-477",
+      "title": "Oebubu mo mpokyer1 m’",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Needs cleanup",
+      "reasons": [
+        "The song includes following songs and an index, totaling 5,801 lines.",
+        "Translation credits and their continuation lines are mixed into the displayed lyrics."
+      ]
+    },
+    {
+      "id": "english-36",
+      "title": "Jesus shall reign where’er the sun",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Parser fixed",
+      "reasons": [
+        "The source-credit matcher removed legitimate lyric lines beginning with Blessings. The matcher now requires a catalog number."
+      ]
+    },
+    {
+      "id": "english-56",
+      "title": "“Great is Thy faithfulness” O God my Father",
+      "catalog": "src/lib/cop-songs.json",
+      "status": "Parser fixed",
+      "reasons": [
+        "The source-credit matcher removed legitimate lyric lines beginning with Blessings. The matcher now requires a catalog number."
+      ]
+    },
+    {
+      "id": "pentecostal-book-202",
+      "title": "Jesus shall reign where’er",
+      "catalog": "src/lib/imported-songs.json",
+      "status": "Parser fixed",
+      "reasons": [
+        "The source-credit matcher removed legitimate lyric lines beginning with Blessings. The matcher now requires a catalog number."
+      ]
+    }
+  ]
+}
