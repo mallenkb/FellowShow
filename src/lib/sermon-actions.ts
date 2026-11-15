@@ -129,14 +129,6 @@ async function beginSermon(
     await waitForStartup()
     if (cancelSermonStart) return false
     const store = useSermonStore.getState()
-    if (store.activeSessionId) {
-      if (resumeId && store.activeSessionId !== resumeId) {
-        throw new Error(
-          "Pause the current sermon before continuing another one."
-        )
-      }
-      return true
-    }
     const saved = resumeId
       ? store.sessions.find((session) => session.id === resumeId)
       : undefined
@@ -144,6 +136,29 @@ async function beginSermon(
       throw new Error(
         "This sermon is already finished. Start a new sermon instead."
       )
+    }
+    // Prepared sessions have never been live and can stay available for later.
+    for (const session of store.sessions) {
+      if (
+        session.prepared ||
+        session.endedAt !== null ||
+        session.id === resumeId
+      )
+        continue
+      if (cancelSermonStart) return false
+      if (useSermonStore.getState().activeSessionId === session.id) {
+        await transcriptionActions.stop()
+        checkpointActiveSermon()
+      }
+      const captured = useSermonStore
+        .getState()
+        .sessions.find((candidate) => candidate.id === session.id)
+      if (captured?.endedAt === null) await finishCapturedSermon(captured)
+    }
+    if (useSermonStore.getState().saveError) await flushSermonSessions()
+    if (cancelSermonStart) return false
+    if (resumeId && useSermonStore.getState().activeSessionId === resumeId) {
+      return true
     }
     const previousTranscript = useTranscriptStore.getState()
     const lastSegmentId = previousTranscript.segments.at(-1)?.id
@@ -415,45 +430,7 @@ async function settleSermon(
       }
       return
     }
-    const transcript = captured.transcript
-    const scriptures = capturedScriptureReferences(captured)
-    useSermonStore.getState().completeSession(captured.id, null, transcript)
-    await flushSermonSessions()
-    toast.success("Sermon finished", {
-      description:
-        transcript.length > 0
-          ? "Transcript saved. Creating sermon notes…"
-          : "Transcript saved.",
-    })
-    if (transcript.length > 0) {
-      const notes = summarizeTranscript(transcript, scriptures).then(
-        async (summary) => {
-          const store = useSermonStore.getState()
-          const savedSession = store.sessions.find(
-            (candidate) => candidate.id === captured.id
-          )
-          if (!savedSession) return
-          const savedDocument = savedSession.summaryDocument
-          store.setFinalSummary(
-            captured.id,
-            summary,
-            savedDocument ?? summaryToDocument(summary)
-          )
-          await flushSermonSessions()
-          toast.success("Sermon notes ready")
-        }
-      )
-      if (options.waitForNotes) {
-        await notes
-      } else {
-        void notes.catch((error: unknown) => {
-          toast.error(
-            "The sermon was saved, but its notes could not be created",
-            { description: String(error) }
-          )
-        })
-      }
-    }
+    await finishCapturedSermon(captured, options.waitForNotes)
   })().finally(() => {
     endSermonPromise = null
     const transition = useSermonStore.getState().transition
@@ -462,4 +439,49 @@ async function settleSermon(
     }
   })
   return endSermonPromise
+}
+
+async function finishCapturedSermon(
+  captured: SermonSession,
+  waitForNotes = false
+): Promise<void> {
+  const transcript = captured.transcript
+  const scriptures = capturedScriptureReferences(captured)
+  useSermonStore.getState().completeSession(captured.id, null, transcript)
+  await flushSermonSessions()
+  toast.success("Sermon finished", {
+    description:
+      transcript.length > 0
+        ? "Transcript saved. Creating sermon notes…"
+        : "Transcript saved.",
+  })
+  if (transcript.length > 0) {
+    const notes = summarizeTranscript(transcript, scriptures).then(
+      async (summary) => {
+        const store = useSermonStore.getState()
+        const savedSession = store.sessions.find(
+          (candidate) => candidate.id === captured.id
+        )
+        if (!savedSession) return
+        const savedDocument = savedSession.summaryDocument
+        store.setFinalSummary(
+          captured.id,
+          summary,
+          savedDocument ?? summaryToDocument(summary)
+        )
+        await flushSermonSessions()
+        toast.success("Sermon notes ready")
+      }
+    )
+    if (waitForNotes) {
+      await notes
+    } else {
+      void notes.catch((error: unknown) => {
+        toast.error(
+          "The sermon was saved, but its notes could not be created",
+          { description: String(error) }
+        )
+      })
+    }
+  }
 }

@@ -372,6 +372,8 @@ export const useSermonStore = create<SermonState>((set) => ({
           lastCheckpointAt: now,
         },
       ],
+      recoverySessionId:
+        state.recoverySessionId === id ? null : state.recoverySessionId,
       selectedSessionId: id,
       pendingSummaryDocument: null,
       pendingSummaryTitle: "",

@@ -271,3 +271,39 @@ it("keeps a paused sermon and its capture intervals unchanged when resuming fail
   expect(useSermonStore.getState().activeSessionId).toBeNull()
   expect(useSermonStore.getState().sessions[0]).toBe(saved)
 })
+
+it("saves every earlier live sermon before starting a new one and leaves prepared sermons available", async () => {
+  const store = useSermonStore.getState()
+  const earlier = store.startSession(2)
+  await pauseSermon()
+  const latest = store.startSession(3)
+  await pauseSermon()
+  const prepared = store.prepareSession("Next week")
+  mocks.startTranscription.mockImplementation(async () => {
+    const { sessions } = useSermonStore.getState()
+    expect(sessions.find((session) => session.id === earlier)).toMatchObject({
+      endedAt: expect.any(Number),
+      transcript: texts.slice(2),
+    })
+    expect(sessions.find((session) => session.id === latest)).toMatchObject({
+      endedAt: expect.any(Number),
+      transcript: texts.slice(3),
+    })
+    expect(mocks.set).toHaveBeenCalledWith(
+      "sessions",
+      expect.arrayContaining([
+        expect.objectContaining({ id: earlier, endedAt: expect.any(Number) }),
+        expect.objectContaining({ id: latest, endedAt: expect.any(Number) }),
+      ])
+    )
+    useTranscriptStore.setState({ isTranscribing: true })
+  })
+
+  expect(await startSermon()).toBe(true)
+  const { activeSessionId, sessions } = useSermonStore.getState()
+  expect(
+    sessions
+      .filter((session) => session.endedAt === null)
+      .map((session) => session.id)
+  ).toEqual([prepared, activeSessionId])
+})

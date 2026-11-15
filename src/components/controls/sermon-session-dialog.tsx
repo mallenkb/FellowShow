@@ -166,7 +166,7 @@ export function SermonSessionDialog() {
                 disabled={busy}
                 onClick={() => perform(() => startSermon(setMissingKey))}
               >
-                Start new sermon
+                {session?.prepared ? "Start new sermon" : "Finish & start new"}
               </Button>
             ) : null}
             {session?.endedAt === null && !session.prepared ? (
