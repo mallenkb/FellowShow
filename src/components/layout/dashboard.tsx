@@ -9,6 +9,7 @@ import { PreviewPanel } from "@/components/panels/preview-panel"
 import { ThemesPanel } from "@/components/panels/themes-panel"
 import { LiveOutputPanel } from "@/components/panels/live-output-panel"
 import { OutputsMultiviewPanel } from "@/components/panels/outputs-multiview-panel"
+import { ReturnFeedPanel } from "@/components/panels/return-feed-panel"
 import { QueuePanel } from "@/components/panels/queue-panel"
 import { SearchPanel } from "@/components/panels/search-panel"
 import { SongsQueuePanel } from "@/components/panels/songs-queue-panel"
@@ -346,6 +347,7 @@ export function Dashboard() {
               onOverlayActionPendingChange={setOverlayActionPending}
             />
           </div>
+          <ReturnFeedPanel />
           <OutputsMultiviewPanel mode={searchMode} />
           {searchMode !== "presentation" && searchMode !== "on-display" ? (
             <ThemesPanel mode={searchMode} />

@@ -103,6 +103,15 @@ export function useWhisperModels() {
           key={model}
           className="flex flex-wrap items-center gap-3 px-3 py-2.5 has-data-[state=checked]:bg-primary/5"
         >
+          {installed ? (
+            <RadioGroupItem
+              value={model}
+              aria-label={`Use ${MODEL_NAMES[model]}`}
+              disabled={downloading !== null || deleting}
+            />
+          ) : (
+            <span className="size-4 shrink-0" aria-hidden="true" />
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium">{MODEL_NAMES[model]}</p>
             <p className="text-xs text-muted-foreground">
@@ -134,14 +143,6 @@ export function useWhisperModels() {
             >
               Delete
             </Button>
-          )}
-          {installed && (
-            <RadioGroupItem
-              className="ml-auto"
-              value={model}
-              aria-label={`Use ${MODEL_NAMES[model]}`}
-              disabled={downloading !== null || deleting}
-            />
           )}
           {pending && (
             <progress

@@ -17,19 +17,124 @@
     "fs:allow-write-text-file",
     {
       "identifier": "fs:allow-copy-file",
-      "allow": [{ "path": "$APPDATA/media/*" }]
+      "allow": [
+        {
+          "path": "$APPDATA/media/*"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-mkdir",
-      "allow": [{ "path": "$APPDATA/media" }]
+      "allow": [
+        {
+          "path": "$APPDATA/media"
+        },
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "$APPDATA/media/*" }]
+      "allow": [
+        {
+          "path": "$APPDATA/media/*"
+        },
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
+    },
+    {
+      "identifier": "opener:allow-reveal-item-in-dir",
+      "allow": [
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
     },
     {
       "identifier": "fs:allow-remove",
-      "allow": [{ "path": "$APPDATA/media/*" }]
+      "allow": [
+        {
+          "path": "$APPDATA/media/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-rename",
+      "allow": [
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
+    },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        {
+          "path": "$VIDEO/FellowShow"
+        },
+        {
+          "path": "$VIDEO/FellowShow/**"
+        }
+      ]
     }
   ]
 }

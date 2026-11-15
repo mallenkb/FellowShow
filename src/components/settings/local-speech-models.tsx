@@ -123,6 +123,15 @@ export function useLocalSpeechModels() {
           key={model}
           className="flex flex-wrap items-center gap-3 px-3 py-2.5 has-data-[state=checked]:bg-primary/5"
         >
+          {installed && !unavailableReason ? (
+            <RadioGroupItem
+              value={model}
+              aria-label={`Use ${name}`}
+              disabled={pending !== null || deleting}
+            />
+          ) : (
+            <span className="size-4 shrink-0" aria-hidden="true" />
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium">{name}</p>
             <p className="text-xs text-muted-foreground">{detail}</p>
@@ -155,14 +164,6 @@ export function useLocalSpeechModels() {
             >
               Delete
             </Button>
-          )}
-          {installed && !unavailableReason && (
-            <RadioGroupItem
-              className="ml-auto"
-              value={model}
-              aria-label={`Use ${name}`}
-              disabled={pending !== null || deleting}
-            />
           )}
           {pending === model && (
             <div className="w-full" role="status">
