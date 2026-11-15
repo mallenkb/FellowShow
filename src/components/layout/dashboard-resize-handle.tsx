@@ -33,8 +33,8 @@ export function DashboardResizeHandle({
       className={
         (isHidden ? "pointer-events-none invisible " : "") +
         (column
-          ? "group relative z-10 flex min-h-0 cursor-col-resize touch-none items-center justify-center bg-background outline-none"
-          : "group relative z-10 flex min-w-0 cursor-row-resize touch-none items-center justify-center bg-background outline-none")
+          ? "group relative z-10 flex min-h-0 cursor-col-resize touch-none items-center justify-center bg-canvas outline-none"
+          : "group relative z-10 flex min-w-0 cursor-row-resize touch-none items-center justify-center bg-canvas outline-none")
       }
     >
       <span

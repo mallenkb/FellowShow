@@ -102,7 +102,7 @@ export function LiveOutputPanel({
         </label>
       </div>
 
-      <div className="relative z-0 aspect-video w-full shrink-0 overflow-hidden">
+      <div className="relative z-0 aspect-video w-full shrink-0 overflow-hidden bg-neutral-950">
         <CanvasVerse
           theme={activeTheme}
           // With only graphics on air, show just what goes out: no leftover
@@ -145,17 +145,17 @@ export function LiveOutputPanel({
           }
           className={cn(
             "h-full transition-opacity",
-            !showsSomething && "opacity-40"
+            !showsSomething && "opacity-30"
           )}
           fillContainer
           fit="contain"
         />
+        {/* The off-air tally sits in the corner so it never covers the
+            theme's own centered placeholder text. */}
         {!showsSomething && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center dark:opacity-40">
-            <span className="rounded bg-foreground px-2 py-0.5 text-[0.6875rem] font-semibold tracking-widest text-background uppercase dark:bg-background/70 dark:text-muted-foreground">
-              Off air
-            </span>
-          </div>
+          <span className="pointer-events-none absolute top-2 left-2 rounded bg-black/80 px-2 py-0.5 text-[0.6875rem] font-semibold tracking-widest text-white uppercase ring-1 ring-white/15">
+            Off air
+          </span>
         )}
       </div>
     </div>

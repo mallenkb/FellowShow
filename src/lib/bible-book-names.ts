@@ -136,6 +136,46 @@ const ENGLISH_BOOK_NAMES = [
   "Revelation",
 ] as const
 
+const BOOK_NAME_ALIASES = new Map<string, number>([
+  ["gyenesis", 1],
+  ["eksodɔs", 2],
+  ["lewitikɔs", 3],
+  ["numeri", 4],
+  ["deuteronomium", 5],
+  ["1 ahemfo", 11],
+  ["2 ahemfo", 12],
+  ["esra", 15],
+  ["ester", 17],
+  ["psalm", 19],
+  ["mmebusɛm", 20],
+  ["song", 22],
+  ["song of songs", 22],
+  ["canticles", 22],
+  ["yoel", 29],
+  ["revelation of john", 66],
+])
+
+export function bibleBookNumberFromName(name: string): number | undefined {
+  const normalized = name
+    .trim()
+    .normalize("NFC")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/^iii /, "3 ")
+    .replace(/^ii /, "2 ")
+    .replace(/^i /, "1 ")
+  const alias = BOOK_NAME_ALIASES.get(normalized)
+  if (alias !== undefined) return alias
+  const englishIndex = ENGLISH_BOOK_NAMES.findIndex(
+    (book) => book.toLowerCase() === normalized
+  )
+  if (englishIndex >= 0) return englishIndex + 1
+  const twiIndex = ASANTE_TWI_BOOK_NAMES.findIndex(
+    (book) => book.toLowerCase() === normalized
+  )
+  return twiIndex >= 0 ? twiIndex + 1 : undefined
+}
+
 function isAsanteTwiTranslation(translation: string): boolean {
   return ["WASNA", "ATWI", "TK"].includes(translation.trim().toUpperCase())
 }

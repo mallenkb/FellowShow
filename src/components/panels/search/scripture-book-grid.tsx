@@ -46,7 +46,7 @@ export function ScriptureBookGrid({
                     title={name}
                     onClick={() => onSelect(book)}
                     className={cn(
-                      "flex min-w-0 flex-col items-start rounded-[6px] border px-3 py-2 text-left transition-colors",
+                      "flex min-h-13 min-w-0 flex-col items-start justify-center rounded-[6px] border px-3 py-2 text-left transition-colors",
                       isCurrent
                         ? "border-transparent bg-primary/20 dark:border-primary-emphasis/60 dark:bg-primary/5"
                         : "border-border bg-background hover:bg-muted/50"
@@ -55,9 +55,13 @@ export function ScriptureBookGrid({
                     <span className="w-full truncate text-sm font-medium text-foreground">
                       {name}
                     </span>
-                    <span className="w-full truncate text-xs text-muted-foreground">
-                      {book.abbreviation}
-                    </span>
+                    {/* Skip abbreviations that only repeat the name (Ruth, Job). */}
+                    {book.abbreviation.toLocaleLowerCase() !==
+                    name.toLocaleLowerCase() ? (
+                      <span className="w-full truncate text-xs text-muted-foreground">
+                        {book.abbreviation}
+                      </span>
+                    ) : null}
                   </button>
                 )
               })}

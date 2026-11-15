@@ -1,4 +1,4 @@
-const MIN_QUOTE_WORDS = 4
+export const MIN_QUOTE_WORDS = 4
 
 interface WordToken {
   word: string
@@ -6,7 +6,7 @@ interface WordToken {
   end: number
 }
 
-function tokenize(text: string): WordToken[] {
+export function tokenizeQuote(text: string): WordToken[] {
   const tokens: WordToken[] = []
   for (const match of text.matchAll(/[\p{L}\p{N}'’]+/gu)) {
     const word = match[0].toLowerCase().replace(/['’]/g, "")
@@ -31,8 +31,18 @@ export function findQuotedSpan(
   verseText: string,
   minWords = MIN_QUOTE_WORDS
 ): { start: number; end: number } | null {
-  const spoken = tokenize(text)
-  const verse = tokenize(verseText)
+  return findTokenizedQuoteSpan(
+    tokenizeQuote(text),
+    tokenizeQuote(verseText),
+    minWords
+  )
+}
+
+export function findTokenizedQuoteSpan(
+  spoken: readonly WordToken[],
+  verse: readonly WordToken[],
+  minWords = MIN_QUOTE_WORDS
+): { start: number; end: number } | null {
   if (spoken.length < minWords || verse.length < minWords) return null
 
   let bestLength = 0

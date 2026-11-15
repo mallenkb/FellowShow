@@ -454,7 +454,9 @@ mod tests {
         drop(connection);
         let mut state = AppState::new();
         state.active_translation_id = 1;
-        state.bible_db = Some(BibleDb::open(&path).expect("open Bible database"));
+        state.bible_db = Some(std::sync::Arc::new(
+            BibleDb::open(&path).expect("open Bible database"),
+        ));
         (directory, state)
     }
 

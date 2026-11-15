@@ -1,4 +1,5 @@
 import { toast } from "sonner"
+import { isTauri } from "@tauri-apps/api/core"
 import { bibleActions } from "@/hooks/use-bible"
 import { toVerseRenderData } from "@/hooks/use-broadcast"
 import {
@@ -6,19 +7,53 @@ import {
   type SermonDirectReference,
 } from "@/lib/sermon-direct-references"
 import { activeTranslationAbbreviation } from "@/lib/preview-staging"
+import { invoke } from "@/lib/ipc"
 import { useBibleStore, useBroadcastStore, useQueueStore } from "@/stores"
+
+export async function fetchScripturePassage(
+  bookNumber: number,
+  chapter: number,
+  verse: number,
+  verseEnd: number | null | undefined,
+  translationId: number
+) {
+  if (!verseEnd || verseEnd <= verse) {
+    return bibleActions.fetchVerse(bookNumber, chapter, verse, translationId)
+  }
+  if (!isTauri() || translationId <= 0) return null
+
+  const verses = await invoke("get_chapter", {
+    translationId,
+    bookNumber,
+    chapter,
+  })
+  const passage = verses.filter(
+    (item) => item.verse >= verse && item.verse <= verseEnd
+  )
+  const first = passage[0]
+  if (!first || first.verse !== verse || passage.at(-1)?.verse !== verseEnd)
+    return null
+  return {
+    ...first,
+    verse_end: verseEnd,
+    verse_parts: passage.map(({ verse, text }) => ({ verse, text })),
+    text: passage.map(({ text }) => text).join(" "),
+  }
+}
 
 export async function resolveScripture(reference: SermonDirectReference) {
   const translationId = useBibleStore.getState().activeTranslationId
   const fallback = directReferenceToVerse(reference, translationId)
-  return (
-    (await bibleActions.fetchVerse(
-      reference.bookNumber,
-      reference.chapter,
-      reference.verse,
-      translationId
-    )) ?? fallback
+  const passage = await fetchScripturePassage(
+    reference.bookNumber,
+    reference.chapter,
+    reference.verse,
+    reference.verseEnd,
+    translationId
   )
+  if (passage?.text.trim()) return passage
+  if (fallback.text.trim()) return fallback
+  throw new Error("This passage is unavailable in the selected Bible version.")
 }
 
 export function reportScriptureActionFailure(

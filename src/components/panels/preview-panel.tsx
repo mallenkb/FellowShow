@@ -266,6 +266,11 @@ export function PreviewPanel({
             {!overlayOutputIsLive || overlayChangesPending ? (
               <LiveActionButton
                 action={overlayChangesPending ? "update" : "show"}
+                label={
+                  overlayChangesPending
+                    ? "Update graphics on Live"
+                    : "Show graphics on Live"
+                }
                 className="flex-1"
                 onClick={() => runOverlayLive("show")}
                 disabled={
@@ -289,6 +294,7 @@ export function PreviewPanel({
             {!previewIsOnAir ? (
               <LiveActionButton
                 action="show"
+                label="Show preview on Live"
                 className="flex-1"
                 onClick={sendPreviewLive}
                 disabled={isOverlayActionPending || !previewVerse}

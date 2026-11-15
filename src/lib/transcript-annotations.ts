@@ -1,30 +1,55 @@
 import { bibleActions } from "@/hooks/use-bible"
+import { toVerseRenderData } from "@/hooks/use-broadcast"
 import { useBibleStore, useBroadcastStore } from "@/stores"
 import type { DetectionResult, ReadingAdvance, Verse } from "@/types"
 import type { TranscriptVerseAnnotation } from "@/lib/transcript-verse-highlights"
-import { stageVerse, stageVerseInBackground } from "@/lib/preview-staging"
+import { findQuotedSpan } from "@/lib/transcript-quote-match"
+import {
+  activeTranslationAbbreviation,
+  stageVerse,
+  stageVerseInBackground,
+} from "@/lib/preview-staging"
 
-// Matches the lowest tier the Related scriptures panel shows.
-const MIN_QUOTE_CONFIDENCE = 0.74
 let annotationRequestId = 0
+const savedAnnotationCache = new WeakMap<
+  DetectionResult,
+  TranscriptVerseAnnotation[]
+>()
 
 export function annotationFromDetection(
-  detection: DetectionResult,
-  kind: TranscriptVerseAnnotation["kind"] = "reference"
+  detection: DetectionResult
 ): TranscriptVerseAnnotation {
   return {
     id: `${detection.verse_ref}-${Date.now()}-${Math.random()}`,
-    kind,
+    kind: "reference",
     reference: detection.verse_ref,
     bookName: detection.book_name,
     bookNumber: detection.book_number,
     chapter: detection.chapter,
     verse: detection.verse,
     verseText: detection.verse_text,
-    transcriptSnippet:
-      kind === "quote" ? undefined : detection.transcript_snippet,
+    transcriptSnippet: detection.transcript_snippet,
     timestamp: Date.now(),
   }
+}
+
+function withDirectQuote(
+  annotation: TranscriptVerseAnnotation
+): TranscriptVerseAnnotation[] {
+  if (
+    !annotation.transcriptSnippet ||
+    !findQuotedSpan(annotation.transcriptSnippet, annotation.verseText, 5)
+  ) {
+    return [annotation]
+  }
+  return [
+    annotation,
+    { ...annotation, id: `${annotation.id}-quote`, kind: "quote" },
+  ]
+}
+
+export function annotationsForDirectDetection(detection: DetectionResult) {
+  return withDirectQuote(annotationFromDetection(detection))
 }
 
 export function annotationFromAdvance(
@@ -56,13 +81,28 @@ export function isHighlightedDetection(detection: DetectionResult): boolean {
   )
 }
 
-/** Semantic matches confident enough to mark the quoted words in the transcript. */
-export function isQuoteDetection(detection: DetectionResult): boolean {
-  return (
-    detection.source === "semantic" &&
-    hasVerse(detection) &&
-    detection.confidence >= MIN_QUOTE_CONFIDENCE
-  )
+/** Rebuild transcript highlights from the session's saved detections. */
+export function annotationsFromSavedDetections(
+  detections: readonly DetectionResult[]
+): TranscriptVerseAnnotation[] {
+  return detections.flatMap((detection) => {
+    if (!isHighlightedDetection(detection)) return []
+    const cached = savedAnnotationCache.get(detection)
+    if (cached) return cached
+    const annotations = withDirectQuote({
+      id: `saved-reference-${detection.book_number}-${detection.chapter}-${detection.verse}`,
+      kind: "reference",
+      reference: detection.verse_ref,
+      bookName: detection.book_name,
+      bookNumber: detection.book_number,
+      chapter: detection.chapter,
+      verse: detection.verse,
+      verseText: detection.verse_text,
+      transcriptSnippet: detection.transcript_snippet,
+    })
+    savedAnnotationCache.set(detection, annotations)
+    return annotations
+  })
 }
 
 function fallbackVerse(annotation: TranscriptVerseAnnotation): Verse {
@@ -100,10 +140,17 @@ export function selectAnnotation(
   const { selectedVerse, activeTranslationId } = useBibleStore.getState()
   const isCurrent = () => {
     const state = useBibleStore.getState()
+    const selection = state.selectedVerse
+    // The chapter browser can resolve the same verse while this lookup is pending.
+    const sameVerse =
+      selection?.translation_id === activeTranslationId &&
+      selection.book_number === annotation.bookNumber &&
+      selection.chapter === annotation.chapter &&
+      selection.verse === annotation.verse
     return (
       requestId === annotationRequestId &&
       state.activeTranslationId === activeTranslationId &&
-      state.selectedVerse === selectedVerse
+      (selection === selectedVerse || sameVerse)
     )
   }
   bibleActions.navigateToVerse(
@@ -115,8 +162,11 @@ export function selectAnnotation(
   const selectAndStage = (verse: Verse) => {
     bibleActions.selectVerse(verse)
     if (sendLive) {
-      stageVerse(verse)
-      useBroadcastStore.getState().takePreviewLive("manual")
+      useBroadcastStore
+        .getState()
+        .presentOnLive(
+          toVerseRenderData(verse, activeTranslationAbbreviation())
+        )
     } else if (activate) stageVerse(verse)
     else stageVerseInBackground(verse)
   }

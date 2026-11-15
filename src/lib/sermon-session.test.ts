@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  formatSermonDuration,
   recoverSermon,
   sanitizeSermonCapture,
   sermonGaps,
@@ -99,5 +100,19 @@ describe("interrupted sermon recovery", () => {
       },
     ])
     expect(capture.lastCheckpointAt).toBe(2_000)
+  })
+})
+
+describe("formatSermonDuration", () => {
+  it("shows minutes and seconds under an hour", () => {
+    expect(formatSermonDuration(125_000)).toBe("2m 5s")
+  })
+
+  it("shows hours and minutes under a day", () => {
+    expect(formatSermonDuration((3 * 60 + 7) * 60_000)).toBe("3h 7m")
+  })
+
+  it("shows days and hours for long breaks", () => {
+    expect(formatSermonDuration((122 * 60 + 41) * 60_000)).toBe("5d 2h")
   })
 })

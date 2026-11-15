@@ -1,17 +1,12 @@
-import {
-  BookMarkedIcon,
-  ListPlusIcon,
-  PlayIcon,
-  SquareIcon,
-  Trash2Icon,
-} from "lucide-react"
+import { ListPlusIcon, PlayIcon, SquareIcon, Trash2Icon } from "lucide-react"
 import { SendToOverlayButton } from "@/components/on-display/send-to-overlay"
 import { verseContent } from "@/components/on-display/overlay-content"
 import { Button } from "@/components/ui/button"
-import { LIVE_STATUS_BADGE_CLASS } from "@/components/ui/live-status-styles"
 import type { SermonDirectReference } from "@/lib/sermon-direct-references"
 import { cn } from "@/lib/utils"
 import { scriptureRowStatusClasses } from "@/components/panels/content-row-styles"
+import { ScriptureCardText } from "./scripture-card-text"
+import { ScriptureStatusBadge } from "./scripture-status-badge"
 import {
   presentScripture,
   previewScripture,
@@ -34,151 +29,124 @@ export function SermonScriptureRow({
   isShowingPreview: boolean
   onRemove: (reference: SermonDirectReference) => void
 }) {
+  const status = isShowingLive ? "live" : isShowingPreview ? "in preview" : null
+
   return (
     <article
       data-slot="sermon-scripture-row"
-      role="button"
-      tabIndex={0}
-      onClick={() => {
-        void previewScripture(reference).catch((error: unknown) => {
-          reportScriptureActionFailure(reference, error)
-        })
-      }}
       onDoubleClick={() => {
         void presentScripture(reference).catch((error: unknown) => {
           reportScriptureActionFailure(reference, error)
         })
       }}
-      onKeyDown={(event) => {
-        if (event.key !== "Enter" && event.key !== " ") return
-        event.preventDefault()
-        void previewScripture(reference).catch((error: unknown) => {
-          reportScriptureActionFailure(reference, error)
-        })
-      }}
       className={cn(
-        "group cursor-pointer rounded-lg border border-transparent px-3 py-2 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        "group flex min-w-0 items-start gap-2 rounded-lg border border-transparent px-3 py-3 transition-colors hover:bg-muted/40",
         scriptureRowStatusClasses(isShowingLive, isShowingPreview)
       )}
     >
-      <div className="flex flex-wrap items-start gap-2">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-400/15 text-amber-800 dark:text-amber-300">
-          <BookMarkedIcon className="size-4" />
-        </span>
-        <div className="min-w-24 flex-1">
-          <h3 className="truncate text-xs font-semibold text-foreground">
+      <button
+        type="button"
+        data-scripture-live-control
+        aria-label={`Preview ${reference.reference}${status ? `, ${status}` : ""}`}
+        title={`Preview ${reference.reference}. Double-click to show on Live.`}
+        onClick={(event) => {
+          if (event.detail > 1) return
+          void previewScripture(reference).catch((error: unknown) => {
+            reportScriptureActionFailure(reference, error)
+          })
+        }}
+        className="min-w-0 flex-1 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="flex flex-wrap items-center gap-1.5">
+          <span className="truncate text-xs font-semibold text-yellow-800 dark:text-yellow-300">
             {reference.reference}
-          </h3>
-          {reference.transcriptSnippet ? (
-            <p className="mt-1 line-clamp-2 text-[0.625rem] leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">Transcript:</span> “
-              {reference.transcriptSnippet}”
-            </p>
-          ) : null}
-          {reference.verseText ? (
-            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-              {reference.verseText}
-            </p>
-          ) : null}
-        </div>
-        {isShowingLive || isShowingPreview ? (
-          <span
-            className={cn(
-              "shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] font-medium uppercase",
-              isShowingLive
-                ? LIVE_STATUS_BADGE_CLASS
-                : "bg-blue-500/10 text-blue-700 dark:text-blue-300"
-            )}
-          >
-            {isShowingLive ? "Live" : "In preview"}
           </span>
-        ) : null}
-        <div
-          className="ml-auto flex shrink-0 items-center gap-0.5"
-          onDoubleClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.stopPropagation()
+          <ScriptureStatusBadge status={status} />
+        </span>
+        <ScriptureCardText
+          text={reference.verseText}
+          bookNumber={reference.bookNumber}
+          chapter={reference.chapter}
+          verse={reference.verse}
+          verseEnd={reference.verseEnd}
+        />
+      </button>
+      <div
+        className="flex shrink-0 items-center gap-0.5"
+        onDoubleClick={(event) => event.stopPropagation()}
+      >
+        <Button
+          type="button"
+          data-scripture-live-control
+          variant="ghost"
+          size="icon-xs"
+          title={
+            isShowingLive
+              ? "Stop showing " + reference.reference + " on Live"
+              : "Show " + reference.reference + " full screen"
+          }
+          aria-label={
+            isShowingLive
+              ? "Stop showing " + reference.reference + " on Live"
+              : "Show " + reference.reference + " full screen"
+          }
+          onClick={() => {
+            if (isShowingLive) {
+              stopScriptureOnLive(reference)
+              return
             }
+            void presentScripture(reference).catch((error: unknown) => {
+              reportScriptureActionFailure(reference, error)
+            })
           }}
         >
+          {isShowingLive ? (
+            <SquareIcon className="size-3 text-destructive" />
+          ) : (
+            <PlayIcon className="size-3" />
+          )}
+        </Button>
+        {!isQueued ? (
           <Button
             type="button"
-            data-scripture-live-control
             variant="ghost"
             size="icon-xs"
-            title={
-              isShowingLive
-                ? "Stop showing " + reference.reference + " on Live"
-                : "Show " + reference.reference + " full screen"
-            }
-            aria-label={
-              isShowingLive
-                ? "Stop showing " + reference.reference + " on Live"
-                : "Show " + reference.reference + " full screen"
-            }
-            onClick={(event) => {
-              event.stopPropagation()
-              if (isShowingLive) {
-                stopScriptureOnLive(reference)
-                return
-              }
-              void presentScripture(reference).catch((error: unknown) => {
+            title={"Add " + reference.reference + " to queue"}
+            aria-label={"Add " + reference.reference + " to queue"}
+            onClick={() => {
+              void queueScripture(reference).catch((error: unknown) => {
                 reportScriptureActionFailure(reference, error)
               })
             }}
           >
-            {isShowingLive ? (
-              <SquareIcon className="size-3 text-destructive" />
-            ) : (
-              <PlayIcon className="size-3" />
-            )}
+            <ListPlusIcon className="size-3" />
           </Button>
-          {!isQueued ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              title={"Add " + reference.reference + " to queue"}
-              aria-label={"Add " + reference.reference + " to queue"}
-              onClick={(event) => {
-                event.stopPropagation()
-                void queueScripture(reference).catch((error: unknown) => {
-                  reportScriptureActionFailure(reference, error)
-                })
-              }}
-            >
-              <ListPlusIcon className="size-3" />
-            </Button>
-          ) : null}
-          <SendToOverlayButton
-            label={reference.reference}
-            getContent={async () =>
-              verseContent(await resolveScripture(reference))
-            }
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            title={
-              (isQueued ? "Remove " : "Dismiss ") +
-              reference.reference +
-              " from sermon scriptures"
-            }
-            aria-label={
-              (isQueued ? "Remove " : "Dismiss ") +
-              reference.reference +
-              " from sermon scriptures"
-            }
-            onClick={(event) => {
-              event.stopPropagation()
-              onRemove(reference)
-            }}
-          >
-            <Trash2Icon className="size-3" />
-          </Button>
-        </div>
+        ) : null}
+        <SendToOverlayButton
+          label={reference.reference}
+          getContent={async () =>
+            verseContent(await resolveScripture(reference))
+          }
+          className="border-transparent bg-transparent shadow-none dark:border-transparent dark:bg-transparent"
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          title={
+            (isQueued ? "Remove " : "Dismiss ") +
+            reference.reference +
+            " from sermon scriptures"
+          }
+          aria-label={
+            (isQueued ? "Remove " : "Dismiss ") +
+            reference.reference +
+            " from sermon scriptures"
+          }
+          onClick={() => onRemove(reference)}
+        >
+          <Trash2Icon className="size-3" />
+        </Button>
       </div>
     </article>
   )

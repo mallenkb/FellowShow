@@ -502,6 +502,14 @@ export function drawReference(
   return ref.fontSize * 1.5
 }
 
+export function verseNumberFont(theme: BroadcastTheme) {
+  const size = theme.verseText.fontSize / 2
+  return {
+    size,
+    css: `700 ${size}px "${theme.reference.fontFamily}", sans-serif`,
+  }
+}
+
 export function drawVerseText(
   ctx: CanvasRenderingContext2D,
   theme: BroadcastTheme,
@@ -521,7 +529,7 @@ export function drawVerseText(
   const verseDecoration = resolveTextDecoration(vt.textDecoration)
   const lineHeightPx = vt.fontSize * vt.lineHeight
   const mainFont = `${vt.fontWeight} ${vt.fontSize}px "${vt.fontFamily}", serif`
-  const numberFont = `700 ${vn.fontSize}px "${theme.reference.fontFamily}", sans-serif`
+  const { size: numberSize, css: numberFont } = verseNumberFont(theme)
 
   type StyledToken = {
     text: string
@@ -629,10 +637,10 @@ export function drawVerseText(
     drawY: number
   ) => {
     const isNumber = kind === "number"
-    const fontSize = isNumber ? vn.fontSize : vt.fontSize
+    const fontSize = isNumber ? numberSize : vt.fontSize
     const y =
       isNumber && vn.superscript
-        ? drawY + Math.max(0, (vt.fontSize - vn.fontSize) * 0.1)
+        ? drawY + Math.max(0, (vt.fontSize - numberSize) * 0.35)
         : drawY + Math.max(0, (vt.fontSize - fontSize) * 0.45)
 
     ctx.font = isNumber ? numberFont : mainFont

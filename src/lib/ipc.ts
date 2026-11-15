@@ -1,4 +1,4 @@
-import { invoke as tauriInvoke } from "@tauri-apps/api/core"
+import { invoke as tauriInvoke, type Channel } from "@tauri-apps/api/core"
 import type {
   Book,
   CrossReference,
@@ -17,6 +17,40 @@ import type { NdiFrameRequest } from "@/types/ndi"
 interface ConnectionTestResult {
   ok: boolean
   message: string
+}
+
+export const LOCAL_SPEECH_MODEL_IDS = [
+  "nemotron",
+  "moonshine",
+  "zipformer",
+  "voxtral",
+  "parakeet",
+] as const
+
+export type LocalSpeechModel = (typeof LOCAL_SPEECH_MODEL_IDS)[number]
+
+export interface LocalSpeechModelStatus {
+  model: LocalSpeechModel
+  installed: boolean
+  unavailableReason: string | null
+}
+
+export const WHISPER_MODEL_IDS = [
+  "tiny",
+  "base",
+  "small",
+  "small.en",
+  "medium",
+  "large-v3-turbo",
+  "large-v3",
+] as const
+export type WhisperModel = (typeof WHISPER_MODEL_IDS)[number]
+
+export interface WhisperModelStatus {
+  canDelete: boolean
+  model: WhisperModel
+  sizeBytes: number
+  installed: boolean
 }
 
 interface EasyWorshipImportedSong {
@@ -132,6 +166,18 @@ export interface Commands {
   test_deepgram_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
   test_openai_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
   test_groq_connection: WithArgs<{ apiKey: string }, ConnectionTestResult>
+  list_local_speech_models: NoArgs<LocalSpeechModelStatus[]>
+  download_local_speech_model: WithArgs<
+    { model: LocalSpeechModel; progress: Channel<string> },
+    void
+  >
+  delete_local_speech_model: WithArgs<{ model: LocalSpeechModel }, void>
+  delete_whisper_model: WithArgs<{ model: WhisperModel }, void>
+  list_whisper_models: NoArgs<WhisperModelStatus[]>
+  download_whisper_model: WithArgs<
+    { model: WhisperModel; progress: Channel<number> },
+    void
+  >
   start_transcription: WithArgs<
     {
       apiKey: string
@@ -139,6 +185,8 @@ export interface Commands {
       gain: number | null
       provider: string | null
       sermonId?: string
+      whisperModel?: WhisperModel
+      localSpeechModel?: LocalSpeechModel
     },
     number
   >
@@ -153,9 +201,23 @@ export interface Commands {
     { sermonId: string; destination: string; format: string },
     void
   >
+  export_sermon_bundle: WithArgs<
+    {
+      sermonId: string
+      destination: string
+      content: { coverPng: number[]; transcript: string; summary: string }
+    },
+    boolean
+  >
   load_secure_settings: NoArgs<SecureSettings>
   save_secure_settings: WithArgs<{ secrets: SecureSettings }, void>
   list_monitors: NoArgs<MonitorInfo[]>
+  identify_screens: WithArgs<
+    {
+      screens: Array<{ monitorIndex: number; title: string; detail: string }>
+    },
+    void
+  >
   ensure_broadcast_window: WithArgs<{ outputId: string; title: string }, void>
   open_broadcast_window: WithArgs<
     { outputId: string; monitorIndex: number; title: string },

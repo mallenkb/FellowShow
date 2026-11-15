@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
+import { syncAppIcon } from "@/lib/app-icon"
 
 type Theme = "dark" | "light" | "system"
 type ResolvedTheme = "dark" | "light"
@@ -114,6 +115,7 @@ export function ThemeProvider({
 
       root.classList.remove("light", "dark")
       root.classList.add(resolvedTheme)
+      syncAppIcon(resolvedTheme)
 
       if (restoreTransitions) {
         restoreTransitions()

@@ -129,7 +129,7 @@ export function Dashboard() {
         rowGap: "4px",
         overflow: "hidden",
       }}
-      className="bg-background"
+      className="bg-canvas"
     >
       <div>
         <TransportBar navigationRef={setNavigationTarget} />
@@ -138,7 +138,7 @@ export function Dashboard() {
 
       <div
         ref={gridRef}
-        className="grid min-h-0 bg-background *:min-h-0"
+        className="grid min-h-0 bg-canvas *:min-h-0"
         style={{
           gridTemplateColumns:
             focusedWorkspace === "media"
@@ -328,7 +328,7 @@ export function Dashboard() {
           }
         />
 
-        <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch overflow-y-auto overscroll-contain bg-background *:min-h-0 [&>*+*]:border-t-4 [&>*+*]:border-background">
+        <div className="flex h-full min-h-0 [scrollbar-width:thin] flex-col items-stretch overflow-y-auto overscroll-contain bg-canvas *:min-h-0 [&>*+*]:border-t-4 [&>*+*]:border-canvas">
           <div
             role="group"
             aria-label="Live and preview"

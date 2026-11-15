@@ -4,6 +4,8 @@ import type {
   VerseRenderData,
 } from "@/types/broadcast"
 
+import { DEEP_OCEAN_SCRIPTURE_STYLE } from "@/lib/builtin-themes"
+import { inferThemeSection } from "@/lib/broadcast-outputs"
 import { lyricFooterTheme } from "./color"
 import {
   alignX,
@@ -52,17 +54,24 @@ export function computeVerseLayoutMetrics(
   options?: RenderOptions
 ): VerseLayoutMetrics {
   const scale = options?.scale ?? 1
+  const contentTheme =
+    theme.builtin &&
+    theme.section === "songs" &&
+    verse &&
+    inferThemeSection(verse) === "bible"
+      ? { ...theme, ...DEEP_OCEAN_SCRIPTURE_STYLE }
+      : theme
   const scriptureTheme =
     verse?.scriptureVerseNumberColor && verse.themeSection === "bible"
       ? {
-          ...theme,
+          ...contentTheme,
           verseNumbers: {
-            ...theme.verseNumbers,
+            ...contentTheme.verseNumbers,
             visible: true,
             color: verse.scriptureVerseNumberColor,
           },
         }
-      : theme
+      : contentTheme
   let scaledTheme = buildScaledTheme(scriptureTheme, scale)
   const canvasW = scaledTheme.resolution.width
   const canvasH = scaledTheme.resolution.height

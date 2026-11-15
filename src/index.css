@@ -190,6 +190,9 @@
   --color-surface-elevated: var(--surface-elevated);
   --color-surface-sunken: var(--surface-sunken);
   --color-surface-header: var(--surface-header);
+  --color-field: var(--field);
+  --color-field-border: var(--field-border);
+  --color-canvas: var(--canvas);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -201,7 +204,9 @@
 
 :root {
   color-scheme: light;
-  --background: var(--color-neutral-200);
+  /* A light canvas with white cards and real borders. A neutral-200 canvas
+     made tiles, gutters and fields read as one flat grey. */
+  --background: var(--color-neutral-100);
   --foreground: var(--color-neutral-950);
   --card: var(--color-white);
   --card-foreground: var(--color-neutral-950);
@@ -245,6 +250,12 @@
   --surface-elevated: var(--card);
   --surface-sunken: var(--color-neutral-100);
   --surface-header: var(--color-neutral-50);
+  /* Editable fields: white with a visible edge, so they never look disabled. */
+  --field: var(--color-white);
+  --field-border: var(--color-neutral-300);
+  /* The gutter between workspace panels. Darker than --background so white
+     panels stay clearly separated. */
+  --canvas: var(--color-neutral-200);
 }
 
 .dark {
@@ -295,6 +306,9 @@
   --surface-elevated: var(--color-neutral-800);
   --surface-sunken: var(--color-neutral-950);
   --surface-header: color-mix(in oklab, var(--muted) 40%, transparent);
+  --field: var(--color-neutral-950);
+  --field-border: var(--border);
+  --canvas: var(--background);
 }
 
 @layer base {
@@ -373,6 +387,17 @@
     height: 2.75rem;
     padding-inline: 0;
   }
+}
+
+.scripture-card-divider {
+  height: 1px;
+  border: 0;
+  background-image: radial-gradient(
+    circle at 0.5px 0.5px,
+    currentColor 0.5px,
+    transparent 0.75px
+  );
+  background-size: 6px 1px;
 }
 
 @container displays-panel (min-width: 300px) {

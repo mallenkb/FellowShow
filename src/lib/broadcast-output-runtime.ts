@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { emitTo } from "@tauri-apps/api/event"
 import { getAllWindows } from "@tauri-apps/api/window"
 import { toast } from "sonner"
-import { invoke } from "@/lib/ipc"
+import { invoke, type MonitorInfo } from "@/lib/ipc"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
 import {
   carriesGraphics,
@@ -11,13 +11,17 @@ import {
   type BroadcastOutputConfig,
 } from "@/lib/broadcast-outputs"
 import { useBroadcastStore } from "@/stores/broadcast-store"
+import { resolveOutputScreen, screenIdentityFor } from "@/lib/screen-identity"
 import {
   defaultNdiOutputConfig,
+  ndiResolutionDimensions,
   sameNdiOutputConfig,
+  sameNdiResolution,
   sanitizeNdiOutputConfig,
 } from "@/lib/ndi-output-config"
 import type {
   NdiAlphaMode,
+  NdiConfigEventPayload,
   NdiFrameRate,
   NdiResolution,
   NdiStartRequest,
@@ -28,6 +32,7 @@ export interface OutputRuntime {
   /** Projector window is visible on a monitor. */
   isDisplayOpen: boolean
   ndiActive: boolean
+  ndiStartError?: string
   ndiSourceName: string
   ndiResolution: NdiResolution
   ndiFrameRate: NdiFrameRate
@@ -59,9 +64,10 @@ function restoreRuntimeConfig(
   if (!existing) return createOutputRuntime(output)
   if (!output.ndi) return existing
   const settings = ndiRuntimeSettings(output.ndi)
-  return Object.entries(settings).every(
-    ([key, value]) => existing[key as keyof OutputRuntime] === value
-  )
+  return existing.ndiSourceName === settings.ndiSourceName &&
+    sameNdiResolution(existing.ndiResolution, settings.ndiResolution) &&
+    existing.ndiFrameRate === settings.ndiFrameRate &&
+    existing.ndiAlphaMode === settings.ndiAlphaMode
     ? existing
     : { ...existing, ...settings }
 }
@@ -106,32 +112,27 @@ function ndiFrameRateToNumber(frameRate: NdiFrameRate): number {
   }
 }
 
-function ndiResolutionDims(resolution: NdiResolution): {
-  width: number
-  height: number
-} {
-  switch (resolution) {
-    case "r720p":
-      return { width: 1280, height: 720 }
-    case "r4k":
-      return { width: 3840, height: 2160 }
-    case "r1080p":
-      return { width: 1920, height: 1080 }
-  }
-}
-
 function emitNdiConfig(
   outputId: string,
   active: boolean,
-  runtime: Pick<OutputRuntime, "ndiFrameRate" | "ndiResolution">
+  runtime: Pick<
+    OutputRuntime,
+    "ndiFrameRate" | "ndiResolution" | "ndiAlphaMode"
+  >
 ): void {
-  const dims = ndiResolutionDims(runtime.ndiResolution)
-  void emitTo(windowLabelForOutput(outputId), "broadcast:ndi-config", {
+  const dims = ndiResolutionDimensions(runtime.ndiResolution)
+  const payload: NdiConfigEventPayload = {
     active,
     fps: ndiFrameRateToNumber(runtime.ndiFrameRate),
     width: dims.width,
     height: dims.height,
-  }).catch(() => {})
+    alphaMode: runtime.ndiAlphaMode,
+  }
+  void emitTo(
+    windowLabelForOutput(outputId),
+    "broadcast:ndi-config",
+    payload
+  ).catch(() => {})
 }
 
 /** Re-emit NDI config after a projector window reports ready. */
@@ -250,13 +251,20 @@ export const useOutputRuntimeStore = create<OutputRuntimeState>((set, get) => ({
     const requestedRuntime = get().byId[output.id]
     const [visible, ndiStatus] = await Promise.all([
       isProjectorWindowVisible(output.id),
-      invoke("get_ndi_status", { outputId: output.id }).catch(() => null),
+      invoke("get_ndi_status", { outputId: output.id }).catch(
+        (error: unknown) => {
+          console.warn(`Failed to read NDI status for ${output.id}`, error)
+          return undefined
+        }
+      ),
     ])
     // A poll begun before Start/Stop or removal must not overwrite that action.
     if (get().byId[output.id] !== requestedRuntime) return
     get().updateRuntime(output.id, {
       isDisplayOpen: visible,
-      ndiActive: Boolean(ndiStatus?.active),
+      ...(ndiStatus === undefined
+        ? {}
+        : { ndiActive: Boolean(ndiStatus?.active) }),
     })
   },
   reconcileAll: async (outputs) => {
@@ -269,16 +277,65 @@ function runtimeFor(outputId: string): OutputRuntime | undefined {
   return useOutputRuntimeStore.getState().byId[outputId]
 }
 
+async function listMonitorsForOpen(): Promise<MonitorInfo[] | null> {
+  try {
+    const monitors = await invoke("list_monitors")
+    return Array.isArray(monitors) && monitors.length > 0 ? monitors : null
+  } catch (error) {
+    console.warn("Couldn't list screens before opening an output", error)
+    return null
+  }
+}
+
+/**
+ * The screen an output should open on now. It follows the saved screen even
+ * when the OS lists screens in a new order, and returns null after asking the
+ * operator when that screen is unplugged, so outputs never trade screens.
+ */
+async function displayMonitorIndexFor(
+  output: BroadcastOutputConfig
+): Promise<number | null> {
+  const monitors = await listMonitorsForOpen()
+  if (!monitors) return output.monitorIndex ?? 0
+  const resolved = resolveOutputScreen(output, monitors)
+  if (resolved.kind === "unset") return output.monitorIndex ?? 0
+  if (resolved.kind === "found") {
+    const { index } = resolved.monitor
+    const screen = screenIdentityFor(resolved.monitor)
+    if (
+      output.monitorIndex !== index ||
+      JSON.stringify(output.screen) !== JSON.stringify(screen)
+    ) {
+      useBroadcastStore
+        .getState()
+        .updateOutput(output.id, { monitorIndex: index, screen })
+    }
+    return index
+  }
+  useBroadcastStore.getState().updateOutput(output.id, { monitorIndex: null })
+  toast.error(`${output.name}'s screen isn't connected`, {
+    description:
+      "Plug that screen back in, or choose another screen for it in Manage.",
+  })
+  openBroadcastSettings(output.id)
+  return null
+}
+
 export async function openDisplayOutput(
   output: BroadcastOutputConfig
 ): Promise<void> {
   const store = useOutputRuntimeStore.getState()
   store.ensureRuntime(output)
   const runtime = runtimeFor(output.id) ?? createOutputRuntime(output)
+  const monitorIndex = await displayMonitorIndexFor(output)
+  if (monitorIndex === null) {
+    store.updateRuntime(output.id, { isDisplayOpen: false })
+    return
+  }
   try {
     await invoke("open_broadcast_window", {
       outputId: output.id,
-      monitorIndex: output.monitorIndex ?? 0,
+      monitorIndex,
       title: outputWindowTitle(output),
     })
     store.updateRuntime(output.id, { isDisplayOpen: true })
@@ -303,6 +360,7 @@ export async function openDisplayOutput(
 async function startNdiOutput(output: BroadcastOutputConfig): Promise<void> {
   const store = useOutputRuntimeStore.getState()
   store.ensureRuntime(output)
+  store.updateRuntime(output.id, { ndiStartError: undefined })
   const runtime = runtimeFor(output.id) ?? createOutputRuntime(output)
   try {
     await invoke("ensure_broadcast_window", {
@@ -321,22 +379,34 @@ async function startNdiOutput(output: BroadcastOutputConfig): Promise<void> {
     })
     store.updateRuntime(output.id, { ndiActive: true })
     useBroadcastStore.getState().syncBroadcastOutputFor(output.id)
-    void emitTo(windowLabelForOutput(output.id), "broadcast:ndi-config", {
+    const config: NdiConfigEventPayload = {
       active: true,
       fps: session.fps,
       width: session.width,
       height: session.height,
-    }).catch(() => {})
+      alphaMode: request.alphaMode,
+    }
+    void emitTo(
+      windowLabelForOutput(output.id),
+      "broadcast:ndi-config",
+      config
+    ).catch(() => {})
     setTimeout(() => {
+      const current = runtimeFor(output.id)
+      if (!current?.ndiActive) return
       useBroadcastStore.getState().syncBroadcastOutputFor(output.id)
-      emitNdiConfig(output.id, true, runtime)
+      emitNdiConfig(output.id, true, current)
     }, 300)
     toast.success(`NDI source "${runtime.ndiSourceName}" is broadcasting`)
   } catch (error) {
-    store.updateRuntime(output.id, { ndiActive: false })
+    const message = error instanceof Error ? error.message : String(error)
+    store.updateRuntime(output.id, {
+      ndiActive: false,
+      ndiStartError: message,
+    })
     console.error(`Failed to start NDI for ${output.name}`, error)
     toast.error(`Couldn't start NDI for ${output.name}`, {
-      description: typeof error === "string" ? error : undefined,
+      description: message,
       // Operators without a working NDI receiver can send this output to a
       // screen instead, without hunting for the setting in Manage.
       action: {
@@ -349,7 +419,7 @@ async function startNdiOutput(output: BroadcastOutputConfig): Promise<void> {
 }
 
 /** Turns an NDI output into a normal screen output. */
-function switchOutputToDisplay(outputId: string): void {
+export function switchOutputToDisplay(outputId: string): void {
   const store = useBroadcastStore.getState()
   const output = store.outputs.find((candidate) => candidate.id === outputId)
   if (!output) return
@@ -363,7 +433,7 @@ function switchOutputToDisplay(outputId: string): void {
 export async function stopOutput(output: BroadcastOutputConfig): Promise<void> {
   const store = useOutputRuntimeStore.getState()
   const runtime = runtimeFor(output.id)
-  if (runtime?.ndiActive) {
+  if (output.outputType === "ndi" || runtime?.ndiActive) {
     await invoke("stop_ndi", { outputId: output.id }).catch(() => {})
     if (runtime) emitNdiConfig(output.id, false, runtime)
   }

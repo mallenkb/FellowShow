@@ -1,4 +1,5 @@
-export type NdiResolution = "r720p" | "r1080p" | "r4k"
+export type NdiResolution =
+  "r720p" | "r1080p" | "r4k" | { custom: { width: number; height: number } }
 export type NdiFrameRate = "fps24" | "fps30" | "fps60"
 export type NdiAlphaMode = "noneOpaque" | "straightAlpha" | "premultipliedAlpha"
 
@@ -31,4 +32,6 @@ export interface NdiConfigEventPayload {
   fps: number
   width: number
   height: number
+  /** Lets an overlay output send a see-through background instead of a key color. */
+  alphaMode?: NdiAlphaMode
 }

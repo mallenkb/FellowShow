@@ -89,6 +89,8 @@ const TRANSLATION_COMMANDS: &[(&str, &str)] = &[
     ("amplified bible", "AMP"),
     ("amplified version", "AMP"),
     ("amplified translation", "AMP"),
+    ("amplified says", "AMP"),
+    ("amp says", "AMP"),
     ("in amplified version", "AMP"),
     ("in amplified translation", "AMP"),
     // SpaRV (Spanish - Reina-Valera 1909)
@@ -194,11 +196,11 @@ const TRANSLATION_COMMANDS: &[(&str, &str)] = &[
     ("give me net", "NET"),
     ("read in net", "NET"),
     ("switch to net", "NET"),
-    ("in the net", "NET"),
     ("can i have it in net", "NET"),
     ("can i have that in net", "NET"),
     ("show me net", "NET"),
     ("new english translation", "NET"),
+    ("net says", "NET"),
     ("in new english", "NET"),
     // CEV (Contemporary English Version)
     ("give me cev", "CEV"),
@@ -224,7 +226,6 @@ const TRANSLATION_COMMANDS: &[(&str, &str)] = &[
     ("can i have that in gnt", "GNT"),
     ("show me gnt", "GNT"),
     ("show me gnb", "GNT"),
-    ("good news", "GNT"),
     ("good news translation", "GNT"),
     ("good news bible", "GNT"),
     ("in good news", "GNT"),
@@ -494,6 +495,11 @@ impl DirectDetector {
         ];
         let mut best: Option<(usize, usize, &str)> = None;
         for &(pattern, abbreviation) in TRANSLATION_COMMANDS.iter().chain(bare.iter()) {
+            // These are ordinary English words as well as version names.
+            // A longer request (or a standalone answer) is needed to disambiguate them.
+            if matches!(pattern, "amp" | "amplified" | "net") && normalized != pattern {
+                continue;
+            }
             for (start, _) in normalized.match_indices(pattern) {
                 let end = start + pattern.len();
                 let starts_word = start == 0 || normalized.as_bytes()[start - 1] == b' ';

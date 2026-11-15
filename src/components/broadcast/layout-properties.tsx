@@ -23,9 +23,6 @@ export function LayoutProperties() {
     Math.max(16, Math.round(draftTheme.reference.fontSize * 0.5))
 
   const verseNumbers = draftTheme.verseNumbers
-  const superscriptSizePct = Math.round(
-    (verseNumbers.fontSize / draftTheme.verseText.fontSize) * 100
-  )
 
   const pctWithPx = (value: number, total: number) =>
     `${value}% (${Math.round((value / 100) * total)}px)`
@@ -224,25 +221,6 @@ export function LayoutProperties() {
           className="h-4 w-4 rounded border-input accent-primary"
         />
       </div>
-
-      {/* Superscript Size */}
-      {verseNumbers.superscript && (
-        <SliderField
-          label="Superscript Size"
-          value={superscriptSizePct}
-          min={20}
-          max={100}
-          unit="%"
-          onChange={(v) => {
-            const newFontSize = Math.round(
-              (v / 100) * draftTheme.verseText.fontSize
-            )
-            update((draft) => {
-              draft.verseNumbers.fontSize = newFontSize
-            }, "verseNumbers.fontSize")
-          }}
-        />
-      )}
     </div>
   )
 }

@@ -2,13 +2,18 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { formatSermonDuration, sermonListeningMs } from "@/lib/sermon-session"
+import {
+  formatSermonDuration,
+  savedDirectScriptures,
+  sermonListeningMs,
+} from "@/lib/sermon-session"
 import { cn } from "@/lib/utils"
 import type { SermonSession } from "@/types"
 import { SESSION_CARD_CLASS, SessionDateBadge } from "./session-card"
 
 const SESSION_BADGE_CLASS =
   "h-6 max-w-full rounded-full bg-muted font-normal text-foreground"
+const SESSIONS_PER_PAGE = 10
 
 export function SessionHistoryList({
   sessions,
@@ -21,7 +26,7 @@ export function SessionHistoryList({
   busy: boolean
   onReview: (session: SermonSession) => void
 }) {
-  const [showAll, setShowAll] = useState(false)
+  const [page, setPage] = useState(0)
   const [search, setSearch] = useState("")
   const query = search.trim().toLocaleLowerCase()
   const matches = sessions.filter((item) =>
@@ -32,7 +37,12 @@ export function SessionHistoryList({
       new Date(item.startedAt).toLocaleDateString([], { dateStyle: "medium" }),
     ].some((value) => value?.toLocaleLowerCase().includes(query))
   )
-  const visible = showAll || query ? matches : matches.slice(0, 3)
+  const pageCount = Math.ceil(matches.length / SESSIONS_PER_PAGE)
+  const currentPage = Math.min(page, Math.max(0, pageCount - 1))
+  const visible = matches.slice(
+    currentPage * SESSIONS_PER_PAGE,
+    (currentPage + 1) * SESSIONS_PER_PAGE
+  )
 
   return (
     <section
@@ -46,15 +56,6 @@ export function SessionHistoryList({
             {sessions.length}
           </span>
         </div>
-        {sessions.length > 3 && !query ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAll(!showAll)}
-          >
-            {showAll ? "Show recent" : "View all"}
-          </Button>
-        ) : null}
       </div>
       {sessions.length > 0 ? (
         <label className="block">
@@ -62,7 +63,10 @@ export function SessionHistoryList({
           <Input
             type="search"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPage(0)
+            }}
             placeholder="Search title, speaker or series"
             className="h-10"
           />
@@ -79,7 +83,7 @@ export function SessionHistoryList({
       ) : (
         <div>
           {visible.map((item) => {
-            const scriptureCount = new Set(item.scriptures ?? []).size
+            const directScriptureCount = savedDirectScriptures(item).size
             const metadata = [
               { key: "speaker", label: item.speaker, dot: "bg-neutral-400" },
               { key: "series", label: item.series, dot: "bg-neutral-400" },
@@ -92,7 +96,7 @@ export function SessionHistoryList({
               },
               {
                 key: "scriptures",
-                label: `${scriptureCount} ${scriptureCount === 1 ? "scripture" : "scriptures"}`,
+                label: `${directScriptureCount} direct ${directScriptureCount === 1 ? "scripture" : "scriptures"}`,
                 dot: "bg-emerald-500",
               },
             ]
@@ -153,6 +157,36 @@ export function SessionHistoryList({
           })}
         </div>
       )}
+      {pageCount > 1 ? (
+        <nav
+          aria-label="Saved session pages"
+          className="flex items-center justify-between gap-3 border-t border-border pt-3"
+        >
+          <span className="text-xs text-muted-foreground">
+            Page {currentPage + 1} of {pageCount}
+          </span>
+          <div className="flex gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={currentPage === 0}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={currentPage + 1 >= pageCount}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </nav>
+      ) : null}
     </section>
   )
 }

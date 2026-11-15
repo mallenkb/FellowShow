@@ -7,8 +7,10 @@ use std::thread::{self, JoinHandle};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use fellowshow_audio::capture::{resample, RecordingFrame, RecordingSink};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_fs::FsExt as _;
+use zip::{write::SimpleFileOptions, CompressionMethod, ZipWriter};
 
 const SAMPLE_RATE: u32 = 48_000;
 const WAV_HEADER_LEN: u64 = 44;
@@ -24,12 +26,7 @@ fn directory(app: &AppHandle, sermon_id: &str) -> Result<PathBuf, String> {
     {
         return Err("Invalid sermon ID.".into());
     }
-    Ok(app
-        .path()
-        .app_data_dir()
-        .map_err(|error| error.to_string())?
-        .join(DIRECTORY)
-        .join(sermon_id))
+    Ok(recording_root(app)?.join(sermon_id))
 }
 
 pub(super) fn start(
@@ -108,11 +105,16 @@ fn write_recording(
 }
 
 fn finish_wav(output: &mut (impl Write + Seek), data_len: u64) -> io::Result<()> {
+    output.seek(SeekFrom::Start(0))?;
+    write_wav_header(output, data_len)?;
+    output.flush()
+}
+
+fn write_wav_header(output: &mut impl Write, data_len: u64) -> io::Result<()> {
     let len = u32::try_from(data_len).map_err(io::Error::other)?;
     let riff_len = len
         .checked_add(36)
         .ok_or_else(|| io::Error::other("Recording exceeds WAV size limit"))?;
-    output.seek(SeekFrom::Start(0))?;
     output.write_all(b"RIFF")?;
     output.write_all(&riff_len.to_le_bytes())?;
     output.write_all(b"WAVEfmt ")?;
@@ -124,8 +126,7 @@ fn finish_wav(output: &mut (impl Write + Seek), data_len: u64) -> io::Result<()>
     output.write_all(&2u16.to_le_bytes())?;
     output.write_all(&16u16.to_le_bytes())?;
     output.write_all(b"data")?;
-    output.write_all(&len.to_le_bytes())?;
-    output.flush()
+    output.write_all(&len.to_le_bytes())
 }
 
 #[derive(Serialize)]
@@ -134,6 +135,8 @@ pub struct AudioPart {
     path: PathBuf,
     started_at: u64,
     duration_ms: u64,
+    #[serde(skip)]
+    data_bytes: u64,
 }
 
 fn parts(path: &Path) -> io::Result<Vec<AudioPart>> {
@@ -165,6 +168,7 @@ fn parts(path: &Path) -> io::Result<Vec<AudioPart>> {
                 path,
                 started_at,
                 duration_ms: bytes * 1_000 / u64::from(SAMPLE_RATE * 2),
+                data_bytes: bytes,
             });
         }
     }
@@ -228,13 +232,18 @@ fn combine(path: &Path, output: &mut (impl Write + Seek)) -> io::Result<()> {
         return Err(io::Error::other("There is no saved audio for this sermon."));
     }
     output.write_all(&EMPTY_WAV_HEADER)?;
+    let data_len = copy_recordings(&recordings, output)?;
+    finish_wav(output, data_len)
+}
+
+fn copy_recordings(recordings: &[AudioPart], output: &mut impl Write) -> io::Result<u64> {
     let mut data_len = 0;
     for part in recordings {
-        let mut input = BufReader::new(File::open(part.path)?);
+        let mut input = BufReader::new(File::open(&part.path)?);
         input.seek(SeekFrom::Start(WAV_HEADER_LEN))?;
         data_len += io::copy(&mut input, output)?;
     }
-    finish_wav(output, data_len)
+    Ok(data_len)
 }
 
 fn export(path: &Path, destination: &Path, format: &str) -> io::Result<()> {
@@ -287,8 +296,6 @@ pub async fn export_sermon_audio(
     destination: PathBuf,
     format: String,
 ) -> Result<(), String> {
-    use tauri_plugin_fs::FsExt as _;
-
     let path = directory(&app, &sermon_id)?;
     if !sermon_audio_formats().contains(&format.as_str())
         || !destination
@@ -299,25 +306,121 @@ pub async fn export_sermon_audio(
     {
         return Err("Choose an export file with the selected audio format.".into());
     }
-    let recording_root = app
+    let recording_root = recording_root(&app)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        check_export_folder(&destination, &recording_root)?;
+        export(&path, &destination, &format)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+    .map_err(|error| error.to_string())
+}
+
+fn recording_root(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(app
         .path()
         .app_data_dir()
         .map_err(|error| error.to_string())?
-        .join(DIRECTORY);
-    tauri::async_runtime::spawn_blocking(move || {
-        let parent = destination
-            .parent()
-            .ok_or_else(|| io::Error::other("Missing export folder"))?;
-        if recording_root.canonicalize().is_ok_and(|root| {
-            parent
-                .canonicalize()
-                .is_ok_and(|folder| folder.starts_with(root))
-        }) {
-            return Err(io::Error::other(
-                "Choose a folder outside the app's recordings.",
-            ));
+        .join(DIRECTORY))
+}
+
+fn check_export_folder(destination: &Path, recording_root: &Path) -> io::Result<()> {
+    let parent = destination
+        .parent()
+        .ok_or_else(|| io::Error::other("Missing export folder"))?;
+    if recording_root.canonicalize().is_ok_and(|root| {
+        parent
+            .canonicalize()
+            .is_ok_and(|folder| folder.starts_with(root))
+    }) {
+        return Err(io::Error::other(
+            "Choose a folder outside the app's recordings.",
+        ));
+    }
+    Ok(())
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SermonExportContent {
+    cover_png: Vec<u8>,
+    transcript: String,
+    summary: String,
+}
+
+fn write_bundle(
+    path: &Path,
+    destination: &Path,
+    content: &SermonExportContent,
+) -> io::Result<bool> {
+    let parent = destination
+        .parent()
+        .ok_or_else(|| io::Error::other("Missing export folder"))?;
+    let mut output = tempfile::NamedTempFile::new_in(parent)?;
+    let recordings = parts(path)?;
+    let has_audio = !recordings.is_empty();
+    let options = SimpleFileOptions::default().compression_method(CompressionMethod::Stored);
+    {
+        let mut archive = ZipWriter::new(BufWriter::new(output.as_file_mut()));
+        for (name, bytes) in [
+            ("cover.png", content.cover_png.as_slice()),
+            ("transcript.txt", content.transcript.as_bytes()),
+            ("summary.txt", content.summary.as_bytes()),
+        ] {
+            if !bytes.is_empty() {
+                archive.start_file(name, options)?;
+                archive.write_all(bytes)?;
+            }
         }
-        export(&path, &destination, &format)
+        if has_audio {
+            let data_len: u64 = recordings.iter().map(|part| part.data_bytes).sum();
+            if data_len <= u64::from(u32::MAX - 36) {
+                archive.start_file(
+                    "audio.wav",
+                    options.large_file(data_len + WAV_HEADER_LEN > u64::from(u32::MAX)),
+                )?;
+                write_wav_header(&mut archive, data_len)?;
+                if copy_recordings(&recordings, &mut archive)? != data_len {
+                    return Err(io::Error::other("The audio changed during export."));
+                }
+            } else {
+                // A single WAV cannot hold a recording larger than the RIFF size limit.
+                for (index, part) in recordings.iter().enumerate() {
+                    archive.start_file(
+                        format!("audio/part-{:04}.wav", index + 1),
+                        options.large_file(true),
+                    )?;
+                    io::copy(&mut BufReader::new(File::open(&part.path)?), &mut archive)?;
+                }
+            }
+        }
+        archive.finish()?.flush()?;
+    }
+    output.as_file().sync_all()?;
+    output.persist(destination)?;
+    Ok(has_audio)
+}
+
+#[tauri::command]
+pub async fn export_sermon_bundle(
+    app: AppHandle,
+    sermon_id: String,
+    destination: PathBuf,
+    content: SermonExportContent,
+) -> Result<bool, String> {
+    if !destination
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("zip"))
+        || !app.fs_scope().is_allowed(&destination)
+    {
+        return Err("Choose a ZIP file for the sermon download.".into());
+    }
+    let path = directory(&app, &sermon_id)?;
+    let recording_root = recording_root(&app)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        check_export_folder(&destination, &recording_root)?;
+        write_bundle(&path, &destination, &content)
     })
     .await
     .map_err(|error| error.to_string())?

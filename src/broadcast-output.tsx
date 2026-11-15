@@ -6,6 +6,7 @@ import { invoke, sendNdiFrame } from "@/lib/ipc"
 import { withSlideBackground } from "@/lib/slide-background"
 import { startBroadcastFrameLoop } from "@/lib/broadcast-frame-loop"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
+import { IdentifyOverlay } from "@/components/broadcast/identify-overlay"
 import { renderVerse } from "@/lib/verse-renderer"
 import { presentationMedia } from "@/lib/presentation-composition"
 import { pruneVideoCache } from "@/lib/media-cache"
@@ -33,6 +34,10 @@ import type {
   VerseRenderData,
 } from "@/types/broadcast"
 import type { BroadcastOverlayPayload, NdiConfigEventPayload } from "@/types"
+import {
+  ndiFrameBackground,
+  ndiSendsTransparentOverlay,
+} from "@/lib/ndi-frame-background"
 
 /** Read output ID from URL query param (?output=main or ?output=alt). Defaults to "main". */
 const OUTPUT_ID =
@@ -327,10 +332,18 @@ function BroadcastCanvas() {
         canvas.height = theme.resolution.height
       }
       if (overlayMode) {
-        ctx.fillStyle = getOverlayBackgroundColor(overlayMode)
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        // Over NDI with alpha, graphics go out on a see-through background
+        // as drawn. The DSK luma lift and key colors are only for receivers
+        // that have to key the frame themselves.
+        const transparent = ndiSendsTransparentOverlay(ndiConfigRef.current)
+        if (transparent) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+        } else {
+          ctx.fillStyle = getOverlayBackgroundColor(overlayMode)
+          ctx.fillRect(0, 0, canvas.width, canvas.height)
+        }
         drawBroadcastOverlays(ctx, theme.resolution, overlays, {
-          keyMode: overlayMode,
+          keyMode: transparent ? undefined : overlayMode,
           imageCache: imageCacheRef.current,
           now: Date.now(),
         })
@@ -662,11 +675,32 @@ function BroadcastCanvas() {
       if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
         const ndiCanvas =
           ndiCanvasRef.current ?? document.createElement("canvas")
-        ndiCanvas.width = targetWidth
-        ndiCanvas.height = targetHeight
+        if (ndiCanvas.width !== targetWidth) ndiCanvas.width = targetWidth
+        if (ndiCanvas.height !== targetHeight) ndiCanvas.height = targetHeight
         const ndiCtx = ndiCanvas.getContext("2d")
         if (!ndiCtx) return
-        ndiCtx.drawImage(canvas, 0, 0, targetWidth, targetHeight)
+        ndiCtx.clearRect(0, 0, targetWidth, targetHeight)
+        const background = ndiFrameBackground(
+          latestData.current?.overlayMode,
+          ndiConfigRef.current
+        )
+        if (background) {
+          ndiCtx.fillStyle = background
+          ndiCtx.fillRect(0, 0, targetWidth, targetHeight)
+        }
+        const scale = Math.min(
+          targetWidth / canvas.width,
+          targetHeight / canvas.height
+        )
+        const width = canvas.width * scale
+        const height = canvas.height * scale
+        ndiCtx.drawImage(
+          canvas,
+          (targetWidth - width) / 2,
+          (targetHeight - height) / 2,
+          width,
+          height
+        )
         ndiCanvasRef.current = ndiCanvas
         sourceCtx = ndiCtx
         sourceWidth = targetWidth
@@ -741,7 +775,16 @@ function BroadcastCanvas() {
     const unlistenNdiConfig = currentWindow.listen<NdiConfigEventPayload>(
       "broadcast:ndi-config",
       (event) => {
+        const previous = ndiConfigRef.current
         ndiConfigRef.current = event.payload
+        // Switching between a transparent and a keyed overlay background
+        // changes the frame even when the content does not.
+        if (
+          ndiSendsTransparentOverlay(previous) !==
+          ndiSendsTransparentOverlay(event.payload)
+        ) {
+          draw()
+        }
         reportBroadcastDiagnostic(
           "config",
           event.payload.active ? "visible" : "hidden"
@@ -817,6 +860,7 @@ function BroadcastCanvas() {
       void unlistenNdiFrame.then((fn) => fn()).catch(console.error)
     }
   }, [
+    draw,
     drawPayloadTransition,
     logDebug,
     preloadMedia,
@@ -919,6 +963,7 @@ function BroadcastCanvas() {
           </button>
         </div>
       ) : null}
+      <IdentifyOverlay />
     </div>
   )
 }

@@ -114,7 +114,7 @@ describe("PreviewPanel", () => {
     // John 3:16 is already the selected verse; staging it again must still
     // replace the notice that another panel put in Preview.
     stageVerse(john316)
-    await user.click(screen.getByRole("button", { name: "Show on Live" }))
+    await user.click(screen.getByRole("button", { name: "Show preview on Live" }))
 
     const { isLive, liveVerse } = useBroadcastStore.getState()
     expect(isLive).toBe(true)
@@ -125,21 +125,21 @@ describe("PreviewPanel", () => {
     const user = userEvent.setup()
     render(<PreviewPanel mode="book" />)
 
-    await user.click(screen.getByRole("button", { name: "Show on Live" }))
-    expect(screen.queryByRole("button", { name: "Show on Live" })).toBeNull()
+    await user.click(screen.getByRole("button", { name: "Show preview on Live" }))
+    expect(screen.queryByRole("button", { name: "Show preview on Live" })).toBeNull()
     await user.click(screen.getByRole("button", { name: "Stop Live" }))
     expect(useBroadcastStore.getState().isLive).toBe(false)
-    expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Show preview on Live" })).toBeTruthy()
   })
 
   it("offers Show on Live and Stop when another item is on air", async () => {
     const user = userEvent.setup()
     render(<PreviewPanel mode="book" />)
-    await user.click(screen.getByRole("button", { name: "Show on Live" }))
+    await user.click(screen.getByRole("button", { name: "Show preview on Live" }))
 
     act(() => stageVerse(john316))
 
-    expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Show preview on Live" })).toBeTruthy()
     expect(screen.getByRole("button", { name: "Stop" })).toBeTruthy()
   })
 
@@ -148,7 +148,7 @@ describe("PreviewPanel", () => {
     render(<PreviewPanel mode="book" overlayActionPending />)
 
     const showButton = screen.getByRole<HTMLButtonElement>("button", {
-      name: "Show on Live",
+      name: "Show preview on Live",
     })
     expect(showButton.disabled).toBe(true)
     await user.dblClick(screen.getByTestId("canvas-verse"))
@@ -180,8 +180,8 @@ describe("PreviewPanel", () => {
       </>
     )
 
-    expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "Update Live" })).toBeNull()
+    expect(screen.getByRole("button", { name: "Show graphics on Live" })).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Update graphics on Live" })).toBeNull()
     expect(screen.queryByRole("button", { name: "Stop Live" })).toBeNull()
     expect(screen.queryByText("Live", { exact: true })).toBeNull()
   })
@@ -216,7 +216,7 @@ describe("PreviewPanel", () => {
 
     act(() => runtime.updateRuntime(output.id, { ndiActive: false }))
 
-    expect(screen.getByRole("button", { name: "Show on Live" })).toBeTruthy()
+    expect(screen.getByRole("button", { name: "Show graphics on Live" })).toBeTruthy()
     expect(screen.queryByRole("button", { name: "Stop Live" })).toBeNull()
     expect(screen.queryByText("Live", { exact: true })).toBeNull()
     expect(useBroadcastStore.getState().liveOverlayOutputIds).toEqual([])

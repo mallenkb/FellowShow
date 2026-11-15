@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::time::Instant;
 
 use fellowshow_bible::BibleDb;
 use tokio::sync::{watch, Notify};
@@ -12,8 +13,9 @@ pub struct SttSession {
 }
 
 pub struct AppState {
-    pub bible_db: Option<BibleDb>,
+    pub bible_db: Option<Arc<BibleDb>>,
     pub active_translation_id: i64,
+    pub translation_changed_at: Option<Instant>,
     pub audio_active: Arc<AtomicBool>,
     pub stt_active: Arc<AtomicBool>,
     pub stt_session: Option<SttSession>,
@@ -27,6 +29,7 @@ impl AppState {
         Self {
             bible_db: None,
             active_translation_id: 0, // No translation selected until the user installs one.
+            translation_changed_at: None,
             audio_active: Arc::new(AtomicBool::new(false)),
             stt_active: Arc::new(AtomicBool::new(false)),
             stt_session: None,

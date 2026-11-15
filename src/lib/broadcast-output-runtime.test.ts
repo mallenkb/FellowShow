@@ -70,7 +70,7 @@ describe("saved NDI output configuration", () => {
     runtime.updateRuntime("main", { ndiActive: true, isDisplayOpen: true })
     await vi.advanceTimersByTimeAsync(500)
 
-    expect(storage.values.get("schemaVersion")).toBe(2)
+    expect(storage.values.get("schemaVersion")).toBe(4)
     const saved = storage.values.get("outputs") as BroadcastOutputConfig[]
     expect(saved[0].ndi).toEqual({
       sourceName: "Loopback Verify",
@@ -124,17 +124,52 @@ describe("saved NDI output configuration", () => {
     expect(useBroadcastStore.getState().outputs[0].ndi).toEqual({
       sourceName: "FellowShow Program",
       resolution: "r1080p",
-      frameRate: "fps24",
-      alphaMode: "straightAlpha",
+      frameRate: "fps30",
+      // Profiles saved before transparent NDI overlays keep their keyed look.
+      alphaMode: "noneOpaque",
     })
     expect(useOutputRuntimeStore.getState().byId.main).toMatchObject({
       ndiSourceName: "FellowShow Program",
       ndiResolution: "r1080p",
-      ndiFrameRate: "fps24",
-      ndiAlphaMode: "straightAlpha",
+      ndiFrameRate: "fps30",
+      ndiAlphaMode: "noneOpaque",
       ndiActive: false,
       isDisplayOpen: false,
     })
+  })
+
+  it("keeps NDI outputs saved before transparent overlays opaque and saves that once", async () => {
+    storage.values.set("schemaVersion", 3)
+    storage.values.set("outputs", [
+      {
+        id: "overlays",
+        name: "Video Overlays",
+        content: "overlays",
+        outputType: "ndi",
+        themeId: null,
+        monitorIndex: null,
+        ndi: {
+          sourceName: "FellowShow Video Overlays",
+          resolution: "r1080p",
+          frameRate: "fps60",
+          alphaMode: "straightAlpha",
+        },
+      },
+    ])
+    const { useBroadcastStore } = await loadSession()
+    const outputs = useBroadcastStore.getState().outputs
+    expect(outputs.map((output) => output.id)).toContain("overlays")
+    expect(outputs.find((output) => output.id === "overlays")?.ndi).toEqual({
+      sourceName: "FellowShow Video Overlays",
+      resolution: "r1080p",
+      frameRate: "fps60",
+      alphaMode: "noneOpaque",
+    })
+    expect(storage.values.get("schemaVersion")).toBe(4)
+    const saved = storage.values.get("outputs") as BroadcastOutputConfig[]
+    expect(
+      saved.find((output) => output.id === "overlays")?.ndi?.alphaMode
+    ).toBe("noneOpaque")
   })
 
   it("keeps transient name edits usable while retaining the last valid saved name", async () => {
@@ -428,5 +463,88 @@ describe("graphics output live-state reconciliation", () => {
     await showOverlayPreviewOnLive(output.id)
 
     expect(useBroadcastStore.getState().isLive).toBe(true)
+  })
+})
+
+describe("display outputs find their own screen", () => {
+  const laptop = {
+    index: 0,
+    name: "Monitor #1",
+    x: 0,
+    y: 0,
+    width: 3456,
+    height: 2234,
+    isPrimary: true,
+  }
+  const scripture = {
+    index: 1,
+    name: "Monitor #18287",
+    x: 1728,
+    y: 0,
+    width: 1920,
+    height: 1080,
+    isPrimary: false,
+  }
+  const overlays = { ...scripture, index: 2, name: "Monitor #18288", x: 3648 }
+
+  it("opens on the saved screen after the OS reorders screens", async () => {
+    const { useBroadcastStore } = await loadSession()
+    const { openDisplayOutput } = await import("./broadcast-output-runtime")
+    const { screenIdentityFor } = await import("@/lib/screen-identity")
+    useBroadcastStore.getState().updateOutput("main", {
+      outputType: "display",
+      monitorIndex: 1,
+      screen: screenIdentityFor(scripture),
+    })
+    invoke.mockImplementation(async (command) =>
+      command === "list_monitors"
+        ? [laptop, { ...overlays, index: 1 }, { ...scripture, index: 2 }]
+        : null
+    )
+
+    await openDisplayOutput(
+      useBroadcastStore.getState().outputs.find((o) => o.id === "main")!
+    )
+
+    expect(invoke).toHaveBeenCalledWith(
+      "open_broadcast_window",
+      expect.objectContaining({ outputId: "main", monitorIndex: 2 })
+    )
+    expect(
+      useBroadcastStore.getState().outputs.find((o) => o.id === "main")
+        ?.monitorIndex
+    ).toBe(2)
+  })
+
+  it("asks for a screen instead of opening when its screen is unplugged", async () => {
+    const { useBroadcastStore } = await loadSession()
+    const { openDisplayOutput, useOutputRuntimeStore } =
+      await import("./broadcast-output-runtime")
+    const { screenIdentityFor } = await import("@/lib/screen-identity")
+    const { toast } = await import("sonner")
+    useBroadcastStore.getState().updateOutput("main", {
+      outputType: "display",
+      monitorIndex: 2,
+      screen: screenIdentityFor(overlays),
+    })
+    invoke.mockImplementation(async (command) =>
+      command === "list_monitors" ? [laptop, scripture] : null
+    )
+
+    await openDisplayOutput(
+      useBroadcastStore.getState().outputs.find((o) => o.id === "main")!
+    )
+
+    expect(invoke).not.toHaveBeenCalledWith(
+      "open_broadcast_window",
+      expect.anything()
+    )
+    expect(toast.error).toHaveBeenCalledWith(
+      expect.stringContaining("screen isn't connected"),
+      expect.anything()
+    )
+    expect(useOutputRuntimeStore.getState().byId.main?.isDisplayOpen).toBe(
+      false
+    )
   })
 })

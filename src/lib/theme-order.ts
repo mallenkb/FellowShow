@@ -1,4 +1,5 @@
 import type { BroadcastTheme, BroadcastThemeSection } from "@/types"
+import { DEFAULT_SONG_THEME_ID } from "@/lib/builtin-themes"
 
 function themeSectionScore(
   theme: BroadcastTheme,
@@ -25,7 +26,11 @@ export function sortThemesForSection(
   themes: BroadcastTheme[],
   section: BroadcastThemeSection
 ): BroadcastTheme[] {
-  return [...themes].sort((a, b) => {
+  const availableThemes =
+    section === "bible"
+      ? themes.filter((theme) => theme.id !== DEFAULT_SONG_THEME_ID)
+      : [...themes]
+  return availableThemes.sort((a, b) => {
     if (a.sortOrder !== undefined || b.sortOrder !== undefined) {
       return (
         (a.sortOrder ?? Number.MAX_SAFE_INTEGER) -

@@ -4,6 +4,7 @@ import {
   applyTextTransform,
   resolveHorizontalAlign,
   resolveTextTransform,
+  verseNumberFont,
 } from "./draw"
 import { lyricDisplayLines } from "@/lib/lyrics"
 import { splitOversizedWord } from "./word-wrap"
@@ -48,10 +49,6 @@ export function buildScaledTheme(
           }
         : null,
     },
-    verseNumbers: {
-      ...theme.verseNumbers,
-      fontSize: theme.verseNumbers.fontSize * scale,
-    },
     reference: {
       ...theme.reference,
       fontSize: theme.reference.fontSize * scale,
@@ -88,7 +85,7 @@ export function measureVerseHeight(
   )
   const lineHeightPx = vt.fontSize * vt.lineHeight
   const mainFont = `${vt.fontWeight} ${vt.fontSize}px "${vt.fontFamily}", serif`
-  const numberFont = `700 ${vn.fontSize}px "${theme.reference.fontFamily}", sans-serif`
+  const { css: numberFont } = verseNumberFont(theme)
   ctx.save()
   ctx.font = mainFont
   if (vt.letterSpacing > 0) {
@@ -257,14 +254,12 @@ export function fitStandardVerseTheme(
   textRectHeight: number
 ): BroadcastTheme {
   const baseVerseSize = theme.verseText.fontSize
-  const baseNumberSize = theme.verseNumbers.fontSize
   const baseReferenceSize = theme.reference.fontSize
   const baseReferenceGap =
     theme.layout.referenceGap ?? theme.reference.fontSize * 0.5
   const minimumScalePercent = 50
   const shrinkStepPercent = 5
   const minVerseSize = 14
-  const minNumberSize = 8
   const minReferenceSize = 10
 
   const buildCandidate = (scale: number): BroadcastTheme => ({
@@ -272,10 +267,6 @@ export function fitStandardVerseTheme(
     verseText: {
       ...theme.verseText,
       fontSize: Math.max(minVerseSize, baseVerseSize * scale),
-    },
-    verseNumbers: {
-      ...theme.verseNumbers,
-      fontSize: Math.max(minNumberSize, baseNumberSize * scale),
     },
     reference: {
       ...theme.reference,

@@ -24,8 +24,39 @@ import {
 } from "@/lib/broadcast-output-runtime"
 import { useBroadcastSettingsDialogStore } from "@/lib/broadcast-settings-dialog"
 import { useBroadcastStore } from "@/stores"
+import { identifyScreens } from "@/lib/identify-screens"
 import { cn } from "@/lib/utils"
-import { PlusIcon, RefreshCwIcon } from "lucide-react"
+import {
+  reconcileOutputScreens,
+  screenIdentityFor,
+  screenLabel,
+} from "@/lib/screen-identity"
+import { PlusIcon, RefreshCwIcon, ScanEyeIcon } from "lucide-react"
+
+/**
+ * Match saved outputs to the screens connected now, then give any output
+ * without a screen a free one. Every assignment saves the screen's identity.
+ */
+function applyScreenAssignments(monitors: MonitorInfo[]): void {
+  const store = useBroadcastStore.getState()
+  const changes = reconcileOutputScreens(store.outputs, monitors)
+  for (const [id, { monitorIndex, screen }] of Object.entries(changes)) {
+    store.updateOutput(id, screen ? { monitorIndex, screen } : { monitorIndex })
+  }
+  const assignments = assignDefaultMonitorIndices(
+    useBroadcastStore.getState().outputs,
+    monitors
+  )
+  for (const [id, monitorIndex] of Object.entries(assignments)) {
+    const monitor = monitors.find((m) => m.index === monitorIndex)
+    store.updateOutput(
+      id,
+      monitor
+        ? { monitorIndex, screen: screenIdentityFor(monitor) }
+        : { monitorIndex }
+    )
+  }
+}
 
 export function BroadcastSettings({
   open,
@@ -45,11 +76,7 @@ export function BroadcastSettings({
     try {
       const result = await invoke("list_monitors")
       setMonitors(result)
-      const store = useBroadcastStore.getState()
-      const assignments = assignDefaultMonitorIndices(store.outputs, result)
-      for (const [id, monitorIndex] of Object.entries(assignments)) {
-        store.updateOutput(id, { monitorIndex })
-      }
+      applyScreenAssignments(result)
     } catch (error) {
       console.error("Failed to enumerate monitors", error)
       setMonitors([])
@@ -106,13 +133,7 @@ export function BroadcastSettings({
     if (!added) return
     useOutputRuntimeStore.getState().ensureRuntime(added)
     if (monitors.length === 0) return
-    const assignments = assignDefaultMonitorIndices(
-      useBroadcastStore.getState().outputs,
-      monitors
-    )
-    for (const [id, monitorIndex] of Object.entries(assignments)) {
-      store.updateOutput(id, { monitorIndex })
-    }
+    applyScreenAssignments(monitors)
   }
 
   const takenMonitorsFor = (outputId: string): TakenMonitor[] =>
@@ -147,19 +168,39 @@ export function BroadcastSettings({
               Choose what each display shows and where it goes.
             </DialogDescription>
           </div>
-          <Button
-            variant="ghost"
-            size="xs"
-            aria-label="Refresh screens"
-            disabled={refreshing}
-            onClick={() => void fetchMonitors()}
-            className="h-7 gap-1 text-xs text-muted-foreground"
-          >
-            <RefreshCwIcon
-              className={cn("size-3", refreshing && "animate-spin")}
-            />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="xs"
+              disabled={monitors.length === 0}
+              title="Show each screen's name on that screen for 5 seconds, including live outputs"
+              onClick={() =>
+                void identifyScreens(
+                  outputs,
+                  (id) =>
+                    useOutputRuntimeStore.getState().byId[id]?.isDisplayOpen ??
+                    false
+                )
+              }
+              className="h-7 gap-1 text-xs text-muted-foreground"
+            >
+              <ScanEyeIcon className="size-3" />
+              Identify
+            </Button>
+            <Button
+              variant="ghost"
+              size="xs"
+              aria-label="Refresh screens"
+              disabled={refreshing}
+              onClick={() => void fetchMonitors()}
+              className="h-7 gap-1 text-xs text-muted-foreground"
+            >
+              <RefreshCwIcon
+                className={cn("size-3", refreshing && "animate-spin")}
+              />
+              Refresh
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="@container/displays min-h-0 [scrollbar-gutter:stable] space-y-4 overflow-y-auto px-5 pb-5">
@@ -192,9 +233,7 @@ export function BroadcastSettings({
                       )}
                     >
                       <div className="text-[0.6875rem] font-semibold">
-                        {monitor.isPrimary
-                          ? "Laptop"
-                          : `Screen ${monitor.index + 1}`}
+                        {screenLabel(monitor)}
                       </div>
                       <div className="text-[0.5625rem] text-muted-foreground">
                         {monitor.width}×{monitor.height}

@@ -1,3 +1,12 @@
+type ScriptureMatchType = "quoted" | "paraphrased" | "allusion" | "theme"
+export type ScriptureDecisionType =
+  ScriptureMatchType | "unrelated" | "uncertain"
+
+export interface ScriptureReview {
+  type: ScriptureDecisionType
+  relevance: number
+}
+
 export interface DetectionResult {
   verse_ref: string
   verse_text: string
@@ -14,6 +23,8 @@ export interface DetectionResult {
   transcript_snippet: string
   /** True when detected from a chapter-only reference (verse defaults to 1, may be refined). */
   is_chapter_only: boolean
+  /** Review of this exact verse text and spoken excerpt, when available. */
+  review?: ScriptureReview
 }
 
 export interface ReadingAdvance {

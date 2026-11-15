@@ -13,6 +13,7 @@ import {
 } from "@/stores/sermon-store"
 import { waitForStartup } from "@/lib/startup-ready"
 import { useTranscriptStore } from "@/stores/transcript-store"
+import { useDetectionStore } from "@/stores/detection-store"
 import type {
   AnnouncementDocument,
   PreachingSummary,
@@ -33,6 +34,24 @@ function sessionSegments(session: SermonSession) {
   return useTranscriptStore
     .getState()
     .segments.slice(session.transcriptStartIndex)
+}
+
+function capturedScriptureReferences(session: SermonSession): string[] {
+  const live = useDetectionStore.getState()
+  const detections =
+    live.sessionId === session.id
+      ? live.detections
+      : (session.scriptureDetections ?? [])
+  return [
+    ...new Set([
+      ...(session.scriptures ?? []),
+      ...(session.directScriptures ?? []),
+      ...detections
+        .filter((detection) => !detection.is_chapter_only)
+        .map((detection) => detection.verse_ref.trim())
+        .filter(Boolean),
+    ]),
+  ]
 }
 
 async function summarizeTranscript(
@@ -143,9 +162,27 @@ async function beginSermon(
       highlightedScriptures: saved?.scriptures ?? [],
     })
     const sermonId = saved?.id ?? crypto.randomUUID()
-    await transcriptionActions.start(onMissingApiKey, sermonId)
+    const previousDetections = useDetectionStore.getState()
+    useDetectionStore
+      .getState()
+      .setSession(sermonId, saved?.scriptureDetections)
+    const restoreDetections = () => {
+      if (useDetectionStore.getState().sessionId === sermonId) {
+        useDetectionStore.setState({
+          sessionId: previousDetections.sessionId,
+          detections: previousDetections.detections,
+        })
+      }
+    }
+    try {
+      await transcriptionActions.start(onMissingApiKey, sermonId)
+    } catch (error) {
+      restoreDetections()
+      throw error
+    }
     const transcript = useTranscriptStore.getState()
     if (cancelSermonStart || !transcript.isTranscribing) {
+      restoreDetections()
       useTranscriptStore.setState({
         ...(saved
           ? {
@@ -209,7 +246,10 @@ export async function generateLiveSermonNotes(force = false): Promise<void> {
   if (segmentCount <= session.transcriptStartIndex) return
   const capturedSegments = [...sessionSegments(session)]
   const capturedScriptures = [
-    ...useTranscriptStore.getState().highlightedScriptures,
+    ...new Set([
+      ...capturedScriptureReferences(session),
+      ...useTranscriptStore.getState().highlightedScriptures,
+    ]),
   ]
 
   noteGenerationPromise = (async () => {
@@ -376,7 +416,7 @@ async function settleSermon(
       return
     }
     const transcript = captured.transcript
-    const scriptures = captured.scriptures ?? []
+    const scriptures = capturedScriptureReferences(captured)
     useSermonStore.getState().completeSession(captured.id, null, transcript)
     await flushSermonSessions()
     toast.success("Sermon finished", {

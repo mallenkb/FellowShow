@@ -12,14 +12,23 @@ const labels: Record<LiveAction, string> = {
   "stop-live": "Stop Live",
 }
 
+/**
+ * Several panels can send to Live at once, so each button names what it sends
+ * through `label` (for example "Show graphics on Live").
+ */
 export function LiveActionButton({
   action,
+  label,
   className,
   title,
   ...props
-}: Omit<ComponentProps<"button">, "children"> & { action: LiveAction }) {
+}: Omit<ComponentProps<"button">, "children"> & {
+  action: LiveAction
+  label?: string
+}) {
   const isStop = action === "stop" || action === "stop-live"
   const Icon = isStop ? SquareIcon : RadioIcon
+  const text = label ?? labels[action]
 
   return (
     <Button
@@ -27,11 +36,11 @@ export function LiveActionButton({
       variant={isStop ? "destructive" : "default"}
       size="sm"
       className={cn("min-w-0", className)}
-      title={title ?? props["aria-label"] ?? labels[action]}
+      title={title ?? props["aria-label"] ?? text}
       {...props}
     >
       <Icon aria-hidden="true" className="size-3.5" />
-      <span className="min-w-0 truncate">{labels[action]}</span>
+      <span className="min-w-0 truncate">{text}</span>
     </Button>
   )
 }

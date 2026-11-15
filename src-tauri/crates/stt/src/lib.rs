@@ -20,6 +20,7 @@
 pub mod deepgram;
 pub mod error;
 pub mod keyterms;
+pub mod local_speech;
 pub mod openai_compatible;
 pub mod provider;
 pub mod rest;
