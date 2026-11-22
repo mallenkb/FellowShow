@@ -19,13 +19,11 @@ import {
   useOutputRuntimeStore,
 } from "@/lib/broadcast-output-runtime"
 import { openBroadcastSettings } from "@/lib/broadcast-settings-dialog"
-import {
-  getCurrentOverlayScripture,
-  getOverlayPayloadForOutput,
-  getOverlayPreviewPayload,
-} from "@/lib/overlays"
 import { useBroadcastStore } from "@/stores"
-import { getOutputKeyMode } from "@/stores/broadcast-store-helpers"
+import {
+  getOutputKeyMode,
+  getOutputOverlayPayload,
+} from "@/stores/broadcast-store-helpers"
 import {
   ArrowUpDownIcon,
   ChevronDownIcon,
@@ -83,11 +81,15 @@ export function OutputsMultiviewPanel({
   const lowerThird = useBroadcastStore((s) => s.lowerThird)
   const overlayConfig = useBroadcastStore((s) => s.overlayConfig)
   const activeOverlays = useBroadcastStore((s) => s.activeOverlays)
-  const overlayScripture = getCurrentOverlayScripture({
+  const overlayState = {
+    outputs,
     isLive,
-    liveVerse,
+    liveOverlayOutputIds,
     previewVerse,
-  })
+    liveVerse,
+    overlayConfig,
+    activeOverlays,
+  }
   const runtimeById = useOutputRuntimeStore((s) => s.byId)
   const [isOpen, setIsOpen] = useState(true)
   const [isReordering, setIsReordering] = useState(false)
@@ -272,29 +274,12 @@ export function OutputsMultiviewPanel({
                 ? liveOverlayOutputIds.includes(output.id)
                 : isLive ||
                   (output.content === "everything" &&
-                    liveOverlayOutputIds.length > 0)
+                    liveOverlayOutputIds.includes(output.id))
             const overlayOutputIsOffAir =
               output.content === "overlays" && active && !outputIsLive
-            const overlays =
-              active && outputIsLive
-                ? output.content === "overlays"
-                  ? getOverlayPreviewPayload(
-                      overlayConfig,
-                      activeOverlays,
-                      undefined,
-                      { scripture: overlayScripture }
-                    )
-                  : getOverlayPayloadForOutput(
-                      overlayConfig,
-                      activeOverlays,
-                      output.id,
-                      {
-                        verse: active ? verse : null,
-                      },
-                      undefined,
-                      overlayScripture
-                    )
-                : null
+            const overlays = active
+              ? getOutputOverlayPayload(overlayState, output, verse)
+              : null
             // Highlight the dedicated screen for the current search tab.
             const matchesTab =
               tabContent !== null && output.content === tabContent
@@ -303,7 +288,8 @@ export function OutputsMultiviewPanel({
                 ? Boolean(
                     overlays?.logos.length ||
                     overlays?.lowerThird ||
-                    overlays?.ticker
+                    overlays?.ticker ||
+                    overlays?.bar
                   )
                 : Boolean(verse)
             const pending = pendingId === output.id

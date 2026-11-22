@@ -45,8 +45,8 @@ export async function showOverlayPreviewOnLive(
     if (!enabled) return false
   }
   useBroadcastStore.getState().setOverlayOutputLive(output.id, true)
-  // One thing on screen at a time: graphics only show over live video, so
-  // sending them takes scripture, songs, notes or media off Program.
+  if (output.content === "overlays") return true
+  // General shares its screen between graphics and Program.
   const state = useBroadcastStore.getState()
   const active = state.activeOverlays
   const sendsGraphics =

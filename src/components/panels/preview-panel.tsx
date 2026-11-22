@@ -231,7 +231,8 @@ export function PreviewPanel({
                 isOverlayPreview
                   ? overlayPreviewPayload
                   : // Graphics show only over live video, on air and here.
-                    programHidesGraphics(previewVerse)
+                    graphicsOutput?.content === "overlays" ||
+                      programHidesGraphics(previewVerse)
                     ? null
                     : overlayPreviewPayload
                       ? overlayPreviewPayload

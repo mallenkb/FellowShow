@@ -419,7 +419,7 @@ describe("graphics output live-state reconciliation", () => {
     expect(useBroadcastStore.getState().isLive).toBe(false)
   })
 
-  it("takes Program content off air when graphics go live, so only one shows", async () => {
+  it("keeps Program on air when dedicated graphics go live", async () => {
     const { output, useBroadcastStore } = await liveGraphicsOutput()
     invoke.mockImplementation(async (command) =>
       command === "start_ndi" ? { fps: 24, width: 1920, height: 1080 } : null
@@ -439,7 +439,7 @@ describe("graphics output live-state reconciliation", () => {
 
     await expect(showOverlayPreviewOnLive(output.id)).resolves.toBe(true)
 
-    expect(useBroadcastStore.getState().isLive).toBe(false)
+    expect(useBroadcastStore.getState().isLive).toBe(true)
     expect(useBroadcastStore.getState().activeOverlays.tickerMessageId).toBe(
       tickerId
     )

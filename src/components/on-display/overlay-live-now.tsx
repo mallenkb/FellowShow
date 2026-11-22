@@ -78,7 +78,6 @@ export function OverlayLiveNow({
     (state) => state.selectedOverlayOutputId
   )
   const onAir = useOverlayOutputLive()
-  // Graphics pause while Program shows its own content.
   const pausedByProgram = useBroadcastStore(
     (state) => state.isLive && programHidesGraphics(state.liveVerse)
   )
@@ -147,7 +146,10 @@ export function OverlayLiveNow({
           />
         )}
       </div>
-      {onAir && pausedByProgram && items.length > 0 ? (
+      {onAir &&
+      output?.content === "everything" &&
+      pausedByProgram &&
+      items.length > 0 ? (
         <p className="border-t border-border/60 px-3 py-2 text-xs text-amber-800 dark:text-amber-500">
           Hidden while Program shows content. They come back when Program is
           back on live video.

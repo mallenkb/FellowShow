@@ -119,7 +119,7 @@ describe("Video Overlays staging", () => {
     expect(payload.bar).toMatchObject({ startedAt: 1_000, changedAt: 5_000 })
   })
 
-  it("shows live graphics on the DSK output only while Program is on live video", async () => {
+  it("keeps the dedicated DSK output live across Program changes", async () => {
     const { useBroadcastStore, tickerId } = await loadStore()
     const { getOutputOverlayPayload } =
       await import("./broadcast-store-helpers")
@@ -131,11 +131,18 @@ describe("Video Overlays staging", () => {
     const store = useBroadcastStore.getState()
     store.toggleStagedTicker(tickerId)
     store.commitStagedOverlays()
-    useBroadcastStore.setState({ liveOverlayOutputIds: ["graphics"] })
+    const general = store.outputs[0]
+    useBroadcastStore.setState({
+      outputs: [general, output],
+      liveOverlayOutputIds: ["graphics"],
+    })
     const payload = () =>
       getOutputOverlayPayload(useBroadcastStore.getState(), output, null)
 
     expect(payload()?.ticker?.id).toBe(tickerId)
+    expect(
+      getOutputOverlayPayload(useBroadcastStore.getState(), general, null)
+    ).toBeNull()
     for (const themeSection of [
       "bible",
       "songs",
@@ -147,9 +154,8 @@ describe("Video Overlays staging", () => {
         isLive: true,
         liveVerse: { reference: "x", segments: [{ text: "x" }], themeSection },
       })
-      expect(payload()?.ticker ?? null).toBeNull()
+      expect(payload()?.ticker?.id).toBe(tickerId)
     }
-    // Graphics come back as soon as Program goes off air.
     useBroadcastStore.setState({ isLive: false })
     expect(payload()?.ticker?.id).toBe(tickerId)
   })
@@ -173,8 +179,10 @@ describe("Video Overlays staging", () => {
     useBroadcastStore.setState({ isLive: false, liveOverlayOutputIds: [] })
     expect(payload()).toBeNull()
 
-    // Graphics on air and Program clear: they show on General too.
-    useBroadcastStore.setState({ liveOverlayOutputIds: ["graphics"] })
+    useBroadcastStore.setState({
+      outputs: [general],
+      liveOverlayOutputIds: [general.id],
+    })
     expect(payload()?.ticker?.id).toBe(tickerId)
 
     // Program content takes over again.

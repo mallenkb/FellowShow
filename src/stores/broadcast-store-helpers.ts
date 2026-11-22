@@ -4,6 +4,7 @@ import {
   DEFAULT_SONG_THEME_ID,
 } from "@/lib/builtin-themes"
 import {
+  carriesGraphics,
   DEFAULT_OVERLAY_OUTPUT_MODE,
   getOverlayOutputMode,
   getOutputProgramPayload,
@@ -21,7 +22,6 @@ import {
   getCurrentOverlayScripture,
   getOverlayPayloadForOutput,
   getOverlayPreviewPayload,
-  programHidesGraphics,
 } from "@/lib/overlays"
 import type {
   BroadcastTheme,
@@ -134,33 +134,32 @@ export function normalizeOutputUpdate(
 }
 
 export function getOutputOverlayPayload(
-  state: BroadcastState,
+  state: Pick<
+    BroadcastState,
+    | "liveOverlayOutputIds"
+    | "isLive"
+    | "outputs"
+    | "overlayConfig"
+    | "activeOverlays"
+    | "liveVerse"
+    | "previewVerse"
+  >,
   output: BroadcastOutputConfig,
   verse: VerseRenderData | null
 ): ReturnType<typeof getOverlayPayloadForOutput> | null {
-  // Normal outputs follow the global Program on-air state. Graphics outputs
-  // have their own explicit Show on Live state so they can go on air without
-  // sending their master overlays into the staged Program preview. General
-  // displays also take over with live graphics, one thing at a time like the
-  // rest: graphics show there while they are live and Program is clear.
-  const graphicsLive = state.liveOverlayOutputIds.length > 0
-  if (
-    output.content === "overlays"
-      ? !state.liveOverlayOutputIds.includes(output.id)
-      : !state.isLive && !(output.content === "everything" && graphicsLive)
-  ) {
-    return null
-  }
-  // Video Overlays is the master graphics bus: its preview and live output
-  // intentionally share the same all-active overlay payload. Per-output
-  // targeting remains in effect for normal program outputs.
-  // Graphics show only over live video, never over Program content.
-  if (
-    output.content === "overlays" &&
-    state.isLive &&
-    programHidesGraphics(state.liveVerse)
-  ) {
-    return { logos: [], lowerThird: null, ticker: null, bar: null }
+  const graphicsLive = state.liveOverlayOutputIds.includes(output.id)
+  if (output.content === "overlays") {
+    if (!graphicsLive) return null
+  } else {
+    if (
+      output.content === "everything" &&
+      !carriesGraphics(output, state.outputs)
+    ) {
+      return null
+    }
+    if (!state.isLive && !(output.content === "everything" && graphicsLive)) {
+      return null
+    }
   }
   const scripture = getCurrentOverlayScripture(state)
   return output.content === "overlays"
@@ -182,7 +181,7 @@ export function getOutputOverlayPayload(
 
 /**
  * How an output is keyed this frame. A Video Overlays output always is. A
- * General display switches to the keyable background whenever Program is
+ * shared General display switches to the keyable background whenever Program is
  * clear, so one input on the switcher does both jobs: never a theme
  * background with graphics on it. It follows the graphics output's DSK or
  * CMK choice.
@@ -194,8 +193,12 @@ export function getOutputKeyMode(
 ): OverlayOutputMode | null {
   const overlayMode = getOverlayOutputMode(output)
   if (overlayMode) return overlayMode
-  if (output.content === "everything" && !verse) {
-    return graphicsKeyMode(graphicsOutputs(state.outputs)[0] ?? output)
+  if (
+    !verse &&
+    output.content === "everything" &&
+    carriesGraphics(output, state.outputs)
+  ) {
+    return graphicsKeyMode(output)
   }
   return null
 }

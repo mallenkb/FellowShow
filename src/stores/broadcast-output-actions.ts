@@ -107,11 +107,16 @@ export function createOutputActions(
       const outputs = [...s.outputs, output]
       set({
         outputs,
+        liveOverlayOutputIds: normalizeLiveOverlayOutputIds(
+          s.liveOverlayOutputIds,
+          outputs
+        ),
         selectedOverlayOutputId: selectOverlayOutputId(
           s.selectedOverlayOutputId,
           outputs
         ),
       })
+      if (output.content === "overlays") get().syncBroadcastOutput()
       return output
     },
     removeOutput: (id) => {
@@ -168,7 +173,8 @@ export function createOutputActions(
           ),
         }
       })
-      get().syncBroadcastOutputFor(id)
+      if (safeUpdates.content !== undefined) get().syncBroadcastOutput()
+      else get().syncBroadcastOutputFor(id)
     },
     setPreviewOutput: (previewVerse) => {
       let previewChanged = false

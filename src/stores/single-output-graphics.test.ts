@@ -45,13 +45,16 @@ describe("General as the single output", () => {
         segments: [{ text: "x" }],
       })
     ).toBeNull()
-    // With a separate Video Overlays output, General follows its key choice.
+    // A dedicated graphics output owns its key background.
     const graphics = {
       ...createOutputConfig([general], { content: "overlays" }),
       overlayMode: "chroma-key" as const,
     }
     expect(
       getOutputKeyMode({ outputs: [general, graphics] }, general, null)
+    ).toBeNull()
+    expect(
+      getOutputKeyMode({ outputs: [general, graphics] }, graphics, null)
     ).toBe("chroma-key")
   })
 

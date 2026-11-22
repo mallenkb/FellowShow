@@ -39,6 +39,7 @@ export function LiveOutputPanel({
   // the operator sees that something went live.
   const graphicsOutput = resolveOverlayOutput(outputs, selectedOverlayOutputId)
   const graphicsLive = useOverlayOutputLive(graphicsOutput?.id ?? null)
+  const programCarriesGraphics = graphicsOutput?.content === "everything"
   const showsSomething = isLive || graphicsLive
   const liveVerse = useBroadcastStore((s) => s.liveVerse)
   const previewVerse = useBroadcastStore((s) => s.previewVerse)
@@ -110,7 +111,9 @@ export function LiveOutputPanel({
           verse={isLive || !graphicsLive ? liveVerse : null}
           lowerThird={isLive ? lowerThird : null}
           overlays={
-            graphicsLive && graphicsOutput
+            graphicsLive &&
+            graphicsOutput &&
+            (!isLive || programCarriesGraphics)
               ? // Live graphics are the master bus: every live graphic shows,
                 // except while Program has its own content (one at a time).
                 isLive && programHidesGraphics(liveVerse)
@@ -127,7 +130,7 @@ export function LiveOutputPanel({
                       }),
                     }
                   )
-              : isLive
+              : isLive && programCarriesGraphics
                 ? getOverlayPayloadForOutput(
                     overlayConfig,
                     activeOverlays,
