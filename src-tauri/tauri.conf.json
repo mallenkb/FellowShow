@@ -44,7 +44,8 @@
     },
     "windows": {
       "nsis": {
-        "compression": "zlib"
+        "compression": "zlib",
+        "installerHooks": "windows/installer.nsh"
       }
     },
     "icon": [

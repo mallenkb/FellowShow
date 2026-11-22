@@ -162,14 +162,37 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          choco install llvm cmake nsis -y --no-progress
           $llvmBin = Join-Path ${env:ProgramFiles} "LLVM\bin"
           if (-not (Test-Path (Join-Path $llvmBin "libclang.dll"))) {
-            throw "libclang.dll was not found at $llvmBin"
+            choco install llvm -y --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
-          "LIBCLANG_PATH=$llvmBin" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "$llvmBin" | Out-File -FilePath $env:GITHUB_PATH -Append
-          "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append
+          if (-not (Get-Command cmake -ErrorAction SilentlyContinue)) {
+            choco install cmake -y --no-progress
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            "$env:ProgramFiles\CMake\bin" >> $env:GITHUB_PATH
+          }
+          "LIBCLANG_PATH=$llvmBin" >> $env:GITHUB_ENV
+          $llvmBin >> $env:GITHUB_PATH
+
+      # The Windows executable links the Rust library. Mobile builds also need
+      # the native library formats declared in the checked-in manifest.
+      - name: Select Rust outputs for the Windows executable
+        if: runner.os == 'Windows'
+        shell: python {0}
+        run: |
+          from pathlib import Path
+          import tomllib
+
+          manifest = Path("src-tauri/Cargo.toml")
+          source = manifest.read_text()
+          declaration = 'crate-type = ["staticlib", "cdylib", "rlib"]'
+          if source.count(declaration) != 1:
+              raise ValueError("Review the Windows library outputs after changing Cargo.toml")
+          updated = source.replace(declaration, 'crate-type = ["rlib"]')
+          if tomllib.loads(updated)["lib"]["crate-type"] != ["rlib"]:
+              raise ValueError("Expected only the executable's Rust library")
+          manifest.write_text(updated)
 
       - name: Restore installed LibreOffice runtime
         if: runner.os == 'Windows'
@@ -261,6 +284,21 @@ jobs:
             throw "Installer completed, but the FellowShow executable was not found in $installDir."
           }
 
+          $app = Start-Process -FilePath $installedApp.FullName -PassThru
+          try {
+            $deadline = [DateTime]::UtcNow.AddSeconds(30)
+            while (-not $app.HasExited -and $app.MainWindowHandle -eq 0 -and [DateTime]::UtcNow -lt $deadline) {
+              Start-Sleep -Milliseconds 250
+              $app.Refresh()
+            }
+            if ($app.HasExited -or $app.MainWindowHandle -eq 0) {
+              throw "Fellow Show failed to open its main window."
+            }
+            "Verified the installed app opened its main window"
+          } finally {
+            if (-not $app.HasExited) { Stop-Process -Id $app.Id }
+          }
+          "Windows installer size: $($installer.Length) bytes"
           "INSTALLER_PATH=$($installer.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "Verified $($installer.Name) installs to $installDir"
 
