@@ -11,5 +11,5 @@ serde.workspace = true
 serde_json.workspace = true
 log.workspace = true
 thiserror.workspace = true
-cpal = "0.15"
+cpal = "0.18"
 crossbeam-channel = "0.5"
