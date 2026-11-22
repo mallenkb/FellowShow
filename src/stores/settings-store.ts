@@ -1,5 +1,7 @@
+import { debouncedSave } from "@/lib/debounced-save"
 import { create } from "zustand"
 import { load, type Store } from "@tauri-apps/plugin-store"
+import { toast } from "sonner"
 import {
   invoke,
   LOCAL_SPEECH_MODEL_IDS,
@@ -39,7 +41,10 @@ export function isOptionalSearchTab(
   return OPTIONAL_SEARCH_TABS.some((tab) => tab === value)
 }
 
+type SettingsWriteBlock = "newer-schema" | "invalid-schema"
+
 interface SettingsState {
+  persistenceError: SettingsWriteBlock | null
   secretsUnlocked: boolean
   deepgramApiKey: string | null
   openaiApiKey: string | null
@@ -100,6 +105,7 @@ interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
+  persistenceError: null,
   secretsUnlocked: false,
   deepgramApiKey: null,
   openaiApiKey: null,
@@ -208,7 +214,13 @@ const PERSISTED_KEYS = [
   "extraSearchTabs",
 ] as const satisfies readonly (keyof SettingsState)[]
 
-const SETTINGS_SCHEMA_VERSION = 1
+export const SETTINGS_SCHEMA_VERSION = 1
+const SETTINGS_WRITE_BLOCK_MESSAGES: Record<SettingsWriteBlock, string> = {
+  "newer-schema":
+    "Settings were saved by a newer version of FellowShow. Update FellowShow to save changes.",
+  "invalid-schema":
+    "FellowShow couldn't read the settings file version. Changes won't be saved.",
+}
 const ALL_PERSISTED_STATE_KEYS = [
   ...PERSISTED_KEYS,
   ...SECRET_SETTING_KEYS,
@@ -216,6 +228,8 @@ const ALL_PERSISTED_STATE_KEYS = [
 
 let tauriStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
+let settingsHydrated = false
+let settingsWriteBlocked: SettingsWriteBlock | null = null
 let persistedSecrets: SecureSettings = {}
 let secretsPromise: Promise<void> | null = null
 
@@ -225,6 +239,7 @@ export function unlockSecureSettings(): Promise<void> {
   if (secretsPromise) return secretsPromise
   secretsPromise = (async () => {
     await hydrateSettings()
+    if (!settingsWriteBlocked) assertSettingsWritable()
     const store = await getStore()
     const before = useSettingsStore.getState()
     const secrets = sanitizeSecureSettings(await invoke("load_secure_settings"))
@@ -236,11 +251,14 @@ export function unlockSecureSettings(): Promise<void> {
         secrets[key] = legacy
         migrated = true
       }
-      if (await store.has(key)) legacyKeys.push(key)
+      if (settingsHydrated && (await store.has(key))) legacyKeys.push(key)
     }
-    if (migrated) await invoke("save_secure_settings", { secrets })
-    for (const key of legacyKeys) await store.delete(key)
-    if (legacyKeys.length) await store.save()
+    // Existing keys can still be used when the settings file is read-only.
+    if (settingsHydrated) {
+      if (migrated) await invoke("save_secure_settings", { secrets })
+      for (const key of legacyKeys) await store.delete(key)
+      if (legacyKeys.length) await store.save()
+    }
     persistedSecrets = { ...secrets }
     const patch: Partial<SettingsState> = { secretsUnlocked: true }
     for (const key of SECRET_SETTING_KEYS) {
@@ -270,13 +288,22 @@ export function hydrateSettings(): Promise<void> {
     try {
       const store = await getStore()
       const storedSchemaVersion = await store.get<unknown>("schemaVersion")
+      const validSchemaVersion =
+        typeof storedSchemaVersion === "number" &&
+        Number.isSafeInteger(storedSchemaVersion) &&
+        storedSchemaVersion >= 0
       if (
         storedSchemaVersion !== undefined &&
-        storedSchemaVersion !== null &&
-        (!Number.isInteger(storedSchemaVersion) ||
-          Number(storedSchemaVersion) > SETTINGS_SCHEMA_VERSION)
+        (!validSchemaVersion || storedSchemaVersion > SETTINGS_SCHEMA_VERSION)
       ) {
-        throw new Error("Unsupported settings schema version")
+        settingsWriteBlocked = validSchemaVersion
+          ? "newer-schema"
+          : "invalid-schema"
+        useSettingsStore.setState({ persistenceError: settingsWriteBlocked })
+        toast.warning(SETTINGS_WRITE_BLOCK_MESSAGES[settingsWriteBlocked], {
+          duration: Infinity,
+        })
+        return
       }
 
       const patch = await loadValidatedSettings(store)
@@ -314,23 +341,7 @@ export function hydrateSettings(): Promise<void> {
         useSettingsStore.setState(patch)
       }
 
-      // Attach only after successful hydration so as not to overwrite disk with defaults.
-      // Debounce writes, so a dragged slider (e.g. gain) coalesces into a single disk write.
-      useSettingsStore.subscribe((state, prevState) => {
-        const changed = ALL_PERSISTED_STATE_KEYS.some(
-          (key) => state[key] !== prevState[key]
-        )
-        if (!changed) return
-        if (saveTimer) clearTimeout(saveTimer)
-        saveTimer = setTimeout(() => {
-          saveTimer = null
-          void enqueuePersistence(useSettingsStore.getState()).catch(
-            (error) => {
-              console.warn("[settings] Failed to persist settings", error)
-            }
-          )
-        }, SAVE_DEBOUNCE_MS)
-      })
+      settingsHydrated = true
     } catch {
       // Store access can fail transiently while an updated app is starting.
       // Allow the next caller (including transcription start) to retry instead
@@ -343,19 +354,48 @@ export function hydrateSettings(): Promise<void> {
 }
 
 export async function saveSettingsNow(): Promise<void> {
-  if (saveTimer) {
-    clearTimeout(saveTimer)
-    saveTimer = null
-  }
   await hydrateSettings()
-  await enqueuePersistence(useSettingsStore.getState())
+  assertSettingsWritable()
+  settingsSave.schedule()
+  await settingsSave.flush()
 }
 
-let saveTimer: ReturnType<typeof setTimeout> | null = null
-let pendingSave: Promise<void> = Promise.resolve()
-const SAVE_DEBOUNCE_MS = 250
+const settingsSave = debouncedSave(
+  () => persistAll(useSettingsStore.getState()),
+  (error) => console.warn("[settings] Failed to persist settings", error),
+  250
+)
+
+useSettingsStore.subscribe((state, prevState) => {
+  const changed = ALL_PERSISTED_STATE_KEYS.some(
+    (key) => state[key] !== prevState[key]
+  )
+  if (!changed) return
+  if (settingsWriteBlocked) {
+    console.warn(
+      "[settings] Skipped saving settings",
+      SETTINGS_WRITE_BLOCK_MESSAGES[settingsWriteBlocked]
+    )
+    return
+  }
+  if (!settingsHydrated) return // Ignore changes while loading saved settings.
+
+  settingsSave.schedule()
+})
+
+function assertSettingsWritable(): void {
+  if (settingsWriteBlocked) {
+    throw new Error(SETTINGS_WRITE_BLOCK_MESSAGES[settingsWriteBlocked])
+  }
+  if (!settingsHydrated) {
+    throw new Error(
+      "Could not save settings because they failed to load. Try again."
+    )
+  }
+}
 
 async function persistAll(state: SettingsState): Promise<void> {
+  assertSettingsWritable()
   const secrets = secureSettingsFromState(state)
   const store = await getStore()
   for (const key of PERSISTED_KEYS) await store.set(key, state[key])
@@ -369,12 +409,6 @@ async function persistAll(state: SettingsState): Promise<void> {
     await invoke("save_secure_settings", { secrets })
     persistedSecrets = { ...secrets }
   }
-}
-
-function enqueuePersistence(state: SettingsState): Promise<void> {
-  const operation = pendingSave.then(() => persistAll(state))
-  pendingSave = operation.catch(() => undefined)
-  return operation
 }
 
 async function loadValidatedSettings(

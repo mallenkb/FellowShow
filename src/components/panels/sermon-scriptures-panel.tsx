@@ -23,6 +23,7 @@ import {
   useSermonStore,
   useTranscriptStore,
 } from "@/stores"
+import { ScriptureQueueList } from "./scripture-queue-list"
 import { SermonScriptureRow } from "@/components/panels/sermon-scripture-row"
 import { RelatedScripturesPanel } from "@/components/panels/related-scriptures-panel"
 import type { ClearedScriptureQueue } from "@/stores/queue-store"
@@ -38,16 +39,16 @@ function scriptureKey(bookNumber: number, chapter: number, verse: number) {
 }
 
 const SCRIPTURE_TAB_CLASS =
-  "workspace-segment h-7 flex-none rounded-[calc(var(--workspace-nav-radius)_-_4px)] px-2.5 text-xs text-muted-foreground data-active:border-transparent data-active:bg-card data-active:text-secondary-foreground dark:data-active:border-transparent dark:data-active:bg-secondary dark:data-active:text-secondary-foreground group-data-[variant=default]/tabs-list:data-active:shadow-none"
+  "workspace-segment h-7 flex-none rounded-[calc(var(--workspace-nav-radius)_-_4px)] px-1.5 @min-[17rem]/scriptures:px-2.5 text-xs text-muted-foreground data-active:border-transparent data-active:bg-card data-active:text-secondary-foreground dark:data-active:border-transparent dark:data-active:bg-secondary dark:data-active:text-secondary-foreground group-data-[variant=default]/tabs-list:data-active:shadow-none"
 
 export function SermonScripturesPanel({
   isActive = true,
 }: {
   isActive?: boolean
 }) {
-  const [scriptureTab, setScriptureTab] = useState<"direct" | "related">(
-    "direct"
-  )
+  const [scriptureTab, setScriptureTab] = useState<
+    "direct" | "related" | "queue"
+  >("direct")
   const detections = useDetectionStore((state) => state.detections)
   const detectionSessionId = useDetectionStore((state) => state.sessionId)
   const segments = useTranscriptStore((state) => state.segments)
@@ -55,6 +56,18 @@ export function SermonScripturesPanel({
     (state) => state.highlightedScriptures
   )
   const queueItems = useQueueStore((state) => state.items)
+  useEffect(
+    () =>
+      useQueueStore.subscribe((state, previous) => {
+        if (
+          state.highlightedId &&
+          state.highlightedId !== previous.highlightedId &&
+          isActive
+        )
+          setScriptureTab("queue")
+      }),
+    [isActive]
+  )
   const activeSessionId = useSermonStore((state) => state.activeSessionId)
   const selectedSessionId = useSermonStore((state) => state.selectedSessionId)
   const viewingSessionId = activeSessionId ?? selectedSessionId
@@ -306,15 +319,16 @@ export function SermonScripturesPanel({
       ref={panelRef}
       value={scriptureTab}
       onValueChange={(value) => {
-        if (value === "direct" || value === "related") setScriptureTab(value)
+        if (value === "direct" || value === "related" || value === "queue")
+          setScriptureTab(value)
       }}
       className="@container/scriptures min-h-0 flex-1 gap-0"
     >
-      <div className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-1 bg-surface-header px-3 py-[3px]">
+      <div className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-1 bg-surface-header px-1 py-[3px] @min-[17rem]/scriptures:px-3">
         <h2 className="sr-only">Sermon scriptures</h2>
         <TabsList
           aria-label="Sermon scriptures"
-          className="workspace-segment-track rounded-[var(--workspace-nav-radius)] border border-border bg-background p-[3px] [--workspace-nav-radius:10px]"
+          className="workspace-segment-track max-w-full justify-start overflow-x-auto rounded-[var(--workspace-nav-radius)] border border-border bg-background p-[3px] [--workspace-nav-radius:10px]"
         >
           <TabsTrigger
             value="direct"
@@ -328,7 +342,7 @@ export function SermonScripturesPanel({
                 scriptures
               </span>
             </span>
-            <span className="font-normal text-muted-foreground">
+            <span className="hidden font-normal text-muted-foreground @min-[16rem]/scriptures:inline">
               ({references.length})
             </span>
           </TabsTrigger>
@@ -344,9 +358,16 @@ export function SermonScripturesPanel({
                 scriptures
               </span>
             </span>
-            <span className="font-normal text-muted-foreground">
+            <span className="hidden font-normal text-muted-foreground @min-[16rem]/scriptures:inline">
               ({relatedReview.matches.length})
             </span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="queue"
+            className={SCRIPTURE_TAB_CLASS}
+            aria-label={`Scripture queue, ${queuedKeys.size} ${queuedKeys.size === 1 ? "verse" : "verses"}`}
+          >
+            Queue ({queuedKeys.size})
           </TabsTrigger>
         </TabsList>
         {scriptureTab === "direct" ? (
@@ -407,6 +428,9 @@ export function SermonScripturesPanel({
             ))}
           </div>
         )}
+      </TabsContent>
+      <TabsContent value="queue" className="min-h-0 flex-1 overflow-y-auto">
+        <ScriptureQueueList items={queueItems} />
       </TabsContent>
       <TabsContent
         value="related"

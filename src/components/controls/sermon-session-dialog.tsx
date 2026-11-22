@@ -25,7 +25,7 @@ import {
 import { useSermonDialogStore } from "@/lib/sermon-dialog"
 import { useAppNavigationStore } from "@/stores/app-navigation-store"
 import { resumableSermon } from "@/lib/sermon-session"
-import { invoke } from "@/lib/ipc"
+import { exitApp } from "@/lib/app-exit"
 import {
   checkpointActiveSermon,
   flushSermonSessions,
@@ -38,9 +38,11 @@ export function SermonSessionDialog() {
   const recoveryId = useSermonStore((state) => state.recoverySessionId)
   const home = useAppNavigationStore((state) => state.screen === "home")
   const session = useSermonStore((state) => {
-    const id = request?.sessionId ?? state.activeSessionId ?? recoveryId
+    const id = request?.sessionId ?? state.activeSessionId
+    if (request?.mode === "close" || request?.mode === "restart")
+      return state.sessions.find((item) => item.id === id)
     return (
-      state.sessions.find((item) => item.id === id) ??
+      state.sessions.find((item) => item.id === (id ?? recoveryId)) ??
       resumableSermon(state.sessions, state.selectedSessionId)
     )
   })
@@ -52,7 +54,8 @@ export function SermonSessionDialog() {
     null
   )
   const mode = request?.mode ?? (!home && recoveryId ? "resume" : null)
-  const isClosing = mode === "close"
+  const restarting = mode === "restart"
+  const isClosing = mode === "close" || restarting
   const isFinishing = mode === "finish"
   const isListening =
     session?.id === activeSessionId && activeSessionId !== null
@@ -86,13 +89,13 @@ export function SermonSessionDialog() {
     // Also handles a cancelled start with no sermon record yet.
     await transcriptionActions.stop()
     checkpointActiveSermon()
-    await flushSermonSessions()
-    if (isClosing) await invoke("close_app")
+    if (isClosing) await exitApp(mode)
+    else await flushSermonSessions()
   }
   const finish = async () => {
     await endSermon({ sessionId: session?.id, waitForNotes: true })
-    await flushSermonSessions()
-    if (isClosing) await invoke("close_app")
+    if (isClosing) await exitApp(mode)
+    else await flushSermonSessions()
   }
   return (
     <>
@@ -109,7 +112,9 @@ export function SermonSessionDialog() {
           <DialogHeader>
             <DialogTitle>
               {isClosing
-                ? "Save this sermon before closing?"
+                ? restarting
+                  ? "Save this sermon before restarting?"
+                  : "Save this sermon before closing?"
                 : isFinishing
                   ? "Finish this sermon?"
                   : mode === "resume"
@@ -120,7 +125,9 @@ export function SermonSessionDialog() {
             </DialogTitle>
             <DialogDescription>
               {isClosing
-                ? "Save and close to continue later. Finish and close saves the sermon and generates its notes before exiting."
+                ? restarting
+                  ? "Pause to continue this sermon after the update, or finish it and generate notes before restarting."
+                  : "Save and close to continue later. Finish and close saves the sermon and generates its notes before exiting."
                 : isFinishing
                   ? `${isListening ? "Listening will stop. " : ""}Your transcript will be saved and used to generate notes.`
                   : mode === "resume"
@@ -151,7 +158,9 @@ export function SermonSessionDialog() {
           <DialogFooter className="flex-wrap">
             <Button variant="ghost" disabled={busy} onClick={dismiss}>
               {isClosing
-                ? "Keep app open"
+                ? restarting
+                  ? "Later"
+                  : "Keep app open"
                 : isFinishing
                   ? "Cancel"
                   : mode === "resume"
@@ -178,7 +187,9 @@ export function SermonSessionDialog() {
                 {isFinishing
                   ? "Finish Sermon"
                   : isClosing
-                    ? "Finish & close"
+                    ? restarting
+                      ? "Finish & restart"
+                      : "Finish & close"
                     : "Finish & generate notes"}
               </Button>
             ) : null}
@@ -194,7 +205,9 @@ export function SermonSessionDialog() {
                 }
               >
                 {isClosing
-                  ? "Save & close"
+                  ? restarting
+                    ? "Pause & restart"
+                    : "Save & close"
                   : mode === "resume"
                     ? session?.prepared
                       ? "Start listening"

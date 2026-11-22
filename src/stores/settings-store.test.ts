@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { SETTINGS_SCHEMA_VERSION } from "./settings-store"
 
 const mockGet = vi.fn()
 const mockSet = vi.fn()
@@ -7,6 +8,11 @@ const mockDelete = vi.fn()
 const mockHas = vi.fn()
 const mockLoad = vi.fn()
 const mockInvoke = vi.fn()
+const mockWarning = vi.fn()
+
+vi.mock("sonner", () => ({
+  toast: { warning: (...args: unknown[]) => mockWarning(...args) },
+}))
 
 vi.mock("@tauri-apps/plugin-store", () => ({
   load: (...args: unknown[]) => mockLoad(...args),
@@ -34,6 +40,7 @@ describe("settings store", () => {
     mockHas.mockReset()
     mockLoad.mockReset()
     mockInvoke.mockReset()
+    mockWarning.mockClear()
     mockHas.mockResolvedValue(false)
     mockInvoke.mockImplementation(async (command: string) => {
       if (command === "load_secure_settings") return {}
@@ -55,7 +62,7 @@ describe("settings store", () => {
       if (key === "gain") return 2.5
       if (key === "sttProvider") return "whisper"
       if (key === "deepgramApiKey") return "dg-key"
-      return null
+      return undefined
     })
 
     const { hydrateSettings, unlockSecureSettings, useSettingsStore } =
@@ -78,7 +85,7 @@ describe("settings store", () => {
   })
 
   it("hydrate with no persisted values falls back to defaults", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
 
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -111,7 +118,7 @@ describe("settings store", () => {
       if (key === "schemaVersion") return 1
       if (key === "defaultPinnedTranslationsApplied") return true
       if (key === "openRouterModel") return "inclusionai/ling-3.0-flash:free"
-      return null
+      return undefined
     })
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -135,7 +142,7 @@ describe("settings store", () => {
       if (key === "defaultPinnedTranslationsApplied") return true
       if (key === "videoOverlaysTabApplied") return true
       if (key === "openRouterModel") return model
-      return null
+      return undefined
     })
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -151,7 +158,7 @@ describe("settings store", () => {
   })
 
   it("does not open the vault when loading or saving ordinary settings", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
     const { hydrateSettings, saveSettingsNow, useSettingsStore } =
       await import("./settings-store")
     await hydrateSettings()
@@ -161,7 +168,7 @@ describe("settings store", () => {
   })
 
   it("shares one vault request across concurrent unlocks", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
     const { unlockSecureSettings } = await import("./settings-store")
     await Promise.all([unlockSecureSettings(), unlockSecureSettings()])
     expect(
@@ -172,7 +179,7 @@ describe("settings store", () => {
   })
 
   it("does not overwrite stored secrets when access is denied", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
     mockInvoke.mockRejectedValue(new Error("access denied"))
     const { unlockSecureSettings, saveSettingsNow, useSettingsStore } =
       await import("./settings-store")
@@ -188,7 +195,7 @@ describe("settings store", () => {
   it("hydrates the automatic update preference", async () => {
     mockGet.mockImplementation(async (key: string) => {
       if (key === "autoUpdateEnabled") return false
-      return null
+      return undefined
     })
 
     const { hydrateSettings, useSettingsStore } =
@@ -199,7 +206,7 @@ describe("settings store", () => {
   })
 
   it("shows Video Overlays by default and lets the operator hide it", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
     await hydrateSettings()
@@ -213,7 +220,7 @@ describe("settings store", () => {
     mockGet.mockImplementation(async (key: string) => {
       if (key === "schemaVersion") return 1
       if (key === "extraSearchTabs") return ["retired"]
-      return null
+      return undefined
     })
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -228,7 +235,7 @@ describe("settings store", () => {
       if (key === "schemaVersion") return 1
       if (key === "videoOverlaysTabApplied") return true
       if (key === "extraSearchTabs") return []
-      return null
+      return undefined
     })
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -242,7 +249,7 @@ describe("settings store", () => {
       if (key === "extraSearchTabs") {
         return ["retired", "songs", "retired", 3, "on-display"]
       }
-      return null
+      return undefined
     })
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -262,7 +269,7 @@ describe("settings store", () => {
   })
 
   it("a setter call after hydration writes the full snapshot to disk", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
 
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -283,7 +290,7 @@ describe("settings store", () => {
   })
 
   it("rapid setter calls coalesce into a single save", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
 
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -302,7 +309,7 @@ describe("settings store", () => {
   })
 
   it("saveSettingsNow persists API keys", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
 
     const {
       hydrateSettings,
@@ -326,7 +333,7 @@ describe("settings store", () => {
   })
 
   it("concurrent hydrate calls attach only one subscription", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
 
     const { hydrateSettings, useSettingsStore } =
       await import("./settings-store")
@@ -357,8 +364,94 @@ describe("settings store", () => {
     warnSpy.mockRestore()
   })
 
+  it.each([
+    { schemaVersion: SETTINGS_SCHEMA_VERSION + 1, reason: "newer-schema" },
+    { schemaVersion: null, reason: "invalid-schema" },
+    { schemaVersion: -1, reason: "invalid-schema" },
+    { schemaVersion: "1", reason: "invalid-schema" },
+  ])(
+    "leaves settings with schema $schemaVersion untouched",
+    async ({ schemaVersion, reason }) => {
+      const original = {
+        schemaVersion,
+        gain: 1.8,
+        futureSetting: true,
+        deepgramApiKey: "legacy-key",
+      }
+      const stored = new Map<string, unknown>(Object.entries(original))
+      mockGet.mockImplementation(async (key: string) => stored.get(key))
+      mockHas.mockImplementation(async (key: string) => stored.has(key))
+      mockSet.mockImplementation(async (key: string, value: unknown) => {
+        stored.set(key, value)
+      })
+      mockDelete.mockImplementation(async (key: string) => stored.delete(key))
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+      try {
+        const {
+          hydrateSettings,
+          saveSettingsNow,
+          unlockSecureSettings,
+          useSettingsStore,
+        } = await import("./settings-store")
+        await hydrateSettings()
+        await expect(saveSettingsNow()).rejects.toThrow(/settings/i)
+        useSettingsStore.getState().setLocalSpeechModel("zipformer")
+        const { flushPendingStoreWrites } = await import("@/lib/debounced-save")
+        await flushPendingStoreWrites()
+        await flushSave()
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining("Skipped saving"),
+          expect.anything()
+        )
+
+        await unlockSecureSettings()
+        expect(useSettingsStore.getState().deepgramApiKey).toBe("legacy-key")
+        expect(useSettingsStore.getState().persistenceError).toBe(reason)
+        expect(mockWarning).toHaveBeenCalledExactlyOnceWith(
+          expect.any(String),
+          expect.objectContaining({ duration: Infinity })
+        )
+        expect(mockSet).not.toHaveBeenCalled()
+        expect(mockSave).not.toHaveBeenCalled()
+        expect(mockDelete).not.toHaveBeenCalled()
+        expect(mockInvoke).not.toHaveBeenCalledWith(
+          "save_secure_settings",
+          expect.anything()
+        )
+        expect(Object.fromEntries(stored)).toEqual(original)
+      } finally {
+        warnSpy.mockRestore()
+      }
+    }
+  )
+
+  it("refuses to save after a transient hydration failure and retries later", async () => {
+    mockGet.mockRejectedValueOnce(new Error("store is temporarily unavailable"))
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      const { hydrateSettings, saveSettingsNow, useSettingsStore } =
+        await import("./settings-store")
+      await expect(saveSettingsNow()).rejects.toThrow(/settings.*load/i)
+      expect(mockSet).not.toHaveBeenCalled()
+      expect(mockSave).not.toHaveBeenCalled()
+      expect(mockWarning).not.toHaveBeenCalled()
+
+      mockGet.mockImplementation(async (key: string) =>
+        key === "gain" ? 1.8 : undefined
+      )
+      await hydrateSettings()
+      expect(useSettingsStore.getState().gain).toBe(1.8)
+      useSettingsStore.getState().setGain(1.4)
+      await saveSettingsNow()
+      expect(mockSet).toHaveBeenCalledWith("gain", 1.4)
+      expect(mockSave).toHaveBeenCalled()
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
+
   it("persist handles save rejection gracefully", async () => {
-    mockGet.mockResolvedValue(null)
+    mockGet.mockResolvedValue(undefined)
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
     const { hydrateSettings, useSettingsStore } =

@@ -10,6 +10,9 @@ const writeFile = vi.fn<
     options?: { append?: boolean }
   ) => Promise<void>
 >(() => Promise.resolve())
+const truncate = vi.fn<(path: string, length: number) => Promise<void>>(
+  async () => {}
+)
 const mkdir = vi.fn((path: string) => {
   if (!disk.has(path)) disk.set(path, new Map())
   return Promise.resolve()
@@ -21,6 +24,7 @@ function split(path: string): [string, string] {
 }
 
 vi.mock("@tauri-apps/plugin-fs", () => ({
+  truncate: (...args: Parameters<typeof truncate>) => truncate(...args),
   writeFile: (...args: Parameters<typeof writeFile>) => writeFile(...args),
   mkdir: (path: string) => mkdir(path),
   writeTextFile: (path: string, text: string) => {
@@ -68,6 +72,7 @@ const {
   prepareSermonFolder,
   sermonFolderName,
   videoPartName,
+  nextVideoPartPath,
 } = await import("./return-recording")
 
 describe("pickRecordingMimeType", () => {
@@ -125,6 +130,13 @@ describe("sermon folders", () => {
     expect(videoPartName(startedAt, "mp4")).toBe("Video 09-05-07.mp4")
   })
 
+  it("preserves the previous video when GoStream reconnects in the same second", async () => {
+    disk.set("/video", new Map([["Video 09-05-07.mp4", "previous part"]]))
+    expect(await nextVideoPartPath("/video", startedAt, "mp4")).toBe(
+      "/video/Video 09-05-07 (2).mp4"
+    )
+  })
+
   it("makes one folder per sermon and finds it again", async () => {
     const folder = await prepareSermonFolder(sermon)
     expect(folder).toBe("/Movies/FellowShow/2026-11-15 Lifted Up")
@@ -179,6 +191,25 @@ describe("createChunkWriter", () => {
     expect(writeFile.mock.calls.every((call) => call[0] === "/out.mp4")).toBe(
       true
     )
+  })
+
+  it("retries a partial append from the last saved byte and keeps the final chunk", async () => {
+    const writer = createChunkWriter("/out.mp4")
+    await writer.write(new Blob(["saved"]))
+    writeFile.mockRejectedValueOnce(new Error("disk full"))
+    await expect(writer.write(new Blob(["partial"]))).rejects.toThrow(
+      "disk full"
+    )
+    await expect(writer.write(new Blob(["last"]))).rejects.toThrow("disk full")
+    await expect(writer.flush()).rejects.toThrow("disk full")
+    await writer.retry()
+    expect(truncate).toHaveBeenCalledWith("/out.mp4", 5)
+    expect(
+      writeFile.mock.calls
+        .slice(2)
+        .map((call) => new TextDecoder().decode(call[1]))
+    ).toEqual(["partial", "last"])
+    await writer.flush()
   })
 
   it("rejects flush after a failed write", async () => {

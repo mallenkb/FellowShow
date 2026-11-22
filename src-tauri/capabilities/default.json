@@ -11,10 +11,17 @@
     "store:default",
     "dialog:default",
     "opener:default",
-    "process:default",
     "updater:default",
     "fs:default",
+    {
+      "identifier": "fs:allow-lstat",
+      "allow": [{ "path": "$APPDATA/media" }, { "path": "$APPDATA/media/*" }]
+    },
     "fs:allow-write-text-file",
+    {
+      "identifier": "fs:allow-truncate",
+      "allow": [{ "path": "$VIDEO/FellowShow/**" }]
+    },
     {
       "identifier": "fs:allow-copy-file",
       "allow": [

@@ -26,6 +26,14 @@ export function searchScripture(
   if (existing && !semantic) return existing
   const run = async () => {
     if (!isCurrent()) return []
+    if (semantic) {
+      const status = await invoke("semantic_search_status")
+      if (!isCurrent()) return []
+      if (!status.available)
+        throw new Error(
+          "The local meaning search model or index is unavailable."
+        )
+    }
     const results = await invoke(
       semantic ? "semantic_search" : "search_scripture_phrases",
       {

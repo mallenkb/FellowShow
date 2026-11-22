@@ -1,6 +1,7 @@
 import { convertFileSrc, isTauri } from "@tauri-apps/api/core"
 import { appDataDir, join } from "@tauri-apps/api/path"
 import { copyFile, mkdir, remove, writeFile } from "@tauri-apps/plugin-fs"
+import { allocateMediaFileName } from "@/lib/presentation-media-cache"
 import { validatePresentationMedia } from "@/lib/media-validation"
 
 export interface CachedPresentationMedia {
@@ -14,11 +15,7 @@ export async function cachePresentationMediaPath(
 ): Promise<string> {
   const directory = await join(await appDataDir(), "media")
   await mkdir(directory, { recursive: true })
-  const extension = sourcePath.split(".").pop()?.toLowerCase() ?? "bin"
-  const destination = await join(
-    directory,
-    `${crypto.randomUUID()}.${extension}`
-  )
+  const destination = await join(directory, allocateMediaFileName(sourcePath))
   await copyFile(sourcePath, destination)
   const cached = { url: convertFileSrc(destination), filePath: destination }
   await validateCachedMedia(cached, mediaType)
@@ -88,9 +85,10 @@ export async function cacheMediaBytes(
   const mediaDirectory = await join(await appDataDir(), "media")
   await mkdir(mediaDirectory, { recursive: true })
 
-  const extension = originalName.split(".").pop()?.toLowerCase()
-  const fileName = `${crypto.randomUUID()}${extension ? `.${extension}` : ""}`
-  const filePath = await join(mediaDirectory, fileName)
+  const filePath = await join(
+    mediaDirectory,
+    allocateMediaFileName(originalName)
+  )
   await writeFile(filePath, bytes)
   return { url: convertFileSrc(filePath), filePath }
 }

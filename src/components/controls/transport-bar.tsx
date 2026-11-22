@@ -127,7 +127,7 @@ export function TransportBar({
       <div
         className={
           service?.title
-            ? "flex min-w-max flex-1 items-center justify-end gap-1 pl-5"
+            ? "flex min-w-max shrink-0 items-center justify-end gap-1 pl-2 xl:flex-1 xl:pl-5"
             : "flex shrink-0 items-center gap-1"
         }
       >

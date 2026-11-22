@@ -1,3 +1,4 @@
+import { debouncedSave } from "@/lib/debounced-save"
 import { create } from "zustand"
 import { load, type Store } from "@tauri-apps/plugin-store"
 import type {
@@ -319,7 +320,12 @@ export const useAnnouncementStore = create<AnnouncementState>((set) => ({
 
 let announcementStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
-let saveTimer: ReturnType<typeof setTimeout> | null = null
+const diskSave = debouncedSave(
+  () => persistAnnouncements(useAnnouncementStore.getState()),
+  (error) =>
+    console.warn("[announcements] Failed to save announcements", error),
+  500
+)
 
 async function getAnnouncementStore(): Promise<Store> {
   if (!announcementStore) {
@@ -332,16 +338,12 @@ async function getAnnouncementStore(): Promise<Store> {
 }
 
 async function persistAnnouncements(state: AnnouncementState): Promise<void> {
-  try {
-    const store = await getAnnouncementStore()
-    await store.set("version", 2)
-    await store.set("sets", state.sets)
-    await store.set("selectedSetId", state.selectedSetId)
-    await store.set("giving", state.giving)
-    await store.save()
-  } catch (error) {
-    console.warn("[announcements] Failed to save announcements", error)
-  }
+  const store = await getAnnouncementStore()
+  await store.set("version", 2)
+  await store.set("sets", state.sets)
+  await store.set("selectedSetId", state.selectedSetId)
+  await store.set("giving", state.giving)
+  await store.save()
 }
 
 export function hydrateAnnouncements(): Promise<void> {
@@ -368,11 +370,7 @@ export function hydrateAnnouncements(): Promise<void> {
         ) {
           return
         }
-        if (saveTimer) clearTimeout(saveTimer)
-        saveTimer = setTimeout(() => {
-          saveTimer = null
-          void persistAnnouncements(useAnnouncementStore.getState())
-        }, 500)
+        diskSave.schedule()
       })
     } catch (error) {
       console.warn("[announcements] Failed to load announcements", error)

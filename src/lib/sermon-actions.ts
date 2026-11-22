@@ -12,6 +12,7 @@ import {
   useSermonStore,
 } from "@/stores/sermon-store"
 import { waitForStartup } from "@/lib/startup-ready"
+import { finalizeSermonWorkspace } from "@/lib/finalize-sermon-workspace"
 import { useTranscriptStore } from "@/stores/transcript-store"
 import { useDetectionStore } from "@/stores/detection-store"
 import type {
@@ -410,7 +411,10 @@ async function settleSermon(
     const state = useSermonStore.getState()
     const id = options.sessionId ?? state.activeSessionId
     const session = state.sessions.find((candidate) => candidate.id === id)
-    if (!session || session.endedAt !== null) return
+    if (!session || session.endedAt !== null) {
+      if (!state.activeSessionId) await finalizeSermonWorkspace()
+      return
+    }
     if (id === state.activeSessionId) {
       await transcriptionActions.stop()
       checkpointActiveSermon()
@@ -421,7 +425,7 @@ async function settleSermon(
     if (!captured) return
     if (!finish) {
       useSermonStore.getState().pauseSession(captured.id)
-      await flushSermonSessions()
+      await finalizeSermonWorkspace()
       if (!options.silentPause) {
         toast.success("Sermon paused", {
           description:
@@ -448,7 +452,8 @@ async function finishCapturedSermon(
   const transcript = captured.transcript
   const scriptures = capturedScriptureReferences(captured)
   useSermonStore.getState().completeSession(captured.id, null, transcript)
-  await flushSermonSessions()
+  if (useSermonStore.getState().activeSessionId) await flushSermonSessions()
+  else await finalizeSermonWorkspace()
   toast.success("Sermon finished", {
     description:
       transcript.length > 0

@@ -209,6 +209,18 @@ pub struct DetectionStatusResult {
     pub paraphrase_enabled: bool,
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SemanticSearchStatus {
+    pub available: bool,
+    pub searched_paths: Vec<String>,
+}
+
+#[tauri::command]
+pub fn semantic_search_status(status: State<'_, SemanticSearchStatus>) -> SemanticSearchStatus {
+    status.inner().clone()
+}
+
 #[derive(Serialize)]
 pub struct SemanticSearchResult {
     pub verse_ref: String,

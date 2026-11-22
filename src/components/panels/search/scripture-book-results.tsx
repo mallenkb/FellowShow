@@ -60,7 +60,7 @@ export function ScriptureBookResults({
 
   return (
     <>
-      <div className="flex min-h-9 shrink-0 items-center justify-between gap-2 px-3 py-2">
+      <div className="flex min-h-9 shrink-0 flex-wrap items-center justify-between gap-2 px-3 py-2">
         <nav
           aria-label="Scripture location"
           className="flex min-w-0 items-center gap-0.5 text-sm"
@@ -216,41 +216,25 @@ export function ScriptureBookResults({
                         {verse.text}
                       </span>
                     </button>
-                    {isQueued ? (
-                      <div className="mr-3 shrink-0">
-                        <VerseQueueAction
-                          verse={verse}
-                          reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
-                          confidence={1}
-                          isQueued
-                          isSelected={isSelected}
+                    <div className="mr-2 flex shrink-0 flex-col items-center gap-1">
+                      <div className="opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 group-has-data-[state=open]:opacity-100">
+                        <SendToOverlayButton
+                          label={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
+                          getContent={() =>
+                            verseContent(
+                              verse,
+                              controller.activeTranslationAbbreviation
+                            )
+                          }
                         />
                       </div>
-                    ) : null}
-                    <div
-                      className={cn(
-                        "pointer-events-none absolute top-1/2 z-10 flex -translate-y-1/2 items-center gap-1 rounded-md border border-border bg-card/95 p-1 opacity-0 shadow-sm transition-opacity group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 group-has-data-[state=open]:pointer-events-auto group-has-data-[state=open]:opacity-100",
-                        isQueued ? "right-10" : "right-2"
-                      )}
-                    >
-                      <SendToOverlayButton
-                        label={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
-                        getContent={() =>
-                          verseContent(
-                            verse,
-                            controller.activeTranslationAbbreviation
-                          )
-                        }
+                      <VerseQueueAction
+                        verse={verse}
+                        reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
+                        confidence={1}
+                        isQueued={isQueued}
+                        isSelected={isSelected}
                       />
-                      {!isQueued ? (
-                        <VerseQueueAction
-                          verse={verse}
-                          reference={`${verse.book_name} ${verse.chapter}:${verse.verse}`}
-                          confidence={1}
-                          isQueued={false}
-                          isSelected={isSelected}
-                        />
-                      ) : null}
                     </div>
                   </div>
                 </VerseOverlayMenu>

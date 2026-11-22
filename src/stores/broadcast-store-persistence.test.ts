@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { DEFAULT_ANNOUNCEMENT_THEME_ID } from "@/lib/builtin-themes"
 
-const storage = vi.hoisted(() => ({ values: new Map<string, unknown>() }))
+const storage = vi.hoisted(() => ({
+  values: new Map<string, unknown>(),
+  save: vi.fn(async () => {}),
+}))
 vi.mock("@tauri-apps/api/event", () => ({ emitTo: vi.fn(async () => {}) }))
 vi.mock("@tauri-apps/plugin-store", () => ({
   load: vi.fn(async () => ({
@@ -9,7 +12,7 @@ vi.mock("@tauri-apps/plugin-store", () => ({
     set: async (key: string, value: unknown) => {
       storage.values.set(key, structuredClone(value))
     },
-    save: async () => {},
+    save: storage.save,
   })),
 }))
 
@@ -77,4 +80,17 @@ describe("saved announcement theme selection", () => {
       )
     }
   )
+})
+
+it("flushes the latest theme immediately and cancels its debounce", async () => {
+  const store = await loadSession()
+  storage.save.mockClear()
+  store.setState({ deletedBuiltinThemeIds: ["one"] })
+  store.setState({ deletedBuiltinThemeIds: ["two"] })
+  const { flushBroadcastThemes } = await import("./broadcast-store-persistence")
+  await flushBroadcastThemes()
+  expect(storage.values.get("deletedBuiltinThemeIds")).toEqual(["two"])
+  expect(storage.save).toHaveBeenCalledTimes(1)
+  await vi.advanceTimersByTimeAsync(500)
+  expect(storage.save).toHaveBeenCalledTimes(1)
 })

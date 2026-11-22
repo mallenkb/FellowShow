@@ -1,6 +1,7 @@
 import { useCallback } from "react"
 import { invoke } from "@/lib/ipc"
 import { waitForStartup } from "@/lib/startup-ready"
+import { finalizeSermonWorkspace } from "@/lib/finalize-sermon-workspace"
 import { toast } from "sonner"
 import {
   hydrateSettings,
@@ -9,11 +10,7 @@ import {
 } from "@/stores/settings-store"
 import { useTranscriptStore } from "@/stores/transcript-store"
 import { useAudioStore } from "@/stores/audio-store"
-import {
-  checkpointActiveSermon,
-  flushSermonSessions,
-  useSermonStore,
-} from "@/stores/sermon-store"
+import { checkpointActiveSermon, useSermonStore } from "@/stores/sermon-store"
 import { useTauriEvent } from "./use-tauri-event"
 
 interface TranscriptPartialPayload {
@@ -85,7 +82,7 @@ function handleTranscriptionStopped(sessionId: number | undefined): void {
         const id = state.activeSessionId
         checkpointActiveSermon()
         useSermonStore.getState().pauseSession(id, true)
-        void flushSermonSessions().catch((error: unknown) => {
+        void finalizeSermonWorkspace().catch((error: unknown) => {
           toast.error("Could not save the paused sermon", {
             description: String(error),
           })

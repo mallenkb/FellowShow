@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import { useRecordingStore } from "@/stores/recording-store"
 import { useReturnFeedStore } from "@/stores/return-feed-store"
 import { useSermonStore } from "@/stores/sermon-store"
@@ -8,53 +9,73 @@ import { useSermonStore } from "@/stores/sermon-store"
  * stops it; resuming the sermon (or GoStream coming back) starts a new part.
  */
 
-function reconcile(): void {
-  const sermonId = useSermonStore.getState().activeSessionId
-  const feed = useReturnFeedStore.getState()
-  const recording = useRecordingStore.getState()
-  if (recording.status === "starting" || recording.status === "stopping") return
-
-  if (recording.status === "recording") {
-    if (
-      sermonId === null ||
-      sermonId !== recording.sermonId ||
-      feed.status !== "live"
-    ) {
-      void recording.stop().catch((error: unknown) => {
-        console.warn("[recording] Failed to stop with the sermon", error)
-      })
+export function initRecordingSermonLink(): () => void {
+  let needsStart = true
+  function reconcile(sourceChanged = false): void {
+    const sermon = useSermonStore.getState()
+    const feed = useReturnFeedStore.getState()
+    const recording = useRecordingStore.getState()
+    if (sourceChanged) needsStart = true
+    if (recording.status === "stopping") return
+    if (recording.status === "recording" || recording.status === "starting") {
+      if (
+        sourceChanged ||
+        sermon.activeSessionId !== recording.sermonId ||
+        feed.status !== "live"
+      ) {
+        void recording.stop().catch((error: unknown) => {
+          console.warn("[recording] Failed to stop with the sermon", error)
+        })
+      }
+      return
     }
-    return
-  }
 
-  if (sermonId === null) return
-  const sermon = useSermonStore
-    .getState()
-    .sessions.find((session) => session.id === sermonId)
-  if (!sermon) return
-  if (feed.status === "live") {
+    if (
+      !needsStart ||
+      feed.status !== "live" ||
+      sermon.transition === "pausing"
+    )
+      return
+    const session = sermon.sessions.find(
+      (item) => item.id === sermon.activeSessionId
+    )
+    if (!session) return
+    needsStart = false
     void recording
       .start({
-        id: sermon.id,
-        title: sermon.title,
-        startedAt: sermon.startedAt,
+        id: session.id,
+        title: session.title,
+        startedAt: session.startedAt,
       })
       .catch((error: unknown) => {
         console.warn("[recording] Failed to start with the sermon", error)
       })
   }
-}
 
-export function initRecordingSermonLink(): () => void {
   const unsubscribers = [
     useSermonStore.subscribe((state, previous) => {
-      if (state.activeSessionId !== previous.activeSessionId) reconcile()
+      if (
+        state.activeSessionId !== previous.activeSessionId ||
+        (state.transition === "pausing") !== (previous.transition === "pausing")
+      )
+        reconcile(true)
     }),
     useReturnFeedStore.subscribe((state, previous) => {
-      if (state.status !== previous.status) reconcile()
+      if (state.status !== previous.status || state.stream !== previous.stream)
+        reconcile(true)
     }),
     useRecordingStore.subscribe((state, previous) => {
-      if (state.status !== previous.status && state.status === "idle")
+      if (state.status === "error" && previous.status !== "error") {
+        toast.error("Recording stopped", {
+          description: state.error ?? undefined,
+        })
+      }
+      if (
+        state.status !== previous.status &&
+        (state.status === "idle" ||
+          previous.status === "starting" ||
+          previous.status === "stopping")
+      )
         reconcile()
     }),
   ]

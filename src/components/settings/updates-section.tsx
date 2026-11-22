@@ -6,7 +6,10 @@ import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { downloadAndInstallAvailableUpdate } from "@/lib/app-updater"
+import {
+  getUpdateErrorMessage,
+  prepareAvailableUpdate,
+} from "@/lib/app-updater"
 import { RefreshCwIcon } from "lucide-react"
 import { useSettingsStore } from "@/stores/settings-store"
 
@@ -20,10 +23,10 @@ export function UpdatesSection() {
   )
   const [currentVersion, setCurrentVersion] = useState("0.1.6")
   const [status, setStatus] = useState<
-    "idle" | "checking" | "downloading" | "installing" | "installed" | "error"
+    "idle" | "checking" | "downloading" | "preparing" | "ready" | "error"
   >("idle")
   const [message, setMessage] = useState(
-    "Use Check & update to look for and install a release immediately."
+    "Check for a new release and download it."
   )
   const [latestVersion, setLatestVersion] = useState<string | null>(null)
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null)
@@ -36,6 +39,12 @@ export function UpdatesSection() {
       })
   }, [])
 
+  const showUpdateError = (message: string) => {
+    setStatus("error")
+    setMessage(`Could not check for or prepare an update. ${message}`)
+    setDownloadProgress(null)
+  }
+
   const handleCheckForUpdates = async () => {
     setStatus("checking")
     setMessage("Checking for updates...")
@@ -44,43 +53,49 @@ export function UpdatesSection() {
 
     let downloadedBytes = 0
     let contentLength = 0
-    const installedVersion = await downloadAndInstallAvailableUpdate(
-      (event: DownloadEvent) => {
-        if (event.event === "Started") {
-          downloadedBytes = 0
-          contentLength = event.data.contentLength ?? 0
-          setStatus("downloading")
-          setMessage("Update found. Downloading in the background...")
-          setDownloadProgress(contentLength > 0 ? 0 : null)
-          return
-        }
-
-        if (event.event === "Progress") {
-          downloadedBytes += event.data.chunkLength
-          if (contentLength > 0) {
-            setDownloadProgress(
-              Math.min(100, Math.round((downloadedBytes / contentLength) * 100))
-            )
-          }
-          return
-        }
-
-        setStatus("installing")
-        setMessage("Installing update...")
+    const result = await prepareAvailableUpdate((event: DownloadEvent) => {
+      if (event.event === "Started") {
+        downloadedBytes = 0
+        contentLength = event.data.contentLength ?? 0
+        setStatus("downloading")
+        setMessage("Update found. Downloading in the background...")
+        setDownloadProgress(contentLength > 0 ? 0 : null)
+        return
       }
-    )
 
-    if (!installedVersion) {
-      setStatus("idle")
-      setMessage("No updates found.")
-      setDownloadProgress(null)
-      return
+      if (event.event === "Progress") {
+        downloadedBytes += event.data.chunkLength
+        if (contentLength > 0) {
+          setDownloadProgress(
+            Math.min(100, Math.round((downloadedBytes / contentLength) * 100))
+          )
+        }
+        return
+      }
+
+      setStatus("preparing")
+      setMessage("Preparing update...")
+    })
+
+    switch (result.kind) {
+      case "available":
+        setLatestVersion(result.version)
+        setStatus("ready")
+        setDownloadProgress(100)
+        setMessage("Update ready. Restart FellowShow to finish updating.")
+        break
+      case "none":
+        setStatus("idle")
+        setMessage("No updates found.")
+        break
+      case "busy":
+        setStatus("idle")
+        setMessage("A check is already running.")
+        break
+      case "error":
+        showUpdateError(result.message)
+        break
     }
-
-    setLatestVersion(installedVersion)
-    setStatus("installed")
-    setDownloadProgress(100)
-    setMessage("Update installed. Restart FellowShow to finish updating.")
   }
 
   const handleOpenLatestRelease = () => {
@@ -88,7 +103,7 @@ export function UpdatesSection() {
   }
 
   const isBusy =
-    status === "checking" || status === "downloading" || status === "installing"
+    status === "checking" || status === "downloading" || status === "preparing"
 
   return (
     <div className="space-y-6">
@@ -120,7 +135,7 @@ export function UpdatesSection() {
           <div className="min-w-0 pr-4">
             <p className="text-sm font-medium">Automatic updates</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Check for and install updates once a day in the background. You
+              Check for and download updates once a day in the background. You
               can still check manually when this is off.
             </p>
           </div>
@@ -138,6 +153,7 @@ export function UpdatesSection() {
                 Manual update
               </p>
               <p
+                role={status === "error" ? "alert" : "status"}
                 className={`mt-1 text-xs leading-relaxed ${
                   status === "error"
                     ? "text-destructive"
@@ -165,13 +181,17 @@ export function UpdatesSection() {
                 type="button"
                 size="sm"
                 disabled={isBusy}
-                onClick={() => void handleCheckForUpdates()}
+                onClick={() => {
+                  void handleCheckForUpdates().catch((error: unknown) => {
+                    showUpdateError(getUpdateErrorMessage(error))
+                  })
+                }}
               >
                 <RefreshCwIcon
                   className={`size-3.5 ${isBusy ? "animate-spin" : ""}`}
                   aria-hidden="true"
                 />
-                Check & update
+                {status === "error" ? "Retry" : "Check & update"}
               </Button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { create } from "zustand"
 
 interface SermonDialogRequest {
-  mode: "stop" | "resume" | "close" | "finish"
+  mode: "stop" | "resume" | "close" | "restart" | "finish"
   sessionId?: string
 }
 

@@ -209,6 +209,13 @@ Existing installations keep their writable app-data database and downloaded
 translation packs when they update. New installations start in a no-Scripture
 state and can download versions from Settings.
 
+Local meaning search uses an optional model and verse index. To enable it on an
+installed copy, copy the generated `models` and `embeddings` directories from
+Quick Setup into FellowShow's app-data directory, beside `fellowshow.db`, and
+restart the app. Keep the tokenizer in `models/qwen3-embedding-0.6b/` even
+when using the INT8 model. On Windows, the app-data directory is
+`%APPDATA%\com.openbezal.fellowshow`. Phrase search works independently.
+
 Windows NSIS release installers use faster Zlib compression to reduce packaging
 time. This intentionally produces a larger installer than the default LZMA
 compression; the installed app and its self-contained document converter are

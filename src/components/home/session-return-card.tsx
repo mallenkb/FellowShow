@@ -26,6 +26,7 @@ export function SessionReturnCard({
   transcribing,
   connectionError,
   saveError,
+  onOpenWorkspace,
   onContinue,
   onFinish,
   onReview,
@@ -38,6 +39,7 @@ export function SessionReturnCard({
   transcribing: boolean
   connectionError: boolean
   saveError: boolean
+  onOpenWorkspace: () => void
   onContinue: () => void
   onFinish: () => void
   onReview: () => void
@@ -102,7 +104,8 @@ export function SessionReturnCard({
       : active && !connected
         ? "Check the connection in the workspace."
         : null
-  const accessibleLabel = [continueLabel, session.title, metadata, notice]
+  const cardLabel = session.prepared ? "Open in workspace" : continueLabel
+  const accessibleLabel = [cardLabel, session.title, metadata, notice]
     .filter(Boolean)
     .join(". ")
 
@@ -123,9 +126,9 @@ export function SessionReturnCard({
         type="button"
         className="flex min-w-0 flex-1 basis-full items-center gap-3 rounded-[10px] text-left transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 sm:basis-auto"
         disabled={busy}
-        onClick={onContinue}
+        onClick={session.prepared ? onOpenWorkspace : onContinue}
         aria-label={accessibleLabel}
-        title={notice ?? continueLabel}
+        title={notice ?? cardLabel}
       >
         <SessionDateBadge timestamp={session.startedAt} current />
         <span className="min-w-0 flex-1">
@@ -185,10 +188,10 @@ export function SessionReturnCard({
           type="button"
           variant="secondary"
           className="rounded-[10px]"
-          disabled={busy || Boolean(session.prepared)}
-          onClick={onFinish}
+          disabled={busy}
+          onClick={session.prepared ? onOpenWorkspace : onFinish}
         >
-          Finish Sermon
+          {session.prepared ? "Open in workspace" : "Finish Sermon"}
         </Button>
         <Button
           type="button"

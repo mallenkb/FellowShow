@@ -24,6 +24,13 @@ impl BibleDb {
         })
     }
 
+    pub fn open_read_only(path: &Path) -> Result<Self, BibleError> {
+        let conn = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        Ok(Self {
+            conn: Mutex::new(conn),
+        })
+    }
+
     /// Acquire the `SQLite` connection, recovering the guard even if a previous
     /// holder panicked while locked.
     ///

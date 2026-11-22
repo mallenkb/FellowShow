@@ -1,60 +1,58 @@
+mod bible_seed;
 mod commands;
 mod events;
+mod semantic_assets;
 mod state;
 
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-/// Resolves a writable path to the working Bible database.
-///
-/// In release builds the bundled DB ships in a read-only resource directory, but
-/// installing a downloaded translation writes to the DB. So we seed a writable
-/// copy in the app data directory on first run and use that thereafter (which
-/// also preserves any translations the user has already downloaded).
-fn resolve_working_db_path<R: tauri::Runtime>(
-    app: &tauri::App<R>,
-    dev_data_dir: &std::path::Path,
-) -> Option<std::path::PathBuf> {
-    use tauri::Manager;
-
-    // Development: use the repo DB directly so rebuilds are picked up and writes persist.
-    if cfg!(debug_assertions) {
-        let dev_db = dev_data_dir.join("fellowshow.db");
-        if dev_db.exists() {
-            return Some(dev_db);
-        }
-    }
-
-    if let Ok(app_data_dir) = app.path().app_data_dir() {
-        let working = app_data_dir.join("fellowshow.db");
-        if working.exists() {
-            return Some(working);
-        }
-
-        if let Ok(resource_dir) = app.path().resource_dir() {
-            if let Some(seed) = bundled_bible_db_candidates(&resource_dir)
-                .into_iter()
-                .find(|path| path.exists())
-            {
-                match std::fs::create_dir_all(&app_data_dir)
-                    .and_then(|()| std::fs::copy(&seed, &working))
-                {
-                    Ok(_) => {
-                        log::info!("Seeded writable Bible database at {}", working.display());
-                        return Some(working);
-                    }
-                    Err(e) => {
-                        log::warn!(
-                            "Failed to seed writable Bible database ({e}); using read-only bundle"
-                        );
-                        return Some(seed);
-                    }
+fn open_bible(
+    app_data: Option<&Path>,
+    resources: Option<&Path>,
+    dev_root: Option<&Path>,
+) -> Option<fellowshow_bible::BibleDb> {
+    let seed = resources.and_then(|dir| {
+        bundled_bible_db_candidates(dir)
+            .into_iter()
+            .find(|p| p.is_file())
+    });
+    let dev_db = dev_root.map(|root| root.join("data/fellowshow.db"));
+    let working = dev_db
+        .filter(|path| path.is_file() && bible_seed::validate(path).is_ok())
+        .or_else(|| {
+            app_data.and_then(|dir| match bible_seed::prepare(dir, seed.as_deref()) {
+                Ok(path) => Some(path),
+                Err(error) => {
+                    log::warn!("Could not prepare writable Bible database: {error}");
+                    None
                 }
+            })
+        });
+    if let Some(path) = working {
+        match fellowshow_bible::BibleDb::open(&path) {
+            Ok(db) => {
+                log::info!("Bible database loaded from {}", path.display());
+                return Some(db);
             }
+            Err(error) => log::warn!("Could not open {}: {error}", path.display()),
         }
     }
-
-    let dev_db = dev_data_dir.join("fellowshow.db");
-    dev_db.exists().then_some(dev_db)
+    let path = seed?;
+    if let Err(error) = bible_seed::validate(&path) {
+        log::warn!("{error}");
+        return None;
+    }
+    match fellowshow_bible::BibleDb::open_read_only(&path) {
+        Ok(db) => {
+            log::warn!("Using read-only Bible database at {}", path.display());
+            Some(db)
+        }
+        Err(error) => {
+            log::warn!("Could not open {}: {error}", path.display());
+            None
+        }
+    }
 }
 
 fn bundled_bible_db_candidates(resource_dir: &std::path::Path) -> [std::path::PathBuf; 2] {
@@ -109,6 +107,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::lifecycle::set_app_close_guard,
             commands::lifecycle::close_app,
+            commands::lifecycle::restart_app,
             commands::bible::list_translations,
             commands::bible::prepare_translation_download,
             commands::bible::cancel_translation_download,
@@ -122,6 +121,7 @@ pub fn run() {
             commands::bible::set_active_translation,
             commands::detection::detect_verses,
             commands::detection::detection_status,
+            commands::detection::semantic_search_status,
             commands::detection::semantic_search,
             commands::detection::search_scripture_phrases,
             commands::detection::toggle_paraphrase_detection,
@@ -173,93 +173,36 @@ pub fn run() {
         .setup(|app| {
             use tauri::Manager;
 
-            let dev_data_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data");
-            let db_path = resolve_working_db_path(app, &dev_data_dir);
-
-            if let Some(db_path) = db_path {
-                let bible_db = match fellowshow_bible::BibleDb::open(&db_path) {
-                    Ok(db) => db,
-                    Err(error) => {
-                        log::error!(
-                            "Bible database at {} could not be opened: {error}",
-                            db_path.display()
-                        );
-                        return Ok(());
-                    }
-                };
-
-                let managed_state = app.state::<Mutex<state::AppState>>();
-                let mut state = managed_state
+            let app_data = app.path().app_data_dir().ok();
+            let resources = app.path().resource_dir().ok();
+            let dev_root = semantic_assets::development_root();
+            if let Some(db) = open_bible(
+                app_data.as_deref(),
+                resources.as_deref(),
+                dev_root.as_deref(),
+            ) {
+                app.state::<Mutex<state::AppState>>()
                     .lock()
-                    .unwrap_or_else(std::sync::PoisonError::into_inner);
-                state.bible_db = Some(Arc::new(bible_db));
-                drop(state);
-                log::info!("Bible database loaded from {}", db_path.display());
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .bible_db = Some(Arc::new(db));
             } else {
-                log::warn!(
-                    "Bible database not found (looked in app data dir, bundled resources, and {}).",
-                    dev_data_dir.display()
-                );
+                log::warn!("Bible database unavailable");
             }
 
-            // Try to load ONNX embedding model and pre-computed verse index
-            // Prefer INT8 quantized model (~571MB) over FP32 (~2.4GB)
-            let base_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
-            let model_path = {
-                let int8 = base_dir.join("models/qwen3-embedding-0.6b-int8/model_quantized.onnx");
-                let fp32 = base_dir.join("models/qwen3-embedding-0.6b/model.onnx");
-                if int8.exists() {
-                    log::info!("Using INT8 quantized ONNX model");
-                    int8
-                } else if fp32.exists() {
-                    log::info!("Using FP32 ONNX model (INT8 not found)");
-                    fp32
-                } else {
-                    fp32
-                }
-            };
-            let tokenizer_path = base_dir.join("models/qwen3-embedding-0.6b/tokenizer.json");
-            let embeddings_path = base_dir.join("embeddings/kjv-qwen3-0.6b.bin");
-            let ids_path = base_dir.join("embeddings/kjv-qwen3-0.6b-ids.bin");
-
-            if model_path.exists() && tokenizer_path.exists() {
-                use fellowshow_detection::semantic::embedder::TextEmbedder;
-                use fellowshow_detection::semantic::index::VectorIndex;
-                match fellowshow_detection::OnnxEmbedder::load(&model_path, &tokenizer_path) {
-                    Ok(embedder) => {
-                        log::info!("ONNX embedding model loaded");
-                        let managed_pipeline = app.state::<Mutex<fellowshow_detection::DetectionPipeline>>();
-                        let mut pipeline = managed_pipeline
-                            .lock()
-                            .unwrap_or_else(std::sync::PoisonError::into_inner);
-
-                        // If pre-computed embeddings exist, load the vector index
-                        if embeddings_path.exists() && ids_path.exists() {
-                            let dim = embedder.dimension();
-                            match fellowshow_detection::HnswVectorIndex::load(&embeddings_path, &ids_path, dim) {
-                                Ok(index) => {
-                                    log::info!("Verse embeddings loaded ({} vectors)", index.len());
-                                    pipeline.set_semantic(
-                                        fellowshow_detection::SemanticDetector::new(
-                                            Box::new(embedder),
-                                            Box::new(index),
-                                        ),
-                                    );
-                                }
-                                Err(e) => {
-                                    log::warn!("Failed to load verse embeddings: {e}");
-                                }
-                            }
-                        } else {
-                            log::info!("No pre-computed verse embeddings found. Run 'bun run export:verses' then the precompute binary.");
-                        }
-                    }
-                    Err(e) => {
-                        log::warn!("Failed to load ONNX model: {e}");
-                    }
-                }
-            } else {
-                log::info!("ONNX model not found. Semantic search disabled. Run 'bun run download:model' to download.");
+            let roots: Vec<PathBuf> = [app_data, resources, dev_root]
+                .into_iter()
+                .flatten()
+                .collect();
+            let semantic = semantic_assets::load_semantic(&roots);
+            app.manage(commands::detection::SemanticSearchStatus {
+                available: semantic.is_some(),
+                searched_paths: roots.iter().map(|p| p.display().to_string()).collect(),
+            });
+            if let Some(detector) = semantic {
+                app.state::<Mutex<fellowshow_detection::DetectionPipeline>>()
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .set_semantic(detector);
             }
 
             Ok(())
@@ -277,9 +220,8 @@ pub fn run() {
                     unsafe { application.setApplicationIconImage(None) };
                 }
             }
-            if let tauri::RunEvent::ExitRequested { api, code, .. } = event {
-                if code != Some(tauri::RESTART_EXIT_CODE) && commands::lifecycle::request_close(app)
-                {
+            if let tauri::RunEvent::ExitRequested { api, .. } = event {
+                if commands::lifecycle::request_close(app) {
                     api.prevent_exit();
                 } else {
                     commands::lifecycle::shutdown_outputs(app);

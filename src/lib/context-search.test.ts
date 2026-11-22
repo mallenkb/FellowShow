@@ -7,6 +7,10 @@ vi.mock("@/lib/ipc", () => ({ invoke: vi.fn().mockResolvedValue([]) }))
 describe("scripture search", () => {
   it("passes the requested translation to both search paths", async () => {
     await searchScripture("be not conformed", 4)
+    vi.mocked(invoke).mockResolvedValueOnce({
+      available: true,
+      searchedPaths: [],
+    })
     await searchScripture("be not conformed", 4, true)
     expect(invoke).toHaveBeenCalledWith("search_scripture_phrases", {
       query: "be not conformed",
@@ -16,6 +20,37 @@ describe("scripture search", () => {
     expect(invoke).toHaveBeenCalledWith("semantic_search", {
       query: "be not conformed",
       translationId: 4,
+      limit: 15,
+    })
+  })
+
+  it("skips an unavailable semantic engine and still returns phrase matches", async () => {
+    vi.mocked(invoke)
+      .mockClear()
+      .mockResolvedValueOnce({
+        available: false,
+        searchedPaths: ["app data", "resources"],
+      })
+    await expect(
+      searchScripture("no model installed", 1, true)
+    ).rejects.toThrow("model or index is unavailable")
+    expect(vi.mocked(invoke).mock.calls).toEqual([["semantic_search_status"]])
+    const matches = [
+      {
+        verse_ref: "John 1:1",
+        verse_text: "In the beginning",
+        book_name: "John",
+        book_number: 43,
+        chapter: 1,
+        verse: 1,
+        similarity: 0.98,
+      },
+    ]
+    vi.mocked(invoke).mockResolvedValueOnce(matches)
+    expect(await searchScripture("no model installed", 1)).toEqual(matches)
+    expect(invoke).toHaveBeenLastCalledWith("search_scripture_phrases", {
+      query: "no model installed",
+      translationId: 1,
       limit: 15,
     })
   })

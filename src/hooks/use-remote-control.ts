@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { listen, type UnlistenFn } from "@tauri-apps/api/event"
 import { isTauri } from "@tauri-apps/api/core"
+import { fetchScripturePassage } from "@/components/panels/sermon-scripture-actions"
 import { invoke } from "@/lib/ipc"
 import { useBroadcastStore } from "@/stores/broadcast-store"
 import { useBibleStore } from "@/stores/bible-store"
@@ -162,10 +163,7 @@ function findCurrentVerseIndex(): number | null {
   return index >= 0 ? index : null
 }
 
-/**
- * Present a queue item at the given index to the live display.
- * Mirrors the logic from QueueItemRow's handlePresent.
- */
+/** Present a queue item at the given index to the live display. */
 async function presentQueueItem(index: number) {
   try {
     const { items } = useQueueStore.getState()
@@ -173,19 +171,42 @@ async function presentQueueItem(index: number) {
     if (!item) return
 
     const { verse } = item
-
-    // Fetch the full verse from the backend to ensure we have complete data
-    // (AI-detected queue items may have partial verse objects)
-    const fullVerse = await invoke("get_verse", {
-      translationId: useBibleStore.getState().activeTranslationId,
-      bookNumber: verse.book_number,
-      chapter: verse.chapter,
-      verse: verse.verse,
-    })
-
-    const verseToPresent = fullVerse ?? verse
+    const translationId = useBibleStore.getState().activeTranslationId
+    const verseEnd =
+      verse.verse_end ?? verse.verse_parts?.at(-1)?.verse ?? verse.verse
+    const isRange = verseEnd > verse.verse
+    const passage =
+      verse.book_number < 0
+        ? verse
+        : await fetchScripturePassage(
+            verse.book_number,
+            verse.chapter,
+            verse.verse,
+            verseEnd,
+            translationId
+          )
 
     const bibleState = useBibleStore.getState()
+    const queue = useQueueStore.getState()
+    if (
+      bibleState.activeTranslationId !== translationId ||
+      queue.activeIndex === null ||
+      queue.items[queue.activeIndex] !== item
+    )
+      return
+
+    const verseToPresent =
+      passage ??
+      (!isRange && verse.translation_id === translationId ? verse : null)
+    if (
+      !verseToPresent ||
+      (isRange &&
+        verseToPresent.verse_parts?.length !== verseEnd - verse.verse + 1)
+    ) {
+      throw new Error(
+        `Could not resolve ${item.reference} in the selected Bible version.`
+      )
+    }
     const translation = activeTranslationAbbreviation()
 
     bibleState.selectVerse(verseToPresent)

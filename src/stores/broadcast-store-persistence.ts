@@ -1,3 +1,4 @@
+import { debouncedSave } from "@/lib/debounced-save"
 import { load, type Store } from "@tauri-apps/plugin-store"
 import {
   BUILTIN_THEMES,
@@ -292,13 +293,7 @@ export function hydrateBroadcastThemes(): Promise<void> {
           state.sectionThemeIds !== prevState.sectionThemeIds ||
           state.overlayConfig !== prevState.overlayConfig
         if (!changed) return
-        if (saveTimer) clearTimeout(saveTimer)
-        saveTimer = setTimeout(() => {
-          saveTimer = null
-          pendingSave = pendingSave.then(() =>
-            persistBroadcastThemes(useBroadcastStore.getState())
-          )
-        }, SAVE_DEBOUNCE_MS)
+        themeSave.schedule()
       })
       if (
         updatedCustomThemes.size ||
@@ -306,36 +301,32 @@ export function hydrateBroadcastThemes(): Promise<void> {
         replaceScriptureOutput ||
         keepKeyedNdi
       ) {
-        pendingSave = pendingSave.then(async () => {
-          try {
-            if (updatedCustomThemes.size) {
-              const migratedThemes = themeRecords.map((entry, index) => {
-                const id = parsedThemes[index]?.id
-                const updated = id ? updatedCustomThemes.get(id) : undefined
-                if (!updated || !entry || typeof entry !== "object")
-                  return entry
-                const { verseText, reference, verseNumbers, layout } = updated
-                return { ...entry, verseText, reference, verseNumbers, layout }
-              })
-              await store.set("customThemes", migratedThemes)
-            }
-            if (replaceScriptureSelection) {
-              await store.set("activeThemeId", patch.activeThemeId)
-              await store.set("sectionThemeIds", patch.sectionThemeIds)
-            }
-            if (replaceScriptureOutput || keepKeyedNdi) {
-              await store.set("outputs", patch.outputs)
-            }
-            await store.set("schemaVersion", BROADCAST_STORE_SCHEMA_VERSION)
-            await store.save()
-          } catch (error) {
-            console.warn(
-              "[broadcast] Failed to migrate saved broadcast settings",
-              error
-            )
+        try {
+          if (updatedCustomThemes.size) {
+            const migratedThemes = themeRecords.map((entry, index) => {
+              const id = parsedThemes[index]?.id
+              const updated = id ? updatedCustomThemes.get(id) : undefined
+              if (!updated || !entry || typeof entry !== "object") return entry
+              const { verseText, reference, verseNumbers, layout } = updated
+              return { ...entry, verseText, reference, verseNumbers, layout }
+            })
+            await store.set("customThemes", migratedThemes)
           }
-        })
-        await pendingSave
+          if (replaceScriptureSelection) {
+            await store.set("activeThemeId", patch.activeThemeId)
+            await store.set("sectionThemeIds", patch.sectionThemeIds)
+          }
+          if (replaceScriptureOutput || keepKeyedNdi) {
+            await store.set("outputs", patch.outputs)
+          }
+          await store.set("schemaVersion", BROADCAST_STORE_SCHEMA_VERSION)
+          await store.save()
+        } catch (error) {
+          console.warn(
+            "[broadcast] Failed to migrate saved broadcast settings",
+            error
+          )
+        }
       }
     } catch {
       console.warn(
@@ -346,32 +337,33 @@ export function hydrateBroadcastThemes(): Promise<void> {
   return hydrationPromise
 }
 
-let saveTimer: ReturnType<typeof setTimeout> | null = null
-let pendingSave: Promise<void> = Promise.resolve()
-const SAVE_DEBOUNCE_MS = 500
+const themeSave = debouncedSave(
+  async () => {
+    await hydrationPromise
+    await persistBroadcastThemes(useBroadcastStore.getState())
+  },
+  (error) => console.warn("[broadcast] Failed to persist themes", error)
+)
+export const flushBroadcastThemes = themeSave.flush
 
 async function persistBroadcastThemes(state: BroadcastState): Promise<void> {
-  try {
-    const store = await getThemeStore()
-    const customThemes = state.themes.filter(
-      (theme) => !theme.builtin && isSelectableTheme(theme)
-    )
-    const themeSortOrder = Object.fromEntries(
-      state.themes
-        .filter((theme) => theme.sortOrder !== undefined)
-        .map((theme) => [theme.id, theme.sortOrder])
-    )
-    await store.set("customThemes", customThemes)
-    await store.set("themeSortOrder", themeSortOrder)
-    await store.set("deletedBuiltinThemeIds", state.deletedBuiltinThemeIds)
-    await store.set("activeThemeId", state.activeThemeId)
-    await store.set("outputs", state.outputs)
-    await store.set("selectedOverlayOutputId", state.selectedOverlayOutputId)
-    await store.set("sectionThemeIds", state.sectionThemeIds)
-    await store.set("overlayConfig", state.overlayConfig)
-    await store.set("schemaVersion", BROADCAST_STORE_SCHEMA_VERSION)
-    await store.save()
-  } catch {
-    console.warn("[broadcast] Failed to persist themes")
-  }
+  const store = await getThemeStore()
+  const customThemes = state.themes.filter(
+    (theme) => !theme.builtin && isSelectableTheme(theme)
+  )
+  const themeSortOrder = Object.fromEntries(
+    state.themes
+      .filter((theme) => theme.sortOrder !== undefined)
+      .map((theme) => [theme.id, theme.sortOrder])
+  )
+  await store.set("customThemes", customThemes)
+  await store.set("themeSortOrder", themeSortOrder)
+  await store.set("deletedBuiltinThemeIds", state.deletedBuiltinThemeIds)
+  await store.set("activeThemeId", state.activeThemeId)
+  await store.set("outputs", state.outputs)
+  await store.set("selectedOverlayOutputId", state.selectedOverlayOutputId)
+  await store.set("sectionThemeIds", state.sectionThemeIds)
+  await store.set("overlayConfig", state.overlayConfig)
+  await store.set("schemaVersion", BROADCAST_STORE_SCHEMA_VERSION)
+  await store.save()
 }

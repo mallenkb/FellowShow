@@ -26,10 +26,18 @@ pub fn set_app_close_guard(app: tauri::AppHandle, enabled: bool) {
     reason = "Tauri injects an owned AppHandle into commands"
 )]
 pub fn close_app(app: tauri::AppHandle) {
-    app.state::<AppCloseState>()
-        .guarded
-        .store(false, Ordering::Relaxed);
+    set_app_close_guard(app.clone(), false);
     app.exit(0);
+}
+
+#[tauri::command]
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "Tauri injects an owned AppHandle into commands"
+)]
+pub fn restart_app(app: tauri::AppHandle) {
+    set_app_close_guard(app.clone(), false);
+    app.request_restart();
 }
 
 /// Ask the operator UI to save before either window close or native Quit.
@@ -61,6 +69,25 @@ pub fn shutdown_outputs(app: &tauri::AppHandle) {
             if let Err(error) = webview.close() {
                 log::warn!("Failed to close {label} during app close: {error}");
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn main_webview_cannot_bypass_preparation_with_process_restart() {
+        let capability: serde_json::Value =
+            serde_json::from_str(include_str!("../../capabilities/default.json")).unwrap();
+        let permissions = capability["permissions"].as_array().unwrap();
+        for permission in permissions {
+            let id = permission
+                .as_str()
+                .or_else(|| permission["identifier"].as_str());
+            assert!(!matches!(
+                id,
+                Some("process:default" | "process:allow-restart")
+            ));
         }
     }
 }

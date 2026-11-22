@@ -1,5 +1,9 @@
 import { isTauri } from "@tauri-apps/api/core"
-import { check, type DownloadEvent } from "@tauri-apps/plugin-updater"
+import {
+  check,
+  type Update,
+  type DownloadEvent,
+} from "@tauri-apps/plugin-updater"
 import { hydrateSettings, useSettingsStore } from "@/stores/settings-store"
 
 export const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
@@ -9,19 +13,16 @@ export const IS_TAURI_RUNTIME = isTauri()
 const LAST_UPDATE_CHECK_KEY = "fellowshow:last-update-check-at"
 
 let updateCheckInFlight = false
+let stagedUpdate: Update | null = null
+
+export async function installStagedUpdate(restart: boolean): Promise<void> {
+  if (!stagedUpdate) return
+  await stagedUpdate.install({ restartAfterInstall: restart })
+  stagedUpdate = null
+}
 
 export function getUpdateErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error)
-}
-
-function isMissingUpdateFeedError(error: unknown) {
-  const errorMessage = getUpdateErrorMessage(error).toLowerCase()
-
-  return (
-    errorMessage.includes("could not fetch a valid release json") ||
-    errorMessage.includes("404") ||
-    errorMessage.includes("not found")
-  )
 }
 
 function getLastUpdateCheckAt() {
@@ -45,26 +46,46 @@ function emitUpdateReady(version: string) {
   )
 }
 
-export async function downloadAndInstallAvailableUpdate(
+type UpdatePreparationResult =
+  | { kind: "available"; version: string }
+  | { kind: "none" }
+  | { kind: "busy" }
+  | { kind: "error"; message: string }
+
+export async function prepareAvailableUpdate(
   onDownloadEvent?: (event: DownloadEvent) => void
-) {
-  if (!IS_TAURI_RUNTIME) return null
-  if (updateCheckInFlight) return null
+): Promise<UpdatePreparationResult> {
+  if (!IS_TAURI_RUNTIME) {
+    return {
+      kind: "error",
+      message:
+        "Update checks are only available in the FellowShow desktop app.",
+    }
+  }
+  if (updateCheckInFlight) return { kind: "busy" }
 
   updateCheckInFlight = true
   try {
-    const update = await check()
-    if (!update) return null
+    if (stagedUpdate) {
+      emitUpdateReady(stagedUpdate.version)
+      return { kind: "available", version: stagedUpdate.version }
+    }
 
-    await update.downloadAndInstall(onDownloadEvent)
+    const update = await check()
+    if (!update) return { kind: "none" }
+
+    // The Windows installer exits the process itself, bypassing ExitRequested.
+    if (navigator.platform.startsWith("Win")) {
+      await update.download(onDownloadEvent)
+      stagedUpdate = update
+    } else {
+      await update.downloadAndInstall(onDownloadEvent)
+    }
     emitUpdateReady(update.version)
 
-    return update.version
+    return { kind: "available", version: update.version }
   } catch (error) {
-    if (!isMissingUpdateFeedError(error)) {
-      console.warn("[updates] Failed to download and install update", error)
-    }
-    return null
+    return { kind: "error", message: getUpdateErrorMessage(error) }
   } finally {
     updateCheckInFlight = false
   }

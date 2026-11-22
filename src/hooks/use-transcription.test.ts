@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const mockInvoke = vi.fn()
 const mockToastError = vi.fn()
 
-vi.mock("@tauri-apps/api/core", () => ({
+vi.mock(import("@tauri-apps/api/core"), async (importOriginal) => ({
+  ...(await importOriginal()),
   invoke: (...args: unknown[]) => mockInvoke(...args),
 }))
 

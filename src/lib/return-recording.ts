@@ -4,6 +4,7 @@ import {
   readDir,
   readTextFile,
   rename,
+  truncate,
   writeFile,
   writeTextFile,
 } from "@tauri-apps/plugin-fs"
@@ -94,6 +95,21 @@ export function videoPartName(
   )}.${extension}`
 }
 
+// A GoStream reconnect can start another part in the same second.
+export async function nextVideoPartPath(
+  folder: string,
+  startedAt: number,
+  extension: RecordingExtension
+) {
+  const name = videoPartName(startedAt, extension)
+  const names = new Set((await readDir(folder)).map((entry) => entry.name))
+  const stem = name.slice(0, name.lastIndexOf("."))
+  let candidate = name
+  for (let part = 2; names.has(candidate); part++)
+    candidate = `${stem} (${part}).${extension}`
+  return join(folder, candidate)
+}
+
 async function recordingsRoot(): Promise<string> {
   return join(await videoDir(), "FellowShow")
 }
@@ -182,37 +198,51 @@ export async function prepareSermonFolder(
 export interface ChunkWriter {
   write: (blob: Blob) => Promise<void>
   flush: () => Promise<void>
+  retry: () => Promise<void>
 }
 
 /** Appends chunks to one file in order. A failed write rejects flush(). */
 export function createChunkWriter(path: string): ChunkWriter {
   let chain: Promise<void> = Promise.resolve()
-  let created = false
+  let savedBytes = 0
   let failure: Error | null = null
+  const unsaved: Blob[] = []
+
+  async function append(blob: Blob) {
+    const bytes = new Uint8Array(await blob.arrayBuffer())
+    if (savedBytes === 0) await writeFile(path, bytes)
+    else await writeFile(path, bytes, { append: true })
+    savedBytes += bytes.byteLength
+  }
 
   return {
     write(blob) {
       const next = chain.then(async () => {
-        if (failure !== null) throw failure
-        const bytes = new Uint8Array(await blob.arrayBuffer())
         try {
-          if (created) await writeFile(path, bytes, { append: true })
-          else {
-            await writeFile(path, bytes)
-            created = true
-          }
+          if (failure) throw failure
+          await append(blob)
         } catch (error) {
+          unsaved.push(blob)
           failure = error instanceof Error ? error : new Error(String(error))
-          throw error
+          throw failure
         }
       })
-      // Keep the chain alive; the failure is remembered for flush().
       chain = next.catch(() => {})
       return next
     },
     async flush() {
       await chain
-      if (failure !== null) throw failure
+      if (failure) throw failure
+    },
+    // Called only after the recorder stopped and flush reported an error.
+    async retry() {
+      // An append may have written a partial chunk before the disk filled.
+      if (savedBytes > 0) await truncate(path, savedBytes)
+      while (unsaved.length) {
+        await append(unsaved[0])
+        unsaved.shift()
+      }
+      failure = null
     },
   }
 }

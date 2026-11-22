@@ -1,3 +1,4 @@
+import { debouncedSave } from "@/lib/debounced-save"
 import { create } from "zustand"
 import { load } from "@tauri-apps/plugin-store"
 import { invoke } from "@/lib/ipc"
@@ -86,22 +87,20 @@ export async function hydrateBibleStore(): Promise<void> {
 export async function initBiblePersistence(): Promise<void> {
   try {
     const store = await load("bible.json", { autoSave: false, defaults: {} })
-    let timer: ReturnType<typeof setTimeout> | null = null
-    let prev = useBibleStore.getState().activeTranslationId
-
-    useBibleStore.subscribe((state) => {
-      const id = state.activeTranslationId
-      if (id === prev) return
-      prev = id
-      if (timer) clearTimeout(timer)
-      timer = setTimeout(() => {
-        void (async () => {
-          await store.set("activeTranslationId", id)
-          await store.save()
-        })().catch((error: unknown) => {
-          console.warn("[bible] Failed to persist active translation", error)
-        })
-      }, 500)
+    const diskSave = debouncedSave(
+      async () => {
+        await store.set(
+          "activeTranslationId",
+          useBibleStore.getState().activeTranslationId
+        )
+        await store.save()
+      },
+      (error) =>
+        console.warn("[bible] Failed to persist active translation", error)
+    )
+    useBibleStore.subscribe((state, previous) => {
+      if (state.activeTranslationId !== previous.activeTranslationId)
+        diskSave.schedule()
     })
   } catch {
     console.warn("[bible] Failed to init persistence subscription")

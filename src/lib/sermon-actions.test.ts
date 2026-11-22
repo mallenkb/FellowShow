@@ -18,6 +18,10 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   startTranscription: vi.fn(),
   stopTranscription: vi.fn(),
+  finalizeRecording: vi.fn(async () => {}),
+}))
+vi.mock("@/stores/recording-store", () => ({
+  finalizeRecording: mocks.finalizeRecording,
 }))
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: (...args: unknown[]) => mocks.invoke(...args),
@@ -202,6 +206,28 @@ describe("automatic live note sources", () => {
     await generateLiveSermonNotes()
     expect(useSermonStore.getState().sessions[0].notes).toEqual([])
   })
+})
+
+it("keeps pause pending until the last video write finishes", async () => {
+  let finish!: () => void
+  const writing = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+  let started!: () => void
+  const finalizing = new Promise<void>((resolve) => {
+    started = resolve
+  })
+  mocks.finalizeRecording.mockImplementationOnce(() => {
+    started()
+    return writing
+  })
+  useSermonStore.getState().startSession(0)
+  const pausing = pauseSermon()
+  await finalizing
+  expect(useSermonStore.getState().transition).toBe("pausing")
+  finish()
+  await pausing
+  expect(useSermonStore.getState().transition).toBeNull()
 })
 
 it("pauses without summarizing, continues the same sermon, and excludes the break from listening time", async () => {

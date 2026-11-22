@@ -1,7 +1,9 @@
 import { create } from "zustand"
+import { debouncedSave } from "@/lib/debounced-save"
 import { toast } from "sonner"
 import { sanitizeSlides, storedSlides } from "@/lib/presentation-storage"
-import { remove } from "@tauri-apps/plugin-fs"
+import { releaseRemovedMedia } from "@/lib/presentation-media-cache"
+import { scheduleMediaCollection } from "@/lib/presentation-media-gc"
 import { load, type Store } from "@tauri-apps/plugin-store"
 import {
   arrangeMedia,
@@ -118,17 +120,11 @@ function findLastPinnedIndex(slides: PresentationSlide[]) {
   return -1
 }
 
-function removeCachedDocumentPages(document: PresentationDocument) {
-  const removals = document.pages.flatMap((page) =>
-    page.cachedPath ? [remove(page.cachedPath)] : []
-  )
-  if (removals.length === 0) return
-  void Promise.all(removals).catch((error: unknown) => {
-    console.warn(
-      "[presentations] Failed to remove cached document pages",
-      error
-    )
-  })
+let needsMediaCollection = false
+
+function noteMediaRemoval(removed: unknown) {
+  releaseRemovedMedia(removed)
+  needsMediaCollection = true
 }
 
 export const usePresentationStore = create<PresentationState>((set, get) => ({
@@ -196,10 +192,15 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
         if (slide.id !== id || slide.locked) return slide
         const layers = slideLayers(slide)
         if (layers.length <= 1) return slide
-        // A live output may still hold this URL. Keep its media valid until the session ends.
+        const remaining = layers.filter((layer) => layer.id !== layerId)
+        if (remaining.length === layers.length || !remaining[0]) return slide
+        noteMediaRemoval(layers.find((layer) => layer.id === layerId))
         return {
           ...slide,
-          layers: layers.filter((layer) => layer.id !== layerId),
+          url: remaining[0].url,
+          mediaType: remaining[0].mediaType,
+          playbackStartedAt: remaining[0].playbackStartedAt,
+          layers: remaining,
         }
       }),
     })),
@@ -296,8 +297,9 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
   removeSlide: (id) =>
     set((state) => {
       const removedSlide = state.slides.find((slide) => slide.id === id)
-      if (removedSlide?.locked) return state
-      if (removedSlide) revokeObjectUrl(removedSlide.url)
+      if (!removedSlide || removedSlide.locked) return state
+      noteMediaRemoval(removedSlide)
+      revokeObjectUrl(removedSlide.url)
 
       const slides = state.slides.filter((slide) => slide.id !== id)
       const selectedSlideId =
@@ -404,7 +406,8 @@ export const usePresentationStore = create<PresentationState>((set, get) => ({
   removeDocument: (id) =>
     set((state) => {
       const removed = state.documents.find((document) => document.id === id)
-      if (removed) removeCachedDocumentPages(removed)
+      if (!removed) return state
+      noteMediaRemoval(removed)
       const documents = state.documents.filter((document) => document.id !== id)
       const fallback = documents[0] ?? null
       const wasSelected = state.selectedDocumentId === id
@@ -498,8 +501,16 @@ function sanitizeDocuments(value: unknown): PresentationDocument[] {
 
 let persistedStore: Store | null = null
 let documentHydration: Promise<void> | null = null
-let saveTimer: ReturnType<typeof setTimeout> | null = null
-let pendingSave: Promise<void> = Promise.resolve()
+const documentSave = debouncedSave(
+  () => persistDocuments(usePresentationStore.getState()),
+  (error) => {
+    console.warn("[presentations] Failed to persist documents", error)
+    toast.error(
+      "Could not save presentations. Keep the app open and try again."
+    )
+  }
+)
+export const flushPresentationStore = documentSave.flush
 
 async function getPersistedStore() {
   if (!persistedStore) {
@@ -524,6 +535,15 @@ async function persistDocuments(state: PresentationState) {
   await store.set("selectedDocumentId", state.selectedDocumentId)
   await store.set("selectedPageId", state.selectedPageId)
   await store.save()
+  const current = usePresentationStore.getState()
+  if (
+    needsMediaCollection &&
+    current.slides === state.slides &&
+    current.documents === state.documents
+  ) {
+    needsMediaCollection = false
+    scheduleMediaCollection(usePresentationStore.getState)
+  }
 }
 
 export function hydratePresentationDocuments(): Promise<void> {
@@ -583,6 +603,8 @@ export function hydratePresentationDocuments(): Promise<void> {
             }
           : {}),
       })
+      scheduleMediaCollection(usePresentationStore.getState)
+      if (interacted) documentSave.schedule()
       usePresentationStore.subscribe((state, previous) => {
         if (
           state.documents === previous.documents &&
@@ -594,18 +616,7 @@ export function hydratePresentationDocuments(): Promise<void> {
         ) {
           return
         }
-        if (saveTimer) clearTimeout(saveTimer)
-        saveTimer = setTimeout(() => {
-          saveTimer = null
-          pendingSave = pendingSave
-            .then(() => persistDocuments(usePresentationStore.getState()))
-            .catch((error: unknown) => {
-              console.warn("[presentations] Failed to persist documents", error)
-              toast.error(
-                "Could not save presentations. Keep the app open and try again."
-              )
-            })
-        }, 500)
+        documentSave.schedule()
       })
     } catch (error) {
       console.warn("[presentations] Failed to hydrate documents", error)

@@ -47,11 +47,6 @@ export function VerseQueueAction({
                 )
                 if (index === -1) return
                 store.flashItem(store.items[index].id)
-                document
-                  .querySelector(
-                    `[data-slot="queue-panel"] [data-queue-idx="${index}"]`
-                  )
-                  ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
               }}
             >
               <CheckIcon className="size-4 text-green-700 dark:text-ai-direct" />

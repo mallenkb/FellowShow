@@ -32,6 +32,7 @@ jobs:
   # add no time, and nothing is published unless they pass.
   ci:
     name: CI
+    permissions: { contents: read, pull-requests: read }
     if: startsWith(github.ref, 'refs/tags/')
     uses: ./.github/workflows/ci.yml
 

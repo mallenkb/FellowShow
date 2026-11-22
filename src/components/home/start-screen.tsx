@@ -223,6 +223,7 @@ export function StartScreen() {
             transcribing={transcribing}
             connectionError={connectionError}
             saveError={Boolean(saveError)}
+            onOpenWorkspace={() => openWorkspace(session.id)}
             onReview={() => setReviewId(session.id)}
             onContinue={() => continueSession(session.id)}
             onFinish={() =>

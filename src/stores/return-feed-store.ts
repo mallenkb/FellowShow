@@ -1,3 +1,4 @@
+import { debouncedSave } from "@/lib/debounced-save"
 import { create } from "zustand"
 import { load, type Store } from "@tauri-apps/plugin-store"
 import { goStreamCameraId, returnAudioId } from "@/lib/return-feed-devices"
@@ -268,7 +269,11 @@ export const useReturnFeedStore = create<ReturnFeedState>((set, get) => {
 
 let returnFeedStore: Store | null = null
 let hydrationPromise: Promise<void> | null = null
-let saveTimer: ReturnType<typeof setTimeout> | null = null
+const diskSave = debouncedSave(
+  () => persistReturnFeed(useReturnFeedStore.getState()),
+  (error) => console.warn("[return-feed] Failed to save devices", error),
+  300
+)
 
 async function getReturnFeedStore(): Promise<Store> {
   if (!returnFeedStore) {
@@ -281,14 +286,10 @@ async function getReturnFeedStore(): Promise<Store> {
 }
 
 async function persistReturnFeed(state: ReturnFeedState): Promise<void> {
-  try {
-    const store = await getReturnFeedStore()
-    await store.set("version", 1)
-    await store.set("videoDeviceId", state.videoDeviceId)
-    await store.save()
-  } catch (error) {
-    console.warn("[return-feed] Failed to save devices", error)
-  }
+  const store = await getReturnFeedStore()
+  await store.set("version", 1)
+  await store.set("videoDeviceId", state.videoDeviceId)
+  await store.save()
 }
 
 function sanitizeDeviceId(value: unknown): string | null {
@@ -310,11 +311,7 @@ export function hydrateReturnFeed(): Promise<void> {
     }
     useReturnFeedStore.subscribe((state, previous) => {
       if (state.videoDeviceId === previous.videoDeviceId) return
-      if (saveTimer) clearTimeout(saveTimer)
-      saveTimer = setTimeout(() => {
-        saveTimer = null
-        void persistReturnFeed(useReturnFeedStore.getState())
-      }, 300)
+      diskSave.schedule()
     })
     // The audio follows Settings › Audio › Input device.
     useSettingsStore.subscribe((state, previous) => {

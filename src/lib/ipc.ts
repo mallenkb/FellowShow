@@ -102,6 +102,7 @@ type WithArgs<TArgs, TResult> = { args: TArgs; result: TResult }
 export interface Commands {
   set_app_close_guard: WithArgs<{ enabled: boolean }, void>
   close_app: NoArgs<void>
+  restart_app: NoArgs<void>
   list_translations: NoArgs<Translation[]>
   prepare_translation_download: NoArgs<number>
   cancel_translation_download: WithArgs<{ downloadId: number }, boolean>
@@ -135,6 +136,10 @@ export interface Commands {
   set_active_translation: WithArgs<{ translationId: number }, number>
   detect_verses: WithArgs<{ text: string }, DetectionResult[]>
   detection_status: NoArgs<DetectionStatus>
+  semantic_search_status: NoArgs<{
+    available: boolean
+    searchedPaths: string[]
+  }>
   semantic_search: WithArgs<
     { query: string; limit?: number; translationId?: number },
     SemanticSearchResult[]

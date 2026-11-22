@@ -1,9 +1,10 @@
 use std::{
     env, fs,
-    io::{self, Read},
+    io::{self, Read, Seek},
     path::{Path, PathBuf},
-    process::Command,
-    time::{SystemTime, UNIX_EPOCH},
+    process::{Child, Command, ExitStatus, Output, Stdio},
+    thread,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 use tauri::ipc::Response;
@@ -14,6 +15,9 @@ const CONVERTIBLE_EXTENSIONS: &[&str] = &[
     "ppt", "pptx", "pps", "ppsx", "pot", "potx", "odp", "doc", "docx", "docm", "dot", "dotx",
     "odt", "rtf", "xls", "xlsx", "xlsm", "ods",
 ];
+const CONVERSION_TIMEOUT: Duration = Duration::from_secs(120);
+const CHILD_POLL_INTERVAL: Duration = Duration::from_millis(25);
+const CHILD_EXIT_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Debug, Error)]
 enum DocumentImportError {
@@ -30,8 +34,12 @@ enum DocumentImportError {
     #[cfg(target_os = "windows")]
     #[error("Microsoft Office could not convert the document to PDF: {0}")]
     MicrosoftOfficeConversionFailed(String),
-    #[error("Could not start LibreOffice: {0}")]
-    LibreOfficeStart(#[source] io::Error),
+    #[error("Could not start the document converter: {0}")]
+    ConverterStart(#[source] io::Error),
+    #[error("Could not wait for the document converter: {0}")]
+    ConverterWait(#[source] io::Error),
+    #[error("Conversion timed out after {} seconds", .0.as_secs())]
+    ConversionTimedOut(Duration),
     #[error("LibreOffice could not convert the document to PDF: {0}")]
     ConversionFailed(String),
     #[error("LibreOffice finished without creating a PDF.")]
@@ -162,6 +170,145 @@ fn validate_office_format(path: &Path, extension: &str) -> Result<(), DocumentIm
     }
 }
 
+fn run_converter(
+    command: &mut Command,
+    workspace: &ConversionWorkspace,
+) -> Result<Output, DocumentImportError> {
+    // Files keep inherited output handles from blocking the converter or the reader.
+    let mut stdout =
+        tempfile::tempfile_in(&workspace.root).map_err(DocumentImportError::Workspace)?;
+    let mut stderr =
+        tempfile::tempfile_in(&workspace.root).map_err(DocumentImportError::Workspace)?;
+    command
+        .stdin(Stdio::null())
+        .stdout(stdout.try_clone().map_err(DocumentImportError::Workspace)?)
+        .stderr(stderr.try_clone().map_err(DocumentImportError::Workspace)?);
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        command.process_group(0);
+    }
+
+    let child = command
+        .spawn()
+        .map_err(DocumentImportError::ConverterStart)?;
+    let status = wait_for_conversion(child, CONVERSION_TIMEOUT)?;
+    let mut output = Output {
+        status,
+        stdout: Vec::new(),
+        stderr: Vec::new(),
+    };
+    if !status.success() {
+        stdout
+            .rewind()
+            .and_then(|()| stdout.read_to_end(&mut output.stdout))
+            .map_err(DocumentImportError::Read)?;
+        stderr
+            .rewind()
+            .and_then(|()| stderr.read_to_end(&mut output.stderr))
+            .map_err(DocumentImportError::Read)?;
+    }
+    Ok(output)
+}
+
+fn poll_child(child: &mut Child, timeout: Duration) -> io::Result<Option<ExitStatus>> {
+    let start = Instant::now();
+    loop {
+        if let Some(status) = child.try_wait()? {
+            return Ok(Some(status));
+        }
+        let remaining = timeout.saturating_sub(start.elapsed());
+        if remaining.is_zero() {
+            return Ok(None);
+        }
+        thread::sleep(remaining.min(CHILD_POLL_INTERVAL));
+    }
+}
+
+fn wait_for_conversion(
+    mut child: Child,
+    timeout: Duration,
+) -> Result<ExitStatus, DocumentImportError> {
+    let error = match poll_child(&mut child, timeout) {
+        Ok(Some(status)) => return Ok(status),
+        Ok(None) => DocumentImportError::ConversionTimedOut(timeout),
+        Err(error) => DocumentImportError::ConverterWait(error),
+    };
+
+    if let Err(error) = kill_converter_tree(child.id()) {
+        log::warn!("Could not stop the document converter process tree: {error}");
+    }
+    if let Err(stop_error) = kill_and_reap(child) {
+        log::warn!("Could not stop or reap the document converter: {stop_error}");
+    }
+    Err(error)
+}
+
+fn kill_and_reap(mut child: Child) -> io::Result<()> {
+    let kill_result = child.kill();
+    let error = match poll_child(&mut child, CHILD_EXIT_TIMEOUT) {
+        Ok(Some(_)) => return Ok(()),
+        Ok(None) => kill_result.err().unwrap_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::TimedOut,
+                "Process did not exit after termination",
+            )
+        }),
+        Err(error) => error,
+    };
+
+    // Termination can be delayed by pending I/O. Reap it without holding up the batch.
+    thread::Builder::new()
+        .name("document-converter-reaper".into())
+        .spawn(move || {
+            if let Err(error) = child.wait() {
+                log::warn!("Could not reap the document converter process: {error}");
+            }
+        })?;
+    Err(error)
+}
+
+#[cfg(unix)]
+fn kill_converter_tree(pid: u32) -> io::Result<()> {
+    unsafe extern "C" {
+        fn kill(pid: std::ffi::c_int, signal: std::ffi::c_int) -> std::ffi::c_int;
+    }
+    const SIGKILL: std::ffi::c_int = 9;
+    let group = i32::try_from(pid).map_err(io::Error::other)?;
+    // SAFETY: The converter was spawned in its own process group with ID equal to its PID.
+    if unsafe { kill(-group, SIGKILL) } == 0 {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn kill_converter_tree(pid: u32) -> io::Result<()> {
+    use std::os::windows::process::CommandExt;
+
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    const TASKKILL_TIMEOUT: Duration = Duration::from_secs(5);
+    let system_root =
+        env::var_os("SystemRoot").ok_or_else(|| io::Error::other("SystemRoot is missing"))?;
+    let mut taskkill = Command::new(PathBuf::from(system_root).join("System32/taskkill.exe"))
+        .args(["/F", "/T", "/PID", &pid.to_string()])
+        .creation_flags(CREATE_NO_WINDOW)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()?;
+
+    let error = match poll_child(&mut taskkill, TASKKILL_TIMEOUT) {
+        Ok(Some(status)) if status.success() => return Ok(()),
+        Ok(Some(status)) => return Err(io::Error::other(format!("taskkill exited with {status}"))),
+        Ok(None) => io::Error::new(io::ErrorKind::TimedOut, "taskkill timed out"),
+        Err(error) => error,
+    };
+    kill_and_reap(taskkill)?;
+    Err(error)
+}
+
 fn convert_with_libreoffice(
     path: &Path,
     resource_dir: Option<&Path>,
@@ -175,7 +322,8 @@ fn convert_with_libreoffice(
     let mut found_executable = false;
 
     for executable in libreoffice_candidates(resource_dir) {
-        let result = Command::new(&executable)
+        let mut command = Command::new(&executable);
+        command
             .arg("--headless")
             .arg("--nologo")
             .arg("--nodefault")
@@ -184,16 +332,19 @@ fn convert_with_libreoffice(
             .arg("pdf")
             .arg("--outdir")
             .arg(&output_dir)
-            .arg(path)
-            .output();
+            .arg(path);
 
-        let output = match result {
+        let output = match run_converter(&mut command, &workspace) {
             Ok(output) => {
                 found_executable = true;
                 output
             }
-            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
-            Err(error) => return Err(DocumentImportError::LibreOfficeStart(error)),
+            Err(DocumentImportError::ConverterStart(error))
+                if error.kind() == io::ErrorKind::NotFound =>
+            {
+                continue
+            }
+            Err(error) => return Err(error),
         };
 
         if !output.status.success() {
@@ -362,7 +513,8 @@ try {
 "#;
     fs::write(&script_path, script).map_err(DocumentImportError::Workspace)?;
 
-    let output = Command::new("powershell.exe")
+    let mut command = Command::new("powershell.exe");
+    command
         .arg("-NoLogo")
         .arg("-NoProfile")
         .arg("-NonInteractive")
@@ -375,9 +527,8 @@ try {
         .arg("-InputPath")
         .arg(path)
         .arg("-OutputPath")
-        .arg(&output_path)
-        .output()
-        .map_err(DocumentImportError::LibreOfficeStart)?;
+        .arg(&output_path);
+    let output = run_converter(&mut command, &workspace)?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_owned();
@@ -403,6 +554,36 @@ mod tests {
     };
     use std::fs;
     use std::path::{Path, PathBuf};
+
+    #[cfg(unix)]
+    #[test]
+    fn conversion_timeout_kills_and_reaps_the_child() {
+        use super::{wait_for_conversion, DocumentImportError};
+        use std::os::unix::process::CommandExt;
+        use std::process::{Command, Stdio};
+        use std::time::Duration;
+
+        let child = Command::new("sleep")
+            .arg("2")
+            .process_group(0)
+            .spawn()
+            .expect("start sleeping converter");
+
+        let pid = child.id().to_string();
+        let timeout = Duration::from_millis(20);
+        let result = wait_for_conversion(child, timeout);
+
+        assert!(
+            matches!(result, Err(DocumentImportError::ConversionTimedOut(duration)) if duration == timeout)
+        );
+        let process_exists = Command::new("/bin/kill")
+            .args(["-0", &pid])
+            .stderr(Stdio::null())
+            .status()
+            .expect("check converter process")
+            .success();
+        assert!(!process_exists, "converter process was not reaped");
+    }
 
     #[test]
     fn bundled_converter_is_the_first_candidate() {

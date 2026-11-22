@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { relaunch } from "@tauri-apps/plugin-process"
+import { toast } from "sonner"
+import { requestAppExit } from "@/lib/app-exit"
 import {
-  downloadAndInstallAvailableUpdate,
+  prepareAvailableUpdate,
   getUpdateErrorMessage,
   IS_TAURI_RUNTIME,
   setLastUpdateCheckAt,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button"
 function AppUpdater() {
   const [readyVersion, setReadyVersion] = useState<string | null>(null)
   const [restartError, setRestartError] = useState<string | null>(null)
+  const [restarting, setRestarting] = useState(false)
   const startedRef = useRef(false)
 
   const runDailyUpdateCheck = useCallback(async () => {
@@ -33,7 +35,10 @@ function AppUpdater() {
     // Record the attempt up front so dev StrictMode and repeated webview reloads
     // do not start duplicate downloads.
     setLastUpdateCheckAt(Date.now())
-    await downloadAndInstallAvailableUpdate()
+    const result = await prepareAvailableUpdate()
+    if (result.kind === "error") {
+      console.warn("[updates] Could not prepare an update", result.message)
+    }
   }, [])
 
   useEffect(() => {
@@ -52,21 +57,29 @@ function AppUpdater() {
     if (startedRef.current) return
     startedRef.current = true
 
-    void runDailyUpdateCheck()
-    const interval = window.setInterval(
-      () => void runDailyUpdateCheck(),
-      UPDATE_CHECK_INTERVAL_MS
-    )
+    const check = () => {
+      void runDailyUpdateCheck().catch((error: unknown) => {
+        console.warn("[updates] Could not check for an update", error)
+      })
+    }
+    check()
+    const interval = window.setInterval(check, UPDATE_CHECK_INTERVAL_MS)
 
     return () => window.clearInterval(interval)
   }, [runDailyUpdateCheck])
 
   const handleRestartNow = async () => {
     setRestartError(null)
+    setRestarting(true)
     try {
-      await relaunch()
+      await requestAppExit("restart")
+      setReadyVersion(null)
     } catch (error) {
-      setRestartError(getUpdateErrorMessage(error))
+      const message = getUpdateErrorMessage(error)
+      setRestartError(message)
+      toast.error("Could not restart FellowShow", { description: message })
+    } finally {
+      setRestarting(false)
     }
   }
 
@@ -74,29 +87,38 @@ function AppUpdater() {
     <Dialog
       open={readyVersion !== null}
       onOpenChange={(open) => {
-        if (!open) setReadyVersion(null)
+        if (!open && !restarting) setReadyVersion(null)
       }}
     >
       <DialogContent showCloseButton={false} className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Update ready</DialogTitle>
           <DialogDescription>
-            FellowShow {readyVersion} has been installed. Restart now to use the
-            updated version, or continue working and restart later.
+            FellowShow {readyVersion} is ready. Restart now to use the updated
+            version, or continue working and restart later.
           </DialogDescription>
         </DialogHeader>
 
         {restartError ? (
-          <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          <p
+            role="alert"
+            className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+          >
             {restartError}
           </p>
         ) : null}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setReadyVersion(null)}>
+          <Button
+            disabled={restarting}
+            variant="outline"
+            onClick={() => setReadyVersion(null)}
+          >
             Later
           </Button>
-          <Button onClick={() => void handleRestartNow()}>Restart now</Button>
+          <Button disabled={restarting} onClick={() => void handleRestartNow()}>
+            Restart now
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

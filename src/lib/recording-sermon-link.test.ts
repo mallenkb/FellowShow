@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { toast } from "sonner"
+
+vi.mock("sonner", () => ({ toast: { error: vi.fn() } }))
 
 vi.mock("@tauri-apps/plugin-store", () => ({
   load: vi.fn(() => Promise.resolve()),
@@ -26,6 +29,7 @@ function sermon(id: string) {
 let dispose: () => void = () => {}
 
 beforeEach(() => {
+  vi.mocked(toast.error).mockClear()
   start.mockClear()
   stop.mockClear()
   feedStart.mockClear()
@@ -40,6 +44,7 @@ beforeEach(() => {
   useSermonStore.setState({
     sessions: [sermon("s1")],
     activeSessionId: null,
+    transition: null,
   })
   dispose = initRecordingSermonLink()
 })
@@ -64,6 +69,15 @@ describe("recording follows the sermon", () => {
     expect(start).toHaveBeenCalledTimes(2)
   })
 
+  it("invalidates video when pause begins, before transcription releases the sermon", () => {
+    useSermonStore.setState({ activeSessionId: "s1" })
+    useSermonStore.setState({ transition: "pausing" })
+    expect(stop).toHaveBeenCalledOnce()
+    expect(start).toHaveBeenCalledTimes(1)
+    useSermonStore.setState({ activeSessionId: null, transition: null })
+    expect(start).toHaveBeenCalledTimes(1)
+  })
+
   it("stops when GoStream drops and starts again when it is back", () => {
     useSermonStore.setState({ activeSessionId: "s1" })
     useReturnFeedStore.setState({ status: "error" })
@@ -78,5 +92,20 @@ describe("recording follows the sermon", () => {
     useSermonStore.setState({ activeSessionId: "s1" })
     expect(feedStart).not.toHaveBeenCalled()
     expect(start).not.toHaveBeenCalled()
+  })
+
+  it("shows one toast each time recording enters the error state", () => {
+    useSermonStore.setState({ activeSessionId: "s1" })
+    const error = "Could not save the sermon video. Check free disk space."
+
+    useRecordingStore.setState({ status: "error", error })
+    useRecordingStore.setState({ bytes: 100 })
+    expect(toast.error).toHaveBeenCalledExactlyOnceWith("Recording stopped", {
+      description: error,
+    })
+
+    useRecordingStore.setState({ status: "starting", error: null })
+    useRecordingStore.setState({ status: "error", error })
+    expect(toast.error).toHaveBeenCalledTimes(2)
   })
 })

@@ -1,15 +1,15 @@
 import { create } from "zustand"
-import { join } from "@tauri-apps/api/path"
 import { toast } from "sonner"
 import {
   createChunkWriter,
   pickRecordingMimeType,
   prepareSermonFolder,
   RecordingUnsupportedError,
-  videoPartName,
+  nextVideoPartPath,
   type ChunkWriter,
   type SermonFolderInfo,
 } from "@/lib/return-recording"
+import { useSermonStore } from "@/stores/sermon-store"
 import { useReturnFeedStore } from "@/stores/return-feed-store"
 
 /**
@@ -45,7 +45,6 @@ interface ActiveRecording {
   track: MediaStreamTrack
   onTrackEnded: () => void
   stopped: Promise<void>
-  failed: boolean
 }
 
 let active: ActiveRecording | null = null
@@ -56,47 +55,70 @@ function detach(recording: ActiveRecording): void {
   if (active === recording) active = null
 }
 
-function failWrite(recording: ActiveRecording, error: unknown): void {
-  if (recording.failed) return
-  recording.failed = true
-  console.warn("[recording] Failed to write the sermon video", error)
-  detach(recording)
-  if (recording.recorder.state !== "inactive") {
-    try {
-      recording.recorder.stop()
-    } catch (stopError) {
-      console.warn("[recording] Failed to stop the recorder", stopError)
-    }
+let generation = 0
+let starting: Promise<void> | null = null
+let stopping: Promise<void> | null = null
+let failedWriter: ChunkWriter | null = null
+
+async function retryFailedWrite() {
+  if (failedWriter) {
+    await failedWriter.retry()
+    failedWriter = null
   }
-  useRecordingStore.setState({
-    status: "error",
-    error: WRITE_ERROR,
-    startedAt: null,
-  })
 }
 
-async function finish(disconnected: boolean): Promise<void> {
+function finish(disconnected: boolean): Promise<void> {
+  generation++
+  if (stopping) return stopping
   const recording = active
-  if (!recording || useRecordingStore.getState().status !== "recording") return
-  useRecordingStore.setState({ status: "stopping" })
-  recording.track.removeEventListener("ended", recording.onTrackEnded)
+  const pendingStart = starting
+  if (!recording && !pendingStart && !failedWriter) return Promise.resolve()
 
-  if (recording.recorder.state !== "inactive") recording.recorder.stop()
-  await recording.stopped
-  try {
-    await recording.writer.flush()
-  } catch (error) {
-    failWrite(recording, error)
-    return
-  }
-  if (recording.failed) return
-  detach(recording)
-  useRecordingStore.setState({
-    status: "idle",
-    sermonId: null,
-    startedAt: null,
-  })
-  if (disconnected) toast.warning(DISCONNECT_WARNING)
+  stopping = Promise.resolve()
+    .then(async () => {
+      if (pendingStart) await pendingStart
+      if (recording) {
+        recording.track.removeEventListener("ended", recording.onTrackEnded)
+        if (recording.recorder.state !== "inactive") recording.recorder.stop()
+        await recording.stopped
+        try {
+          await recording.writer.flush()
+        } catch (error) {
+          failedWriter = recording.writer
+          throw error
+        } finally {
+          detach(recording)
+        }
+      }
+      await retryFailedWrite()
+    })
+    .then(
+      () => {
+        stopping = null
+        useRecordingStore.setState({
+          status: "idle",
+          sermonId: null,
+          startedAt: null,
+          error: null,
+        })
+        if (disconnected) toast.warning(DISCONNECT_WARNING)
+      },
+      (error: unknown) => {
+        stopping = null
+        useRecordingStore.setState({
+          status: "error",
+          error: WRITE_ERROR,
+          startedAt: null,
+        })
+        throw error
+      }
+    )
+  useRecordingStore.setState({ status: "stopping" })
+  return stopping
+}
+
+export function finalizeRecording(): Promise<void> {
+  return finish(false)
 }
 
 export const useRecordingStore = create<RecordingState>((set, get) => ({
@@ -106,78 +128,114 @@ export const useRecordingStore = create<RecordingState>((set, get) => ({
   bytes: 0,
   error: null,
 
-  start: async (sermon) => {
+  start: (sermon) => {
     const { status } = get()
-    if (status !== "idle" && status !== "error") return
+    if (status !== "idle" && status !== "error")
+      return starting ?? Promise.resolve()
     const stream = useReturnFeedStore.getState().stream
     const track = stream?.getVideoTracks()[0]
     if (!stream || !track || track.readyState === "ended") {
       set({ status: "error", error: NO_STREAM_ERROR })
-      return
+      return Promise.resolve()
     }
 
-    set({ status: "starting", error: null, bytes: 0, sermonId: sermon.id })
-    try {
-      const format = pickRecordingMimeType((type) =>
-        MediaRecorder.isTypeSupported(type)
+    const token = ++generation
+    const isCurrent = () => {
+      const feed = useReturnFeedStore.getState()
+      const session = useSermonStore.getState()
+      return (
+        token === generation &&
+        session.activeSessionId === sermon.id &&
+        session.transition !== "pausing" &&
+        feed.status === "live" &&
+        feed.stream === stream &&
+        track.readyState !== "ended"
       )
-      // Renaming a folder that is being written to would split the video.
-      const folder = await prepareSermonFolder(sermon, { allowRename: false })
-      const startedAt = Date.now()
-      const path = await join(
-        folder,
-        videoPartName(startedAt, format.extension)
-      )
-      const writer = createChunkWriter(path)
-      const recorder = new MediaRecorder(stream, {
-        mimeType: format.mimeType,
-        videoBitsPerSecond: 6_000_000,
-        audioBitsPerSecond: 192_000,
-      })
-
-      let markStopped = () => {}
-      const stopped = new Promise<void>((resolve) => {
-        markStopped = resolve
-      })
-      const recording: ActiveRecording = {
-        recorder,
-        writer,
-        track,
-        stopped,
-        failed: false,
-        onTrackEnded: () => {
-          void finish(true).catch((error: unknown) => {
-            failWrite(recording, error)
-          })
-        },
-      }
-
-      recorder.ondataavailable = (event: BlobEvent) => {
-        if (event.data.size === 0) return
-        set((state) => ({ bytes: state.bytes + event.data.size }))
-        void writer.write(event.data).catch((error: unknown) => {
-          failWrite(recording, error)
+    }
+    const operation: Promise<void> = Promise.resolve()
+      .then(async () => {
+        if (!isCurrent()) return
+        if (failedWriter) {
+          await retryFailedWrite()
+          if (!isCurrent()) return
+        }
+        const format = pickRecordingMimeType((type) =>
+          MediaRecorder.isTypeSupported(type)
+        )
+        // Renaming a folder that is being written to would split the video.
+        const folder = await prepareSermonFolder(sermon, { allowRename: false })
+        if (!isCurrent()) return
+        const startedAt = Date.now()
+        const path = await nextVideoPartPath(
+          folder,
+          startedAt,
+          format.extension
+        )
+        if (!isCurrent()) return
+        const writer = createChunkWriter(path)
+        const recorder = new MediaRecorder(stream, {
+          mimeType: format.mimeType,
+          videoBitsPerSecond: 6_000_000,
+          audioBitsPerSecond: 192_000,
         })
-      }
-      recorder.onstop = () => markStopped()
-      track.addEventListener("ended", recording.onTrackEnded)
 
-      active = recording
-      recorder.start(TIMESLICE_MS)
-      set({ status: "recording", startedAt })
-    } catch (error) {
-      if (active) detach(active)
-      console.warn("[recording] Could not start recording", error)
-      set({
-        status: "error",
-        error:
-          error instanceof RecordingUnsupportedError
-            ? error.message
-            : START_ERROR,
-        startedAt: null,
+        let markStopped = () => {}
+        const stopped = new Promise<void>((resolve) => {
+          markStopped = resolve
+        })
+        const recording: ActiveRecording = {
+          recorder,
+          writer,
+          track,
+          stopped,
+          onTrackEnded: () => {
+            void finish(true).catch((error: unknown) => {
+              console.warn("[recording] Failed to finalize video", error)
+            })
+          },
+        }
+
+        recorder.ondataavailable = (event: BlobEvent) => {
+          if (event.data.size === 0) return
+          set((state) => ({ bytes: state.bytes + event.data.size }))
+          void writer.write(event.data).catch(() => {
+            if (stopping) return
+            void finish(false).catch((error: unknown) => {
+              console.warn("[recording] Failed to finalize video", error)
+            })
+          })
+        }
+        recorder.onstop = () => markStopped()
+        track.addEventListener("ended", recording.onTrackEnded)
+
+        active = recording
+        recorder.start(TIMESLICE_MS)
+        set({ status: "recording", startedAt })
       })
-    }
+      .catch((error: unknown) => {
+        if (!isCurrent()) return
+        if (active) detach(active)
+        console.warn("[recording] Could not start recording", error)
+        set({
+          status: "error",
+          error:
+            error instanceof RecordingUnsupportedError
+              ? error.message
+              : failedWriter
+                ? WRITE_ERROR
+                : START_ERROR,
+          startedAt: null,
+        })
+      })
+      .finally(() => {
+        if (starting !== operation) return
+        starting = null
+        if (get().status === "starting") set({ status: "idle", sermonId: null })
+      })
+    starting = operation
+    set({ status: "starting", error: null, bytes: 0, sermonId: sermon.id })
+    return operation
   },
 
-  stop: () => finish(false),
+  stop: finalizeRecording,
 }))

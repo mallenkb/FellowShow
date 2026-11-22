@@ -13,6 +13,7 @@ const prepareSermonFolder = vi.fn<() => Promise<string>>(() =>
 )
 
 vi.mock("@tauri-apps/plugin-fs", () => ({
+  readDir: vi.fn(async () => []),
   writeFile: (...args: Parameters<typeof writeFile>) => writeFile(...args),
 }))
 
@@ -78,7 +79,10 @@ class FakeTrack extends EventTarget {
 
 vi.stubGlobal("MediaRecorder", FakeRecorder)
 
-const { useRecordingStore } = await import("./recording-store")
+const { initRecordingSermonLink } = await import("@/lib/recording-sermon-link")
+const { useSermonStore } = await import("./sermon-store")
+const { finalizeRecording, useRecordingStore } =
+  await import("./recording-store")
 const { useReturnFeedStore } = await import("./return-feed-store")
 
 function goLive(): FakeTrack {
@@ -94,6 +98,8 @@ const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 describe("recording store", () => {
   beforeEach(() => {
+    useSermonStore.setState({ activeSessionId: sermon.id })
+    prepareSermonFolder.mockClear()
     FakeRecorder.instances = []
     writeFile.mockReset()
     writeFile.mockImplementation(() => Promise.resolve())
@@ -145,6 +151,100 @@ describe("recording store", () => {
     expect(useRecordingStore.getState().error).toBe(
       "This computer cannot record video here."
     )
+  })
+
+  it("abandons a pending folder preparation when the sermon pauses", async () => {
+    goLive()
+    let resolveFolder!: (path: string) => void
+    prepareSermonFolder.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFolder = resolve
+        })
+    )
+    const starting = useRecordingStore.getState().start(sermon)
+    await Promise.resolve()
+    expect(prepareSermonFolder).toHaveBeenCalled()
+    useSermonStore.setState({ activeSessionId: null })
+    resolveFolder("/video")
+    await starting
+    expect(FakeRecorder.instances).toHaveLength(0)
+    expect(useRecordingStore.getState().status).toBe("idle")
+  })
+
+  it("invalidates the old start even if the same sermon resumes before folder preparation finishes", async () => {
+    goLive()
+    useSermonStore.getState().startSession(0, sermon.id)
+    let release!: (path: string) => void
+    prepareSermonFolder.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve
+        })
+    )
+    const dispose = initRecordingSermonLink()
+    try {
+      await Promise.resolve()
+      useSermonStore.setState({ activeSessionId: null })
+      expect(useRecordingStore.getState().status).toBe("stopping")
+      useSermonStore.setState({ activeSessionId: sermon.id })
+      const resumed = new Promise<void>((resolve) => {
+        const unsubscribe = useRecordingStore.subscribe((state) => {
+          if (state.status === "recording") {
+            unsubscribe()
+            resolve()
+          }
+        })
+      })
+      release("/old")
+      await resumed
+      expect(prepareSermonFolder).toHaveBeenCalledTimes(2)
+      expect(FakeRecorder.instances).toHaveLength(1)
+      await finalizeRecording()
+      expect(writeFile.mock.calls[0][0]).not.toContain("/old/")
+      expect(useRecordingStore.getState().status).toBe("idle")
+    } finally {
+      dispose()
+    }
+  })
+
+  it("shares the stop promise until the last chunk reaches disk", async () => {
+    goLive()
+    await useRecordingStore.getState().start(sermon)
+    let release = () => {}
+    let writing = () => {}
+    const entered = new Promise<void>((resolve) => {
+      writing = resolve
+    })
+    writeFile.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          release = resolve
+          writing()
+        })
+    )
+    const stopping = useRecordingStore.getState().stop()
+    const finalized = finalizeRecording()
+    expect(finalized).toBe(stopping)
+    await entered
+    expect(useRecordingStore.getState().status).toBe("stopping")
+    expect(new TextDecoder().decode(writeFile.mock.calls[0][1])).toBe("final")
+    release()
+    await finalized
+    expect(useRecordingStore.getState().status).toBe("idle")
+  })
+
+  it("rejects with the final disk error and retains that chunk for retry", async () => {
+    goLive()
+    await useRecordingStore.getState().start(sermon)
+    const failure = new Error("disk full")
+    writeFile.mockRejectedValueOnce(failure)
+    await expect(finalizeRecording()).rejects.toBe(failure)
+    expect(useRecordingStore.getState().status).toBe("error")
+    await finalizeRecording()
+    expect(writeFile).toHaveBeenCalledTimes(2)
+    expect(writeFile.mock.calls[1]).toEqual(writeFile.mock.calls[0])
+    expect(useRecordingStore.getState().status).toBe("idle")
   })
 
   it("writes chunks to disk and reports the saved file", async () => {
