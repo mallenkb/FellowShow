@@ -1,5 +1,5 @@
 import { cp, mkdir, readdir, rm, stat } from "node:fs/promises"
-import { basename, join, resolve } from "node:path"
+import { join, resolve } from "node:path"
 
 const projectRoot = resolve(import.meta.dir, "..")
 const runtimeRoot = join(projectRoot, "vendor", "document-converter", "runtime")
@@ -47,22 +47,28 @@ function destinationName() {
   return "libreoffice"
 }
 
-const source = await firstDirectory(sourceCandidates())
-if (!source) {
-  throw new Error(
-    "LibreOffice was not found for packaging. Install it on the build machine or set LIBREOFFICE_BUNDLE_SOURCE to its application/runtime directory."
-  )
-}
-
-await mkdir(runtimeRoot, { recursive: true })
-for (const entry of await readdir(runtimeRoot)) {
-  if (entry !== ".gitkeep") {
-    await rm(join(runtimeRoot, entry), { recursive: true, force: true })
-  }
-}
-
 const destination = join(runtimeRoot, destinationName())
-await cp(source, destination, { recursive: true, preserveTimestamps: true })
+const reuseStagedRuntime =
+  process.platform === "win32" &&
+  process.env.FELLOWSHOW_STAGED_OFFICE_CACHE_HIT === "true"
+
+if (!reuseStagedRuntime) {
+  const source = await firstDirectory(sourceCandidates())
+  if (!source) {
+    throw new Error(
+      "LibreOffice was not found for packaging. Install it on the build machine or set LIBREOFFICE_BUNDLE_SOURCE to its application/runtime directory."
+    )
+  }
+
+  await mkdir(runtimeRoot, { recursive: true })
+  for (const entry of await readdir(runtimeRoot)) {
+    if (entry !== ".gitkeep") {
+      await rm(join(runtimeRoot, entry), { recursive: true, force: true })
+    }
+  }
+
+  await cp(source, destination, { recursive: true, preserveTimestamps: true })
+}
 
 const executable =
   process.platform === "darwin"
@@ -72,9 +78,9 @@ const executable =
       : join(destination, "program", "soffice")
 
 if (!(await stat(executable)).isFile()) {
-  throw new Error(
-    `The staged LibreOffice runtime from ${basename(source)} does not contain ${executable}.`
-  )
+  throw new Error(`Missing bundled LibreOffice executable: ${executable}`)
 }
 
-console.log(`Staged bundled document converter from ${source}`)
+console.log(
+  `${reuseStagedRuntime ? "Restored" : "Staged"} bundled document converter at ${destination}`
+)

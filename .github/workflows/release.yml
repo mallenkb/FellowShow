@@ -194,13 +194,18 @@ jobs:
               raise ValueError("Expected only the executable's Rust library")
           manifest.write_text(updated)
 
-      - name: Restore installed LibreOffice runtime
+      - name: Restore staged LibreOffice runtime
         if: runner.os == 'Windows'
         id: libreoffice-cache
         uses: actions/cache@v6
         with:
-          path: C:\Program Files\LibreOffice
-          key: libreoffice-runtime-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.WINDOWS_LIBREOFFICE_VERSION }}
+          path: vendor/document-converter/runtime/LibreOffice
+          key: libreoffice-staged-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.WINDOWS_LIBREOFFICE_VERSION }}
+
+      - name: Use restored converter in place
+        if: runner.os == 'Windows' && steps.libreoffice-cache.outputs.cache-hit == 'true'
+        shell: pwsh
+        run: '"FELLOWSHOW_STAGED_OFFICE_CACHE_HIT=true" >> $env:GITHUB_ENV'
 
       - name: Install bundled document converter source on Windows
         if: runner.os == 'Windows' && steps.libreoffice-cache.outputs.cache-hit != 'true'
@@ -342,6 +347,7 @@ jobs:
         if: env.WARM_CACHE_ONLY != 'true'
         uses: actions/upload-artifact@v7
         with:
+          compression-level: 0
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_path }}
           if-no-files-found: error
