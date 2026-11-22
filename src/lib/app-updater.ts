@@ -4,13 +4,33 @@ import {
   type Update,
   type DownloadEvent,
 } from "@tauri-apps/plugin-updater"
+import { create } from "zustand"
 import { hydrateSettings, useSettingsStore } from "@/stores/settings-store"
 
 export const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
 export const UPDATE_READY_EVENT = "fellowshow:update-ready"
 export const IS_TAURI_RUNTIME = isTauri()
 
-const LAST_UPDATE_CHECK_KEY = "fellowshow:last-update-check-at"
+const UPDATE_CHECK_TIMEOUT_MS = 30_000
+
+type UpdateStatus =
+  | { kind: "idle" | "checking" | "none" }
+  | {
+      kind: "downloading"
+      version: string
+      received: number
+      total: number | null
+    }
+  | { kind: "preparing" | "ready"; version: string }
+  | { kind: "error"; message: string }
+
+export const useAppUpdateStatus = create<{ status: UpdateStatus }>(() => ({
+  status: { kind: "idle" },
+}))
+
+function setUpdateStatus(status: UpdateStatus) {
+  useAppUpdateStatus.setState({ status })
+}
 
 let updateCheckInFlight = false
 let stagedUpdate: Update | null = null
@@ -25,20 +45,7 @@ export function getUpdateErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error)
 }
 
-function getLastUpdateCheckAt() {
-  const value = window.localStorage.getItem(LAST_UPDATE_CHECK_KEY)
-  return value ? Number(value) : 0
-}
-
-export function setLastUpdateCheckAt(value: number) {
-  window.localStorage.setItem(LAST_UPDATE_CHECK_KEY, String(value))
-}
-
-export function shouldCheckForUpdates(now = Date.now()) {
-  return now - getLastUpdateCheckAt() >= UPDATE_CHECK_INTERVAL_MS
-}
-
-function emitUpdateReady(version: string) {
+export function showUpdateRestartDialog(version: string) {
   window.dispatchEvent(
     new CustomEvent(UPDATE_READY_EVENT, {
       detail: { version },
@@ -52,27 +59,52 @@ type UpdatePreparationResult =
   | { kind: "busy" }
   | { kind: "error"; message: string }
 
-export async function prepareAvailableUpdate(
-  onDownloadEvent?: (event: DownloadEvent) => void
-): Promise<UpdatePreparationResult> {
+export async function prepareAvailableUpdate(): Promise<UpdatePreparationResult> {
   if (!IS_TAURI_RUNTIME) {
-    return {
-      kind: "error",
+    const result = {
+      kind: "error" as const,
       message:
         "Update checks are only available in the FellowShow desktop app.",
     }
+    setUpdateStatus(result)
+    return result
   }
   if (updateCheckInFlight) return { kind: "busy" }
 
+  const status = useAppUpdateStatus.getState().status
+  if (status.kind === "ready") {
+    return { kind: "available", version: status.version }
+  }
+
   updateCheckInFlight = true
   try {
-    if (stagedUpdate) {
-      emitUpdateReady(stagedUpdate.version)
-      return { kind: "available", version: stagedUpdate.version }
+    setUpdateStatus({ kind: "checking" })
+    const update = await check({ timeout: UPDATE_CHECK_TIMEOUT_MS })
+    if (!update) {
+      setUpdateStatus({ kind: "none" })
+      return { kind: "none" }
     }
 
-    const update = await check()
-    if (!update) return { kind: "none" }
+    const { version } = update
+    let received = 0
+    let total: number | null = null
+    setUpdateStatus({ kind: "downloading", version, received, total })
+
+    const onDownloadEvent = (event: DownloadEvent) => {
+      switch (event.event) {
+        case "Started":
+          received = 0
+          total = event.data.contentLength || null
+          break
+        case "Progress":
+          received += event.data.chunkLength
+          break
+        case "Finished":
+          setUpdateStatus({ kind: "preparing", version })
+          return
+      }
+      setUpdateStatus({ kind: "downloading", version, received, total })
+    }
 
     // The Windows installer exits the process itself, bypassing ExitRequested.
     if (navigator.platform.startsWith("Win")) {
@@ -81,11 +113,16 @@ export async function prepareAvailableUpdate(
     } else {
       await update.downloadAndInstall(onDownloadEvent)
     }
-    emitUpdateReady(update.version)
 
-    return { kind: "available", version: update.version }
+    setUpdateStatus({ kind: "ready", version })
+    return { kind: "available", version }
   } catch (error) {
-    return { kind: "error", message: getUpdateErrorMessage(error) }
+    const result = {
+      kind: "error" as const,
+      message: getUpdateErrorMessage(error),
+    }
+    setUpdateStatus(result)
+    return result
   } finally {
     updateCheckInFlight = false
   }

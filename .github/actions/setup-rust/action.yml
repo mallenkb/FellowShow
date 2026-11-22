@@ -1,0 +1,16 @@
+name: Set up the pinned Rust toolchain
+description: Isolate the project toolchain so unrelated runner toolchains do not invalidate the Cargo cache.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      working-directory: src-tauri
+      run: |
+        export RUSTUP_HOME="$RUNNER_TEMP/fellowshow-rustup"
+        rustup toolchain install
+        # Cache actions invoke rustc from the repository root, outside src-tauri.
+        toolchain=$(rustup show active-toolchain)
+        {
+          echo "RUSTUP_HOME=$RUSTUP_HOME"
+          echo "RUSTUP_TOOLCHAIN=${toolchain%% *}"
+        } >> "$GITHUB_ENV"

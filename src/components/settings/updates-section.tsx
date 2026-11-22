@@ -1,14 +1,14 @@
 import { getVersion } from "@tauri-apps/api/app"
 import { openUrl } from "@tauri-apps/plugin-opener"
-import type { DownloadEvent } from "@tauri-apps/plugin-updater"
 import { useEffect, useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import {
-  getUpdateErrorMessage,
   prepareAvailableUpdate,
+  showUpdateRestartDialog,
+  useAppUpdateStatus,
 } from "@/lib/app-updater"
 import { RefreshCwIcon } from "lucide-react"
 import { useSettingsStore } from "@/stores/settings-store"
@@ -21,89 +21,47 @@ export function UpdatesSection() {
   const setAutoUpdateEnabled = useSettingsStore(
     (state) => state.setAutoUpdateEnabled
   )
-  const [currentVersion, setCurrentVersion] = useState("0.1.6")
-  const [status, setStatus] = useState<
-    "idle" | "checking" | "downloading" | "preparing" | "ready" | "error"
-  >("idle")
-  const [message, setMessage] = useState(
-    "Check for a new release and download it."
-  )
-  const [latestVersion, setLatestVersion] = useState<string | null>(null)
-  const [downloadProgress, setDownloadProgress] = useState<number | null>(null)
+  const [currentVersion, setCurrentVersion] = useState<string | null>(null)
+  const status = useAppUpdateStatus((state) => state.status)
+  const isBusy =
+    status.kind === "checking" ||
+    status.kind === "downloading" ||
+    status.kind === "preparing"
 
   useEffect(() => {
-    getVersion()
+    void getVersion()
       .then(setCurrentVersion)
-      .catch(() => {
-        setCurrentVersion("0.1.6")
+      .catch((error: unknown) => {
+        console.warn("[updates] Could not read the installed version", error)
       })
   }, [])
 
-  const showUpdateError = (message: string) => {
-    setStatus("error")
-    setMessage(`Could not check for or prepare an update. ${message}`)
-    setDownloadProgress(null)
+  const progress =
+    status.kind === "downloading" && status.total
+      ? Math.min(100, Math.floor((status.received / status.total) * 100))
+      : undefined
+
+  let message = "Check for a new version of FellowShow."
+  switch (status.kind) {
+    case "checking":
+      message = "Checking for updates…"
+      break
+    case "downloading":
+      message = `Downloading FellowShow ${status.version} in the background.`
+      break
+    case "preparing":
+      message = `Preparing FellowShow ${status.version}…`
+      break
+    case "ready":
+      message = `FellowShow ${status.version} is ready. Restart to finish updating.`
+      break
+    case "none":
+      message = "No updates found."
+      break
+    case "error":
+      message = `Could not check for or prepare an update. ${status.message}`
+      break
   }
-
-  const handleCheckForUpdates = async () => {
-    setStatus("checking")
-    setMessage("Checking for updates...")
-    setLatestVersion(null)
-    setDownloadProgress(null)
-
-    let downloadedBytes = 0
-    let contentLength = 0
-    const result = await prepareAvailableUpdate((event: DownloadEvent) => {
-      if (event.event === "Started") {
-        downloadedBytes = 0
-        contentLength = event.data.contentLength ?? 0
-        setStatus("downloading")
-        setMessage("Update found. Downloading in the background...")
-        setDownloadProgress(contentLength > 0 ? 0 : null)
-        return
-      }
-
-      if (event.event === "Progress") {
-        downloadedBytes += event.data.chunkLength
-        if (contentLength > 0) {
-          setDownloadProgress(
-            Math.min(100, Math.round((downloadedBytes / contentLength) * 100))
-          )
-        }
-        return
-      }
-
-      setStatus("preparing")
-      setMessage("Preparing update...")
-    })
-
-    switch (result.kind) {
-      case "available":
-        setLatestVersion(result.version)
-        setStatus("ready")
-        setDownloadProgress(100)
-        setMessage("Update ready. Restart FellowShow to finish updating.")
-        break
-      case "none":
-        setStatus("idle")
-        setMessage("No updates found.")
-        break
-      case "busy":
-        setStatus("idle")
-        setMessage("A check is already running.")
-        break
-      case "error":
-        showUpdateError(result.message)
-        break
-    }
-  }
-
-  const handleOpenLatestRelease = () => {
-    void openUrl(FELLOW_SHOW_RELEASES_URL)
-  }
-
-  const isBusy =
-    status === "checking" || status === "downloading" || status === "preparing"
 
   return (
     <div className="space-y-6">
@@ -122,7 +80,9 @@ export function UpdatesSection() {
             <div>
               <p className="text-sm font-medium">Current Version</p>
               <p className="text-xs text-muted-foreground">
-                FellowShow {currentVersion}
+                {currentVersion
+                  ? `FellowShow ${currentVersion}`
+                  : "Version unavailable"}
               </p>
             </div>
           </div>
@@ -135,8 +95,9 @@ export function UpdatesSection() {
           <div className="min-w-0 pr-4">
             <p className="text-sm font-medium">Automatic updates</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Check for and download updates once a day in the background. You
-              can still check manually when this is off.
+              Check for and download updates in the background when FellowShow
+              opens and once a day while it stays open. You can still check
+              manually when this is off.
             </p>
           </div>
           <Switch
@@ -147,33 +108,36 @@ export function UpdatesSection() {
         </div>
 
         <div className="rounded-lg border border-border bg-muted/30 p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 basis-48">
               <p className="text-xs font-medium text-foreground">
-                Manual update
+                Update status
               </p>
               <p
-                role={status === "error" ? "alert" : "status"}
+                role={status.kind === "error" ? "alert" : "status"}
                 className={`mt-1 text-xs leading-relaxed ${
-                  status === "error"
+                  status.kind === "error"
                     ? "text-destructive"
                     : "text-muted-foreground"
                 }`}
               >
                 {message}
               </p>
-              {latestVersion ? (
-                <p className="mt-1 text-[0.625rem] text-muted-foreground">
-                  Latest version: {latestVersion}
-                </p>
-              ) : null}
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={handleOpenLatestRelease}
+                onClick={() => {
+                  void openUrl(FELLOW_SHOW_RELEASES_URL).catch(
+                    (error: unknown) =>
+                      console.warn(
+                        "[updates] Could not open the release page",
+                        error
+                      )
+                  )
+                }}
               >
                 Open release
               </Button>
@@ -182,31 +146,46 @@ export function UpdatesSection() {
                 size="sm"
                 disabled={isBusy}
                 onClick={() => {
-                  void handleCheckForUpdates().catch((error: unknown) => {
-                    showUpdateError(getUpdateErrorMessage(error))
+                  if (status.kind === "ready") {
+                    showUpdateRestartDialog(status.version)
+                    return
+                  }
+                  void prepareAvailableUpdate().catch((error: unknown) => {
+                    console.warn(
+                      "[updates] Could not check for an update",
+                      error
+                    )
                   })
                 }}
               >
-                <RefreshCwIcon
-                  className={`size-3.5 ${isBusy ? "animate-spin" : ""}`}
-                  aria-hidden="true"
-                />
-                {status === "error" ? "Retry" : "Check & update"}
+                {status.kind === "ready" ? null : (
+                  <RefreshCwIcon
+                    className={`size-3.5 ${isBusy ? "animate-spin" : ""}`}
+                    aria-hidden="true"
+                  />
+                )}
+                {status.kind === "ready"
+                  ? "Restart…"
+                  : status.kind === "error"
+                    ? "Retry"
+                    : "Check & update"}
               </Button>
             </div>
           </div>
 
-          {downloadProgress !== null ? (
+          {status.kind === "downloading" ? (
             <div className="mt-3">
-              <div className="h-1.5 overflow-hidden rounded-full bg-background">
-                <div
-                  className="h-full rounded-full bg-primary transition-[width]"
-                  style={{ width: `${downloadProgress}%` }}
-                />
-              </div>
-              <p className="mt-1 text-[0.625rem] text-muted-foreground">
-                {downloadProgress}% downloaded
-              </p>
+              <progress
+                aria-label="Update download progress"
+                className="block h-1.5 w-full accent-primary"
+                max={100}
+                value={progress}
+              />
+              {progress !== undefined ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {progress}% downloaded
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>

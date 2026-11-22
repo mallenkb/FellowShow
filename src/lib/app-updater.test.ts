@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
-import { installStagedUpdate, prepareAvailableUpdate } from "./app-updater"
+import {
+  installStagedUpdate,
+  prepareAvailableUpdate,
+  useAppUpdateStatus,
+} from "./app-updater"
 
 const update = vi.hoisted(() => ({
   version: "2",
@@ -15,6 +19,7 @@ vi.mock("@tauri-apps/plugin-updater", () => ({ check }))
 
 beforeEach(() => {
   vi.clearAllMocks()
+  useAppUpdateStatus.setState({ status: { kind: "idle" } })
   check.mockResolvedValue(update)
 })
 

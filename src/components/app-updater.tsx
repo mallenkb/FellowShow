@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { requestAppExit } from "@/lib/app-exit"
 import {
   prepareAvailableUpdate,
   getUpdateErrorMessage,
   IS_TAURI_RUNTIME,
-  setLastUpdateCheckAt,
   shouldRunAutomaticUpdateCheck,
-  shouldCheckForUpdates,
+  showUpdateRestartDialog,
+  useAppUpdateStatus,
   UPDATE_CHECK_INTERVAL_MS,
   UPDATE_READY_EVENT,
 } from "@/lib/app-updater"
@@ -25,21 +25,6 @@ function AppUpdater() {
   const [readyVersion, setReadyVersion] = useState<string | null>(null)
   const [restartError, setRestartError] = useState<string | null>(null)
   const [restarting, setRestarting] = useState(false)
-  const startedRef = useRef(false)
-
-  const runDailyUpdateCheck = useCallback(async () => {
-    if (!IS_TAURI_RUNTIME) return
-    if (!(await shouldRunAutomaticUpdateCheck())) return
-    if (!shouldCheckForUpdates()) return
-
-    // Record the attempt up front so dev StrictMode and repeated webview reloads
-    // do not start duplicate downloads.
-    setLastUpdateCheckAt(Date.now())
-    const result = await prepareAvailableUpdate()
-    if (result.kind === "error") {
-      console.warn("[updates] Could not prepare an update", result.message)
-    }
-  }, [])
 
   useEffect(() => {
     const onUpdateReady = (event: Event) => {
@@ -54,19 +39,43 @@ function AppUpdater() {
 
   useEffect(() => {
     if (!IS_TAURI_RUNTIME) return
-    if (startedRef.current) return
-    startedRef.current = true
+    let cancelled = false
 
-    const check = () => {
-      void runDailyUpdateCheck().catch((error: unknown) => {
+    const check = async () => {
+      const enabled = await shouldRunAutomaticUpdateCheck()
+      if (cancelled || !enabled) return
+
+      if (useAppUpdateStatus.getState().status.kind === "ready") return
+
+      const result = await prepareAvailableUpdate()
+      if (!cancelled && result.kind === "available") {
+        toast.info(`FellowShow ${result.version} is ready`, {
+          action: {
+            label: "Restart…",
+            onClick: () => showUpdateRestartDialog(result.version),
+          },
+        })
+      }
+      if (result.kind === "error") {
+        console.warn("[updates] Could not prepare an update", result.message)
+      }
+    }
+    const runInBackground = () => {
+      void check().catch((error: unknown) => {
         console.warn("[updates] Could not check for an update", error)
       })
     }
-    check()
-    const interval = window.setInterval(check, UPDATE_CHECK_INTERVAL_MS)
 
-    return () => window.clearInterval(interval)
-  }, [runDailyUpdateCheck])
+    runInBackground()
+    const interval = window.setInterval(
+      runInBackground,
+      UPDATE_CHECK_INTERVAL_MS
+    )
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [])
 
   const handleRestartNow = async () => {
     setRestartError(null)
