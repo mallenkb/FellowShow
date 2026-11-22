@@ -186,9 +186,6 @@ jobs:
       - name: Verify bundled Bible database exists
         run: bun -e "if (!require('node:fs').statSync('data/fellowshow.db').size) process.exit(1)"
 
-      - name: Stage bundled document converter
-        run: bun run prepare:document-converter
-
       - name: Build release app to warm the cache
         if: env.WARM_CACHE_ONLY == 'true'
         run: bunx tauri build --no-bundle
@@ -199,6 +196,21 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: bunx tauri build ${{ matrix.bundle_args }}
+
+      # Tauri logs the updater archive only after it finishes writing it. Its
+      # creation time marks the boundary between DMG work and tar.gz compression.
+      - name: Record macOS updater archive timing
+        if: runner.os == 'macOS' && env.WARM_CACHE_ONLY != 'true'
+        shell: python3 {0}
+        run: |
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          archive, = Path("src-tauri/target/release/bundle/macos").glob("*.app.tar.gz")
+          info = archive.stat()
+          start = datetime.fromtimestamp(info.st_birthtime, timezone.utc)
+          print(f"Updater archive started at {start.isoformat()}")
+          print(f"Updater archive write took {info.st_mtime - info.st_birthtime:.1f}s")
 
       - name: Verify installer silently installs
         if: runner.os == 'Windows' && env.WARM_CACHE_ONLY != 'true'
@@ -227,6 +239,36 @@ jobs:
 
           "INSTALLER_PATH=$($installer.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "Verified $($installer.Name) installs to $installDir"
+
+      - name: Verify offline Office conversion from the packaged runtime
+        if: env.WARM_CACHE_ONLY != 'true'
+        shell: python {0}
+        run: |
+          import os
+          import subprocess
+          import sys
+          import tempfile
+          from pathlib import Path
+
+          if sys.platform == "darwin":
+              app, = Path("src-tauri/target/release/bundle/macos").glob("*.app")
+              converter = app / "Contents/Resources/document-converter/LibreOffice.app/Contents/MacOS/soffice"
+          else:
+              converter = Path(os.environ["RUNNER_TEMP"]) / "FellowShowInstall/document-converter/LibreOffice/program/soffice.com"
+
+          fixtures = Path("output/e2e/fixtures")
+          documents = [fixtures / "e2e-two-pages.docx", fixtures / "e2e-two-slides.pptx"]
+          with tempfile.TemporaryDirectory() as folder:
+              output = Path(folder)
+              profile = (output / "profile").as_uri()
+              subprocess.run([converter.resolve(), "--headless", "--nologo", "--nodefault",
+                              f"-env:UserInstallation={profile}", "--convert-to", "pdf",
+                              "--outdir", output, *documents], check=True, timeout=90)
+              for document in documents:
+                  pdf = output / document.with_suffix(".pdf").name
+                  with pdf.open("rb") as file:
+                      if file.read(5) != b"%PDF-":
+                          raise ValueError(f"Invalid PDF for {document.name}")
 
       - name: Upload bundle artifact
         if: env.WARM_CACHE_ONLY != 'true'

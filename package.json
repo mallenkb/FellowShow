@@ -45,7 +45,7 @@
     "prepare:release-bible": "bun run data/prepare-release-bible.ts",
     "prepare:r2-content": "bun run data/prepare-r2-content.ts",
     "publish:r2-content": "bun run data/publish-r2-content.ts",
-    "release:bundled": "bun run prepare:release-bible && bun run prepare:document-converter && bun run tauri build",
+    "release:bundled": "bun run prepare:release-bible && bun run tauri build",
     "release:r2": "bun run download:asante-twi && bun run prepare:r2-content && bun run publish:r2-content",
     "download:model": "bun run data/download-model.ts",
     "export:verses": "bun run data/compute-embeddings.ts",
