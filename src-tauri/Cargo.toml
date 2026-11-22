@@ -29,7 +29,7 @@ missing_panics_doc = "allow"
 
 [package]
 name = "fellowshow"
-version = "0.1.63"
+version = "0.1.64"
 description = "Fellow Show - Real-Time AI Bible Verse Detection"
 authors = ["Faithful"]
 license = "MIT"
@@ -69,7 +69,7 @@ dotenvy = "0.15"
 reqwest = { version = "0.13", features = ["json", "stream"] }
 sha2 = "0.11"
 hex = "0.4"
-rusqlite = { version = "0.42", features = ["bundled"] }
+rusqlite = { version = "0.43", features = ["bundled"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-opener = "2"

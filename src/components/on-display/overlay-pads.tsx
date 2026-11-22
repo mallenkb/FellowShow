@@ -20,84 +20,13 @@ import {
 } from "@/lib/broadcast-output-runtime"
 import type { ActiveOverlayState, OverlayConfiguration } from "@/types"
 import { OVERLAY_KIND_STYLES, type OverlayPadKind } from "./overlay-kind-styles"
+import { buildPads, moveOverlayPad, type OverlayPad } from "./overlay-pad-order"
 import { OverlayPadMenu } from "./overlay-pad-menu"
 
 export type { OverlayPadKind }
 
-const SPEED_LABELS = {
-  slow: "Slow scroll",
-  standard: "Normal scroll",
-  fast: "Fast scroll",
-} as const
-
 const PAD_GRID_CLASS =
   "grid auto-rows-fr grid-cols-2 gap-2 @[32rem]/pads:grid-cols-3 @[42rem]/pads:grid-cols-4"
-
-interface OverlayPad {
-  key: string
-  kind: OverlayPadKind
-  id: string
-  name: string
-  kindLabel: string
-  detail: string
-  /** Logo images shown as small thumbnails on the pad. */
-  imageUrls?: string[]
-  /** Sent from Sermon, Notes or Songs. */
-  sent?: boolean
-}
-
-function buildPads(config: OverlayConfiguration): OverlayPad[] {
-  const pads: OverlayPad[] = []
-  if (config.logo.logos.length > 0) {
-    pads.push({
-      key: "logo",
-      kind: "logo",
-      id: "logo",
-      name:
-        config.logo.logos.length === 1
-          ? config.logo.logos[0].name
-          : `${config.logo.logos.length} logos`,
-      kindLabel: "Logo",
-      detail: "Stays on screen",
-      imageUrls: config.logo.logos.slice(0, 3).map((logo) => logo.imageUrl),
-    })
-  }
-  for (const bar of config.bars) {
-    pads.push({
-      key: `bar:${bar.id}`,
-      kind: "bar",
-      id: bar.id,
-      name: bar.name,
-      kindLabel: bar.source === "text" ? "Text bar" : "Scripture bar",
-      sent: bar.sent,
-      detail:
-        bar.source === "live-verse" ? "Follows the verse" : "Stays on screen",
-    })
-  }
-  for (const preset of config.lowerThirdPresets) {
-    pads.push({
-      key: `lower:${preset.id}`,
-      kind: "lowerThird",
-      id: preset.id,
-      name: preset.name,
-      kindLabel: "Lower third",
-      detail: `Hides after ${Math.round(preset.durationMs / 1000)}s`,
-    })
-  }
-  for (const message of config.tickerMessages) {
-    pads.push({
-      key: `ticker:${message.id}`,
-      kind: "ticker",
-      id: message.id,
-      name: message.text,
-      kindLabel: "Scrolling text",
-      sent: message.sent,
-      detail: SPEED_LABELS[message.speed ?? config.ticker.speed],
-    })
-  }
-  // Sent pads come last, so the number keys follow the order on screen.
-  return [...pads.filter((pad) => !pad.sent), ...pads.filter((pad) => pad.sent)]
-}
 
 function isSelected(pad: OverlayPad, selection: ActiveOverlayState): boolean {
   switch (pad.kind) {
@@ -266,6 +195,8 @@ export function OverlayPads({
     return () => window.removeEventListener("keydown", onKeyDown, true)
   }, [onPreviewRequest])
 
+  const [dragged, setDragged] = useState<OverlayPad | null>(null)
+  const [target, setTarget] = useState<string | null>(null)
   const sentPads = pads.filter((pad) => pad.sent)
   const renderPad = (pad: OverlayPad) => {
     const index = pads.indexOf(pad)
@@ -292,15 +223,70 @@ export function OverlayPads({
           onPreviewRequest?.()
         }}
         onEdit={() => onEdit(pad.kind, pad.id)}
+        onMoveEarlier={
+          index > 0 && Boolean(pads[index - 1].sent) === Boolean(pad.sent)
+            ? () => moveOverlayPad(pad.key, pads[index - 1].key)
+            : undefined
+        }
+        onMoveLater={
+          index + 1 < pads.length &&
+          Boolean(pads[index + 1].sent) === Boolean(pad.sent)
+            ? () => moveOverlayPad(pad.key, pads[index + 1].key)
+            : undefined
+        }
         onDelete={() => setPendingDelete(pad)}
       >
-        <div className="relative min-w-0">
+        <div
+          className={cn(
+            "relative min-w-0 rounded-lg",
+            target === pad.key && "ring-2 ring-ring"
+          )}
+          onDragOver={(event) => {
+            if (
+              !dragged ||
+              dragged.key === pad.key ||
+              Boolean(dragged.sent) !== Boolean(pad.sent)
+            )
+              return
+            event.preventDefault()
+            event.dataTransfer.dropEffect = "move"
+            setTarget(pad.key)
+          }}
+          onDragLeave={(event) => {
+            if (!(
+              event.relatedTarget instanceof Node &&
+              event.currentTarget.contains(event.relatedTarget)
+            )) {
+              setTarget((current) => (current === pad.key ? null : current))
+            }
+          }}
+          onDrop={(event) => {
+            if (!dragged) return
+            event.preventDefault()
+            moveOverlayPad(dragged.key, pad.key)
+            setDragged(null)
+            setTarget(null)
+          }}
+        >
           <button
             type="button"
             aria-pressed={selected}
             aria-label={`${selected ? "Remove" : "Add"} ${pad.name} ${selected ? "from" : "to"} Preview`}
             aria-keyshortcuts={index < 9 ? String(index + 1) : undefined}
-            title="Click to preview. Double-click to show on Live."
+            title="Drag to reorder. Click to preview. Double-click to show on Live."
+            draggable
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = "move"
+              event.dataTransfer.setData(
+                "application/x-fellowshow-overlay-pad",
+                pad.key
+              )
+              setDragged(pad)
+            }}
+            onDragEnd={() => {
+              setDragged(null)
+              setTarget(null)
+            }}
             onClick={(event) => {
               if (event.detail < 2) {
                 togglePad(pad)
@@ -349,6 +335,7 @@ export function OverlayPads({
                   <img
                     key={url}
                     src={url}
+                    draggable={false}
                     alt=""
                     className="h-12 max-w-full rounded-md bg-black/40 object-contain p-1.5 @[18rem]/pads:h-14 @[18rem]/pads:max-w-24"
                   />

@@ -146,8 +146,17 @@ pub fn list_local_speech_models(app: AppHandle) -> Result<Vec<LocalSpeechModelSt
 
 fn uv_command(app: &AppHandle, root: &Path) -> Command {
     let executable = if cfg!(windows) { "uv.exe" } else { "uv" };
+    #[cfg(windows)]
+    let bundled = app
+        .path()
+        .resource_dir()
+        .ok()
+        .map(|dir| dir.join("uv").join(executable));
+    #[cfg(not(windows))]
+    let bundled = None;
     let home = app.path().home_dir().ok();
     let candidates = [
+        bundled,
         home.as_ref()
             .map(|home| home.join(".local").join("bin").join(executable)),
         home.as_ref()

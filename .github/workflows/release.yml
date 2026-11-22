@@ -288,6 +288,9 @@ jobs:
           if (-not $installedApp) {
             throw "Installer completed, but the FellowShow executable was not found in $installDir."
           }
+          if (-not (Test-Path -PathType Leaf (Join-Path $installedApp.DirectoryName "uv\uv.exe"))) {
+            throw "The installer did not include the uv runtime for speech model downloads."
+          }
 
           $app = Start-Process -FilePath $installedApp.FullName -PassThru
           try {

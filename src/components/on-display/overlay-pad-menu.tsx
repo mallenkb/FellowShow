@@ -21,6 +21,8 @@ export function OverlayPadMenu({
   onShowLive,
   onEdit,
   onDelete,
+  onMoveEarlier,
+  onMoveLater,
   children,
 }: {
   selected: boolean
@@ -29,6 +31,8 @@ export function OverlayPadMenu({
   onShowLive: () => void
   onEdit: () => void
   onDelete: () => void
+  onMoveEarlier?: () => void
+  onMoveLater?: () => void
   children: ReactNode
 }) {
   return (
@@ -46,6 +50,12 @@ export function OverlayPadMenu({
         <ContextMenuItem onSelect={onEdit}>
           <PencilIcon />
           Edit
+        </ContextMenuItem>
+        <ContextMenuItem disabled={!onMoveEarlier} onSelect={onMoveEarlier}>
+          Move earlier
+        </ContextMenuItem>
+        <ContextMenuItem disabled={!onMoveLater} onSelect={onMoveLater}>
+          Move later
         </ContextMenuItem>
         <ContextMenuItem variant="destructive" onSelect={onDelete}>
           <Trash2Icon />

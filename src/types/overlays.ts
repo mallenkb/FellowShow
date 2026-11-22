@@ -326,6 +326,7 @@ export interface OverlayLook {
 }
 
 export interface OverlayConfiguration {
+  padOrder?: string[]
   version: typeof OVERLAY_CONFIGURATION_VERSION
   logo: LogoOverlayConfig
   ticker: TickerOverlayConfig

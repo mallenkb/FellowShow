@@ -744,9 +744,27 @@ export function sanitizeOverlayConfiguration(
         .filter((look): look is OverlayLook => look !== null)
     : []
 
+  const logo = sanitizeLogo(record.logo, validOutputIds)
+  const padKeys = new Set([
+    ...(logo.logos.length ? ["logo"] : []),
+    ...bars.map((bar) => `bar:${bar.id}`),
+    ...lowerThirdPresets.map((preset) => `lower:${preset.id}`),
+    ...tickerMessages.map((message) => `ticker:${message.id}`),
+  ])
+  const padOrder = Array.isArray(record.padOrder)
+    ? [
+        ...new Set(
+          record.padOrder.filter(
+            (key): key is string => typeof key === "string" && padKeys.has(key)
+          )
+        ),
+      ]
+    : []
+
   return {
     version: OVERLAY_CONFIGURATION_VERSION,
-    logo: sanitizeLogo(record.logo, validOutputIds),
+    logo,
+    ...(padOrder.length ? { padOrder } : {}),
     ticker: sanitizeTickerConfig(
       record.ticker,
       Array.isArray(record.tickerMessages) ? record.tickerMessages[0] : null

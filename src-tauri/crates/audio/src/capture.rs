@@ -94,9 +94,10 @@ pub fn start(
                 AudioError::StreamError(format!("Failed to enumerate devices: {e}"))
             })?;
             for d in input_devices {
-                if let Ok(name) = d.name() {
+                if let Ok(description) = d.description() {
+                    let name = description.name();
                     log::info!("[AUDIO]   Available device: '{name}'");
-                    if name == *id {
+                    if name == id {
                         log::info!("[AUDIO]   ✓ MATCH: '{name}'");
                         found = Some(d);
                         break;
@@ -118,7 +119,10 @@ pub fn start(
                 .ok_or(AudioError::NoInputDevices)?;
             log::info!(
                 "[AUDIO] Using default device: '{}'",
-                d.name().unwrap_or_default()
+                d.description().map_or_else(
+                    |_| String::new(),
+                    |description| description.name().to_owned()
+                )
             );
             d
         }
@@ -128,7 +132,7 @@ pub fn start(
         .default_input_config()
         .map_err(|e| AudioError::StreamError(format!("Failed to get default input config: {e}")))?;
 
-    let source_sample_rate = supported_config.sample_rate().0;
+    let source_sample_rate = supported_config.sample_rate();
     let source_channels = supported_config.channels() as usize;
     let sample_format = supported_config.sample_format();
 
@@ -140,7 +144,7 @@ pub fn start(
         "[AUDIO] Input config: sample_rate={source_sample_rate}, channels={source_channels}, format={sample_format:?}, target_sample_rate={target_sample_rate}, gain={gain}"
     );
 
-    let err_fn = |err: cpal::StreamError| {
+    let err_fn = |err: cpal::Error| {
         log::error!("Audio stream error: {err}");
     };
 
@@ -149,7 +153,7 @@ pub fn start(
             let sender = sender.clone();
             let recording = recording.clone();
             device.build_input_stream(
-                &stream_config,
+                stream_config,
                 move |data: &[i16], _: &cpal::InputCallbackInfo| {
                     process_and_send(
                         data,
@@ -169,7 +173,7 @@ pub fn start(
             let sender = sender.clone();
             let recording = recording.clone();
             device.build_input_stream(
-                &stream_config,
+                stream_config,
                 move |data: &[f32], _: &cpal::InputCallbackInfo| {
                     // Convert f32 -> i16
                     #[expect(
@@ -201,7 +205,7 @@ pub fn start(
             let sender = sender.clone();
             let recording = recording.clone();
             device.build_input_stream(
-                &stream_config,
+                stream_config,
                 move |data: &[u16], _: &cpal::InputCallbackInfo| {
                     // Convert u16 -> i16 (u16 midpoint is 32768)
                     #[expect(

@@ -1,0 +1,10 @@
+{
+  "build": {
+    "beforeBuildCommand": "bun run scripts/prepare-windows-uv.ts && bun run prepare:document-converter && bun run build"
+  },
+  "bundle": {
+    "resources": {
+      "../vendor/uv/runtime/": "uv/"
+    }
+  }
+}
