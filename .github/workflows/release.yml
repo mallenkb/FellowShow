@@ -5,6 +5,11 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      stock_dmg_compression:
+        description: Benchmark Tauri's stock zlib compression
+        type: boolean
+        default: false
   # Tags cannot reuse another tag's build cache, only main's. This nightly run
   # on main compiles the release app (without bundling or publishing) so the
   # next tag starts from a warm cache instead of compiling everything.
@@ -22,6 +27,7 @@ concurrency:
 
 env:
   BUN_VERSION: 1.4.4
+  WINDOWS_LIBREOFFICE_VERSION: "26.8.3"
   MACOSX_DEPLOYMENT_TARGET: "11.0"
   CMAKE_OSX_DEPLOYMENT_TARGET: "11.0"
   # The nightly run only warms the cache.
@@ -165,10 +171,18 @@ jobs:
           "$llvmBin" | Out-File -FilePath $env:GITHUB_PATH -Append
           "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append
 
-      - name: Install bundled document converter source on Windows
+      - name: Restore installed LibreOffice runtime
         if: runner.os == 'Windows'
+        id: libreoffice-cache
+        uses: actions/cache@v6
+        with:
+          path: C:\Program Files\LibreOffice
+          key: libreoffice-runtime-v1-${{ runner.os }}-${{ runner.arch }}-${{ env.WINDOWS_LIBREOFFICE_VERSION }}
+
+      - name: Install bundled document converter source on Windows
+        if: runner.os == 'Windows' && steps.libreoffice-cache.outputs.cache-hit != 'true'
         shell: pwsh
-        run: choco install libreoffice-fresh -y --no-progress
+        run: choco install libreoffice-fresh --version $env:WINDOWS_LIBREOFFICE_VERSION -y --no-progress
 
       - name: Install bundled document converter source on macOS
         if: runner.os == 'macOS'
@@ -190,22 +204,32 @@ jobs:
         if: env.WARM_CACHE_ONLY == 'true'
         run: bunx tauri build --no-bundle
 
+      - name: Select macOS disk image compression
+        if: runner.os == 'macOS' && env.WARM_CACHE_ONLY != 'true'
+        run: echo "$GITHUB_WORKSPACE/.github/scripts/macos-dmg" >> "$GITHUB_PATH"
+
       - name: Build bundles
         if: env.WARM_CACHE_ONLY != 'true'
         env:
+          FELLOWSHOW_DMG_FORMAT: ${{ inputs.stock_dmg_compression && 'UDZO' || 'ULFO' }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: bunx tauri build ${{ matrix.bundle_args }}
 
       # Tauri logs the updater archive only after it finishes writing it. Its
       # creation time marks the boundary between DMG work and tar.gz compression.
-      - name: Record macOS updater archive timing
+      - name: Record macOS packaging times
         if: runner.os == 'macOS' && env.WARM_CACHE_ONLY != 'true'
         shell: python3 {0}
         run: |
+          import os
           from datetime import datetime, timezone
           from pathlib import Path
 
+          timing = (Path(os.environ["RUNNER_TEMP"]) / "fellowshow-dmg-timing.txt").read_text()
+          print(timing.strip())
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write(timing)
           archive, = Path("src-tauri/target/release/bundle/macos").glob("*.app.tar.gz")
           info = archive.stat()
           start = datetime.fromtimestamp(info.st_birthtime, timezone.utc)
@@ -248,18 +272,24 @@ jobs:
           import subprocess
           import sys
           import tempfile
+          from contextlib import ExitStack
           from pathlib import Path
-
-          if sys.platform == "darwin":
-              app, = Path("src-tauri/target/release/bundle/macos").glob("*.app")
-              converter = app / "Contents/Resources/document-converter/LibreOffice.app/Contents/MacOS/soffice"
-          else:
-              converter = Path(os.environ["RUNNER_TEMP"]) / "FellowShowInstall/document-converter/LibreOffice/program/soffice.com"
 
           fixtures = Path("output/e2e/fixtures")
           documents = [fixtures / "e2e-two-pages.docx", fixtures / "e2e-two-slides.pptx"]
-          with tempfile.TemporaryDirectory() as folder:
+          with tempfile.TemporaryDirectory() as folder, ExitStack() as cleanup:
               output = Path(folder)
+              if sys.platform == "darwin":
+                  dmg, = Path("src-tauri/target/release/bundle/dmg").glob("*.dmg")
+                  mount = output / "mount"
+                  mount.mkdir()
+                  subprocess.run(["hdiutil", "attach", "-readonly", "-nobrowse", "-noautoopen",
+                                  "-mountpoint", mount, dmg], check=True)
+                  cleanup.callback(subprocess.run, ["hdiutil", "detach", mount], check=True)
+                  app, = mount.glob("*.app")
+                  converter = app / "Contents/Resources/document-converter/LibreOffice.app/Contents/MacOS/soffice"
+              else:
+                  converter = Path(os.environ["RUNNER_TEMP"]) / "FellowShowInstall/document-converter/LibreOffice/program/soffice.com"
               profile = (output / "profile").as_uri()
               subprocess.run([converter.resolve(), "--headless", "--nologo", "--nodefault",
                               f"-env:UserInstallation={profile}", "--convert-to", "pdf",

@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+"""Select the compression for Tauri's final DMG conversion."""
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+args = sys.argv[1:]
+system_tool = "/usr/bin/hdiutil"
+# All other operations, including creating and mounting the writable image,
+# retain the arguments supplied by Tauri.
+stock_compression = ["-format", "UDZO", "-imagekey", "zlib-level=9"]
+index = args.index("-format") if "-format" in args else len(args)
+if args[:1] != ["convert"] or args[index:index + 4] != stock_compression:
+    os.execv(system_tool, [system_tool, *args])
+
+image_format = os.environ["FELLOWSHOW_DMG_FORMAT"]
+if image_format == "ULFO":
+    args[index:index + 4] = ["-format", "ULFO"]
+elif image_format != "UDZO":
+    sys.exit(f"Unknown DMG format: {image_format}")
+
+output = Path(args[args.index("-o") + 1])
+started = time.monotonic()
+subprocess.run([system_tool, *args], check=True)
+duration = time.monotonic() - started
+timing = Path(os.environ["RUNNER_TEMP"]) / "fellowshow-dmg-timing.txt"
+timing.write_text(f"{image_format} compression: {duration:.1f}s, {output.stat().st_size} bytes\n")
